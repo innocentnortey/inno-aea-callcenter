@@ -374,15 +374,57 @@ def register_spend(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-17 models: the Anthropic adapter (models.md §2, §7).
 
-    No-op until AEA-17 fills it.
+    Provides Key[anthropic.Anthropic]("anthropic_client"): the one SDK client, built from settings.anthropic_api_key
+    with max_retries=0 and the SDK's own spans off, and closed on shutdown. AnthropicAdapter objects (one per model)
+    are built from it by AEA-51's adapter_for. Caps the SDK's "anthropic" logger at WARNING, because its DEBUG lines
+    carry whole request payloads.
     """
+    import logging
+
+    import anthropic
+
+    from meridian.adapters.models.anthropic import build_anthropic_client
+
+    logging.getLogger("anthropic").setLevel(logging.WARNING)
+
+    def _client(c: Container) -> anthropic.Anthropic:
+        client = build_anthropic_client(settings.anthropic_api_key)
+        c.on_close(client.close)
+        return client
+
+    container.provide(Key[anthropic.Anthropic]("anthropic_client"), _client)
 
 
 def register_jev(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-18 models: the Jev adapter via OpenRouter (models.md §3, §7).
 
-    No-op until AEA-18 fills it.
+    Provides Key[httpx.Client]("jev_http_client"): the one HTTP client every JevAdapter shares, redirects off, closed
+    on shutdown. Provides Key[Callable[[str], JevAdapter]]("jev_adapter_factory"): a model ID gives a JevAdapter bound
+    to that client and settings.openrouter_api_key (ValueError for a model with no JEV_PRICES row). AEA-51's
+    adapter_for calls the factory once per distinct Jev model and memoises the result. Makes no request.
     """
+    import httpx
+
+    from meridian.adapters.models.openrouter_jev import JevAdapter
+
+    http_key = Key[httpx.Client]("jev_http_client")
+
+    def _http(c: Container) -> httpx.Client:
+        client = httpx.Client(follow_redirects=False, timeout=5.0)
+        c.on_close(client.close)
+        return client
+
+    def _factory(c: Container) -> Callable[[str], JevAdapter]:
+        http = c.get(http_key)
+        api_key = settings.openrouter_api_key
+
+        def make(model: str) -> JevAdapter:
+            return JevAdapter(http, api_key=api_key, model=model)
+
+        return make
+
+    container.provide(http_key, _http)
+    container.provide(Key[Callable[[str], JevAdapter]]("jev_adapter_factory"), _factory)
 
 
 def register_gateway(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -409,15 +451,38 @@ def register_tool_dispatch(container: Container, app: FastAPI, *, settings: Any,
 def register_identity(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-27 identity: IdentityService and the demo inbox (graph-tools §5).
 
-    No-op until AEA-27 fills it.
+    Provides Key[IdentityService]("identity_service"), the one IdentityService, built from the "uow_factory" key
+    (AEA-10), settings.session_secret (the HMAC key, graph-core §12) and limits.identity (C-9). web/deps.py resolves
+    get_identity_service from that key (AEA-23); the identity node (AEA-36), the CON-6 route (AEA-43) and GraphDeps
+    (AEA-51) all use it.
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.identity import IdentityService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> IdentityService:
+        return IdentityService(c.get(uow_key), session_secret=settings.session_secret, limits=limits.identity)
+
+    container.provide(Key[IdentityService]("identity_service"), build)
 
 
 def register_scheduling(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-28 scheduling: SchedulingService (cases.md §4).
 
-    No-op until AEA-28 fills it.
+    Provides Key[SchedulingService]("scheduling"), the one SchedulingService, built from the "uow_factory" key (AEA-10)
+    and limits.booking (the R-41 cap, MC-22). The graph wiring (AEA-51) passes it to GraphDeps.scheduling and to
+    scheduling_tools(); no tool is registered here (GRT-1).
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.scheduling import SchedulingService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> SchedulingService:
+        return SchedulingService(c.get(uow_key), limits.booking)
+
+    container.provide(Key[SchedulingService]("scheduling"), build)
 
 
 def register_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
