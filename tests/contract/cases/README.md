@@ -51,7 +51,7 @@ Aliases accepted for files written before this format: `started_thread` and `sta
 `as_<role>` means `role:<role>`; `reset_gate_held` means `reset_held`; `ended_thread` means the setup `ended`.
 
 Local-driver-only words (the real app cannot produce them without a double): `handoff_fails`, `turn_running`,
-`live_case_claimed`, `live_case_joined`, `live_case_unclaimed`, `case_claimed_by_supervisor`, `case_events`. A drive using
+`live_case_claimed`, `live_case_joined`, `live_case_unclaimed`, `case_claimed_by_supervisor`, `case_events`, `case_state`. A drive using
 one is listed by the completeness test and proved by the route's own driver (`mock-tested`), not run here. A word the
 runner does not know fails the format check by name; adding it is a follow-up on AEA-59, not an edit to your file.
 

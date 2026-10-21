@@ -923,8 +923,20 @@ def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-45 staff API: queue, case, actions, contact log, flags, oversight routes (staff.md §6).
 
-    No-op until AEA-45 fills it.
+    Includes routes/staff_cases.py's router (CON-11…13, CON-15…17) once per app. Provides nothing: CaseService (AEA-29),
+    FlagService (AEA-44) and DemoService (AEA-30) are bound by their own hunks; until a service is bound an allowed
+    request answers 500 ("not bound: <provider>") after the role check. An app that create_app did not build has no
+    web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_cases import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_cases_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_cases_routes_included = True
 
 
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -993,8 +1005,48 @@ def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, l
 def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-53 reads: MetricsReader bound to get_metrics_reads() (cases.md §9).
 
-    No-op until AEA-53 fills it.
+    Provides deps.METRICS_READS ("metrics_reads"): one MetricsReader over Key("uow_factory") (AEA-10), the demo clock
+    Key("demo_clock") (AEA-30, read through a forwarder each time a page stamps a demo time, as register_staff_live
+    does, so a container without register_demo still builds; there a demo stamp raises RuntimeError("not bound:
+    demo_clock")), Key("wall_clock") (AEA-23), Key("ledger") (AEA-26), Key("alert_settings") (AEA-32),
+    settings.agent_version and limits.spend.daily_cap_usd (MC-22). An app that create_app did not build has no web
+    shell, so this does nothing.
     """
+    from datetime import datetime
+
+    from meridian.services.metrics_reader import MetricsReader
+    from meridian.web.deps import METRICS_READS, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+
+    class _DemoClock:
+        """Resolves AEA-30's clock at call time (the register_staff_live forwarder)."""
+
+        def now(self) -> datetime:
+            try:
+                clock = container.get(demo_clock_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_clock_key.name}":
+                    raise RuntimeError(f"not bound: {demo_clock_key.name}") from None
+                raise
+            moment: datetime = clock.now()
+            return moment
+
+    container.provide(
+        METRICS_READS,
+        lambda c: MetricsReader(
+            c.get(UOW_FACTORY),
+            _DemoClock(),
+            c.get(WALL_CLOCK),
+            c.get(Key[Any]("ledger")),
+            c.get(Key[Any]("alert_settings")),
+            str(settings.agent_version),
+            limits.spend.daily_cap_usd,
+        ),
+    )
 
 
 def register_reads(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:

@@ -253,10 +253,8 @@ def _resolve_path_param(run: AppRun, drive: Drive, param: str, words: list[str])
     given = drive.spec.get("path", {}).get(param)
     if given is None and param == "thread_id":
         given = drive.spec.get("thread")
-    if given is None and param == "reference" and "reference" in drive.spec:
-        return str(
-            drive.spec["reference"]
-        )  # cases/README.md section 2: sent literally; `path` wins when both are given
+    if given is None and param == "reference":
+        given = drive.spec.get("reference")  # AEA-46 cases name the case here, not under "path"
     if given in PATH_WORDS or given is None:
         if given in ("started", "ended"):
             if run.main_thread is None:
