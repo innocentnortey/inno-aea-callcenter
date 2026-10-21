@@ -1,11 +1,84 @@
 # Plan — [AEA-60] contract: prompt ↔ consumer checks (rendered prompts vs parsers, ToolDefs and schemas)
 
-**Status:** planned. Every step except step 9 can be built on `main` today. Step 9 (the act-node part of AC-8) imports
-`agent/nodes/act.py`'s real `run_specialist` and `escalation`, which are still AEA-21 stubs: **BLOCKED-ON AEA-39** for that
-step only (see section 9). The orchestrator dispatches the implementer once AEA-39 is merged.
-**Issue:** GitLab `innocentnortey/inno-aea-callcenter#60` (copy: `docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` `b68df7e`
+**Status: BUILT AND MERGED.** Code commit `5f7725b`, merge `0e37fad`, ledger `84d826f` (row: `merged`). Do **not**
+dispatch an implementer to rebuild it. The one step left (step 14, section 5a below) is **blocked on AEA-51** and only
+upgrades AC-13's evidence level; AC-13 is already met as written (its evidence clause allows `mock-tested` + *Blocked by*
+AEA-57, AEA-51 until those land).
+**Issue:** GitLab `innocentnortey/inno-aea-callcenter#60` (copy: `docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` `dbcd8b7` (refresh 1)
 **Lane / risk:** `lane::build-loop`, no `risk::security` (tests only). Plan → implement (code and tests together) → affected tests → `code-review-agent`.
-**Planner model:** claude-opus-5-5. **Implementer:** Sonnet. No earlier plan file existed at this path; this is the first version.
+**Planner model:** claude-opus-5-5. **Implementer:** Sonnet.
+
+**Refresh 1 (2026-10-21, `main` at `dbcd8b7`).** Read this box first. Where it and anything below differ, this box wins.
+Sections 1–8 and *Deviations* are kept unchanged as the record of what was planned and built.
+
+1. **What is on `main`** (from `git show --stat 5f7725b`): `tests/contract/test_prompts_vs_consumers.py` (448 lines),
+   `tests/contract/_prompts_render.py`, `_prompts_checks.py`, `_prompts_malformed.py`, `_prompts_expect.py`,
+   `_prompts_drift.py` (the last two are implementer deviations, see *Deviations*), `tests/journeys/j5/test_aea_60.py`,
+   `tests/journeys/j9/test_aea_60.py`, `docs/testing/journeys/2026-10-21-AEA-60.md`, `docs/design/code-design.md` §9 line,
+   `.claude/state/icm-progress.md` line 60. Steps 0–13 of section 5 are **done**.
+2. **Result as recorded** (evidence record and ledger; numbers from the implementer's and merge agent's runs, not re-run by
+   this planner): contract module 104 passed, 0 skipped, 0 xfailed; the three journey tests skipped, each
+   `blocked-on AEA-51: reply_composer not bound`; ruff, format and mypy clean. The wave-3 seam audit at `0e37fad`
+   (`.claude/state/resume.md`, *Stage 8: wave 3 context upkeep, AEA-60*) reports "Prompts vs consumers pass" and no
+   AEA-60 finding.
+3. **Nothing it depends on has moved.** `git diff --stat 0e37fad..dbcd8b7 -- src tests/journeys/support
+   tests/journeys/j5/test_aea_37.py tests/unit/agent tests/contract tests/fakes tests/fixtures` is empty; the commits since
+   the merge are the ledger, the context upkeep and FU-j1-demo-state (J-1 only).
+4. **The journey legs will run, not skip forever, once AEA-51 lands.** Every name in their `needs` is a real container key
+   (`web/deps.py` lines 77–78 `Key("handoff_service")`, `Key("case_service")`; `web/container.py` lines 767, 770
+   `Key("run_graph")`, `Key("reply_composer")`), and `tests/journeys/support/steps.py` `missing_needs` raises `KeyError` on
+   an unknown name, so the recorded skips prove the names resolve. The schema columns the legs read exist
+   (`src/meridian/adapters/sqlite/schema/00_core.sql`: `degrade_reason` line 53, `plan_intents` 59, `planner_failed` 62,
+   `danger_raised` 63; `check_events.check_kind` 106, `result` 108, `codes` 111).
+5. **AEA-51 already runs these legs.** Its plan (`AEA-51.md`, refresh 6 item 4 and §8 R-23) binds `run_graph` in its pass
+   2a and names `j5/test_aea_60.py` and `j9/test_aea_60.py` among the sibling tests that must pass at its check 8; a red
+   one whose cause is in a sibling's code is reported `blocked-on <owner>`, never skipped. AEA-51's branch
+   `aea-51-aea-51-customer-path` (`e9d07f3`, pass 1) touches no AEA-60 file (`git diff --stat main...e9d07f3 --
+   tests/journeys tests/contract src/meridian/agent/prompts src/meridian/agent/nodes` adds only
+   `tests/contract/test_model_ports_contract.py`).
+
+## 5a. Remaining step (refresh 1)
+
+**Step 14 — upgrade AC-13's evidence after AEA-51 merges.** Start only when the ledger row for AEA-51 reads `merged`.
+Branch from `main` (`aea-60-f1-journey-level` or the orchestrator's name), `export UV_LINK_MODE=hardlink`, no venv copy.
+
+1. Run `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs`.
+2. **All three pass** (`test_j5_malformed_classifier_reply_books_normally`, `test_j9_both_planners_malformed_hand_off_degraded`,
+   `test_j9_malformed_responder_draft_falls_back`): edit only these two docs.
+   - `docs/testing/journeys/2026-10-21-AEA-60.md`: replace the *Level* field's journey half with `integrated with a scripted
+     model` (the contract module stays `mock-tested`); *Tested revision* = the `main` commit you ran on; *Command* unchanged;
+     *Result* = the pass counts from step 1 plus the contract module's count from
+     `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` (expect 104 passed); *Blocked by* = `none`. Keep *Claim*
+     and *Remaining limitations* (C-1, C-2, no live model: AEA-61).
+   - `.claude/state/icm-progress.md` line 60 (the AEA-60 row): replace `J-5/J-9 test_aea_60.py blocked-on AEA-51` with
+     `J-5/J-9 test_aea_60.py 3 passed (integrated, scripted model)`. Replace in place; add no row.
+   This is docs only (nothing code or tests read), so the orchestrator may do it as `lane::direct` (`ticket-lanes.md`):
+   one agent, no worktree, commit straight to the working branch between merges.
+3. **A leg is red.** Run it alone with `-x -rs`. Then:
+   - If the leg's own expectation contradicts the signed contract (DO-4 §10 failure offer and handoff block; graph-nodes §4
+     signal table; cases.md §3.4 rule 6, `ai_failure` P3; web.md §9–§10), fix only that leg in
+     `tests/journeys/j5/test_aea_60.py` or `tests/journeys/j9/test_aea_60.py`, citing the contract line in the commit
+     body. This is `lane::build-loop` (a `fanout-implementer` with this plan).
+   - If the product code contradicts the contract, leave the leg red, do not edit it, and report `blocked-on <owner>` with
+     the failing assertion line on #60 and on the owner's issue (graph wiring, turn service, composer → AEA-51; act node,
+     escalation → AEA-39; reply nodes → AEA-38; plan nodes → AEA-37; case and handoff services → AEA-29).
+   - A missing harness capability (raw bodies, `stop_reason`, a `NEED_OWNERS` entry) is a follow-up on AEA-57, never an
+     edit to `tests/journeys/support/`.
+   - Known: J-9(a)'s brief raw quotes `message_id: 1`; if that is not the customer's message id, `check_quotes` trims the
+     quote and nothing the leg asserts changes (R-2). Do not "fix" it.
+4. Checks before the commit (cheapest first): if a leg changed, `uv run ruff check` and `uv run ruff format --check` on
+   the changed leg, then `uv run mypy` on it; then step 1's command (all pass); then
+   `uv run python -m tests.journeys.affected --base main --list-only` and confirm both legs are listed. No full suite
+   (docs and journey files only; nothing shared changed). `pytest -n 2` at most if you parallelise. Do not bind ports 4019
+   or 5184 (the harness picks its own).
+5. Commit with explicit paths (`git add docs/testing/journeys/2026-10-21-AEA-60.md .claude/state/icm-progress.md` plus any
+   changed leg), never `-A`; message `docs(AEA-60): J-5/J-9 legs at integrated level after AEA-51` (or `test(AEA-60): …`
+   when a leg changed); last line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do not push; the merge step
+   pushes `main`.
+
+**Must not do in step 14:** re-create or edit any `tests/contract/_prompts_*.py` or `test_prompts_vs_consumers.py`
+(they pass on `main`); edit `src/`, `agent/prompts/`, `tests/journeys/support/`, `tests/journeys/j5/test_aea_37.py` or any
+other ticket's file; add `skip`/`xfail`/`live`; put a phone, card-like number, code or real name anywhere.
 
 ---
 
@@ -475,10 +548,14 @@ push; bind ports 4019 or 5184.
 
 ## 9. Readiness
 
-**READY**, with **BLOCKED-ON AEA-39** for step 9 only (the act-node clause of AC-8 imports `act.run_specialist` and
-`act.escalation`, still stubs on `main` `b68df7e`; J-9(a)'s integrated level also runs through AEA-39's handoff node). No
-`NEEDS-DECISION`: CAS-16 and DAT-2 are built on their recommended options (D-14), and the two AC clarifications stay inside
-signed contracts. AEA-51 is not a blocker: the journey criterion records `mock-tested` + *Blocked by* AEA-51 until it lands.
+**Refresh 1: READY, nothing to build now; step 14 is BLOCKED-ON AEA-51.** Steps 0–13 are built and merged (`0e37fad`);
+AC-1…AC-12, AC-14 and AC-15 are met on `main`, and AC-13 is met at the level its own evidence clause allows
+(`mock-tested`, *Blocked by* AEA-51). The orchestrator dispatches step 14 only after AEA-51 merges; if AEA-51's own
+check 8 already shows the three legs passing, step 14 is the two-doc update in 5a.2. No `NEEDS-DECISION`: CAS-16 and
+DAT-2 stay on their D-14 options, C-1 and C-2 stay inside signed contracts, and no signed contract needs a change.
+
+*Original readiness (kept for the record):* READY, with BLOCKED-ON AEA-39 for step 9 only; AEA-39 merged (`12e46ee`)
+before the build, so step 9 was built and passes.
 
 ## Deviations
 

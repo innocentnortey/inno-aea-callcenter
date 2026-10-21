@@ -1,10 +1,11 @@
 # Plan — [AEA-39] graph: act node (fan-out, escalation, handoff)
 
-**Status:** **READY** (refresh 4). Every prerequisite is on `main`: AEA-35b (`SpecialistTask`, `KnowledgeSlice`,
-`AccountSlice` in `src/meridian/domain/tools.py`, merged `3725c90`) and AEA-35 (`scope_for` in
-`agent/specialists/runner.py`, merged `1ce98c4`). The §9.1 question is answered (option A, Innocent 2026-10-21: "just do
+**Status:** **READY — DONE, nothing to implement** (refresh 5). AEA-39 merged to `main` as `12e46ee` ('Merge AEA-39 act node': `ded15a7` feat(graph): act node, `d744422` journey record). The refresh-4 text below is kept as the record of what was built.
+
+Refresh-4 status (kept for the record): READY; every prerequisite (AEA-35b `3725c90`, AEA-35 `1ce98c4`) was on `main`. The §9.1 question is answered (option A, Innocent 2026-10-21: "just do
 whatever you recommend"). Step 0 is now a sanity check only. Every name this plan uses is on `main` and was checked; every
 decision is made below.
+
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/39 (spec copy:
 `docs/plans/tickets/AEA-39.md`) · **Base revision:** `main` at `b68df7e` (refresh 4; refresh 3 at `8a205b2` plus AEA-35b's
 branch at `68f7f19`; refresh 2 at `2ec19ad`; refresh 1 at `b559c75`; first written at `96096be` plus AEA-21's then-unmerged
@@ -14,6 +15,36 @@ branch `aea-21-graph-spine`) · **Lane:** `lane::build-loop`, no `risk::security
 Read this whole file before writing code. Every decision is already made here (§8.1 lists them). If the code on `main`
 disagrees with a name in this plan, **the code on `main` wins**: follow it and say so in your report. If a name this plan
 needs is **missing** on `main`, stop and report `blocked-on` (step 0 lists the checks). Never invent a missing type.
+
+**Refresh 5 (2026-10-21, `main` at `2f70221`). This plan is complete. Do not re-run steps 0 to 9.**
+
+1. **What is on `main`.** `git merge-base --is-ancestor 12e46ee main` succeeds. The merge brought in `src/meridian/agent/nodes/act.py`,
+   `tests/unit/agent/nodes/test_act.py`, `tests/unit/agent/nodes/act_fixtures.py`, `tests/journeys/j3/test_aea_39.py`,
+   `tests/journeys/j4/test_aea_39.py`, the `tests/graph/test_spine.py` edit (step 7), the journey record
+   `docs/testing/journeys/2026-10-21-AEA-39.md` (level `mock-tested`, blocked by AEA-51 for the integrated level) and the context
+   rows (area map, ICM progress, code-design). `git log 12e46ee..main` for `act.py`, `tests/unit/agent/nodes/` and the two
+   journey files is empty, so later merges have not changed this ticket's code.
+2. **No branch or worktree is left.** `git worktree list` has no AEA-39 entry, and `git branch --list '*aea-39*'` is empty.
+3. **Why a re-plan was asked for.** The code review was sent out after the merge and after the worktree was removed. The
+   reviewer reported that, and the implementer then had no branch to fix. Nothing in this plan is wrong; the order of the
+   steps was.
+4. **What the orchestrator does next (decided here):**
+   - **Do not send this plan to an implementer.** It owns no files any more. A fix step against it does nothing.
+   - **Review the merged code where it is:** send `code-review-agent` (Sonnet) to `git diff 12e46ee^1 12e46ee` on `main`, with
+     this plan and the ticket `docs/plans/tickets/AEA-39.md` as the reference. Its checks: `uv run ruff check src/meridian/agent/nodes/act.py tests/unit/agent/nodes tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py tests/graph/test_spine.py`,
+     `uv run ruff format --check` on the same paths, `uv run mypy src/meridian/agent/nodes/act.py`,
+     `uv run pytest -n 2 tests/unit/agent/nodes/test_act.py tests/graph/test_spine.py -q`, and
+     `uv run pytest -m journey tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py -q`.
+     Passing means 31 unit tests, the spine tests and 2 journeys pass, and lint, format and mypy report nothing.
+   - **If the review finds real defects:** cut a follow-up `AEA-39-F1` on a new branch off `main` (worktree
+     `inno-aea-callcenter-wt/AEA-39-F1`, branch `aea-39-f1-<topic>`). Give it its own plan at
+     `docs/plans/fanout/2026-10-21-build/AEA-39-F1.md` that lists each finding with its file and line, the fix, and the test that
+     proves it. A fix under about 30 lines in one file may go to `fanout-implementer` with the plan written inline by
+     the orchestrator (rule `fanout-plan-then-implement`). It joins the next merge batch. Do not reopen this plan.
+   - **If the review is clean:** close the fix step. Nothing else is owed. The integrated J-3/J-4 level arrives with AEA-51.
+   - The *Deviations* section at the end of this file (test file sizes over 500 lines, AC-2 test split, `decide_escalation`
+     patching) is the implementer's record of where it departed from the plan. The reviewer should judge those three points.
+     Splitting the test files is optional follow-up work, not a defect.
 
 **Refresh 4 (2026-10-21, `main` at `b68df7e`).** What changed since refresh 3 (`8a205b2`), and what it does to this plan:
 
