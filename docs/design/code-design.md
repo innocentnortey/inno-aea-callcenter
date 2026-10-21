@@ -191,6 +191,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 **Built:** `agent/nodes/front.py` (AEA-36, `712b9e9`).
 **Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
+**Built:** `agent/nodes/plan.py`, `agent/prompts/routing.py` (AEA-37, `b760241`).
 **Built:** `services/{turn,session}.py`, `web/routes/chat.py`, `web/schemas/chat.py`, the `register_chat` hunk (AEA-40, `e74e3c2`).
 **Built:** `agent/nodes/reply.py` (four node bodies), `agent/prompts/reply.py` (AEA-38, `ec94722`).
 **Built:** `agent/nodes/load_context.py` (AEA-34, `8d6be78`).
@@ -296,14 +297,14 @@ src/meridian/                                    planned                        
 │   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2   stub AEA-21 6df4f4c
 │   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2   built AEA-21 6df4f4c
 │   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   built AEA-36 712b9e9
-│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   built AEA-37 b760241
 │   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
 │   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   built AEA-38 ec94722
 │   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3   built AEA-35 e614508 (ticket wave 2)
 │   ├── specialists/runner.py                    the braked tool loop                                        A7b   3   built AEA-35 e614508 (ticket wave 2)
 │   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3   built AEA-22 5d0a4e4 (ticket wave 1)
 │   ├── prompts/specialists.py                   specialist wording                                          A7b   3   built AEA-35 e614508 (ticket wave 2)
-│   ├── prompts/routing.py                       planner and classifier wording, choice fields               A7d   3
+│   ├── prompts/routing.py                       planner and classifier wording, choice fields               A7d   3   built AEA-37 b760241
 │   └── prompts/reply.py                         responder and brief wording; trimmed schemas                A7c   3   built AEA-38 ec94722
 ├── web/
 │   ├── container.py                             composition root; one register_<area>() stub per area       A0    0
