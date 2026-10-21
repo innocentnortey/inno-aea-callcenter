@@ -42,7 +42,7 @@ EXPECTED_COUNTS = {
     "promise": 7,
     "fee_change": 4,
     "followup": 3,
-    "booking": 12,
+    "booking": 16,
     "limits": 7,
     "live": 6,
     "demo": 12,
