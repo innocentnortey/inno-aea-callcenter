@@ -238,7 +238,7 @@ src/meridian/                                    planned                        
 │   ├── models/anthropic.py                      AnthropicAdapter: all three model ports; own failure mapping A2    1
 │   ├── models/openrouter_jev.py                 JevAdapter: ChoiceModel only; own failure mapping           A2    1
 │   ├── retrieval_fastembed.py                   FastembedIndex + relevance floor + readiness info           A3    1
-│   └── tracing_langfuse.py                      LangfuseTraceSink (mask hook, bounded queue), NullTraceSink A10a  1
+│   └── tracing_langfuse.py                      LangfuseTraceSink (mask hook, bounded queue), NullTraceSink A10a  1   built AEA-19 2d5b692
 ├── retrieval/
 │   ├── settings.py                              embedder, chunker and floor constants, one place            A3    1
                                                  (AEA-16; stage7/data.md §3, DAT-11)
