@@ -28,7 +28,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-23 | #23 | B sec | planned | aea-23-aea-23-web-shell |  |  | AEA-01,AEA-02,AEA-04 |
 | AEA-24 | #24 | B sec | ready |  |  |  | AEA-01 |
 | AEA-25 | #25 | D | merged | main | 0ad71f9 (README, SUBMISSION D-3, resume); ledger row in the next commit | README.md has the 8 sections in order; ruff, format, mypy, pytest (121 passed) exit 0; env names, percentages, secret words and links checked by grep; diff touches README.md, SUBMISSION.md and .claude/state only | - |
-| AEA-26 | #26 | B | planned |  |  |  | AEA-10 |
+| AEA-26 | #26 | B | merged | aea-26-aea-26-spend-ledger | 96096be (code 8465a1f) | ruff check/format clean; mypy clean (160 files); 238 affected tests passed (no shared fixture/config touched, no full suite); journey J-9 extension 1 affected, 1 passed, record mock-tested, blocked by AEA-57 and AEA-51 | - |
 | AEA-27 | #27 | B sec | planned |  |  |  | AEA-04,AEA-10,AEA-13 |
 | AEA-28 | #28 | B | planned |  |  |  | AEA-10,AEA-13 |
 | AEA-29 | #29 | B sec | planned |  |  |  | AEA-10,AEA-11,AEA-14,AEA-16 |
