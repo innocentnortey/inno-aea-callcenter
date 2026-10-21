@@ -374,3 +374,41 @@ the `pending: AEA-56` lines (URL, redeploy downtime).
 5. **Low (`lane::direct`):** area-map drift: `.claude/reference/area-map.md` has duplicate, contradictory rows (A6 three times, A8, A11, A12 twice). Acceptance: each area exactly once with the latest status. (Same as wave-3 finding 3.)
 
 **Next action:** land AEA-45, 51, 52 and 53 (AEA-51 unblocks J-2 to J-5 and most skips), then re-run the seams audit. Cut tickets for findings 1, 2, 4 and 5 (5 is `lane::direct`) and identify the two failing tests and the hanging test from the audit report before the next wave-merge gate. Earlier open findings (wave 0, wave 1 AEA-24, wave 3) remain above. Modified plan files `AEA-61.md` and `AEA-62.md` belong to planners; do not sweep them in.
+
+## Stage 8: wave 2 context upkeep, AEA-39 act node (2026-10-21, VPS)
+
+**Merged in wave 2:** AEA-39 (act node, `agent/nodes/act.py`), merge commit `12e46ee`; ledger row in `build-ledger.md` (`6659403`). Audited at `12e46ee` in a separate
+detached worktree (since removed). The pre-existing `audit-W2` (at `b9be4dc`, not `12e46ee`) and `audit-W3` worktrees were left untouched. Scripted model only, no paid calls.
+
+**Security audit: n/a** (no `risk::security` ticket in this batch).
+
+**Seams audit: FAIL (no blocker; one medium, four low).** The act node connects to its dependencies: `GraphDeps`, `SchedulingService.slice_inputs`,
+`SpecialistRunner.run`, `HandoffService.open` and `ModelsStatus.models_disabled` all match; mypy strict is clean. Checks, all on `12e46ee`:
+1. `pytest tests/journeys tests/contract -n 2`: 704 passed, 56 skipped, 1 xfailed, 15 errors. All 15 errors are the AEA-58 browser journeys (`j1/test_aea_58.py`,
+   `j9/test_aea_58.py`) with `BrowserPrerequisiteError` because `apps/web/dist` is not built (no node_modules here), so their result is unknown, not green.
+2. `pytest tests/graph tests/integration tests/api tests/services tests/deploy -n 2`: 654 passed, 10 skipped.
+3. `ruff check` and `mypy`: clean.
+Most journeys skip as "blocked-on AEA-51" (`reply_composer` / `run_graph` unbound). Live exercise on the real assembled app, in-process: `POST /api/login` with the
+demo pair 200 (AEA-30's `demo_clock` is bound on main, so wave-2 finding 1 no longer reproduces); wrong password 401 `LOGIN_FAILED`; a customer on
+`GET /api/staff/queue` 403 `ROLE_NOT_ALLOWED`; a turn on an unknown session 404 `SESSION_NOT_FOUND`.
+
+**Open findings (this audit):**
+1. **Medium:** the planner and the scheduling specialist disagree on `pending_change`. `plan.py:252` computes it from `settled.current_visit().change_request is not None`;
+   `act.py` `_has_pending_change` (lines 95-97, used at 141) does `getattr(state, 'pending_change', None)`, and `ConversationState` has no such field, so the slice is always
+   False. `graph.py` lists it in `DURABLE_KEYS` but nothing writes it. No wrong behaviour today (nothing reads the flag yet). **Proposed ticket:** derive
+   `SchedulingSlice.pending_change` from the planner's source (or add the field and have act write it); AC: a unit test with a settled visit holding a `change_request`
+   gives True, none gives False, and the `getattr` fallback is gone.
+2. **Low:** `POST /api/chat/sessions` returns 500 (body `{request_id}` only) because `Key('reply_composer')` is unbound and `register_graph` is an empty body
+   (`web/container.py:1071`) until AEA-51. It is the only unbound key in `web/deps.py`; the 500 is the designed unhandled-error shape. Existing ticket AEA-51; AC: the probe
+   returns 200 and a scripted turn completes through `run_graph`.
+3. **Low (docs):** `area-map.md` still has duplicate "planned" rows for A6, A8, A7a, A11 and A12 and cites `f4aa2cb`; AEA-30 is on main as `5f4e879`. **Proposed `lane::direct`
+   ticket:** one row per area, every cited hash resolves in `git log main`.
+4. **Low:** the person-request rule id is defined three times (`agent/nodes/act.py:59` `PERSON_RULE_ID`, `gates/rules.py:35` `RULE_ID_PERSON`, `policy/escalation.py:99`
+   literal `R2.person`). Values agree today. **Proposed ticket:** import `gates.rules.RULE_ID_PERSON`; AC: grep for `R2.person` in `src` outside `gates/rules.py` returns nothing.
+5. **Low:** browser journeys (AEA-58) error in a backend-only worktree without `apps/web/dist` (`tests/journeys/browser/build.py:47`). **Proposed ticket:** the gate builds dist
+   first, or the browser fixtures skip with "blocked: no dist"; AC: `pytest tests/journeys -m journey` in a backend-only worktree reports 0 errors.
+
+**Carried, still open:** earlier wave-2 findings 2 to 9 and the wave-0 findings 1 and 3 (see the sections above); finding 1 of the first wave-2 audit (login 500) is now resolved by AEA-30.
+
+**Next action:** continue wave 3 per `build-ledger.md` (AEA-40 and AEA-51 have worktrees under `inno-aea-callcenter-wt/`; `docs/plans/fanout/2026-10-21-build/AEA-60.md` is an
+uncommitted planner edit, not swept in). Cut tickets for findings 1, 3, 4 and 5 above; build dist (or add the skip) before the next merge gate so the 15 browser errors do not mask a real failure.
