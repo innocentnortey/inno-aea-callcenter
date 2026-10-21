@@ -437,8 +437,62 @@ def register_demo(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_reset(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-31 reset: ResetService and the demo seed (cases.md §7).
 
-    No-op until AEA-31 fills it.
+    Binds the reset service (restore and checkpoint clear from storage, the reset gate, the seed with AEA-29's
+    BriefAssembler, AEA-30's format_clock) and loads the demo seed once at first boot. An app create_app did not build
+    has no web shell, so this does nothing.
     """
+    import functools
+    import importlib
+
+    from meridian.services.reset import ResetService, seed_demo, seed_first_boot
+    from meridian.web.deps import RESET_GATE, RESET_SERVICE, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+
+    def sibling(module: str, name: str) -> Any:
+        # Same-wave siblings (AEA-29, AEA-30), resolved when the container builds, not at import.
+        return getattr(importlib.import_module(module), name)
+
+    def seed() -> Callable[[Any], int]:
+        return functools.partial(
+            seed_demo, assembler=sibling("meridian.services.handoff", "BriefAssembler")()
+        )
+
+    def lazy_seed(tx: Any) -> int:
+        # Resolved on first call, so the container builds before AEA-29 lands.
+        return seed()(tx)
+
+    def lazy_format_clock(*args: Any, **kwargs: Any) -> Any:
+        return sibling("meridian.services.demo", "format_clock")(*args, **kwargs)
+
+    def sibling_present(module: str) -> bool:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            return False
+        return True
+
+    def build(c: Container) -> ResetService:
+        checkpointer = c.get(Key[Any]("checkpointer"))
+        return ResetService(
+            c.get(UOW_FACTORY),
+            c.get(RESET_GATE),
+            c.get(Key[Any]("restore_working_copy")),
+            checkpointer.clearing,
+            lazy_seed,
+            format_clock=lazy_format_clock,
+        )
+
+    def first_boot() -> None:
+        if not sibling_present("meridian.services.handoff"):
+            return  # AEA-29 not merged yet: nothing to assemble briefs with, so no first-boot seed
+        seed_first_boot(container.get(UOW_FACTORY), seed(), container.get(WALL_CLOCK)())
+
+    container.provide(RESET_SERVICE, build)
+    container.on_start(first_boot)
 
 
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -472,8 +526,55 @@ def register_events(container: Container, app: FastAPI, *, settings: Any, limits
 def register_person_request(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-42 customer API: PersonRequestService, CON-4 and CON-5 routes (web.md §8).
 
-    No-op until AEA-42 fills it.
+    Provides deps.PERSON_REQUESTS ("person_requests") built from "uow_factory", "handoff_service", "reply_composer",
+    "trace", "demo_clock" and "wall_clock"; while any of those is not provided, the object it provides raises
+    RuntimeError("not bound: ...") when called, so the app still starts. Includes the CON-4/CON-5 router once. An app
+    without a web shell gets nothing.
     """
+    from typing import NoReturn
+
+    from meridian.services.person_request import PersonRequestService
+    from meridian.web.deps import HANDOFF_SERVICE, PERSON_REQUESTS, REPLY_COMPOSER, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.handoff import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    needed: tuple[tuple[str, Key[Any]], ...] = (
+        ("uow", UOW_FACTORY),
+        ("handoff", HANDOFF_SERVICE),
+        ("composer", REPLY_COMPOSER),
+        ("trace", Key[Any]("trace")),
+        ("demo_clock", Key[Any]("demo_clock")),
+        ("wall_clock", WALL_CLOCK),
+    )
+
+    class _NotBound:
+        def __init__(self, missing: tuple[str, ...]) -> None:
+            self.missing = missing
+
+        def request(self, cmd: object) -> NoReturn:
+            raise RuntimeError("not bound: " + ", ".join(self.missing))
+
+    def make(c: Container) -> Any:
+        found: dict[str, Any] = {}
+        missing: list[str] = []
+        for arg, key in needed:
+            try:
+                found[arg] = c.get(key)
+            except ContainerError as exc:
+                if str(exc) != f"not provided: {key.name}":
+                    raise
+                missing.append(key.name)
+        if missing:
+            return _NotBound(tuple(missing))
+        return PersonRequestService(**found)
+
+    container.provide(PERSON_REQUESTS, make)
+    if not getattr(app.state, "handoff_routes_included", False):
+        app.include_router(build_router())
+        app.state.handoff_routes_included = True
 
 
 def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:

@@ -257,13 +257,13 @@ src/meridian/                                    planned                        
                                                  BriefAssembler
 │   ├── demo.py                                  DemoClock (Clock port), staffing, clock advance             A6    1
 │   ├── scheduler.py                             60 s tick: due-soon, overdue, stuck, unowned; daily prune   A6    1
-│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1
+│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1   built AEA-31 8192d2b
 │   ├── health.py                                health events, heartbeat, watchdog                          A10a  1
 │   ├── turn.py                                  run one turn: admission, idempotency, deadline, persist     A8    2
 │   ├── session.py                               open a conversation (CON-1)                                 A8    2
 │   ├── reset_gate.py                            reset-in-progress gate, injected into ResetService          A8    2
                                                  (AEA-23; stage7/web.md §7)
-│   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2
+│   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2   built AEA-42 55b5e7c
                                                  (AEA-42; stage7/web.md §8)
 │   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2
 │   ├── staff.py                                 StaffSessionStore (login sessions, role check, role switch) A9    2
@@ -305,7 +305,7 @@ src/meridian/                                    planned                        
 │   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout, getSession (AEA-23)                   A8    2
 │   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
 │   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
-│   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2
+│   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2   built AEA-42 55b5e7c
 │   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
 │   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 role switch (AEA-44)                                 A9    2
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
@@ -397,7 +397,7 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `services/handoff.py` | Turn an escalation into a case with the policy promise, idempotently; assemble the brief. | `HandoffService.open`, `BriefAssembler` | `CaseService`, `policy/handoff.py`, `DemoService`, clock |
 | `services/demo.py` | Serve the one demo clock and the staffing state, and advance the clock forward. | `DemoClock`, `DemoService.staffing/set_staffing/advance_clock` | UoW, `CaseService` |
 | `services/scheduler.py` | Raise due-soon, overdue, stuck and unowned alerts on the demo clock, and prune checkpoints daily. | `SchedulerJob.tick()` | `CaseService`, clock, injected `prune_checkpoints: Callable[[], int]` |
-| `services/reset.py` | Restore the demo all-or-nothing. | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
+| `services/reset.py` | Restore the demo all-or-nothing. Also holds the demo seed loader (`seed_demo`, `seed_first_boot`); the seed list is stage7/cases.md §7. Built (AEA-31, `8192d2b`). | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
 | `services/ledger.py` | Record every model call's cost and stop model use at a cap. | `record`, `SpendGuard.allow_turn`, `trip_provider_cap`, `models_disabled` | UoW (`repos_spend`), limits |
 | `services/live_chat.py` | Let a claimed representative join, write, hand back or close a chat. | `join`, `send`, `hand_back`, `close` | UoW (`conversations.controller`, `messages`, `events`), `CaseService` |
 | `services/staff.py` | Hold the login sessions, check and switch the role, and record flags. | `StaffSessionStore`: `start`, `resolve`, `end`, `actor_for`, `switch_role`, `session_info`; `FlagService`: `flag`, `review`, `list_flags` (stage7/staff.md §2, STF-26). AEA-44 flips the row to built; it does not rename | UoW (`repos_staff`) |
