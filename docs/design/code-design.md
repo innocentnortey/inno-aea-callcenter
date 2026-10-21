@@ -265,7 +265,7 @@ src/meridian/                                    planned                        
                                                  and FlagService (AEA-44; stage7/staff.md §2)
 │   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
 ├── agent/
-│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1
+│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1   built AEA-20 2bcb8fb
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1
 │   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
