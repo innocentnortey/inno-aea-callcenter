@@ -1158,3 +1158,17 @@ answer differs from its recommendation; D-12 is followed in AC-19).
 - **Pass 2 (G2, G2-WP) waits on AEA-51** (binds `reply_composer` and `run_graph` in `register_graph`, still a no-op on
   main; not started; WP scripts, R-3). AEA-40 is merged (`f466ff7`). AEA-51 is not in the ticket's *Blocked by* (R-4).
 - **G3 (the CON-19 tile check) waits on AEA-53** (ledger NEEDS-DECISION, not started).
+
+## Deviations
+
+Implementer run, branch `aea-52-aea-52-staff-demo-integ`, from `main` `37a0d34` (AEA-45 and AEA-53 had merged; AEA-51 had not).
+
+1. **Built groups G0 + G1** (F-30, F-45 hold; F-51 fails: `register_graph` still provides nothing). Pass 2 (G2, G2-WP, G3) is not built. F-53 now holds, but G3 also needs a live chat (AEA-51), so it stays out.
+2. **AC-16 reset limiter.** The plan's `fresh()` calls `resetDemo` more than 10 times; `resets_per_ip` is 10 per 600 s wall window and answers 409 `RESET_IN_PROGRESS` past it. The test now takes `journey_clock` and advances the wall clock 601 s every 8 resets. No product change.
+3. **AC-5 `field`.** `ApiError.field` is top level (`error["field"] == "text"`), not under `details`.
+4. **AC-26 non-vacuous.** The scheduler logs nothing on a healthy tick, so the allow-list check would have inspected zero records. The test forces one failed prune (the AC-25 seam, `Checkpointer.prune` instance patch) so the scheduler's one warning is checked. Same patch target as AC-25; no new monkeypatch target.
+5. **mypy.** `uv run mypy` with no path argument is the working form (explicit file paths lose the package config and report `import-untyped`).
+6. **Context rows** name the branch instead of a commit sha (a sha cannot be known before the commit; the merge step can replace it).
+7. **Journey record** regenerated from the two AEA-52 journey files only (j6, j8), so another ticket's red journey (below) does not enter it.
+
+Pre-existing, not this slice's: `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` is red on clean main (`startChatSession` answers 500 since AEA-40 merged without AEA-51's `reply_composer`). `check_context.py` reports `FAIL icm 18561 B (budget 8192 B)` for `.claude/state/icm-progress.md`, over budget before this change.
