@@ -1498,3 +1498,21 @@ Run inside the worktree with `export UV_LINK_MODE=hardlink`, cheapest first, and
 - the UX session's OpenAPI amendment (AC-21).
 
 **Gates:** none (no human, paid or live gate).
+
+## Deviations
+
+Appended by the implementer, 2026-10-21 (branch `aea-45-staff-cases-api`, code commit `c6cdab6`).
+
+- **AC-19 not built (R-1 not granted, `case_state` absent on `main`).** Step 0.4's grep found no `case_state` in
+  `tests/contract/openapi_cases.py` and the dispatch did not grant the two R-1 edits. Per step 0.4, step 7
+  (`tests/contract/cases/staff_cases.py` and `tests/api/test_contract_cases_staff_cases.py`) was not written. Nothing
+  else depends on it; the runner subset (check D) passes without the file in non-strict mode. Needs the R-1
+  follow-up on AEA-59, then a re-dispatch for step 7 only.
+- **J-6 file is blocked from step 0, not from step 2.** The plan expected steps 0-1 to pass today. The real login
+  reads `demo_clock` (AEA-30), so `journey.login()` answers 500 on `main`. Steps 0 and 1 now declare
+  `needs=("login_sessions", "demo_clock")`, login happens inside step 0, and the whole file skips with
+  `blocked-on AEA-30: demo_clock not bound`. The body of steps 2-6 has therefore never executed.
+- **Context rows.** The area-map A9 row, the DO-3 `**Built:**` line (placed after the last existing line, 194) and
+  the ICM row (after the AEA-47 row, 37) were edited in commit 2. `check_context.py` reports `FAIL icm 14537 B (budget
+  8192 B)`; the file was already over budget from other tickets' rows, and is not this ticket's to trim.
+- Test files hold a few more parametrised cases than the plan lists (per-example parametrisation); names match.
