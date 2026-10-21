@@ -14,7 +14,7 @@ from langgraph.types import Command
 from pydantic import SecretStr
 
 from meridian.agent import graph as graph_mod
-from meridian.agent.nodes import act, front, load_context, plan, reply
+from meridian.agent.nodes import act, front
 from meridian.domain import blocks as b
 from meridian.domain.common import FailureCounters, Halt, HaltReason, Priority, TurnId
 from meridian.domain.identity import FormValues
@@ -104,20 +104,12 @@ def test_skeleton_compiles_and_runs(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.mark.parametrize(
     ("module", "name", "path"),
     [
-        (load_context, "load_context", "load_context.py"),
         (front, "gates", "front.py"),
         (front, "safety", "front.py"),
         (front, "identity", "front.py"),
-        (plan, "planner", "plan.py"),
-        (plan, "danger_classifier", "plan.py"),
-        (plan, "plan_join", "plan.py"),
         (act, "run_specialist", "act.py"),
         (act, "escalation", "act.py"),
         (act, "handoff", "act.py"),
-        (reply, "facts", "reply.py"),
-        (reply, "responder", "reply.py"),
-        (reply, "brief", "reply.py"),
-        (reply, "checks", "reply.py"),
     ],
 )
 def test_stubs_raise_loudly(module: typing.Any, name: str, path: str) -> None:
