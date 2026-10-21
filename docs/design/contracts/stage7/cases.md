@@ -597,6 +597,25 @@ Types these methods return, by name only (graph topic, AEA-02, fields = the Open
 `StaffGuidance`: data.md §3 (`retrieval/manifest.py`; merge MC-26).
 Consumers: AEA-30, 36, 38, 39, 42, 45, 46, 51, 52, 53.
 
+
+### 5a. Built by AEA-29 (2026-10-21): additions and recorded gaps
+
+- The `source_id` is `src-<lookup_log id>` and the `lookup_log_id` is `ll-<id>`; only `lookup_log` sources become chips (O-9). [Decided §7, engineering; AEA-29 plan]
+- `apply` returns `CaseSummaryView | CaseActionRejected` (O-2). [Decided §7, engineering; AEA-29 plan]
+- `record_activity` returns `ActivityResult | CaseActionRejected` (O-3). [Decided §7, engineering; AEA-29 plan]
+- `set_followup` returns `FollowUp | CaseActionRejected`; refusals use `NOT_ALLOWED_IN_STATE` with `details.state` (O-4). [Decided §7, engineering; AEA-29 plan]
+- `CaseNotFound(case_ref)` (a `LookupError`) is raised by `detail` for an unknown case (O-5). [Decided §7, engineering; AEA-29 plan]
+- `CaseService(uow, clock, handoff_block=…, settled_view=…)`; the `shift_ended` row carries `speaker`, `line`, `handoff`, `settled` (O-6). [Decided §7, engineering; AEA-29 plan]
+- `BriefAssembler(staff_guidance=…)` shows a guidance text only when its sha256 equals the logged `result_seen` (O-7, RF-14). [Decided §7, engineering; AEA-29 plan]
+- `attach_extraction(..., customer_messages=…)` rejects a quote that is not a substring of a customer message (O-8). [Decided §7, engineering; AEA-29 plan]
+- `case_created` goes to the thread stream; the case stream gets only `case_changed` and `chat_closed` (O-11). [Decided §7, engineering; AEA-29 plan]
+- `customer_id` is stored only for a verified identity, and the case view reads "verified" when the case has a customer (O-14, RF-16). [Decided §7, engineering; AEA-29 plan]
+- `CaseWriteFailed` is raised after one retry of the case write (AC-6). [Decided §7, engineering; AEA-29 plan]
+- `resolve_staff_guidance` maps `STAFF_GUIDANCE_FOR` prefixes to passages at start-up; with no `staff_notes.json` there is no guidance and one warning; an unmatched prefix fails start-up (O-16). [Decided §7, engineering; AEA-29 plan]
+- Email and general follow-up texts are blocked on the AEA-03 follow-up (UX wording); those branches raise `NotImplementedError` (O-15). [Decided §7, engineering; AEA-29 plan]
+- `parse_seen` reads JSON, AEA-27's invoice, membership and warranty sentences, `key=value` text and bare text; `record_kind` classifies a record id (`appointment:N` and `slot:N` included). Gap: no shared structured `result_seen` format across tools, and no slot read for `current` (RF-26, R-20). [Decided §7, engineering; AEA-29 plan]
+- Private module split: `_case_rules.py` (pure rules), `_case_views.py` (row to view), `_case_actions.py` (staff write bodies; the service commits only a non-rejection) (RF-27). [Decided §7, engineering; AEA-29 plan]
+
 ---
 
 ## 6. Demo clock, staffing and scheduler (AEA-30): `services/demo.py`, `services/scheduler.py`
