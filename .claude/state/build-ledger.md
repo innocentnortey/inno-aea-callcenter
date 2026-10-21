@@ -17,7 +17,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-12 | #12 | B sec | frozen-tests |  |  |  | AEA-01,AEA-02,AEA-04,AEA-05 |
 | AEA-13 | #13 | B | blocked |  |  | awaiting Innocent: decision AEA-13-fees | AEA-02,AEA-03 |
 | AEA-14 | #14 | B | merged | main | 551b13c (merge of 37ee4d9) | ruff check/format clean; mypy clean (47 files); 225 affected tests passed (policy, gates, import direction, affected journeys, skeleton, web container); journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
-| AEA-15 | #15 | B | sent-back | aea-15-checks-completion-facts |  |  | AEA-02 |
+| AEA-15 | #15 | B | merged | aea-15-checks-completion-facts | e9a8740 (merge of fef0897) | ruff check/format clean; mypy clean (118 files); unit suite 575 passed (src/meridian/checks.py and tests/unit/test_checks.py new; no shared fixture/config touched); journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-16 | #16 | B | merged | aea-16-aea-16-retrieval-ingest | 576a4bf | ruff check/format clean; mypy clean (50 files); affected tests 25 passed (retrieval, skeleton, import direction) plus 17 affected-journey tests; journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
 | AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
 | AEA-18 | #18 | B sec | planned | aea-18-aea-18-jev-adapter |  |  | AEA-02 |
