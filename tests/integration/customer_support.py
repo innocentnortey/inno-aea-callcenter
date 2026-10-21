@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import atexit
 import functools
+import json
 import os
 import shutil
 import sqlite3
@@ -124,6 +125,13 @@ def _current_request() -> Any:
     return getattr(_CURRENT, "request", None)
 
 
+def request_text(request: Any) -> str:
+    """The request as one JSON string (markers are looked up in it); the output model class is not data."""
+    if request is None:
+        return ""
+    return json.dumps(request.model_dump(exclude={"output_model"}), default=str)
+
+
 class StepScript(JourneyScript):
     """Per-step entries instead of one queue (PD-8): one entry answers every call of its role in the step; a tuple is
     consumed in call order (for Role.SPECIALIST: indexed by the tool round of the run, so concurrent runs never mix).
@@ -152,7 +160,7 @@ class StepScript(JourneyScript):
         if self.probe is not None:
             self.probe()
         request = _current_request()
-        text = request.model_dump_json() if request is not None else ""
+        text = request_text(request)
         with self._step_lock:
             table: Mapping[Role, StepEntry] = next(
                 (t for marker, t in self._by_marker.items() if marker in text and role in t), self._default
@@ -297,6 +305,68 @@ def customer_environment(*, index_dir: Path | None, eval_key: str | None) -> Ite
 
 
 @contextmanager
+def serve_customer_run(
+    request: pytest.FixtureRequest,
+    env: JourneyEnv,
+    options: RunOptions,
+    *,
+    guard: Any,
+    logs: Any,
+    eval_key: str | None,
+    monkeypatch: pytest.MonkeyPatch | None = None,
+    overrides: ContainerOverrides | None = None,
+) -> Iterator[CustomerRun]:
+    """One server on `env` with a fresh step script. A restart test calls it again on the same environment; a test of
+    the real adapters passes its own `overrides` (the step script is then unused and `models` is empty)."""
+    if options.deadline_s is not None:
+        assert monkeypatch is not None, "deadline_s needs the monkeypatch fixture"
+        deadline = options.deadline_s
+        monkeypatch.setattr(
+            "meridian.web.container.Limits", lambda: Limits(turn=TurnLimits(deadline_s=deadline))
+        )
+    script = StepScript()
+    clock = StepClock() if options.with_clock else None
+    models: Mapping[Role, ScriptedModel] = {}
+    if overrides is None:
+        overrides, models = step_overrides(env.settings, script, wall_clock=clock, trace=options.trace)
+    collector = request.config.stash[COLLECTOR_KEY]
+    with launch_server(env.settings, overrides=overrides) as server:
+        run = CustomerRun(
+            env=env,
+            server=server,
+            script=script,
+            models=models,
+            clock=clock,
+            db=DbReader(env.db_path),
+            logs=logs,
+            guard=guard,
+            collector=collector,
+            strict=bool(request.config.getoption("--journeys-strict")),
+            nodeid=request.node.nodeid,
+            eval_key=eval_key,
+        )
+        try:
+            yield run
+        finally:
+            run.close_clients()
+    spend = DbReader(env.db_path).one(
+        "SELECT COUNT(*) AS n, COALESCE(SUM(cost_usd), 0.0) AS total FROM spend_ledger"
+    )
+    collector.add_note(
+        RunNote(
+            host=server.host,
+            port=server.port,
+            agent_version=env.settings.agent_version,
+            models={r.value: f"{m.provider}/{m.model}" for r, m in models.items()},
+            issued_sha256=env.issued_sha256_before,
+            spend_rows=int(spend["n"]),
+            spend_total_usd=float(spend["total"]),
+            outbound_blocked=len(guard.blocked),
+        )
+    )
+
+
+@contextmanager
 def open_customer_run(
     request: pytest.FixtureRequest,
     options: RunOptions = DEFAULT_OPTIONS,
@@ -307,53 +377,28 @@ def open_customer_run(
     with socket_guard() as guard, tap_logs() as logs, fastembed_offline():
         index_dir = require_index() if options.index == "built" else None
         eval_key = letters(40) if options.eval_key else None
-        with customer_environment(index_dir=index_dir, eval_key=eval_key) as env:
-            if options.deadline_s is not None:
-                assert monkeypatch is not None, "deadline_s needs the monkeypatch fixture"
-                deadline = options.deadline_s
-                monkeypatch.setattr(
-                    "meridian.web.container.Limits", lambda: Limits(turn=TurnLimits(deadline_s=deadline))
-                )
-            script = StepScript()
-            clock = StepClock() if options.with_clock else None
-            overrides, models = step_overrides(env.settings, script, wall_clock=clock, trace=options.trace)
-            collector = request.config.stash[COLLECTOR_KEY]
-            with launch_server(env.settings, overrides=overrides) as server:
-                run = CustomerRun(
-                    env=env,
-                    server=server,
-                    script=script,
-                    models=models,
-                    clock=clock,
-                    db=DbReader(env.db_path),
-                    logs=logs,
-                    guard=guard,
-                    collector=collector,
-                    strict=bool(request.config.getoption("--journeys-strict")),
-                    nodeid=request.node.nodeid,
-                    eval_key=eval_key,
-                )
-                try:
-                    yield run
-                finally:
-                    run.close_clients()
-            spend = DbReader(env.db_path).one(
-                "SELECT COUNT(*) AS n, COALESCE(SUM(cost_usd), 0.0) AS total FROM spend_ledger"
-            )
-            collector.add_note(
-                RunNote(
-                    host=server.host,
-                    port=server.port,
-                    agent_version=env.settings.agent_version,
-                    models={r.value: f"{m.provider}/{m.model}" for r, m in models.items()},
-                    issued_sha256=env.issued_sha256_before,
-                    spend_rows=int(spend["n"]),
-                    spend_total_usd=float(spend["total"]),
-                    outbound_blocked=len(guard.blocked),
-                )
-            )
+        with (
+            customer_environment(index_dir=index_dir, eval_key=eval_key) as env,
+            serve_customer_run(
+                request, env, options, guard=guard, logs=logs, eval_key=eval_key, monkeypatch=monkeypatch
+            ) as run,
+        ):
+            yield run
     if guard.blocked:
         raise AssertionError(f"socket guard refused {len(guard.blocked)} non-loopback connection(s)")
+
+
+def span_meta(span: Any, key: str) -> Any:
+    """One metadata value of a Langfuse span: the exporter stores each as a JSON string."""
+    raw = dict(span.attributes or {}).get(f"langfuse.observation.metadata.{key}")
+    return json.loads(raw) if isinstance(raw, str) else raw
+
+
+def signals_of(logs: Any) -> list[dict[str, Any]]:
+    """The graph's `signal` records (they carry their fields in the `signal` log attribute, not meridian_record)."""
+    return [
+        dict(r.__dict__["signal"]) for r in logs._snapshot() if isinstance(r.__dict__.get("signal"), dict)
+    ]
 
 
 def build_capture_sink(registry: list[Any]) -> tuple[TraceSink, InMemorySpanExporter]:
@@ -367,18 +412,33 @@ def finished_spans(sink: Any, exporter: InMemorySpanExporter) -> list[ReadableSp
     return sorted(exporter.get_finished_spans(), key=lambda s: s.start_time or 0)
 
 
-def write_probe(db_path: Path, failures: list[str]) -> Callable[[], None]:
-    """A function that fails (into `failures`) exactly when another connection holds a write transaction."""
+def write_probe(db_path: Path, failures: list[str], *, patience_s: float = 0.5) -> Callable[[], None]:
+    """A function that fails (into `failures`) exactly when a write transaction stays open while the model call runs.
+
+    The probe opens its own connection with busy_timeout 0 and tries BEGIN IMMEDIATE. Parallel graph nodes legitimately
+    write for a few milliseconds while a sibling's model call is running (the classifier's ledger row, the brief node's
+    store), so one refusal is retried for `patience_s`. A transaction held across the call by the calling thread itself
+    cannot be released while the probe waits, so it still fails after the patience runs out. Probes also serialise, so
+    two probes never collide with each other."""
+    lock = threading.Lock()
 
     def probe() -> None:
-        conn = sqlite3.connect(str(db_path), timeout=0, isolation_level=None)
-        try:
-            conn.execute("PRAGMA busy_timeout=0")
-            conn.execute("BEGIN IMMEDIATE")
-            conn.execute("ROLLBACK")
-        except sqlite3.OperationalError as exc:
-            failures.append(f"{type(exc).__name__}: {exc}")
-        finally:
-            conn.close()
+        with lock:
+            conn = sqlite3.connect(str(db_path), timeout=0, isolation_level=None)
+            try:
+                conn.execute("PRAGMA busy_timeout=0")
+                deadline = time.monotonic() + patience_s
+                while True:
+                    try:
+                        conn.execute("BEGIN IMMEDIATE")
+                        conn.execute("ROLLBACK")
+                        return
+                    except sqlite3.OperationalError as exc:
+                        if time.monotonic() >= deadline:
+                            failures.append(f"{type(exc).__name__}: {exc}")
+                            return
+                        time.sleep(0.005)
+            finally:
+                conn.close()
 
     return probe

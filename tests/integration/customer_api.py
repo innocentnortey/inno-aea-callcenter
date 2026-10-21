@@ -6,7 +6,7 @@ printed or written into a test file.
 from __future__ import annotations
 
 import uuid
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -108,10 +108,21 @@ def customer_row(run: JourneyRun, customer_id: str) -> dict[str, Any]:
     return run.db.one("SELECT * FROM customers WHERE customer_id = ?", (customer_id,))
 
 
-def verify(chat: Chat, customer_id: str, opening_text: str) -> httpx.Response:
-    """Opening message, the locate form filled from the customer row, then the code from the inbox."""
+def verify(
+    chat: Chat,
+    customer_id: str,
+    opening_text: str,
+    *,
+    before_form: Callable[[], None] | None = None,
+    before_code: Callable[[], None] | None = None,
+) -> httpx.Response:
+    """Opening message, the locate form filled from the customer row, then the code from the inbox.
+
+    `before_form` and `before_code` let a scenario set the model script for those turns."""
     resp = say(chat, opening_text)
     if blocks(resp, "locate_prompt"):
+        if before_form is not None:
+            before_form()
         block = blocks(resp, "locate_prompt")[0]
         row = customer_row(chat.run, customer_id)
         wanted = {"name": row["name"], "phone": row["phone"], "customer_id": customer_id}
@@ -122,6 +133,8 @@ def verify(chat: Chat, customer_id: str, opening_text: str) -> httpx.Response:
         assert field_set is not None, "the locate prompt offers no field set this helper can fill"
         resp = send_form(chat, block["card_id"], {f: str(wanted[f]) for f in field_set})
     code_card = card_id_of(resp, "code_prompt")
+    if before_code is not None:
+        before_code()
     return send_code(chat, code_card, newest_code(chat))
 
 

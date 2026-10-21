@@ -1096,8 +1096,7 @@ def register_graph(
     Key("retrieval_index") (FastembedIndex(settings.index_dir)), Key("retrieval_readiness") (its readiness(), read while the
     container builds; not ready logs retrieval_not_ready and the app still starts), Key("tool_registry"),
     Key("tool_dispatcher"), Key("specialist_runner"), deps.REPLY_COMPOSER (one ReplyComposer), Key("graph_deps"),
-    Key("compiled_graph") (SqliteSaver from Key("checkpointer"), recursion limit 25); Key("run_graph") is provided once
-    AEA-39's act node is on main. A role present in
+    Key("compiled_graph") (SqliteSaver from Key("checkpointer"), recursion limit 25) and Key("run_graph"). A role present in
     overrides.choice / .structured / .tools uses that port with its configured RoleSpec; overrides.trace is provided as
     Key("trace_override"), which Key("trace") (AEA-19) then returns. Makes no request and writes nothing. An app
     create_app did not build has no web shell, so this does nothing.
@@ -1110,7 +1109,7 @@ def register_graph(
     from meridian.adapters.retrieval_fastembed import FastembedIndex, Readiness
     from meridian.agent.context import GraphDeps
     from meridian.agent.gateway import ModelGateway
-    from meridian.agent.graph import build_graph
+    from meridian.agent.graph import bind_run_graph, build_graph
     from meridian.agent.nodes.compose import ReplyComposer
     from meridian.agent.specialists.runner import SpecialistRunner
     from meridian.agent.specialists.specs import SPECS
@@ -1249,6 +1248,10 @@ def register_graph(
             checkpointer=c.get(Key[Any]("checkpointer")).saver,
             composer=c.get(deps.REPLY_COMPOSER),
         ),
+    )
+    container.provide(
+        Key[Any]("run_graph"),
+        lambda c: bind_run_graph(c.get(graph_key), deps=c.get(deps_key), composer=c.get(deps.REPLY_COMPOSER)),
     )
 
 
