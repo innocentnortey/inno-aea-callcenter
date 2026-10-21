@@ -778,6 +778,28 @@
       "example": null
     },
     {
+      "id": "history.code_entered",
+      "template": "Code entered",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/plans/fanout/2026-10-21-ux4/g1-chat-core.md",
+        "line": 487,
+        "where": "UX build live-row wording for a customer code or form action (Step 6 customerRowText; never the digits)"
+      },
+      "example": null
+    },
+    {
+      "id": "history.details_sent",
+      "template": "Details sent",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/plans/fanout/2026-10-21-ux4/g1-chat-core.md",
+        "line": 487,
+        "where": "UX build live-row wording for a customer code or form action (Step 6 customerRowText; never the digits)"
+      },
+      "example": null
+    },
+    {
       "id": "demo.shift_ended",
       "template": "The simulated shift ended before a representative joined.",
       "source": {

@@ -65,6 +65,6 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-60 | #60 | B | ready |  |  |  | AEA-20,AEA-22,AEA-35,AEA-37,AEA-38,AEA-39,AEA-17,AEA-18,AEA-27,AEA-28,AEA-33,AEA-57 |
 | AEA-61 | #61 | B | ready |  |  |  | AEA-51,AEA-57,AEA-60,AEA-06,AEA-50 |
 | AEA-62 | #62 | B | ready |  |  |  | AEA-58,AEA-51,AEA-52,AEA-29,AEA-40,AEA-57 |
-| AEA-03b | #201 | B | built | aea-03b-history-texts | 8db744f |  | - |
+| AEA-03b | #201 | B | merged | aea-03b-history-texts | 19e046b (merge of becebc3; code 8db744f) | ruff check/format clean; mypy clean (108 files); 197 affected tests passed (policy, import direction, agent nodes, reset, scheduling); affected journeys 15 passed, 13 skipped (blocked); texts.py imported by a few modules, no shared fixture/config touched, no full suite; record docs/testing/journeys/2026-10-21-AEA-03b.md (mock-tested) | - |
 | AEA-02b | #200 | B | merged | aea-02b-case-views | 5305d57063a38a4c600cf74f997bdc5df4c6edfc | Merge conflict in .claude/state/icm-progress.md only (append-style), resolved by keeping both sides. Gates: ru | - |
 | AEA-56 | #56 | gated | gated |  |  | human: deploy and smoke (Innocent) |  |
