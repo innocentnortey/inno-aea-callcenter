@@ -1,65 +1,71 @@
-# CLAUDE.md — inno-aea-onboarding
+# inno-aea-callcenter — project entry
 
-**Start here:** the [router](.claude/README.md) maps each task to what to load. Where the project
-stands: [`PROJECT-CHECKLIST.md`](PROJECT-CHECKLIST.md); the first unticked gate is the current
-stage.
+## What this project is
 
-## What this repo is
+AEA Investors' hiring-partner challenge via Gauntlet AI: the **AEA FDE Challenge — AI Call Center
+Agent**. Acting as a Forward Deployed Engineer for *Meridian Home Comfort* (a fictional Austin HVAC
+and plumbing company), we discover the top call drivers from unlabeled transcripts. We answer the
+top 3 by RAG over a messy knowledge base, book against a mock scheduling DB, escalate the rest with
+handoff context, prove containment on a transcript-built test set, and deploy publicly with
+monitoring. Hosting defaults to Railway. Innocent decides scope and signs off every ★ gate.
 
-The **AEA Investors hiring-partner project** (via Gauntlet AI), built against AEA's *Project 1:
-AI-Powered Onboarding Assistant* brief. The brief covers four flows: guided chat intake, ID or
-document OCR with user confirmation, appointment booking, and supportive content at friction points.
+## System boundaries
 
-**Phase:** research, as of 2026-10-14. Documentation and research context only. **Don't write the
-PRD, design, tickets or code until Innocent says research is done.**
+| Area | Owns | Home |
+|---|---|---|
+| Agent and service (planned) | The two-layer chat agent, staff console API, case store, demo controls | `src/meridian/`; detail in the [area map](.claude/reference/area-map.md) |
+| Screens and UI contracts | Customer chat, staff console, the CON cards; the UX track | `docs/ux/`; the prototype is the real frontend: `apps/web/` (built 2026-10-21, awaiting the UX-4 gate) |
+| Evaluation (planned) | Test cases (dev and sealed held-out), harness, reports | `eval/`; plan in [`docs/design/evaluation-plan.md`](docs/design/evaluation-plan.md) |
+| Design | System design, code design, contracts, metrics, observability | `docs/design/` |
 
-**Chosen niche:** administrative patient intake across multiple practices, with a reusable core.
-This is a research choice; the brief itself is general (`docs/analysis/portfolio-fit-review.md`).
+## Non-negotiable boundaries
 
-## ⚠️ Evidence discipline — read before writing anything about a company
+- **The issued brief and Meridian data are never edited.** The agent writes to a *copy* of the DB. Rule: [source-authority](.claude/rules/source-authority.md).
+- **Meridian is fictional; AEA context is framing only.** No requirement comes from AEA's real portfolio. Rule: [source-authority](.claude/rules/source-authority.md).
+- **Numbers come from runs on a stated test set.** A target (60–75% containment) is never a result. Rule: [verification-evals-observability](.claude/rules/verification-evals-observability.md).
+- **A confident wrong answer is worse than a handoff.** Safety instructions come first; promises come from policy. Rule: [source-authority](.claude/rules/source-authority.md).
+- **`docs/archive/` is frozen Project 1 history.** Never cite it as requirements; never edit it. Rule: [context-maintenance](.claude/rules/context-maintenance.md).
+- **No product code before its zero-to-hero gate.** The current gate is in the checklist. Rule: [new-project-zero-to-hero](../.claude/rules/new-project-zero-to-hero.md).
+- **Commit or push only when Innocent asks; HTML is a local file.** Rules: [project-provenance](.claude/rules/project-provenance.md), [html-files-not-artifacts](.claude/rules/html-files-not-artifacts.md).
 
-[`.claude/rules/source-authority.md`](.claude/rules/source-authority.md) loads automatically. In
-short:
-- The brief is ISSUED and never edited.
-- Company pages show what a company publishes, not how it operates.
-- An AEA "Current" label is not control or permission to deploy.
-- Count platforms, not practices.
-- An existing tool at a company is not evidence that it fails.
-- Intake is administrative, never clinical.
+**Every task that moves a file, owner or route reads [context-maintenance](.claude/rules/context-maintenance.md) first.**
 
-## Where facts live (one owner each)
+## Read only what the task needs
 
-| Fact | Owner |
+**Start at the router: [`.claude/README.md`](.claude/README.md).** These are ordinary links, not imports.
+
+| Task | Read |
 |---|---|
-| Requirements, rubric, metrics | `docs/source/aea-proj1-onboarding-assistant.md` (ISSUED) |
-| Sources, authority, review dates | `docs/source/source-register.md` |
-| AEA strategies and portfolio counts | `docs/analysis/company-research/aea-investors.md` |
-| Industry comparison and recommendation | `docs/analysis/portfolio-fit-review.md` |
-| Per-company evidence | `docs/analysis/company-research/<company>.md` |
-| Onboarding research report (template Parts 1–10, 12 sections) + annexes | `docs/analysis/2026-10-15-onboarding-research-report.md` (config spec and demo blueprint annexes alongside) |
-| Public review evidence | `docs/analysis/2026-10-15-google-review-sentiment.md` (raw extracts local, git-ignored) |
-| Solution candidates (SOL-N), ranking rubric, shortlist and Innocent's selection record | `docs/analysis/2026-10-15-solution-selection-and-evidence-matrix.md` |
-| Unknowns (RQ-N) | `docs/analysis/research-questions.md` |
-| Partner questions (open GQ-18 and GQ-20; resolved GQ-19) | `Gauntlet AI/open-questions.md` |
-| Brief audit, risks (T1–T23) and consistency (C1–C11) | `docs/analysis/2026-10-14-brief-audit.md` (owns the reviewed T1–T13 and additional findings) |
-| Deliverables and dates | `SUBMISSION.md` |
-| Stage and gates | `PROJECT-CHECKLIST.md` |
-| Engineering and system-design principles (GP-N) | `docs/principles/` (copy of `Gauntlet AI/principles/`) |
-| Work history | `Gauntlet AI/devlogs/aea-onboarding/` ([contract](.claude/reference/dev-log.md)) |
+| Which document wins a disagreement | [source-authority](.claude/rules/source-authority.md) (ranking table) |
+| What the brief requires; deliverables | [briefing](docs/source/aea-call-center-briefing.md), [`SUBMISSION.md`](SUBMISSION.md) |
+| Anything touching the transcripts, KB or scheduling DB | [issued-data README](docs/data/issued/README.md), [brief audit](docs/analysis/2026-10-20-brief-audit.md) §3–§4 |
+| Traps, legal, ethical or safety limits | [brief audit](docs/analysis/2026-10-20-brief-audit.md) |
+| Escalation, handoff, staff or manager views | [consolidated handoff direction](docs/analysis/2026-10-20-human-handoff-consolidated-direction.md) (planning), [original handoff direction](docs/analysis/2026-10-20-human-handoff-product-direction.md) (research), [handoff information inventory](docs/data/handoff-information-inventory.md) (call drivers, sources, payload) |
+| Who the customer is, how service works, UX and brand research inputs | [company and service profile](docs/analysis/2026-10-20-meridian-company-service-profile.md) |
+| Framing, demo, interview answers | [hiring-partner-framing](.claude/rules/hiring-partner-framing.md), [AEA context](docs/analysis/aea-investors.md) |
+| System design, sizing, failure handling, model calls | [system design](docs/design/system-design.md) (DO-1, DO-2), [`docs/design/`](docs/design/) for DO-5–DO-7 |
+| Where code goes; module interfaces; API ↔ CON cards | [area map](.claude/reference/area-map.md) → [code design](docs/design/code-design.md), [contracts](docs/design/contracts/README.md) |
+| Proving a feature works end to end; what a "verified" claim must record | [integrated-journeys](.claude/rules/integrated-journeys.md), then [build-loop-test-scope](.claude/rules/build-loop-test-scope.md) |
+| What stage we're in; what's next | [`PROJECT-CHECKLIST.md`](PROJECT-CHECKLIST.md) |
+| Start or resume work | [`.claude/state/resume.md`](.claude/state/resume.md), then the checklist |
 
-## Working rules
+## How this project is governed
 
-1. **Follow `zero-to-hero`.** The sequence is in `../.claude/skills/zero-to-hero/` (mode: light).
-   Stage 2 (data reality), Stage 3 (hard problems) and Stage 4 (interview) come before design or
-   tickets. In Stages 3–6, walk the questions in `docs/principles/system-design.md` and raise the
-   open ones as options.
-2. **Two layers of success** (`.claude/rules/hiring-partner-framing.md`). Open with AEA's business
-   value, prove the brief, and close on how the system moves the metric.
-3. **Audit the brief, then write our own PRD.** Partner briefs contain traps. A deviation is
-   documented with its source, never silent.
-4. **Synthetic data only.** No real IDs or patient data, ever.
-5. **Log milestones** in the dev log as work happens.
-6. **Version control and hosting** follow `.claude/rules/project-provenance.md`. Commit and push
-   only when asked.
-7. **HTML is a local file** in `docs/artifacts/`, never a published Artifact.
-8. **Riverside** is deferred for this AEA research. The portal partner is The Riverside Company: its legal disclosures identify Riverside Partners L.L.C. as doing business under that name (GQ-19 resolved 2026-10-15). The separate Boston Riverside Partners rebranded as RS2 Healthcare Partners. Shared-submission permission remains GQ-18; Riverside does not shape AEA's product framing here.
+Entry points **route**, rules **prohibit**, references **explain**, canonical documents **prove**.
+
+| Concern | Owner |
+|---|---|
+| Where anything is, what to load | [router](.claude/README.md) |
+| How to keep context true while working | [maintenance rule](.claude/rules/context-maintenance.md) |
+| Context-system maturity | [ICM progress checklist](.claude/state/icm-progress.md) |
+| Product stage and gates | [`PROJECT-CHECKLIST.md`](PROJECT-CHECKLIST.md) (zero-to-hero) |
+| Requirements | [briefing](docs/source/aea-call-center-briefing.md) (ISSUED); our [PRD](docs/prd/inno-aea-callcenter-prd.md) (Stage 4 interview: [interview doc](docs/prd/inno-aea-callcenter-interview.md)) |
+| Sources and their authority | [source register](docs/source/source-register.md) |
+| Decisions | Product: [consolidated direction §11](docs/analysis/2026-10-20-human-handoff-consolidated-direction.md); foundation answers: PRD §10; design choices: [system design SDQ](docs/design/system-design.md); hard problems: [register](docs/design/hard-problems.md) |
+| Design outputs and their status | *Design outputs* register in the [interview doc](docs/prd/inno-aea-callcenter-interview.md) |
+| Code layout (planned until built) | [area map](.claude/reference/area-map.md) |
+| Deliverables and dates | [`SUBMISSION.md`](SUBMISSION.md) |
+| Setup choices, adopted rules, collaborators | [setup profile](.claude/reference/setup-profile.md) |
+| Where we left off | [`.claude/state/resume.md`](.claude/state/resume.md) |
+| Run history | dev log in `Gauntlet AI/devlogs/aea-callcenter/` ([contract](.claude/reference/dev-log.md)) |
+| Which document wins | Issued briefing → issued data → Gauntlet staff answers → our analysis; full table in [source-authority](.claude/rules/source-authority.md) |

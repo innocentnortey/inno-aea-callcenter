@@ -9,10 +9,9 @@ paths:
   - "**/SYSTEM_DESIGN*.md"
 ---
 
-# The System-Design Conversation
+> **Provenance:** copy of `Gauntlet AI/.claude/rules/system-design-conversation.md` (zero-to-hero principles pack), copied 2026-10-20 (re-copied: original changed since 2026-10-14). Change the original first, then re-copy.
 
-> **Provenance:** copy of `Gauntlet AI/.claude/rules/system-design-conversation.md` (2026-10-14).
-> Change the original first, then re-copy. Principles are local at `docs/principles/`.
+# The System-Design Conversation
 
 Applies whenever a PRD, interview, hard-problems page, architecture or system design is being
 written or discussed. The principles are `principles/system-design.md` (GP-107 – GP-119); in a
@@ -24,7 +23,10 @@ spin-off repo, `docs/principles/system-design.md`. The process they support is
 1. **Walk the questions, don't wait to be asked.** Before a design is called ready, go through each
    principle's *Raise in the design conversation* list. A question the docs already answer gets a
    citation; an open one goes to Innocent **as options** (2–4, recommendation first), never as a
-   blank question.
+   blank question. **Who answers, when, and what may not be drafted first** is
+   `system-design-questioning.md`: the foundation questions (load, peak, failure to survive, spend
+   ceiling, hardest uncertainty) are asked before anything that depends on them, and a stand-in such
+   as a test load is never an answer.
 2. **Economics and scale bucket first [GP-107, GP-108].** No component is chosen before the cost per
    successful outcome and the scale bucket are written down.
 3. **Depth where the partner is uncertain [GP-109].** Solved parts get one line each; the uncertain

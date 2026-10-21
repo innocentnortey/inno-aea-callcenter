@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian AI Agent — Stage 2 Review</title>
+<meta name="review-stage" content="Zero-to-hero Stage 2 · Data reality">
+<meta name="review-status" content="CHECKED by Innocent 2026-10-20 (WP-2, WP-3, WP-6 answered)">
+<meta name="review-approved-by" content="Innocent ✓ 2026-10-20">
+<meta name="review-date" content="2026-10-20">
+<meta name="review-source" content="docs/data/README.md|b4dae64b964bc5541cb86c555d8ae07319dd671bcbfcc104607935f1696b0a0d">
+<meta name="review-source" content="docs/data/worked-pairs.md|5e67c9aaa5dc8e0fbbf5af54e5894906a92c22df6d8d27c4f912b811858d1f0b">
+<style>
+:root{
+  --bg:#f6f4ee;--surface:#fffdf8;--surface-2:#f0ece2;--ink:#1c1b19;--muted:#5b584f;--line:#d9d2c3;
+  --accent:#1f5f5b;--focus:#b8541e;
+  --fact:#1f6a5f;--fact-bg:#e3f1ee;
+  --decision:#2b4f8f;--decision-bg:#e6ecf8;
+  --proposal:#7a4f00;--proposal-bg:#fbf0d9;
+  --unknown:#55524a;--unknown-bg:#ecebe6;
+  --awaiting:#a3361c;--awaiting-bg:#fbe7e1;
+  --lane-family:#f3efe6;--lane-assistant:#e9f2f0;--lane-staff:#ecebf5;
+  --space-1:4px;--space-2:8px;--space-3:16px;--space-4:24px;--space-5:40px;--radius:10px;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}}
+:root[data-theme="dark"]{
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font-ui)}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 16px}
+.skip:focus{left:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--space-3)}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);padding:var(--space-4) 0}
+.kicker{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:var(--space-2) 0 var(--space-3)}
+h2{font-size:clamp(21px,2.6vw,26px);line-height:1.25;margin:0 0 var(--space-2)}
+h3{font-size:17px;margin:0 0 var(--space-2)}
+p{margin:0 0 var(--space-3)}
+.lede{font:18px/1.55 var(--font-body);max-width:72ch}
+.status-banner{display:flex;gap:var(--space-3);align-items:flex-start;background:var(--awaiting-bg);
+  border:1px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-3);margin-bottom:var(--space-3)}
+.status-banner strong{color:var(--awaiting)}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:4px var(--space-3);font-size:14px;color:var(--muted);margin:0}
+.meta dt{font-weight:600;color:var(--ink)}
+.meta dt{grid-column:1}.meta dd{grid-column:2;margin:0;overflow-wrap:anywhere}
+code{font:0.88em var(--font-mono);background:var(--surface-2);padding:1px 5px;border-radius:5px}
+section{padding:var(--space-5) 0 var(--space-3);border-bottom:1px solid var(--line)}
+.section-sub{color:var(--muted);max-width:75ch}
+/* status badges */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap;vertical-align:middle}
+.st::before{font-size:11px}
+.st.fact{color:var(--fact);background:var(--fact-bg)} .st.fact::before{content:"●"}
+.st.decision{color:var(--decision);background:var(--decision-bg)} .st.decision::before{content:"◆"}
+.st.proposal{color:var(--proposal);background:var(--proposal-bg)} .st.proposal::before{content:"▲"}
+.st.unknown{color:var(--unknown);background:var(--unknown-bg);border-style:dashed} .st.unknown::before{content:"?"}
+.st.awaiting{color:var(--awaiting);background:var(--awaiting-bg);border-width:2px} .st.awaiting::before{content:"⧗"}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-3);list-style:none;padding:var(--space-3);margin:var(--space-3) 0 0;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+.legend li{display:flex;gap:8px;align-items:center}
+/* cards */
+.grid{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.grid.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.card[data-status="fact"]{border-left-color:var(--fact)}
+.card[data-status="decision"]{border-left-color:var(--decision)}
+.card[data-status="proposal"]{border-left-color:var(--proposal)}
+.card[data-status="unknown"]{border-left-color:var(--unknown);border-left-style:dashed}
+.card[data-status="awaiting"]{border-left-color:var(--awaiting);border-color:var(--awaiting)}
+.card h3{display:flex;justify-content:space-between;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap}
+.card p:last-child,.card ul:last-child{margin-bottom:0}
+.card .src{font-size:13px;color:var(--muted)}
+.big{font-size:20px;font-weight:700;line-height:1.25;margin:var(--space-1) 0 var(--space-2)}
+ul.tight{margin:0;padding-left:20px} ul.tight li{margin:2px 0}
+/* diagrams */
+figure{margin:var(--space-3) 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+figcaption{font-size:14px;color:var(--muted);margin-top:var(--space-2)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{min-width:760px}
+.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.scroll-hint{display:none;font-size:13px;color:var(--muted);margin:0 0 var(--space-2)}
+svg{display:block;width:100%;height:auto;font-family:var(--font-ui)}
+svg .lane-family{fill:var(--lane-family)} svg .lane-assistant{fill:var(--lane-assistant)} svg .lane-staff{fill:var(--lane-staff)}
+svg .lane-label{fill:var(--muted);font-size:13px;font-weight:700}
+svg .node{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .node.fact{stroke:var(--fact)} svg .node.decision{stroke:var(--decision);stroke-width:2}
+svg .node.proposal{stroke:var(--proposal);stroke-dasharray:6 3} svg .node.unknown{stroke:var(--unknown);stroke-dasharray:3 3}
+svg .node.awaiting{stroke:var(--awaiting);stroke-width:2.5}
+svg .node.demo{stroke:var(--proposal);stroke-dasharray:4 4;fill:var(--proposal-bg)}
+svg text{fill:var(--ink);font-size:13px} svg .small{font-size:11.5px;fill:var(--muted)} svg .strong{font-weight:700}
+svg .arrow{stroke:var(--muted);stroke-width:1.6;fill:none} svg .arrow.dash{stroke-dasharray:5 4}
+svg .head{fill:var(--muted)} svg .band{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:2 4}
+svg .band-label{fill:var(--accent);font-weight:700;font-size:12.5px}
+.words{font-size:14px;color:var(--muted);margin:var(--space-2) 0 0;padding-left:20px}
+/* why chain */
+.chain{display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));counter-reset:why}
+.chain .card{position:relative}
+.chain .card::before{counter-increment:why;content:"Why " counter(why);display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+/* timeline */
+.days{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.day h3{margin-bottom:var(--space-2)}
+.day ol{margin:0;padding-left:22px} .day li{margin:5px 0}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:6px;margin-left:4px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted)}
+.cutline{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0;color:var(--awaiting);font-weight:700}
+.cutline::before,.cutline::after{content:"";flex:1;border-top:2px dashed var(--awaiting)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--surface-2)}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+/* story parts (context → problem → why-hard) */
+.part{border-left:3px solid var(--line);padding:2px 0 2px var(--space-3);margin:var(--space-3) 0}
+.part h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 4px}
+.part p{max-width:78ch}
+.part[data-part="context"]{border-left-color:var(--accent)}
+.part[data-part="problem"]{border-left-color:var(--decision)}
+.part[data-part="why-hard"]{border-left-color:var(--awaiting)}
+.ask{background:var(--awaiting-bg);border:2px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-4)}
+.ask h2{color:var(--awaiting)}
+footer{padding:var(--space-4) 0 var(--space-5);font-size:13px;color:var(--muted)}
+@media (max-width:640px){
+  .status-banner{flex-direction:column;gap:var(--space-2)}
+  .meta{grid-template-columns:1fr}
+  .meta dt,.meta dd{grid-column:1}
+  .meta dt:not(:first-child){margin-top:var(--space-2)}
+  figure{padding:var(--space-2)}
+  .scroll-hint{display:block}
+  .cutline{flex-direction:column;gap:var(--space-2);text-align:center}
+  .cutline::before,.cutline::after{flex:none;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media print{
+  html,body{background:#fff;color:#000}
+  .skip{display:none}
+  section{break-inside:auto;padding:16px 0}
+  figure,.card,.day{break-inside:avoid}
+  h2,h3,.section-sub{break-after:avoid}
+  .scroll{overflow:visible} .scroll svg{min-width:0} .scroll-hint{display:none}
+  a{color:#000}
+  a[href^="../"]::after{content:" (" attr(href) ")";font-size:10px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap">
+  <p class="kicker">Zero-to-hero Stage 2 · Data reality · local visual review · Markdown is the source of truth</p>
+  <h1>Meridian AI service agent: real inputs, and exactly what the agent must do with them</h1>
+  <div class="status-banner" role="status"><span class="st decision">Your decision</span>
+    <div><strong>You checked all three uncertain examples on 2026-10-20</strong> (section 3). WP-3 changed the urgent-path rule: it now runs only when the customer says someone is in danger. The Stage 2 gate closes on your answers; Stage 3 (hard problems) waits for your go.</div></div>
+  <dl class="meta">
+    <dt>Review date</dt><dd>2026-10-20, about 20:00 CT; updated with your answers the same evening (built after the Markdown sources)</dd>
+    <dt>Sources (full documents)</dt><dd>
+      <a href="../data/README.md"><code>docs/data/README.md</code></a>: samples and coverage matrix · <code data-sha-for="docs/data/README.md">b4dae64b964b</code><br>
+      <a href="../data/worked-pairs.md"><code>docs/data/worked-pairs.md</code></a>: worked pairs WP-1 to WP-8 · <code data-sha-for="docs/data/worked-pairs.md">5e67c9aaa5dc</code></dd>
+    <dt>Refresh</dt><dd>If either source changes, this page is rebuilt and checked before you sign off.</dd>
+  </dl>
+  <ul class="legend" data-legend aria-label="Status legend">
+    <li><span class="st fact" data-legend-item="fact">Fact</span> from the issued data</li>
+    <li><span class="st decision" data-legend-item="decision">Your decision</span> chosen on 2026-10-20</li>
+    <li><span class="st proposal" data-legend-item="proposal">Proposal</span> Claude proposes; not yours yet</li>
+    <li><span class="st unknown" data-legend-item="unknown">Unknown</span> not established</li>
+    <li><span class="st awaiting" data-legend-item="awaiting">Awaiting approval</span> your check is needed</li>
+  </ul>
+</div></header>
+<main id="main" class="wrap">
+
+<section aria-labelledby="sum-h" data-visual="summary"><h2 id="sum-h">At a glance</h2>
+  <div class="grid three">
+    <article class="card" data-status="fact"><h3>14 samples <span class="st fact">Fact</span></h3><p class="big">10 calls, 3 help-file pieces, 1 database extract.</p><p class="src">Chosen on purpose: every source, every type, the strange ones.</p></article>
+    <article class="card" data-status="proposal"><h3>8 worked examples <span class="st proposal">Proposal</span></h3><p class="big">One for every core workflow. 5 hard, 3 easy.</p><p class="src">Required outputs come from the current help files and database, never from what a human agent said.</p></article>
+    <article class="card" data-status="fact"><h3>A new data trap <span class="st fact">Fact</span></h3><p class="big">69% of existing appointments list an issue that doesn't match the booked service.</p><p class="src">109 of 159 rows. README D-11.</p></article>
+    <article class="card" data-status="decision"><h3>Checked by you <span class="st decision">Your decision</span></h3><p class="big">3 uncertain examples answered.</p><p class="src">Section 3. One of them narrowed the urgent path.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="story-h" data-visual="story"><h2 id="story-h">The story so far</h2>
+  <p class="lede">Stage 1 settled what we build: an agent that answers Meridian's questions from its own help files, books in its database, and hands the rest to people honestly. Stage 2 checks that against real inputs before any design.</p>
+  <p>We picked real calls and files that cover each kind of request, and especially the risky ones: an outdated file that looks like the right answer, a $49 fee that must come before a change, a gas-type emergency, a policy gap, and a task the systems can't finish. For each, we wrote down exactly what the agent must do. Where the call's customer isn't in the database, we kept their words and swapped in a real database customer, and we say so.</p>
+</section>
+
+<section aria-labelledby="cov-h"><h2 id="cov-h">1 · What the samples cover</h2>
+  <p class="section-sub">Rows are kinds of request. Columns are where the data comes from. A filled cell names the sample or worked example that covers it.</p>
+  <figure>
+    <p class="scroll-hint">Diagram: swipe sideways. The table below says the same thing.</p>
+    <div class="scroll" tabindex="0" aria-label="Coverage diagram, scrolls sideways">
+    <svg viewBox="0 0 1040 380" role="img" aria-labelledby="cv1 cv2">
+      <title id="cv1">Coverage of request types by source and worked example</title>
+      <desc id="cv2">Nine request types against four sources: calls, help files, the image, and the database, with the worked example for each.</desc>
+      <text x="10" y="24" class="strong">Request type</text><text x="300" y="24" class="strong">Calls</text><text x="440" y="24" class="strong">Help files</text><text x="620" y="24" class="strong">Image</text><text x="720" y="24" class="strong">Database</text><text x="900" y="24" class="strong">Example</text>
+      <g>
+        <text x="10" y="60">Membership answers</text><rect class="node fact" x="290" y="42" width="120" height="28" rx="6"/><text x="300" y="61" class="small">S1, S10</text><rect class="node fact" x="430" y="42" width="170" height="28" rx="6"/><text x="440" y="61" class="small">current + stale twin</text><rect class="node fact" x="710" y="42" width="160" height="28" rx="6"/><text x="720" y="61" class="small">tier, renewal</text><rect class="node proposal" x="890" y="42" width="130" height="28" rx="6"/><text x="900" y="61" class="small">WP-1, WP-8</text>
+        <text x="10" y="96">Billing questions</text><rect class="node fact" x="290" y="78" width="120" height="28" rx="6"/><text x="300" y="97" class="small">S2</text><rect class="node fact" x="430" y="78" width="170" height="28" rx="6"/><text x="440" y="97" class="small">FAQ, fees, prices</text><rect class="node fact" x="710" y="78" width="160" height="28" rx="6"/><text x="720" y="97" class="small">INV-204411</text><rect class="node awaiting" x="890" y="78" width="130" height="28" rx="6"/><text x="900" y="97" class="small">WP-2 check</text>
+        <text x="10" y="132">Disputes, refunds</text><rect class="node fact" x="290" y="114" width="120" height="28" rx="6"/><text x="300" y="133" class="small">S3, S4</text><rect class="node fact" x="430" y="114" width="170" height="28" rx="6"/><text x="440" y="133" class="small">escalation policy</text><rect class="node proposal" x="890" y="114" width="130" height="28" rx="6"/><text x="900" y="133" class="small">WP-7</text>
+        <text x="10" y="168">New booking</text><rect class="node fact" x="290" y="150" width="120" height="28" rx="6"/><text x="300" y="169" class="small">S5</text><rect class="node fact" x="430" y="150" width="170" height="28" rx="6"/><text x="440" y="169" class="small">windows, member fee</text><rect class="node fact" x="710" y="150" width="160" height="28" rx="6"/><text x="720" y="169" class="small">slots, customers</text><rect class="node awaiting" x="890" y="150" width="130" height="28" rx="6"/><text x="900" y="169" class="small">WP-3 check</text>
+        <text x="10" y="204">Appointment changes</text><rect class="node fact" x="290" y="186" width="120" height="28" rx="6"/><text x="300" y="205" class="small">S6</text><rect class="node fact" x="430" y="186" width="170" height="28" rx="6"/><text x="440" y="205" class="small">24 h, $49</text><rect class="node fact" x="710" y="186" width="160" height="28" rx="6"/><text x="720" y="205" class="small">appointment 1</text><rect class="node proposal" x="890" y="186" width="130" height="28" rx="6"/><text x="900" y="205" class="small">WP-4</text>
+        <text x="10" y="240">Safety</text><rect class="node fact" x="290" y="222" width="120" height="28" rx="6"/><text x="300" y="241" class="small">S7</text><rect class="node fact" x="430" y="222" width="170" height="28" rx="6"/><text x="440" y="241" class="small">safety policy</text><rect class="node proposal" x="890" y="222" width="130" height="28" rx="6"/><text x="900" y="241" class="small">WP-5</text>
+        <text x="10" y="276">Burning smell (gap)</text><rect class="node fact" x="290" y="258" width="120" height="28" rx="6"/><text x="300" y="277" class="small">S8</text><rect class="node fact" x="430" y="258" width="170" height="28" rx="6"/><text x="440" y="277" class="small">breaker condition</text><rect class="node awaiting" x="890" y="258" width="130" height="28" rx="6"/><text x="900" y="277" class="small">WP-6 check</text>
+        <text x="10" y="312">Can't complete (D4)</text><rect class="node fact" x="290" y="294" width="120" height="28" rx="6"/><text x="300" y="313" class="small">S10</text><rect class="node fact" x="430" y="294" width="170" height="28" rx="6"/><text x="440" y="313" class="small">cancel rules</text><rect class="node fact" x="710" y="294" width="160" height="28" rx="6"/><text x="720" y="313" class="small">no auto-renew field</text><rect class="node proposal" x="890" y="294" width="130" height="28" rx="6"/><text x="900" y="313" class="small">WP-8</text>
+        <text x="10" y="348">Hours and holidays</text><rect class="node fact" x="430" y="330" width="170" height="28" rx="6"/><text x="440" y="349" class="small">FAQ hours</text><rect class="node fact" x="610" y="330" width="90" height="28" rx="6"/><text x="618" y="349" class="small">S13 image</text><text x="900" y="349" class="small">0 calls ask</text>
+      </g>
+    </svg></div>
+    <figcaption><span class="st fact">Fact</span> samples from the issued data · <span class="st proposal">Proposal</span> worked examples · <span class="st awaiting">Awaiting approval</span> your check.</figcaption>
+    <ol class="words"><li>Every kind of request has at least one real call, the help file that answers it, and (where needed) the database records.</li><li>Every core workflow has a worked example. Warranty is covered by samples only, which light mode allows.</li><li>No call asks about hours or holidays, but the holiday image is still sampled, because the agent must read it.</li></ol>
+  </figure>
+  <div class="grid">
+    <article class="card" data-status="fact"><h3>D-11 · Appointment details don't match <span class="st fact">Fact</span></h3><p>109 of 159 existing appointments list an issue that doesn't fit the service booked, e.g. "AC not cooling" booked as plumbing. So the agent confirms the booked service, date, window and technician, and treats the issue text as "as recorded".</p><p class="src">README D-11.</p></article>
+    <article class="card" data-status="fact"><h3>D-12 · A fee example needed a stand-in <span class="st fact">Fact</span></h3><p>No test customer has an appointment within 24 hours. Appointment 1 (customer MHC-57204, today 12–4pm) does, so WP-4 uses it.</p><p class="src">README D-12.</p></article>
+    <article class="card" data-status="fact"><h3>Partly synthetic examples <span class="st fact">Fact</span></h3><p>No caller in the calls exists in the database. Four examples keep the caller's words but use a real database customer, and say so.</p><p class="src">README; inventory §1.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="wp-h"><h2 id="wp-h">2 · The worked examples</h2>
+  <p class="section-sub">Each card shows the real input, what the agent must do, and what makes it hard.</p>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>Example</th><th>Input (real words)</th><th>Required output</th><th>Gap</th><th>Rating</th></tr></thead>
+    <tbody>
+      <tr data-status="proposal"><td><strong>WP-1</strong> membership</td><td>"What does the Comfort Club membership actually include?" · "And how much is it?" · "Does it cover plumbing?"</td><td>From the current file: $189/yr or $16.99/mo (12-month minimum), what's included, Plus $269 for plumbing. Cite the file. Never $149, $12.99 or "refund any time" (the outdated copy).</td><td>The outdated copy is nearly the same text</td><td><span class="st proposal">easy · sure</span></td></tr>
+      <tr data-status="decision"><td><strong>WP-2</strong> invoice</td><td>"I got an invoice … and I'm not sure what it's for."</td><td>Code to the phone on record → read INV-204411: $89 diagnostic, $245 contactor, $144 after-hours; $478 unpaid, due Nov 1. Explain as billed ($144), never judge; $149 isn't raised unprompted. Email copy → offer a person. A dispute → handoff, 1 business day.</td><td>The bill disagrees with policy ($144 vs $149; no diagnostic credit line)</td><td><span class="st decision">hard · checked</span></td></tr>
+      <tr data-status="decision"><td><strong>WP-3</strong> no cooling</td><td>"My AC isn't cooling." · "This Saturday if possible, 4 to 7, after work."</td><td>Nobody is said to be in danger, so a normal booking: no emergency number, no P1 case; skippable urgency questions go in the booking note. Code → no Saturday evening slot exists → offer Mon Oct 19 8–12 (Marta), 12–4 (Ray), 1–5 (Marta) → book. Member: diagnostic fee waived.</td><td>Telling "uncomfortable" from "in danger"; booking rules, zone and member fee</td><td><span class="st decision">hard · checked</span></td></tr>
+      <tr data-status="decision"><td><strong>WP-4</strong> reschedule</td><td>"I have a tech coming … but something came up. Can I move it?"</td><td>Code → appointment today 12–4pm, 2 hours away → explain "a $49 late-change fee applies under current policy" → <strong>never move it, even on a yes</strong> (your Stage 3 decision) → P2 staff change request due at 12:00; "your 12–4 visit stays until a representative confirms"; say plainly no one can promise to confirm before then. Never "charged". No waiver.</td><td>Fee timing on the fixed clock; refusing the write; a fast enough handoff</td><td><span class="st decision">hard · sure (revised)</span></td></tr>
+      <tr data-status="proposal"><td><strong>WP-5</strong> CO alarm</td><td>"My carbon monoxide detector is going off."</td><td>First words, the KB's own: leave the home immediately and call 911 or the gas utility from outside, no switches. Contact optional after. P0 case. No time promised.</td><td>None: a fixed rule in code</td><td><span class="st decision">easy · sure</span></td></tr>
+      <tr data-status="decision"><td><strong>WP-6</strong> burning smell</td><td>"I smell something burning from the vents."</td><td>Ask: breaker already tripped? smoke, sparks, flames? (Don't send them to the panel.) Yes → safety. No → urgent booking. Unsure → conditional instruction, emergency number, P1 case; nothing beyond the help files.</td><td>A policy gap; agents booked these as routine</td><td><span class="st decision">hard · checked</span></td></tr>
+      <tr data-status="proposal"><td><strong>WP-7</strong> refund</td><td>"I want a full refund on the repair. It didn't fix anything…"</td><td>No refund promised. Handoff: "A representative will get to your refund request within 2 business days", a reference, email or phone. Claims kept apart.</td><td>Promise from the policy table</td><td><span class="st decision">easy · sure</span></td></tr>
+      <tr data-status="proposal"><td><strong>WP-8</strong> cancel membership</td><td>"I want to cancel my Comfort Club membership." · "Just make sure it doesn't renew."</td><td>Code → renewal Nov 3 → explain the rules with no pressure → "I can't switch off auto-renewal from this chat" → staff case to do it before Nov 3. Never "done".</td><td>Policy allows it; the systems can't do it</td><td><span class="st decision">hard · sure</span></td></tr>
+    </tbody></table></div>
+  <figure>
+    <p class="scroll-hint">Diagram: swipe sideways. The list below says the same thing.</p>
+    <div class="scroll" tabindex="0" aria-label="Burning smell decision diagram, scrolls sideways">
+    <svg viewBox="0 0 1040 250" role="img" aria-labelledby="bs1 bs2">
+      <title id="bs1">WP-6: the burning-smell path</title>
+      <desc id="bs2">The agent asks two questions. Yes to either leads to the safety instruction. Clearly no to both leads to an urgent booking. Unsure leads to the cautious answer.</desc>
+      <defs><marker id="ah5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="node fact" x="20" y="95" width="210" height="60" rx="8"/><text x="30" y="118" class="strong">"I smell burning"</text><text x="30" y="137" class="small">no breaker information</text>
+      <rect class="node decision" x="290" y="85" width="260" height="80" rx="8"/><text x="300" y="108" class="strong">Ask two questions</text><text x="300" y="127" class="small">breaker already tripped?</text><text x="300" y="144" class="small">smoke, sparks or flames?</text>
+      <rect class="node decision" x="640" y="15" width="380" height="56" rx="8"/><text x="650" y="38" class="strong">Yes → leave home, call 911 (P0)</text><text x="650" y="56" class="small">the safety rule, word for word</text>
+      <rect class="node decision" x="640" y="97" width="380" height="56" rx="8"/><text x="650" y="120" class="strong">No to both → urgent booking</text><text x="650" y="138" class="small">plus a priority case</text>
+      <rect class="node decision" x="640" y="179" width="380" height="56" rx="8"/><text x="650" y="202" class="strong">Unsure → cautious answer (P1)</text><text x="650" y="220" class="small">help-file words only; no "turn it off" (WP-6)</text>
+      <path class="arrow" d="M230,125 L290,125" marker-end="url(#ah5)"/>
+      <path class="arrow" d="M550,110 L640,45" marker-end="url(#ah5)"/>
+      <path class="arrow" d="M550,125 L640,125" marker-end="url(#ah5)"/>
+      <path class="arrow" d="M550,140 L640,205" marker-end="url(#ah5)"/>
+    </svg></div>
+    <figcaption><span class="st decision">Your decision</span> D2, and the cautious wording you checked (WP-6).</figcaption>
+    <ol class="words"><li>The agent asks whether a breaker has already tripped, and whether there is smoke, sparks or flames, without sending the customer to the panel.</li><li>Yes to either: the safety instruction and a P0 case.</li><li>Clearly no to both: an urgent booking with a priority case.</li><li>Unsure: the cautious answer, the emergency number and a P1 case.</li></ol>
+  </figure>
+</section>
+
+<section aria-labelledby="ask-h"><div class="ask" data-status="decision">
+  <h2 id="ask-h">3 · What you checked, and your answers</h2>
+  <p><span class="st decision">Your decision</span> <strong>Stage 2 gate:</strong> every uncertain example is now checked by you (2026-10-20).</p>
+
+  <article class="card" data-status="decision" data-ask="WP-2">
+    <h3>WP-2 · The $144 vs $149 after-hours fee <span class="st decision">You: explain as billed, $144</span></h3>
+    <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>Omar asks what his $478 bill is for. After the code, the agent reads his invoice: diagnostic $89, contactor $245, after-hours $144.</p></div>
+    <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Meridian's fee schedule says after-hours is $149, not $144. Should the agent point that out on its own, or only if Omar asks?</p></div>
+    <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>Saying it invites a dispute and looks like the agent judging the bill. Staying silent hides a fact. The agent is told to explain, never judge.</p></div>
+    <div class="part" data-part="why-asked"><h3>Why we asked you, and what your answer changed</h3><p>It sets how every invoice answer is worded and which billing tests count as correct.</p></div>
+    <p><strong>Your answer ("wp2 144"):</strong> the agent explains the line as billed, $144, and doesn't raise $149 on its own. If Omar questions the line, the team can review it and the chat hands off. The mismatch always goes into the staff brief.</p>
+  </article>
+
+  <article class="card" data-status="decision" data-ask="WP-3">
+    <h3>WP-3 · Which "AC not cooling" chats get the urgent path <span class="st decision">You: only when someone is in danger</span></h3>
+    <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>Linda says her AC isn't cooling and wants a Saturday evening visit. The earlier rule sent every no-heat, no-cooling or leak report to the emergency number and a priority case.</p></div>
+    <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>About 53 of the 75 HVAC booking calls report no heat, no cooling or water pooling. Each would have opened a priority case and shown the emergency number, even when the customer only needs a visit.</p></div>
+    <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>Priority cases are meant to stand out. If most bookings create one, staff stop noticing them. But a home that is dangerously hot or cold for someone vulnerable must not wait in the booking queue.</p></div>
+    <div class="part" data-part="why-asked"><h3>Why we asked you, and what your answer changed</h3><p>It sets how many cases staff see, how the supervisor view counts priority work, and which booking tests expect the emergency number.</p></div>
+    <p><strong>Your answer:</strong> the urgent path runs "only … if they're stating its an emergency as in someone is in danger as a result of the conditions described". Linda books normally. The short urgency questions stay, inside the booking, so a customer can say so. This narrows OD-4 (ii) and PRD R-8.</p>
+  </article>
+
+  <article class="card" data-status="decision" data-ask="WP-6">
+    <h3>WP-6 · Add "turn the system off"? <span class="st decision">You: no</span></h3>
+    <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>A customer smells burning from the vents but can't say whether a breaker tripped. The agent gives the cautious answer: the safety triggers, the emergency number, and a priority case.</p></div>
+    <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Should the cautious answer also say "turn the system off at the thermostat"? It sounds sensible, but no Meridian help file says it for a burning smell.</p></div>
+    <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>Safety advice we invent is advice the company never approved. The audit's rule is to add nothing beyond the help files. But a customer may expect a practical step.</p></div>
+    <div class="part" data-part="why-asked"><h3>Why we asked you, and what your answer changed</h3><p>It sets the exact safety wording the agent uses and tests for. The parked code includes this line, so it is removed when the build starts.</p></div>
+    <p><strong>Your answer ("i take only your recommendation"):</strong> no. Only the help files' words. The KB's "turn the system off" step stays limited to water pooling at the indoor unit.</p>
+  </article>
+
+  <p><strong>What this means:</strong> the three examples are set and the Stage 2 gate closes on your answers. Stage 3 (hard problems) starts from the five hard examples when you say go. Nothing is built.</p>
+</div></section>
+</main>
+<footer class="wrap">Local file, not published. The Markdown sources are the source of truth; this page is a synthesis built after them. If a source changes, the page is rebuilt and checked with the zero-to-hero <code>check_review_page.py</code> before any sign-off.</footer>
+
+</body>
+</html>

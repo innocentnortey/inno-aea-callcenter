@@ -1,0 +1,25 @@
+/* G1 chat core motion. Opacity only; nothing animates under reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .landed { position: relative; }
+  .landed::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--landed-wash);
+    border-bottom: 1px solid var(--landed-edge);
+    pointer-events: none;
+    opacity: 0;
+    animation: chat-landed calc(var(--dur-landed-in) + var(--dur-landed-hold) + var(--dur-landed-out)) var(--ease-enter) 1;
+  }
+  @keyframes chat-landed {
+    0% { opacity: 0; }
+    13.3% { opacity: 1; }
+    66.7% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  .chat-fade-in { animation: chat-fade var(--dur-fade) var(--ease-enter) 1; }
+  @keyframes chat-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}

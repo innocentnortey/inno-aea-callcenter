@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+/* Semantic tier (design.md 4.2), light values. Dark overrides live in dark.css. Components read these, never primitives. */
+@theme static {
+  --color-*: initial; /* removes Tailwind's default palette: no red/amber/orange utilities exist */
+
+  /* @semantic (21) */
+  --color-canvas: var(--cool-100);
+  --color-surface: var(--cool-0);
+  --color-surface-rail: var(--cool-25);
+  --color-surface-well: var(--cool-50);
+  --color-surface-selected: var(--cool-100);
+  --color-border-hair: var(--cool-150);
+  --color-border-control: var(--mid-500);
+  --color-customer: var(--emerald-50);
+  --color-customer-edge: var(--emerald-100);
+  --color-text: var(--cool-900);
+  --color-text-muted: var(--cool-600);
+  --color-accent: var(--emerald-700);
+  --color-on-accent: var(--cool-0);
+  --color-focus: var(--emerald-700);
+  --color-send: var(--cool-800);
+  --color-on-send: var(--cool-0);
+  --color-person: var(--indigo-900);
+  --color-on-person: var(--cool-0);
+  --color-safety: var(--red-700);
+  --color-on-safety: var(--cool-0);
+  --color-scrim: rgb(16 18 22 / 0.5);
+
+  /* @radius (7) */
+  --radius-frame: 24px;
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-tag: 6px;
+  --radius-tip: 4px;
+  --radius-sharp: 0px;
+  --radius-round: 50%;
+
+  /* @type (16) */
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+  --text-section: 12px;
+  --text-section--line-height: 16px;
+  --text-small: 13px;
+  --text-small--line-height: 18px;
+  --text-ui: 14px;
+  --text-ui--line-height: 20px;
+  --text-body: 15px;
+  --text-body--line-height: 22px;
+  --text-card-title: 15px;
+  --text-card-title--line-height: 20px;
+  --text-name: 16px;
+  --text-name--line-height: 22px;
+  --text-lead: 18px;
+  --text-lead--line-height: 26px;
+  --text-title: 20px;
+  --text-title--line-height: 26px;
+  --text-signal: 18px;
+  --text-signal--line-height: 20px;
+  --text-code: 24px;
+  --text-code--line-height: 28px;
+  --text-ref: 13px;
+  --text-ref--line-height: 18px;
+  --text-time-hero: 28px;
+  --text-time-hero--line-height: 32px;
+  --text-time-due: 18px;
+  --text-time-due--line-height: 26px;
+  --text-time-row: 15px;
+  --text-time-row--line-height: 22px;
+  --text-time-meta: 12px;
+  --text-time-meta--line-height: 16px;
+
+  --font-display: "Instrument Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, Menlo, monospace;
+}

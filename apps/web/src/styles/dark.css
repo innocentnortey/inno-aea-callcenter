@@ -1,0 +1,55 @@
+/* Dark theme (design.md 7, 4.2 dark column). Secondary; light is the default (theme.ts always sets data-theme). */
+:root {
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: var(--night-950);
+    --color-surface: var(--night-850);
+    --color-surface-rail: var(--night-900);
+    --color-surface-well: var(--night-800);
+    --color-surface-selected: var(--night-700);
+    --color-border-hair: var(--night-650);
+    --color-border-control: var(--mid-500);
+    --color-customer: var(--emerald-900);
+    --color-customer-edge: var(--emerald-800);
+    --color-text: var(--night-100);
+    --color-text-muted: var(--night-300);
+    --color-accent: var(--emerald-500);
+    --color-on-accent: var(--emerald-950);
+    --color-focus: var(--emerald-500);
+    --color-send: var(--night-200);
+    --color-on-send: var(--cool-900);
+    --color-person: var(--indigo-300);
+    --color-on-person: var(--indigo-950);
+    --color-safety: var(--red-600);
+    --color-on-safety: var(--cool-0);
+    --color-scrim: rgb(0 0 0 / 0.6);
+    --elev-popover: 0 0 0 1px var(--color-border-hair);
+  }
+}
+:root[data-theme="dark"],
+[data-kit-theme="dark"] {
+  --color-canvas: var(--night-950);
+  --color-surface: var(--night-850);
+  --color-surface-rail: var(--night-900);
+  --color-surface-well: var(--night-800);
+  --color-surface-selected: var(--night-700);
+  --color-border-hair: var(--night-650);
+  --color-border-control: var(--mid-500);
+  --color-customer: var(--emerald-900);
+  --color-customer-edge: var(--emerald-800);
+  --color-text: var(--night-100);
+  --color-text-muted: var(--night-300);
+  --color-accent: var(--emerald-500);
+  --color-on-accent: var(--emerald-950);
+  --color-focus: var(--emerald-500);
+  --color-send: var(--night-200);
+  --color-on-send: var(--cool-900);
+  --color-person: var(--indigo-300);
+  --color-on-person: var(--indigo-950);
+  --color-safety: var(--red-600);
+  --color-on-safety: var(--cool-0);
+  --color-scrim: rgb(0 0 0 / 0.6);
+  --elev-popover: 0 0 0 1px var(--color-border-hair);
+}

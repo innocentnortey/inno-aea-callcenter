@@ -1,254 +1,231 @@
-# Source Register
+# Source Register — AEA Call Center Agent
 
 **Owner of:** every source this project relies on: where it is, how authoritative it is, when it
-was reviewed, and what it supports. Other documents cite sources by `S-N`. IDs are stable and
-grouped by company, not strictly in order.
+was reviewed, and what it supports. Other documents cite sources by `S-N`.
+
+**IDs.** New sources for the call-center brief start at **S-100**. The AEA context rows keep their
+IDs from the Project 1 register (now archived at
+[`../archive/project-1-onboarding/source/source-register.md`](../archive/project-1-onboarding/source/source-register.md)),
+so citations in the archive still resolve. Unused IDs below S-100 belong to that archive.
 
 **Authority labels:**
 - **ISSUED:** a document from the partner, via Gauntlet. It is what gets graded.
+- **ISSUED-DATA:** a data asset the partner hands over (transcripts, knowledge base, scheduling DB).
+  Issued, but deliberately messy: the brief says none of it is guaranteed clean.
 - **DERIVED:** our own analysis.
 - **EVIDENCE:** our own record of public data.
-- **CONTEXT-AEA:** AEA's own website.
-- **CONTEXT-CO:** a portfolio company's or practice's own website.
-- **CONTEXT-PEER:** another provider's published patient journey; an example, not evidence about an AEA company.
-- **PROFESSIONAL-GUIDANCE:** a professional association's practice guidance; not a universal operational or legal requirement.
-- **PRIMARY-LAW:** official statutory text; scope and effective law still depend on jurisdiction.
-- **PRIMARY-GUIDANCE:** regulator or standards-body guidance, not independent legal clearance.
-- **PRIMARY-VENDOR:** vendor terms/documentation; not proof of our account configuration or an executed agreement.
-
-Context sources prove what an organisation *publishes*, not how it operates (see
-`.claude/rules/source-authority.md`).
-
-**What "Reviewed" means:**
-- **2026-10-15 ✓:** fetched and checked in the research completion pass (see the section near the end).
-- **2026-10-14 ✓:** fetched and checked against the claims in this repo on 2026-10-14, during
-  project initialisation.
-- **2026-10-13/14 (notes):** read during the earlier Gauntlet research and recorded there; not
-  re-read in this session.
+- **CONTEXT-AEA:** AEA's own website. Shows what AEA publishes, not how it operates.
+- **PRIMARY-LAW / PRIMARY-GUIDANCE / PRIMARY-VENDOR:** statute or decision text, regulator or
+  standards-body guidance, vendor terms. Not legal clearance; scope depends on jurisdiction and
+  facts. **SECONDARY:** a law-firm or press summary, used where the primary site blocked access.
+- **INDUSTRY-RESEARCH:** a vendor's own survey or interview study; useful for ideation, with its
+  sampling and commercial incentives noted. **PRODUCT-REFERENCE:** first-party product guidance
+  showing an implementation pattern, not evidence that Meridian needs that feature.
+  **DESIGN-REFERENCE:** other designers' published visual work (e.g. Dribbble shots), used only as
+  internal reference for texture and component construction; credited, never copied into the product.
 
 ---
 
-## Provenance of the issued brief (S-1)
-
-| Field | Value |
-|---|---|
-| Local copy | `docs/source/aea-proj1-onboarding-assistant.md` (unchanged) |
-| Copied from | `Gauntlet AI/artifacts/2026-10-13-partner-briefs/aea-proj1-onboarding-assistant.md` |
-| Received | 2026-10-13, via the Gauntlet hiring-partner portal. The `Gauntlet AI` copy was itself copied from `~/Downloads` (companion doc header). |
-| Copied | 2026-10-14; byte-identical (`cmp` passed) |
-| SHA-256 | `0de4e06ea72524b1725af63fdd48a3fb364712d16c21f79c9b1d8e49a0011331` |
-| Rule | Never edit. A new version from the partner gets a new dated file and a new row here. |
-| Related | Riverside's onboarding brief sits beside the original in `Gauntlet AI/`. It is out of frame for this project for now. |
-
-## Local sources
+## Issued sources
 
 | ID | Source | Authority | Reviewed | Supports |
 |---|---|---|---|---|
-| S-1 | AEA Project 1 brief (above) | ISSUED | 2026-10-14 ✓ | Scope, required flows, edge cases, metrics (illustrative), stack, security, rubric, submission requirements; re-read for the audit's C1–C11 internal-consistency comparison on the same date |
-| S-2 | `Gauntlet AI/artifacts/2026-10-13-hiring-partner-project-choice-and-deadlines.md` (§0, §0.1, §2) | DERIVED | 2026-10-15 ✓ | General-domain finding and Riverside identity correction (§0); portfolio comparison carried into [fit review](../analysis/portfolio-fit-review.md) (§0.1); AEA context and role hypothesis (§2) |
-| S-3 | `Gauntlet AI/artifacts/2026-10-13-partner-projects-todo.md` (Project 1) | DERIVED | 2026-10-15 ✓ | Pipeline; historical T1–T13 hypotheses, superseded by the [local audit](../analysis/2026-10-14-brief-audit.md); dates feeding [SUBMISSION](../../SUBMISSION.md); GQ-19 identity closure |
-| S-4 | AEA portfolio inventory: [local copy](../evidence/2026-10-14-aea-portfolio-inventory.json), original at `Gauntlet AI/artifacts/2026-10-14-aea-portfolio-inventory.json` | EVIDENCE (our record of S-6 and the profiles) | 2026-10-14 ✓ | 118 profiles; 56 current/active; workflow groups. Copy is byte-identical; SHA-256 `20f9dc63f3a30cd57a2a03f34f738aec71e17d3c16cee78f013ad2d06f87e639` |
-| S-5 | `Gauntlet AI/open-questions.md` (GQ-18…GQ-20) | DERIVED | 2026-10-15 ✓ | GQ-19 Riverside identity resolved from first-party disclosures; GQ-18 shared submission and GQ-20 deadline remain open |
+| S-100 | Portal project page, *AEA FDE Challenge: AI Call Center Agent*, Version 1, last updated 10/16/2026 — [Part A of the briefing](aea-call-center-briefing.md#part-a--portal-project-page) (pasted by Innocent 2026-10-19) | ISSUED | 2026-10-19 ✓ | PRD summary, impact metrics, seven functional requirements, benchmarks, 2–3 day timebox, **five** required deliverables, AI-usage doc "Not-needed" |
+| S-101 | Attached PDF, *AEA FDE Challenge: AI Call Center Agent* (4 pages) — [`aea-investors-call-center.pdf`](aea-investors-call-center.pdf), text in [Part B of the briefing](aea-call-center-briefing.md#part-b--attached-pdf-aea-fde-challenge-ai-call-center-agent). SHA-256 `8482c765a915ef1cd5eb86d6712f14729bb809b1f3a787bea5503fded5201354` | ISSUED | 2026-10-19 ✓ | Scenario, the three data assets, seven required goals, voice extra credit, **three** deliverables, reviewer criteria ("Did you catch the traps?") |
+| S-102 | Call transcripts — `docs/data/issued/meridian_dataset/call_transcripts/` (420 files) + `call_transcripts_index.csv` | ISSUED-DATA | received 2026-10-20 ✓ (zip SHA-256 `ab143c1a…6422`, see `docs/data/issued/README.md`) | Call-driver discovery, test set |
+| S-103 | Knowledge base — `docs/data/issued/meridian_dataset/knowledge_base/` (17 files) | ISSUED-DATA | received 2026-10-20 ✓ | RAG corpus |
+| S-104 | Scheduling database — `docs/data/issued/meridian_dataset/scheduling_db/` (SQLite + CSVs + `SCHEMA.md`) | ISSUED-DATA | received 2026-10-20 ✓ | Availability check and booking write; expected booking behaviour; seeded test customers |
+| S-105 | Dataset README — `docs/data/issued/meridian_dataset/README.md` | ISSUED | 2026-10-20 ✓ | Company (Meridian Home Comfort, fictional Austin HVAC + plumbing), "today" = 2026-10-16, KB contradicts itself, `internal/` not for customers, reviewer tests bookings against the same DB |
 
-## AEA web sources
+## AEA context (carried from Project 1)
 
-| ID | URL | Authority | Reviewed | Supports |
+Used only for the business framing (`.claude/rules/hiring-partner-framing.md`). The brief's
+company is synthetic, so none of this shapes the product.
+
+| ID | Source | Authority | Reviewed | Supports |
 |---|---|---|---|---|
+| S-4 | AEA portfolio inventory: [local copy](../evidence/2026-10-14-aea-portfolio-inventory.json), original at `Gauntlet AI/artifacts/2026-10-14-aea-portfolio-inventory.json` | EVIDENCE (our record of S-6 and the profiles) | 2026-10-14 ✓ | 118 profiles; 56 current/active; workflow groups. SHA-256 `20f9dc63f3a30cd57a2a03f34f738aec71e17d3c16cee78f013ad2d06f87e639` |
 | S-6 | https://www.aeainvestors.com/portfolio/ | CONTEXT-AEA | 2026-10-14 (inventory) | The directory of 118 profiles |
 | S-7 | https://www.aeainvestors.com/elevate/ | CONTEXT-AEA | 2026-10-13/14 (notes) | Elevate covers business and healthcare services; SLATE framework |
 | S-8 | https://www.aeainvestors.com/middle-market-private-equity/ | CONTEXT-AEA | 2026-10-14 (notes) | Middle Market focuses on industrials |
 | S-9 | https://www.aeainvestors.com/team-member/avi-shah/ | CONTEXT-AEA | 2026-10-13 (notes) | Head of AI Solutions; former Salesforce Agentforce product director |
 | S-24 | https://www.aeainvestors.com/aea-elevate-adds-experienced-operating-professionals-to-further-accelerate-portfolio-value-creation/ | CONTEXT-AEA | 2026-10-13 (notes) | Elevate operating hires (Feb 2026); possible source of the SLATE wording. Which of S-7 or S-24 holds the quote was not recorded. |
 
-## Company web sources (anchor cohort)
+"Reviewed (notes)" means read during earlier Gauntlet research and not re-read since. Re-read
+before quoting any of these in the demo or interview.
 
-| ID | URL | Authority | Reviewed | Supports |
+## Legal, regulatory and vendor sources (brief audit, 2026-10-20)
+
+Verified 2026-10-20 by a research pass for [`../analysis/2026-10-20-brief-audit.md`](../analysis/2026-10-20-brief-audit.md) §6.
+"Mirror" = statute text read from a mirror because the official site blocked automated access.
+
+| ID | Source | Authority | Reviewed | Supports |
 |---|---|---|---|---|
-| S-10 | https://www.aeainvestors.com/portfolio/commonwealth-pain-spine/ | CONTEXT-AEA | 2026-10-14 ✓ | Current · Elevate · 2022 · Louisville; description; AEA board members |
-| S-11 | https://www.mypainsolution.com/about/new-patient-registration/ | CONTEXT-CO | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | What a *complete referral* from a referring provider contains (demographics incl. SSN, insurance cards, notes, imaging) — **not** a list of patient-entered fields; fax referral; new-patient scheduling phone and email; valid unexpired photo ID and the accepted ID types; downloads (new-patient letter S-72, NPP/bill of rights S-73). 2026-10-15: no list of "cities served" appeared in the fetched text; footprint now comes from S-69. |
-| S-12 | https://www.mypainsolution.com/faq/ | CONTEXT-CO | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | Arrival instructions (new patients 30 min early if forms not done; follow-ups 15 min; procedures 30 min); what to bring (insurance cards, photo ID, co-payment, recent imaging/consults); scheduling aim "within 10 days of referral or initial contact" and "within ten business days of initial contact"; **$50 fee for cancellations with <24 h notice; >10 min late may be rescheduled**; **self-pay "to accommodate uninsured patients only"**; payment plans; cost estimates; referral answers are inconsistent ("most insurance plans require a referral" vs "Some … Others allow you to schedule directly"); prior authorisation days to weeks; MVA after PIP exhausted; workers' comp needs authorisation; procedure prep (fasting, driver after sedation). **The 2026-10-14 reading missed the fee, self-pay and scheduling-aim items.** |
-| S-13 | https://www.aeainvestors.com/portfolio/american-dental-companies/ | CONTEXT-AEA | 2026-10-14 ✓ | Current · Elevate · 2024 · Phoenix; description |
-| S-14 | https://www.ameridentco.com/partner-practices | CONTEXT-CO | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | Practice network: 76 practice-profile links; 74 city/state entries across 15 states (AZ 26, CA 16, WA 6, WY 4, ID 3, PA 3, CO 2, AK 2, NM 2, GA 2, UT 2, FL 2, MD 2, MN 1, TX 1). Machine counts; the two methods differ by 2. |
-| S-15 | https://dentistinmeridian.com/frequently-asked-questions/ | CONTEXT-CO (one practice) | 2026-10-14 ✓; re-read 2026-10-15 ✓ (wording "Typically, you will be asked…" unchanged) | AdaCare: photo ID, insurance details, forms in advance |
-| S-16 | https://dentistinmeridian.com/new-patients/ | CONTEXT-CO (one practice) | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | AdaCare: **$89 new-patient exam and X-rays**; cleaning usually not the same day as the new-patient exam; all ages but very young children referred to a pediatric dentist; print forms or arrive 10 min early; first-visit contents; contact office with insurance before the visit; accepts most major dental insurance and files claims as a courtesy; financial consultation; CareCredit, payment plans, major credit cards; Book Now widget (S-83). |
-| S-17 | https://www.aeainvestors.com/portfolio/metro-vein-centers/ | CONTEXT-AEA | 2026-10-14 ✓ | Current · Elevate · New York; no investment date shown |
-| S-18 | https://www.metroveincenters.com/locations/new-york | CONTEXT-CO | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | Free evaluations in each NY clinic; 200+ plans incl. Medicare and Medicaid; 17 NY clinics with Google review counts. Network count now owned by S-89. |
-| S-19 | https://www.metroveincenters.com/privacy-policy | CONTEXT-CO | 2026-10-14 ✓; re-read 2026-10-15 ✓ | Chatbot for appointment requests, insurance verification and general inquiries; data stored in HubSpot; SMS programme sends opted-in appointment reminders and marketing |
-| S-20 | https://www.aeainvestors.com/portfolio/american-oncology-network/ | CONTEXT-AEA | 2026-10-14 ✓ | Current · Elevate · 2023 · Fort Myers; description |
-| S-21 | https://www.aoncology.com/practices/florida-oncology-and-hematology/ | CONTEXT-CO (one practice) | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | Links to the FOH new-patient packet (S-98), records release and NPP (S-99) and the practice site floridaonc.com (S-94); 5 offices in 4 cities (Cape Coral, Clearwater, Fort Myers, Naples ×2). |
-| S-22 | https://www.aeainvestors.com/portfolio/numotion/ | CONTEXT-AEA | 2026-10-14 ✓ | Current · Middle Market · 11/2018 · Nashville; description |
-| S-23 | https://www.numotion.com/order-process-and-timeline | CONTEXT-CO | 2026-10-14 ✓; **re-read 2026-10-15 ✓** | Four steps with stated times: evaluation about 1 week; **medical documentation about 2–4 weeks**; funding approval about 2–8 weeks; delivery process about 2–8 weeks (build 2–8 weeks, delivery ~1 week). |
+| S-110 | *Moffatt v. Air Canada*, 2024 BCCRT 149 — https://www.canlii.org/en/bc/bccrt/doc/2024/2024bccrt149/2024bccrt149.html; read via https://www.mccarthy.ca/en/insights/blogs/techlex/moffatt-v-air-canada-misrepresentation-ai-chatbot | PRIMARY-LAW (read via SECONDARY) | 2026-10-20 | L-1 chatbot statements bind the company |
+| S-111 | Tex. Bus. & Com. Code §17.46(b)(12), (b)(20); §17.50 — https://statutes.capitol.texas.gov/Docs/BC/htm/BC.17.htm (mirror https://texas.public.law/statutes/tex._bus._and_com._code_section_17.46) | PRIMARY-LAW (mirror) | 2026-10-20 | L-2 |
+| S-112 | 13 CFR §121.201 (NAICS 238220, $19M) — https://www.law.cornell.edu/cfr/text/13/121.201 | PRIMARY-LAW | 2026-10-20 | L-3 small-business threshold |
+| S-113 | Texas Data Privacy and Security Act (Bus. & Com. Code ch. 541) — summary https://www.dwt.com/blogs/privacy--security-law-blog/2023/07/texas-data-privacy-and-security-act-overview (AG page blocked) | SECONDARY | 2026-10-20 | L-3 |
+| S-114 | PCI SSC FAQ 1310 — https://www.pcisecuritystandards.org/faqs/1310/ (with FAQ 1085; PCI DSS v4.0.1 Req. 3.3.1, 3.3.1.2, 4.2.2) | PRIMARY-GUIDANCE | 2026-10-20 | L-4 |
+| S-115 | PCI SSC, *Protecting Telephone-Based Payment Card Data* v3.0 (2018) — https://listings.pcisecuritystandards.org/documents/Protecting_Telephone_Based_Payment_Card_Data_v3-0_nov_2018.pdf | PRIMARY-GUIDANCE | 2026-10-20 | L-4 |
+| S-116 | Tex. Penal Code §16.02(c)(4)(B) — mirror https://texas.public.law/statutes/tex._penal_code_section_16.02 | PRIMARY-LAW (mirror) | 2026-10-20 | L-5 one-party consent |
+| S-117 | Cal. Penal Code §§631, 632 — mirror https://california.public.law/codes/penal_code_section_632 | PRIMARY-LAW (mirror) | 2026-10-20 | L-5 all-party consent |
+| S-118 | *Ambriz v. Google LLC*, No. 3:23-cv-05437-RFL (N.D. Cal. 2025-02-10), 2025 WL 830450 — summary https://www.zwillgen.com/privacy/federal-judge-allows-google-customer-service-ai-class-action-to-proceed/ (docket blocked; current status uncertain) | SECONDARY | 2026-10-20 | L-5 AI vendor as "eavesdropper" |
+| S-119 | Cal. Bus. & Prof. Code §§17940–17941 (B.O.T. Act) — mirror https://california.public.law/codes/business_and_professions_code_section_17941 | PRIMARY-LAW (mirror) | 2026-10-20 | L-6 |
+| S-120 | Utah Code Title 13 ch. 77 (AI Policy Act, as amended 2025) — https://le.utah.gov/xcode/Title13/Chapter77/C13-77_2025050820250508.pdf; a 2026 amendment (ch. 95) not verified | PRIMARY-LAW | 2026-10-20 | L-6 |
+| S-121 | Texas HB 149 (TRAIGA), enrolled — https://capitol.texas.gov/tlodocs/89R/billtext/html/HB00149F.htm | PRIMARY-LAW | 2026-10-20 | L-6 |
+| S-122 | 15 U.S.C. §8403 (ROSCA) — https://www.law.cornell.edu/uscode/text/15/8403 | PRIMARY-LAW | 2026-10-20 | L-7 |
+| S-123 | FTC click-to-cancel vacatur (*Custom Communications v. FTC*, 8th Cir. 2025-07-08) — https://www.fenwick.com/insights/publications/eighth-circuit-vacates-ftcs-click-to-cancel-rule; California AB 2863 — https://btlaw.com/en/insights/alerts/2025/california-expands-automatic-renewal-law-new-requirements-now-in-effect; Texas auto-renewal survey — https://www.kelleydrye.com/viewpoints/blogs/ad-law-access/auto-renewal-laws-2025-round-up | SECONDARY | 2026-10-20 | L-7 |
+| S-124 | Gemini API Additional Terms — https://ai.google.dev/gemini-api/terms (updated 2026-04-28) | PRIMARY-VENDOR | 2026-10-20 | L-9 |
+| S-125 | Anthropic training policy and commercial terms — https://privacy.claude.com/en/articles/7996868-is-my-data-used-for-model-training · https://www.anthropic.com/legal/commercial-terms | PRIMARY-VENDOR | 2026-10-20 | L-9 |
+| S-126 | OpenAI API data controls — https://developers.openai.com/api/docs/guides/your-data | PRIMARY-VENDOR | 2026-10-20 | L-9 |
+| S-127 | ElevenLabs publishing and licence help — https://elevenlabs.io/docs/help-center/legal/can-i-publish-the-content-i-generate-on-the-platform | PRIMARY-VENDOR | 2026-10-20 | L-9 |
+| S-128 | Twilio AUP — https://www.twilio.com/en-us/legal/aup · Messaging Policy — https://www.twilio.com/en-us/legal/messaging-policy | PRIMARY-VENDOR | 2026-10-20 | L-9 |
+| S-129 | FCC Declaratory Ruling FCC 24-17 (AI voices under the TCPA) — https://docs.fcc.gov/public/attachments/FCC-24-17A1.pdf | PRIMARY-LAW | 2026-10-20 | L-9 outbound calls only |
+| S-130 | Texas Gas Service safety brochure — https://www.texasgasservice.com/media/Public%20Awareness/Safety%20Brochures/2022Feb-SafetyBrochure-TGS.pdf | PRIMARY-GUIDANCE | 2026-10-20 | L-10 |
+| S-131 | CDC carbon monoxide guidance — https://www.cdc.gov/hurricanes/safety/how-to-safely-stay-safe-after-a-hurricane-or-other-tropical-storm.html | PRIMARY-GUIDANCE | 2026-10-20 | L-10 |
 
-## Alternative-group evidence (used only in the fit review)
+## Service-team ideation sources (2026-10-20)
 
-All of these were read in the 2026-10-14 research and recorded in S-2 §0.1. **None was re-read in
-this session.** All are CONTEXT-CO.
+These inform [`../analysis/2026-10-20-service-team-ideation.md`](../analysis/2026-10-20-service-team-ideation.md).
+They do not override the issued brief or prove the needs of Meridian's fictional staff.
 
-| ID | URL | Supports |
-|---|---|---|
-| S-25 | https://www.nesfircroft.com/talent-acquisition-services/contract-staffing/assignment-support/ | NES: assignment support (mobility, work permits, welfare) |
-| S-26 | https://redglobal.com/anti-slavery | RED: identity and right-to-work checks, consultant onboarding |
-| S-27 | https://www.bespokepartners.com/ | Bespoke: executive search |
-| S-28 | https://50floor.com/schedule-now/ | 50 Floor: consultation-led sales |
-| S-29 | https://www.windownation.com/ | Window Nation: consultation-led sales |
-| S-30 | https://markspain.com/blog/how-to-get-a-guaranteed-offer-on-your-home | Mark Spain: property details before consultation |
-| S-31 | https://www.bmscat.com/ | BMS CAT: urgent property-damage restoration |
-| S-32 | https://www.montway.com/app/uploads/2024/07/prepare-vehicle-shipping-guide.pdf | Montway: inspection and bill-of-lading steps |
-| S-33 | https://www.magna5.com/managed-it-services/ | Magna5: account- and system-level managed IT |
-| S-34 | https://amerivet.com/partnership-locations | AmeriVet: practice directory |
-| S-35 | https://amerivet.com/blog/veterinary-appointment-scheduling?hs_amp=true | AmeriVet: scheduling discussion |
+| ID | Source | Authority | Reviewed | Supports |
+|---|---|---|---|---|
+| S-132 | Zendesk, [CX Trends 2026](https://cxtrends.zendesk.com/) and [report announcement](https://www.zendesk.com/in/newsroom/articles/ai-ushers-in-era-of-contextual-intelligence-redefining-customer-experience-in-2026/) — survey of more than 11,000 consumers and business leaders across 22 countries | INDUSTRY-RESEARCH | 2026-10-20 | Customers repeating their story across agents; contextual continuity as a service need. Vendor survey; not Meridian-specific. |
+| S-133 | Salesforce, [State of Service, Sixth Edition](https://www.salesforce.com/service/state-of-service-report/) — survey of more than 5,500 service professionals | INDUSTRY-RESEARCH | 2026-10-20 | Agent speed/quality tradeoff and multiple-screen information search. Vendor survey; not Meridian-specific. |
+| S-134 | Intercom, [Customer service team evolution](https://www.intercom.com/blog/new-research-customer-service-team-evolution) — analysis of 166 interviews with support leaders, managers and frontline specialists, drawn from Intercom customers or prospects | INDUSTRY-RESEARCH | 2026-10-20 | AI changes triage, routing, QA and frontline responsibilities. Customer/prospect sample limits generalization. |
+| S-135 | Microsoft Learn, [Customer summary in Omnichannel](https://learn.microsoft.com/en-us/dynamics365/unified-service-desk/oc-usd/customer-summary?view=dynamics-usd-4.3) | PRODUCT-REFERENCE | 2026-10-20 | Example of one-screen customer, conversation, case and timeline context for receiving agents. |
+| S-136 | Microsoft Learn, [Customer support assistance agent solution idea](https://learn.microsoft.com/en-us/power-platform/architecture/solution-ideas/customer-support-agent) | PRODUCT-REFERENCE | 2026-10-20 | Example of handoff with context, queue routing, agent workspace and escalation insights. |
+| S-137 | Microsoft Learn, [Bot dashboard](https://learn.microsoft.com/en-us/dynamics365/customer-service/use/oc-bot-dashboard) | PRODUCT-REFERENCE | 2026-10-20 | Distinguishing resolved, transferred and abandoned outcomes; its "deflection" definition includes abandonment, which this project's containment definition must not copy. |
 
-## Brief audit primary sources
+## Human-handoff research (product direction, 2026-10-20)
 
-Reviewed **2026-10-14** for the [brief audit](../analysis/2026-10-14-brief-audit.md).
-Claims are limited to the identified passages. Web documentation and account offerings can change;
-recheck selected services before use. Review means public source review, not contract execution,
-deployment verification or jurisdiction-specific legal clearance. S-48's indexed official passage
-was checked; direct page retrieval repeatedly failed. The other sources below were opened.
+Verified by three research passes for [`../analysis/2026-10-20-human-handoff-product-direction.md`](../analysis/2026-10-20-human-handoff-product-direction.md). **Outside evidence about real agents and customers, not about Meridian.** "Analogous" = another field (hospital, emergency department) used by analogy. Strength is the research pass's rating.
 
-| ID | Source and passage | Authority | Supports |
-|---|---|---|---|
-| S-36 | [Gemini API Additional Terms](https://ai.google.dev/gemini-api/terms?hl=en), effective March 23, 2026; Age Requirements, Use Restrictions, Unpaid/Paid Services | PRIMARY-VENDOR | Personal/sensitive input restriction, review/improvement use, age/region/medical-use limits |
-| S-37 | [Groq BAA](https://console.groq.com/docs/legal/customer-business-associate-addendum), §1.1 | PRIMARY-VENDOR | Covered Cloud Services exclude free/trial and other listed services |
-| S-38 | [Your Data in GroqCloud](https://console.groq.com/docs/your-data), retention sections | PRIMARY-VENDOR | Default inference behavior; feature-state and reliability/abuse exceptions, controls and retention |
-| S-39 | [HHS cloud computing guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/health-information-technology/cloud-computing/index.html), introduction and Q1–2 | PRIMARY-GUIDANCE | HIPAA role conditions; cloud BAA obligations including encrypted storage |
-| S-40 | [Supabase shared responsibility](https://supabase.com/docs/guides/deployment/shared-responsibility-model), Managing healthcare data | PRIMARY-VENDOR | At least Team plan for BAA, HIPAA add-on and configuration responsibilities |
-| S-41 | [HIPAA on Render](https://render.com/docs/hipaa-compliance), setup and important considerations | PRIMARY-VENDOR | Eligible workspaces/plans; free instances excluded; resource/log restrictions |
-| S-42 | [Railway compliance](https://docs.railway.com/enterprise/compliance), HIPAA BAA | PRIMARY-VENDOR | Shared responsibility and BAA add-on with paid monthly spend threshold |
-| S-43 | [Ollama FAQ](https://docs.ollama.com/faq), disabling cloud features | PRIMARY-VENDOR | Local-only mode requires actual configuration; cloud functionality exists |
-| S-44 | [FDA administrative-support software scope](https://www.fda.gov/medical-devices/digital-health-center-excellence/step-2-software-function-intended-administrative-support-health-care-facility) | PRIMARY-GUIDANCE | Administrative functions excluded by statutory provision; not clearance of clinical uses |
-| S-45 | [NIST AI 600-1](https://nvlpubs.nist.gov/nistpubs/ai/NIST.AI.600-1.pdf), July 2024, §§2.3, 2.7 and testing/evaluation actions | PRIMARY-GUIDANCE | Dangerous recommendations, human–AI interaction risks and contextual evaluation; voluntary guidance |
-| S-46 | [FTC dark-pattern report announcement](https://www.ftc.gov/news-events/news/press-releases/2022/09/ftc-report-shows-rise-sophisticated-dark-patterns-designed-trick-trap-consumers), September 2022 | PRIMARY-GUIDANCE | Manipulative data/consumer choice practices; does not condemn every help trigger |
-| S-47 | [European Commission AI Act Article 3](https://ai-act-service-desk.ec.europa.eu/en/ai-act/article-3), definition (39); [Recital 18](https://ai-act-service-desk.ec.europa.eu/en/ai-act/recital-18) | PRIMARY-LAW (Commission presentation) | Emotion-recognition definition based on biometric data; does not establish applicability to this demo |
-| S-48 | [Illinois BIPA §10](https://www.ilga.gov/legislation/ilcs/fulltext?DocName=074000140K10) | PRIMARY-LAW; official indexed passage, direct retrieval unavailable | Photograph/demographic exclusions and face-geometry inclusion; no determination of this project's jurisdiction or other state laws |
-| S-49 | [18 USC §1028, official text through October 7, 2026](https://uscode.house.gov/us/usc/119-118/t18/s1028/), (a), (c), (d) | PRIMARY-LAW | Identification-document offense elements and definitions; supports conservative fixture choice, not clearance of a specimen |
-| S-50 | [HHS medical-record retention FAQ](https://www.hhs.gov/hipaa/for-professionals/faq/does-hipaa-require-covered-entities-to-keep-medical-records-for-any-period/index.html) | PRIMARY-GUIDANCE | HIPAA Privacy Rule does not set medical-record retention; state law generally does; safeguards through disposal |
-| S-51 | [FTC COPPA FAQ](https://www.ftc.gov/business-guidance/resources/complying-coppa-frequently-asked-questions), A and H | PRIMARY-GUIDANCE | Child-directed services, actual knowledge and direct under-13 collection; FAQ flags April 2025 rule amendments, so not a complete current compliance checklist |
-| S-52 | [FTC Health Breach Notification Rule compliance guidance](https://www.ftc.gov/business-guidance/resources/complying-ftcs-health-breach-notification-rule-0) | PRIMARY-GUIDANCE | Conditional duties outside HIPAA for qualifying personal health record businesses |
-| S-53 | [PCI SSC FAQ 1217](https://www.pcisecuritystandards.org/faqs/1217/) | PRIMARY-GUIDANCE (industry standards body) | PCI DSS applies to storing, processing or transmitting cardholder data; industry standard, not general financial-data law |
-| S-54 | [OWASP LLM prompt-injection prevention](https://cheatsheetseries.owasp.org/cheatsheets/LLM_Prompt_Injection_Prevention_Cheat_Sheet.html) | PRIMARY-GUIDANCE (security guidance) | Direct/indirect instructions, least privilege and layered defenses |
-| S-55 | [Supabase JWT guidance](https://supabase.com/docs/guides/auth/jwts), verification | PRIMARY-VENDOR | Verify tokens with appropriate libraries; identity verification does not replace authorization |
-| S-56 | [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), Bypassing Row Level Security | PRIMARY-VENDOR | Privileged service role/DB roles may bypass RLS; keys and request context matter |
-| S-57 | [PostgreSQL constraints](https://www.postgresql.org/docs/current/ddl-constraints.html), unique and exclusion constraints | PRIMARY-VENDOR (official project documentation) | Database enforcement mechanisms; not proof of a future booking implementation |
-| S-58 | [k6 built-in metrics](https://grafana.com/docs/k6/latest/using-k6/metrics/reference/), http_req_duration and http_req_failed | PRIMARY-VENDOR | Duration boundaries and separate failure metric |
-| S-59 | [Render free-service limits](https://render.com/docs/free), idle spin-down | PRIMARY-VENDOR | 15-minute idle sleep, roughly one-minute restart and other free-service limits |
-| S-60 | [OWASP file upload guidance](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html) | PRIMARY-GUIDANCE (security guidance) | Layered format validation, authorization, limits and storage isolation |
-| S-61 | [W3C understanding timing adjustable](https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html), WCAG 2.2 SC 2.2.1 | PRIMARY-GUIDANCE (accessibility standard explanation) | User control over content time limits; not a jurisdiction-specific legal compliance verdict |
-| S-62 | [HHS de-identification guidance](https://www.hhs.gov/hipaa/for-professionals/special-topics/de-identification/index.html), methods and identifier conditions | PRIMARY-GUIDANCE | Removing a name alone does not establish de-identification |
+| ID | Source | Authority | Sample, sponsor, strength | Supports |
+|---|---|---|---|---|
+| S-138 | Brynjolfsson, Li & Raymond, *Generative AI at Work*, QJE 140(2), 2025 (NBER w31161, 2023) — https://arxiv.org/abs/2304.11771 | RESEARCH (field study) | 5,172 chat agents, one Fortune 500 software firm; vendor supplied data. Strong | Copilot gains for novices; 38% suggestion adoption; ~25% fewer manager requests |
+| S-139 | Wang, Zhu, Feng, Lu & Jia, *Agentic AI and Human-in-the-Loop Interventions* (Alibaba), arXiv 2605.14830, May 2026 — https://arxiv.org/abs/2605.14830 | RESEARCH (RCT) | 647 chat workers, 680,676 chats, Taobao, Aug 2024; authors may be Alibaba-affiliated. Strong | Escalated chats +19.1% time; frustration-triggered +40.8%; early human intervention limits harm |
+| S-140 | Wu et al. (Airbnb), *Incremental Summarization for Customer Support*, EMNLP 2025 Industry — https://arxiv.org/abs/2510.06677 | RESEARCH (company production study) | Production rollout, >92% of cases; >1,000-agent satisfaction survey; self-evaluated. Moderate | Notes 10%→3% of handle time; −3% to −9% time; agent edits as feedback |
+| S-141 | Mayilvaghanan, Gupta & Kumar (Observe.AI), *Spot the BlindSpots*, EMNLP 2025 Industry — https://aclanthology.org/2025.emnlp-industry.91/ | RESEARCH (vendor benchmark) | 2,500 real call transcripts, 20 models, LLM-judged (93.7% human agreement). Moderate | Summaries keep 53.67% of named entities, 67.46% of agent actions |
+| S-142 | Qin et al., *Customer Service Representative's Perception of the AI Assistant*, CSCW 2025 poster — https://arxiv.org/abs/2507.00513 | RESEARCH (qualitative) | 13 representatives, one Chinese utility call center. Weak–moderate | AI tickets need heavy editing; extra AI info a burden |
+| S-143 | UJET, *The Agent and AI Disconnect*, 2026 — https://assets.ujet.cx/resource-center-pdfs/UJET-Agent_Survey_Report.pdf | INDUSTRY-RESEARCH (vendor) | 250 US frontline agents, 500–5,000-employee firms. Moderate–weak | 93% feel need to double-check AI; 65% report customer repeat complaints; 81% use >4 tools |
+| S-144 | Salesforce, *State of Service*, 7th ed., 2025 — https://www.salesforce.com/en-us/wp-content/uploads/sites/4/documents/PDF/state-of-service-7th-edition.pdf | INDUSTRY-RESEARCH (vendor) | 6,500 service professionals, 40 countries, Apr–Jun 2025. Moderate on facts, weak on sentiment | Reps 46% of time with customers; caseload complexity shift; 40% rate AI handoff excellent |
+| S-145 | Calabrio, *2025 State of the Contact Center* (press release 2025-03-25) — https://www.silicon.co.uk/press-release/98-of-contact-centers-are-using-ai-and-61-are-experiencing-more-difficult-conversations-according-to-new-calabrio-research | INDUSTRY-RESEARCH (vendor) | 437 contact-center **managers**, 13 countries. Weak–moderate | 61% say conversations harder since AI; 32% cite agent distrust (manager view) |
+| S-146 | Five9 2026 Business Leaders CX Report, via CMSWire 2026-08-05 — https://www.cmswire.com/customer-experience/customers-the-ai-handoff-is-broken-contact-center-leaders-wont-hear-it/ | INDUSTRY-RESEARCH (vendor, secondary) | 3,000 consumers + 600 decision-makers, US/UK/DE. Moderate | 96% of leaders say context preserved vs consumers repeating themselves |
+| S-147 | CCW Digital / Liveops, *Tech vs. Humanity: Redefining the Agent Role*, Nov 2025 — https://liveops.com/wp-content/uploads/2026/05/WP_CCW-Liveops-Market-Study-Tech-vs-Humanity-Redefining-the-Agent-Role-compressed.pdf | INDUSTRY-RESEARCH (sponsored) | CX **leaders**, sample size not stated. Weak–moderate | Leaders report agent friction across tools (73%), missing context (56%) |
+| S-148 | Gamble (FOURCASTERS), *What Agents Really Think About AI*, No Jitter 2025-03-31 — https://www.nojitter.com/contact-centers/what-agents-really-think-about-ai-in-customer-service | INDUSTRY-RESEARCH | 152 US/UK agents, Feb 2025; sponsor not stated. Weak | 20% frequently double-check AI (contrast with S-143 wording) |
+| S-149 | CFPB, *Chatbots in Consumer Finance*, 2023-06-06 — https://files.consumerfinance.gov/f/documents/cfpb_chatbot-issue-spotlight_2023-06.pdf | REGULATOR | Complaint review + top-10-bank market scan. Strong qualitative, weak numeric | Doom loops; no offramp to a human; disputes unresolved |
+| S-150 | FCA (Critical Research), *Vulnerability review*, May 2024 — https://www.fca.org.uk/publication/external-research/vulnerability-review-improving-outcomes-consumers-engaging-financial-services-firms.pdf | REGULATOR | 1,500 UK adults + 20 depth interviews. Strong (qualitative for chatbot points) | Chatbots unable to resolve; repeating to multiple people |
+| S-151 | Hathaway, Emadi & Deshpande, *Don't Call Us, We'll Call You*, Management Science 67(3), 2021 — https://pubsonline.informs.org/doi/10.1287/mnsc.2020.3621 (summary https://www.kenan-flagler.unc.edu/news/dont-call-us/) | RESEARCH (empirical model) | One US bank call center. Strong | 37% callback acceptance; hold 3–6× more unpleasant; guaranteed windows cut hold up to 71% (simulated) |
+| S-152 | Kinch & Buell, *Mitigating the Negative Effects of Customer Anxiety by Facilitating Access to Human Contact*, Management Science 2025 — https://pubsonline.informs.org/doi/10.1287/mnsc.2022.01029 | RESEARCH (field + lab experiments) | Credit-union self-service loans. Strong | Inviting human contact raised loan uptake 24%, though few used it |
+| S-153 | Zhang & Narayandas, *Engaging Customers with AI in Online Chats*, Management Science 72(1), 2025 — summary https://aiinstitute.hbs.edu/?p=29426 | RESEARCH (RCT; summary only) | 138 agents, 250k+ chats, one year. Moderate–strong | Very fast human replies after handoff read as a bot |
+| S-154 | Gartner customer survey, press releases 2024-07-09 and 2024-08-19 — https://www.gartner.com/en/newsroom/press-releases/2024-07-09-gartner-survey-finds-64-percent-of-customers-would-prefer-that-companies-didnt-use-ai-for-customer-service | INDUSTRY-RESEARCH (analyst) | 5,728 customers, Dec 2023. Moderate–strong | 64% prefer no AI in service; top fear: harder to reach a person |
+| S-155 | Five9 Consumer CX Report (Hanover Research), 2026-10-14 — https://finviz.com/news/402484/ (Business Wire syndication) | INDUSTRY-RESEARCH (vendor) | 3,000 consumers US/UK/DE, Apr 2026. Moderate | 35% often/always repeat after AI→human; trust 26%→55% when a human is reachable |
+| S-156 | Starmer et al., *Changes in Medical Errors after Implementation of a Handoff Program* (I-PASS), NEJM 2014 — https://doi.org/10.1056/NEJMsa1405556 | RESEARCH (analogous, clinical) | 9 pediatric programs, 10,740 admissions; AHRQ-funded; no randomized control. Strong in domain | Structured handoff: −30% preventable adverse events, no added handoff time |
+| S-157 | Hartman et al., *LLM-Generated Emergency Medicine Handoff Notes*, JAMA Netw Open 2024 — https://jamanetwork.com/journals/jamanetworkopen/fullarticle/2827336 | RESEARCH (analogous, clinical) | 50 test cases, 3 physician raters. Moderate | Automatic metrics favoured AI notes; physicians rated them marginally inferior |
+| S-158 | Tang et al., *TofuEval*, NAACL 2024 — https://aclanthology.org/2024.naacl-long.251 | RESEARCH (benchmark) | Human-labelled LLM dialogue summaries (not customer service); AWS authors. Strong method | 40–50% of summaries with ≥1 inconsistency for most models; errors cluster in secondary topics |
+| S-159 | Ramprasad, Ferracane & Lipton, *Analyzing LLM Behavior in Dialogue Summarization*, ACL 2024 — https://aclanthology.org/2024.acl-long.677 | RESEARCH (benchmark) | Span-level human annotation, GPT-4 and Alpaca. Strong method | ~23% of GPT-4 summaries inconsistent; 38% of errors are circumstantial inference |
+| S-160 | Parasuraman & Manzey, *Complacency and Bias in Human Use of Automation*, Human Factors 52(3), 2010 — https://journals.sagepub.com/doi/10.1177/0018720810376055 | RESEARCH (review) | Integrative review. Strong | Complacency under multitasking; not cured by training |
+| S-161 | Bansal et al. CHI 2021 — https://arxiv.org/abs/2006.14779 · Buçinca et al. CSCW 2021 — https://arxiv.org/abs/2102.09692 · Vasconcelos et al. CSCW 2023 — https://arxiv.org/abs/2212.06823 | RESEARCH (experiments) | Lab experiments (199 and 731 participants for the latter two). Strong, lab tasks | Explanations raise acceptance regardless of correctness; over-reliance falls when checking is cheap |
+| S-162 | Ding et al., *Citations and Trust in LLM Generated Responses*, AAAI 2025 — https://arxiv.org/abs/2501.01303 | RESEARCH (experiment) | Live randomized experiment; self-reported trust. Moderate | Citations raise trust even when random; trust falls when checked |
+| S-163 | Mark, Gonzalez & Harris, CHI 2005 — https://www.interruptions.net/literature/Mark-CHI05-p321-mark.pdf · Mark, Gudith & Klocke, CHI 2008 — https://www.ics.uci.edu/~gmark/chi08-mark.pdf | RESEARCH (analogous, observational/experiment) | 24 IT workers (2005). Strong but old | Interrupted work: 25 min to resume; more stress and frustration |
+| S-164 | Song, Tucker & Murrell, *The Diseconomies of Queue Pooling*, Management Science 61(12), 2015 — https://pubsonline.informs.org/doi/fpi/10.1287/mnsc.2014.2118 | RESEARCH (analogous, ED) | One emergency department, diff-in-diff. Strong | Named-owner queues: 17% shorter stays than pooled |
+| S-165 | Ibanez, Clark, Huckman & Staats, *Discretionary Task Ordering*, Management Science 64(9), 2018 — https://pubsonline.informs.org/doi/suppl/10.1287/mnsc.2017.2810 | RESEARCH (analogous, radiology) | ~2.4M diagnoses. Strong | Cherry-picking short tasks reduces productivity |
+| S-166 | Hathaway, Kagan & Dada, *The Gatekeeper's Dilemma*, Operations Research 71(3), 2023 — https://pubsonline.informs.org/doi/references/10.1287/opre.2021.2211 | RESEARCH (model + lab) | Bank call-center motivated; behavioural experiments. Moderate–strong | Transfer penalties make agents hold cases they should pass on |
+| S-167 | Munichor & Rafaeli, *Numbers or Apologies?*, J. Applied Psychology 92(2), 2007 — doi 10.1037/0021-9010.92.2.511 | RESEARCH (field + simulation) | 123 calls + 83 participants. Moderate–strong | Queue-position information lowest abandonment |
+| S-168 | Yu, Allon & Bassamboo, *The Reference Effect of Delay Announcements*, Management Science 2021 (doi 10.1287/mnsc.2020.3870) · Akşin et al., Operations Research 2017 — https://pubsonline.informs.org/doi/fpi/10.1287/opre.2016.1542 | RESEARCH (field) | Bank call centers. Strong | Accurate delay announcements shape expectations and abandonment |
+| S-169 | Sax et al., *Evaluation of the Emergency Severity Index … Mistriage*, JAMA Netw Open 2023 — https://pubmed.ncbi.nlm.nih.gov/36930151/ | RESEARCH (analogous, ED) | 5,315,176 visits, 21 hospitals. Strong | 32.2% mistriage; urgent cases missed — urgency labels need rules + human override |
 
-## Related partner identity source
+## Home-services context for the company profile (2026-10-20)
 
-| ID | Source and passage | Authority | Supports |
-|---|---|---|---|
-| S-63 | [The Riverside Company regulatory disclosures](https://www.riversidecompany.com/regulatory-disclosures), reviewed 2026-10-15 | FIRST-PARTY COMPANY | Identifies Riverside Partners L.L.C. as doing business as The Riverside Company; corroborates the portal card's name and website. Context only; does not change the AEA brief or niche. |
+Verified 2026-10-20 (each page fetched and quoted) for [`../analysis/2026-10-20-meridian-company-service-profile.md`](../analysis/2026-10-20-meridian-company-service-profile.md).
+**Outside evidence about residential HVAC and plumbing service in general, not about Meridian.** S-130 (Texas Gas
+Service) and S-131 (CDC carbon monoxide) above are reused for gas and CO safety.
 
-## Sources added in the 2026-10-15 research completion pass
+| ID | Source | Authority | Reviewed | Supports |
+|---|---|---|---|---|
+| S-170 | CDC, *Heat and Older Adults (Aged 65+)*, page dated 2024-06-25 — https://www.cdc.gov/heat-health/risk-factors/heat-and-older-adults-aged-65.html | PRIMARY-GUIDANCE | 2026-10-20 | Air conditioning as main protection; don't rely on fans; why older adults are at higher risk |
+| S-171 | NWS Austin/San Antonio, *Climate Summary: Austin* — https://www.weather.gov/media/ewx/climate/ClimateSummary-ewx-Austin.pdf | PRIMARY-GUIDANCE (government data) | 2026-10-20 | Normal highs ≥90°F from May 26 to Sep 23; peak early August; 90 days ≥100°F in 2011 |
+| S-172 | ENERGY STAR, *Maintenance Checklist* — https://www.energystar.gov/saveathome/heating-cooling/maintenance-checklist | PRIMARY-GUIDANCE | 2026-10-20 | Cooling check in spring, heating in fall, "contractors get busy once summer and winter come"; condensate drain check |
+| S-173 | City of Austin, *Austin Water Cold Weather Tips* — https://www.austintexas.gov/department/austin-water-cold-weather-tips | PRIMARY-GUIDANCE (local utility) | 2026-10-20 | Know where the shutoff valve is; turn off water at the shutoff if a pipe bursts; renters ask the property manager |
+| S-174 | Trane, *Warranty and Registration* — https://www.trane.com/residential/en/resources/warranty-and-registration/ | PRIMARY-VENDOR (one manufacturer only) | 2026-10-20 | Register within 60 days for the registered limited warranty; dealers often register; "never assume your dealer is registering" |
+| S-175 | 16 Tex. Admin. Code §75.71 (Cornell LII mirror) — https://www.law.cornell.edu/regulations/texas/16-Tex-Admin-Code-SS-75-71 | PRIMARY-LAW (mirror) | 2026-10-20 | Texas AC contractors: licence number on advertising (h) and on proposals and invoices, plus the TDLR consumer notice (i) |
+| S-176 | Moor, *Your Complete Guide to HVAC Maintenance Agreements*, HVAC.com, 2023-10-05 — https://www.hvac.com/expert-advice/hvac-preventative-maintenance-contract/ | SECONDARY (industry consumer site) | 2026-10-20 | Typical plan: two seasonal tune-ups, priority service, 10–20% repair discounts, larger firms offer 3–4 tiers |
+| S-177 | CSG International, *Survey Results on In-Home Customer Service*, press release 2014-11-11 — https://ir.csgi.com/press-releases/press-release-details/2014/CSG-Releases-Survey-Results-on-In-Home-Customer-Service/default.aspx | INDUSTRY-RESEARCH (vendor; 400 US consumers; 2014, dated) | 2026-10-20 | 56% want an alert when a tech is late; 89% prefer live location and updated ETA; interest in tighter windows |
+| S-178 | Pew Research Center, *Mobile Fact Sheet*, fieldwork 2026-01-30 to 2026-06-18 — https://www.pewresearch.org/internet/fact-sheet/mobile/ | RESEARCH (national survey) | 2026-10-20 | 91% of US adults own a smartphone; 16% are smartphone-only internet users |
+| S-179 | National Eye Institute, *Color Blindness* — https://www.nei.nih.gov/learn-about-eye-health/eye-conditions-and-diseases/color-blindness | PRIMARY-GUIDANCE | 2026-10-20 | About 1 in 12 men have colour vision deficiency; red–green is most common |
+| S-180 | W3C, *Understanding WCAG 2.2: 1.4.1 Use of Color* — https://www.w3.org/WAI/WCAG22/Understanding/use-of-color.html (with 1.4.3 Contrast (Minimum) and 1.4.11 Non-text Contrast) · Earley, *ANSI Z535.1 – Safety Colors in Focus*, In Compliance Magazine, July 2023 — https://digital.incompliancemag.com/issue/july-2023/ansi-z535-1-safety-colors-in-focus/ | PRIMARY-GUIDANCE (W3C) · SECONDARY (ANSI summary; standard itself not read) | 2026-10-20 | Colour never the only signal; 4.5:1 text and 3:1 UI contrast; Z535 signal-word colours (red DANGER, orange WARNING, yellow CAUTION, blue NOTICE, green safety instructions) |
 
-All read **2026-10-15**. Text was cached locally for checking (`docs/evidence/raw-page-text/`, git-ignored and re-fetchable); claims cite the live URL. Commonwealth's site sits behind a Cloudflare check, so its pages were read through the `stealth-chrome` browser session; forms were **viewed only — nothing was entered or submitted**.
+## UX-2 reference research (2026-10-20)
 
-### Commonwealth Pain & Spine (CONTEXT-CO)
+**Design and behaviour references for UX-2 Concepts, not evidence about Meridian.** Products marked
+*observed live* were driven in an isolated Chrome DevTools context at 390 px; nothing was submitted,
+sent, booked or typed. Findings and their [O]/[D]/[P] tags are in
+[`../ux/02-concepts/REFERENCES.md`](../ux/02-concepts/REFERENCES.md); the Dribbble shots are listed
+with credits in [`../design/DESIGN-DIRECTIONS.md`](../design/DESIGN-DIRECTIONS.md).
 
-| ID | Source | Supports |
-|---|---|---|
-| S-64 | https://www.mypainsolution.com/ (home) | Claims: "Led by Dual Board-Certified Physicians", "Care That's Built Around You", "Advanced, Minimally Invasive Pain Treatments", "Convenient Access … 32+ locations … prompt scheduling"; existing patients directed to the Patient Portal |
-| S-65 | https://www.mypainsolution.com/about/ | "more than 30 clinics"; mission ("quickly responding with compassionate, personalized, and comprehensive treatment plans"); P.R.O.U.D. values incl. Responsiveness ("From timely access to care to persistent follow-up"); states served |
-| S-66 | https://www.mypainsolution.com/about/complete-care/ | Complete Care components: physician-led team, interventional treatments, Remote Therapeutic Monitoring, Chronic Care Management, Behavioral Health Integration, patient portal (messaging, appointment requests), **"24/7 Virtual Agent"** that helps "with scheduling needs and connect you with the appropriate member of your care team", educational resources |
-| S-67 | https://www.mypainsolution.com/about/insurance-information/ | Accepted plans by state (KY & IN, OH, IL, WV, VA, TN, SC, NC) with plan-specific notes (e.g. UHC Medicare "Referral required", Devoted Health out-of-network only); insurance FAQ (cost estimates, payment plans, denials and appeals, self-pay for uninsured) |
-| S-68 | https://www.mypainsolution.com/about/patient-guarantee/ | Pledge: "Our scheduling staff is devoted to finding appointments for new patients within ten business days of referral or initial contact"; accept all new patients |
-| S-69 | https://www.mypainsolution.com/locations/ | 33 offices in 7 states (KY 14, IN 6, SC 5, TN 4, OH 2, IL 1, NC 1); address, phone and today's hours per office; 11 offices marked "By Appointment Only" on the day read |
-| S-70 | https://www.mypainsolution.com/louisville-south/ | Louisville South (4420 Dixie Hwy — the office Google labels "Shively"): Mon–Fri 7:45 AM–5:00 PM by appointment, Sat–Sun closed; 2 MDs + 1 APRN listed; self-referral explanation; 3-step path ending "We aim to get you seen within two weeks" after the physician's referral is received |
-| S-71 | https://www.mypainsolution.com/providers/ | Provider directory (17 pages; filter by name/gender; each provider shows credential and offices); "We accept nearly all insurance and are accepting new patients at all our locations." Full enumeration not completed (pager not scriptable) |
-| S-72 | https://sa1s3.patientpop.com/assets/docs/93508.pdf (new-patient letter, linked from S-11) | Welcome letter; physicians listed as board certified in pain medicine and anesthesiology; ten-business-day pledge; patient obligations incl. "Payment of fees at the time of service" |
-| S-73 | https://sa1s3.patientpop.com/assets/docs/93509.pdf (NPP and bill of rights, linked from S-11) | Legal entity "Commonwealth Pain Associates, PLLC dba Commonwealth Pain & Spine"; privacy notice |
-| S-74 | Referral forms: https://www.mypainsolution.com/documents/Referral.-updated-03.06.25.pdf ; https://www.mypainsolution.com/documents/newpatientreferral_502.-updated-07.30.26.pdf ; https://sa1s3.patientpop.com/assets/docs/440434.pdf | Physician-to-office map (versions differ; 2025-03-06 form lists 20 physicians + 1 PT); referral reasons, pain areas, MVA and workers' comp sections; fax (866) 697-2464 |
-| S-75 | https://commonwealth.prettygoodai.net/request-appointment/start?pagemode=Live (request form; viewed only) | Required fields: first/last name, phone, email, DOB, preferred clinic, seen before (Y/N), previous or referring provider (search or manual), street address, city, state, ZIP, gender, insurance company (list), member ID, reason for referral, preferred contact method (phone/email), MVA (Y/N), work injury (Y/N); optional "how did you hear". **No SSN, no ID upload.** "Powered by" prettygoodai |
-| S-76 | https://www.mypainsolution.com/services/ ; /conditions-we-treat/ ; selected service pages (injections, medication management, nerve ablation, neurostimulation, kyphoplasty, chronic care management, psychological pain assessment, occupational medicine) | Service catalogue and condition list |
+| ID | Source | Authority | Reviewed | Supports |
+|---|---|---|---|---|
+| S-181 | Strand Brothers Service Experts (Austin), home page and its "Schedule the Experts" widget (a ServiceTitan Scheduling Pro iframe, `scheduler.servicetitan.com`) — https://www.serviceexperts.com/austin-tx/ | PRODUCT-REFERENCE (observed live) | 2026-10-20 | How a real Austin HVAC company's booking entry behaves on a phone: channel hub, contact details before any time, AI-labelled chat, brand red on every action |
+| S-182 | Housecall Pro Help, *Getting started with online booking* — https://help.housecallpro.com/en/articles/11473210-getting-started-with-online-booking | PRODUCT-REFERENCE (vendor documentation) | 2026-10-20 | Slots in 30-minute increments vs an arrival window ("a range of time in which to expect your arrival"); a mode that hides time selection and creates unscheduled jobs |
+| S-183 | Texas Gas Service web pages: *Report Emergency* modal (https://www.texasgasservice.com/?action=report-emergency) and *When You Smell Gas* (https://www.texasgasservice.com/safety/if-you-smell-gas). The PDF brochure is S-130 | PRIMARY-GUIDANCE (utility; observed live) | 2026-10-20 | One-sentence, action-first instruction with tappable numbers; "DON'T use your phone, tablet, computer or other mobile devices"; at 390 px the emergency link is inside the menu while a billing notice holds the warning banner |
+| S-184 | Intercom: Messenger with Fin on https://www.intercom.com/help/en/ (observed live) and Help article *Set your reply time* — https://www.intercom.com/help/en/articles/732436-share-your-expected-response-time | PRODUCT-REFERENCE (observed live + vendor documentation) | 2026-10-20 | AI disclosure line and per-message "Fin · AI Agent" label; no visible person button; reply time options (fixed, custom, dynamic 7-day median, queue position); office hours shown out of hours; "Waiting for a teammate" after transfer |
+| S-185 | Zendesk Help: *Viewing customer context for user, history, and device information* — https://support.zendesk.com/hc/en-us/articles/4408829170458 · *Adding the SLA breach countdown to your views* — https://support.zendesk.com/hc/en-us/articles/4408885799834 | PRODUCT-REFERENCE (vendor documentation; not driven live, needs a login) | 2026-10-20 | Requester essentials as label/value rows; interactions list with letter-and-colour status squares and hover preview; SLA column showing time to the next breach. Colour thresholds come from a community comment, unverified |
+| S-186 | Dribbble shots (15), searched 2026-10-20; designers and URLs listed in `docs/design/DESIGN-DIRECTIONS.md`, images in `docs/design/references/dr-NN-*.jpg` | DESIGN-REFERENCE (other designers' work; internal reference only, never copied into the product or demo) | 2026-10-20 | Texture and component construction of the three "dependable dispatch" directions |
+| S-227 | Dribbble shots (9) for direction A4, searched 2026-10-20 (14 searches, 645 new shots reviewed); designers and URLs listed in `docs/design/DESIGN-DIRECTIONS.md` § A4, images in `docs/design/references/dr-16…dr-24-*.jpg`, raw lists in `docs/design/references/search/a4-*.json`. (Requested as S-187; that ID already belongs to Anthropic *Pricing*, so the next free ID is used) | DESIGN-REFERENCE (other designers' work; internal reference only, never copied into the product or demo) | 2026-10-20 | Texture and component construction of A4 · Account statement, the "utility professional but soft on the eyes" take on dependable dispatch |
+| S-228 | Dribbble shots (10) for direction A5: Innocent's pick *Kirridesk - AI customer service with reply regeneration* (Bagus Fikri for Fikri Studio, https://dribbble.com/shots/27624722-Kirridesk-AI-customer-service-with-reply-regeneration) plus 9 shots like it, searched 2026-10-20 (8 searches, the designer's profile and the shot's "You might also like"; 297 shots reviewed as 9 contact sheets, 22 opened at 1200×900); designers and URLs listed in `docs/design/DESIGN-DIRECTIONS.md` § A5, images in `docs/design/references/dr-25…dr-34-*.jpg`, raw lists in `docs/design/references/search/a5-*.json`. Hex values sampled from the images with Pillow | DESIGN-REFERENCE (other designers' work; internal reference only, never copied into the product or demo) | 2026-10-20 | Palette, texture and component construction of A5 · Service desk, the direction Innocent asked for after A1–A4 ("more stuff like this") |
+| S-231 | Dribbble shots (7) for direction A6: Innocent's pick *Customer Service Workspace* (Kendall McMillan, https://dribbble.com/shots/27664920-Customer-Service-Workspace) plus 6 shots like it, prioritising customer-facing chat in the same palette mood, searched 2026-10-20 (10 searches, the designer's profile; 438 new shots reviewed as 13 contact sheets, 16 opened at 1200×900); designers and URLs listed in `docs/design/DESIGN-DIRECTIONS.md` § A6, images in `docs/design/references/dr-35…dr-41-*.jpg`, raw list in `docs/design/references/search/a6-batch.json`. Hex values sampled from the images with Pillow. (S-229 and S-230 were taken, so the next free ID after S-228 is used) | DESIGN-REFERENCE (other designers' work; internal reference only, never copied into the product or demo) | 2026-10-20 | Palette, texture and component construction of A6 · Branch office, and its translation from a staff workspace to a customer chatbot |
 
-### American Dental Companies and AdaCare (CONTEXT-CO)
+## Vendor and framework facts (SD research, 2026-10-20)
 
-| ID | Source | Supports |
-|---|---|---|
-| S-78 | https://www.ameridentco.com/ ; /about | Positioning to dentists: "Patient Care, Team Care, Business Care"; doctor-led ownership; leadership |
-| S-79 | https://www.ameridentco.com/what-we-do/insurance-verification ; /patient-communication ; /information-technology | Central services to practices: insurance verification, A/R, claims, credentialing; scheduling services, continued-care recall, "Full Oversight of Patient Communications"; "Cloud-based centralized dental management software", cloud X-ray, practice analytics |
-| S-80 | https://www.ameridentco.com/partnership | Partner-facing claim of "a minimum increase of 30% in revenue in the first year of partnership" (a claim to dentists, not a patient fact) |
-| S-81 | https://dentistinmeridian.com/ (AdaCare home) and service pages | Office hours (Mon 9–5, Tue 9–5, Wed 8–3, Thu 10–6, every other Fri 9–4); address and phone; service catalogue incl. sedation (nitrous, oral conscious), dentures, implants, full-arch |
-| S-82 | https://dentistinmeridian.com/wp-content/uploads/2024/04/AdaCare-Dental-Dentures-New-Patients-Forms.pdf | 4-page packet: electronic-communications consent; patient information (incl. SS# field, two dental insurances, policy-holder data, referral source); consent for services with fees (walk-in, <24 h cancellation, >10 min late); medical and dental history; HIPAA acknowledgement. Pages 2–4 are scanned images, read visually |
-| S-83 | https://schedule.jarvisanalytics.com/frame/american-dental-companies?location_id=10886 | **First reading (2026-10-15, completion pass):** booking widget exists; its contents did not render for automated viewing (the cached text fetch returned an empty frame), so appointment types and slot visibility were not established. **Re-read 2026-10-15 (reconciliation pass, Chrome DevTools, isolated browser context; view only):** the widget rendered for AdaCare's Meridian address. Step 1 asks New or Existing Patient and "Booking for" Myself / Someone Else (Adult). New Patient lists six services: Denture Repair, Emergency Visit, Implants, **New Patient Visit**, Second Opinion, Sedation Dentistry Consultation. Choosing New Patient Visit showed dates and times for 19–26 Oct 2026 **before any personal details were requested**; the next step ("2 Schedule") was not opened, no slot was selected and nothing was submitted. This matches an earlier chat walkthrough reported by Innocent. It establishes that published self-scheduling with visible slots exists at this practice. It does not establish what happens after submission, whether the booking reaches the practice system, or whether other ADC practices use the same configuration (RQ-40). |
+Read 2026-10-20 for [`../research/2026-10-20-vendor-and-framework-facts.md`](../research/2026-10-20-vendor-and-framework-facts.md)
+(PRD interview items SD-4.2, SD-5.4, SD-5.6, SD-6.3, SD-7.4 and the Langfuse self-host decision Q-050). "Pinned source" =
+the installed package in `.venv/` at the version in `uv.lock`, which matches the upstream tag cited. Vendor prices and
+limits change; re-read before quoting in the demo or interview.
 
-### Metro Vein Centers (CONTEXT-CO)
-
-| ID | Source | Supports |
-|---|---|---|
-| S-85 | https://www.metroveincenters.com/ | "We treat people, not symptoms."; patient-centred care, board-certified specialists, innovation; 200+ plans |
-| S-86 | https://www.metroveincenters.com/faqs | ABVLM certification; cosmetic treatment $425 per session; self-pay range $425–$1,500; "91% of our vein treatments are covered"; reschedule by phone 866-715-9121 or by texting the reminder number; records by email; treatment list; pregnancy guidance |
-| S-87 | https://www.metroveincenters.com/insurance | Insurance specialist role ("A real person … No chat bots"); six-step insurance process; verification "about 24–48 hours"; estimate callback "within 24-48 business hours"; Medicaid "accepted in select states"; self-pay and financing; top plans list |
-| S-88 | https://www.metroveincenters.com/consult (form viewed only) | Free-evaluation form: first name, last name, email, phone (required), newsletter opt-in; free evaluation "subject to insurance eligibility"; 98% satisfaction and "20,000 5-Star reviews" claims; payment methods |
-| S-89 | https://www.metroveincenters.com/locations (and the clinic list on S-87) | 80 clinics in 9 states (TX 24, NY 17, NJ 12, MI 8, AZ 7, CT 6, IL 4, GA 1, PA 1) |
-| S-90 | https://www.metroveincenters.com/locations/new-york/queens-forest-hills | Forest Hills hours (Mon 9:30–7, Tue 8–5, Wed 8–4, Thu 8–5, Fri 8–4:30); named physicians; IAC accreditation claim; bilingual-office testimonial |
-
-### American Oncology Network and Florida Oncology & Hematology (CONTEXT-CO)
-
-| ID | Source | Supports |
-|---|---|---|
-| S-92 | https://www.aoncology.com/who-we-are/ ; /for-patients/ ; /technology/ ; /patient-centric-care/ | Platform: launched 2018; centralised pharmacy, pathology, "fully integrated electronic medical records" (OncoEMR), patient portal, browser-based telehealth, care coordination, financial assistance |
-| S-93 | https://www.aoncology.com/locations/ | Network location list (paged/map-driven; full count not established in this pass) |
-| S-94 | https://www.floridaonc.com/ ; /about-us/ ; /your-team/ | FOH services (medical oncology, hematology, BiTE, imaging, radioligand, pathology, pharmacy, care coordination, clinical trials, financial support); 10 physicians and 15 advanced practitioners linked |
-| S-95 | https://www.floridaonc.com/new-patient-information/ | Entry by "physician's referral or transfer"; second opinions welcome; call (239) 217-8011; documents incl. Spanish; what to bring (medication list, prior illnesses, surgeries, allergies, insurance card); "strive to keep waiting times for appointments to a minimum" |
-| S-96 | https://www.floridaonc.com/patient-referral/ ; /contact-us/ | Per-office referral forms, phones and faxes; contact form cannot schedule ("call our office or use the patient portal"); do not send SSNs via the form; CareSpace patient portal for clinical questions; after-hours answering service |
-| S-97 | https://www.floridaonc.com/make-a-payment/ ; /service/financial-support/ ; /service/care-coordination/ | Online payment and payment plans; financial counsellor at an initial visit; care coordination (barriers to care, navigation) and free dietitian visits |
-| S-98 | https://www.aoncology.com/wp-content/uploads/2023/05/13680_FOH_New-Patient_Form_251105_FINAL.pdf | 14-page packet: consent to treat; demographics (incl. SS#, language, contact preferences, pharmacy); PCP and referring physician; emergency contact; advance directives; clinical history; photo authorisation; records-release request; disclosure consent; insurance (incl. policy-holder SS#); NPP acknowledgement; financial policies; SMS/email consent; patient-assistance authorisation |
-| S-99 | FOH records-release PDF (…/12913_FOH_MRR_Medical-Records-Release_Form_240716_FINAL.pdf) and NPP PDF (…/13817_FOH_Notice-of-Privacy-Practices-NPP-HIE_Form_260123_Final.pdf) | Records release and privacy notice |
-
-### Numotion (CONTEXT-CO)
-
-| ID | Source | Supports |
-|---|---|---|
-| S-101 | https://www.numotion.com/ ; /who-we-are | "nation's largest and leading provider of Complex Rehab Technology"; services (CRT, service & repair, urology supplies, speech solutions, workers' comp via CorLife, SpinLife retail); accreditations |
-| S-102 | https://www.numotion.com/what-to-expect ; /understanding-the-insurance-process ; /medical-necessity | Insurance process after a referral (verification → prior authorisation 15–60 days → follow-up/appeal); provide primary and secondary insurance; Medicare MBI; one wheelchair per 5 years under Medicare; face-to-face doctor visit and Letter of Medical Necessity for complex chairs |
-| S-103 | https://www.numotion.com/billing-and-financing | Medicaid and Medicare in all states; online payment; payment plans; CareCredit |
-| S-104 | https://www.numotion.com/faqs ; /contact | National customer care (800) 500-9150; live chat; track your order; after-hours support hours |
-| S-105 | https://www.numotion.com/locations ; /locations/nashville-tn | 114 branches in 45 states; Nashville branch = 161 F Bain Drive, LaVergne, TN (Mon–Fri 8:30–5:00; new-equipment evaluation by appointment) |
-| S-106 | https://www.numotion.com/in-home-service-repair ; /about-mynumotion-app | Repair scheduling steps and what to have ready; myNumotion app guide lists real-time order information, text/email notification of order status change, equipment listing, request service, appointment calendar, self-pay estimate, invoices and live chat with a representative; its home-screen image shows order status, appointments, service requests and a clinical-team entry. **This is documented capability from a public guide, not a test of a live customer account or of how well it performs** (noted 2026-10-15, reconciliation pass). |
-
-### Public review evidence (EVIDENCE — attributed reports of experience, not operational facts)
-
-| ID | Source | Supports |
-|---|---|---|
-| S-77 | Google review dialogs: Commonwealth Pain and Spine Louisville South (Google listing labelled "Shively", 4420 Dixie Hwy; 4.7, 3,105 reviews) and Elizabethtown (4.7, 2,844) | Lowest and Newest samples; see [review report](../analysis/2026-10-15-google-review-sentiment.md) |
-| S-84 | Google review dialog: AdaCare Dental & Dentures, Meridian ID (4.9, 171) | As above |
-| S-91 | Google review dialog: Metro Vein Centers Queens–Forest Hills (4.8, 881) | As above |
-| S-100 | Google review dialog: Florida Oncology & Hematology Naples (4.9, 446) | As above |
-| S-107 | Google review dialog: Numotion Nashville branch, LaVergne TN (4.8, 551) | As above |
-
-Raw review extracts are kept locally in `docs/evidence/raw-google-reviews/` (git-ignored; they contain reviewers' own names and health details).
-
-**Not used as evidence:** Google AI Overview summaries and Indeed/Glassdoor employee ratings seen in search results on 2026-10-15. Both appeared in the first version of the review report and were removed in the completion pass because they were not read at source.
-
-## Patient journey and onboarding baseline sources
-
-Reviewed **2026-10-15** for [patient journeys and standard onboarding practices](../analysis/2026-10-15-patient-journeys-and-onboarding-baseline.md). Guidance establishes reference practices, not the five companies' actual internal implementation. No source below establishes measured revenue lift. Previously registered company sources retain their existing IDs.
-
-| ID | Source | Authority | Passage and scope |
-|---|---|---|---|
-| S-108 | [AMA Patient Pre-Registration](https://edhub.ama-assn.org/steps-forward/module/2702557), published 2016, renewed March 2024 | PROFESSIONAL-GUIDANCE | Introduction and Steps 1–3: registration before a visit or on the day; administrative/history collection, coordinator responsibilities, logistics and baseline measurement. Broader than this project's administrative software scope. |
-| S-109 | [AMA Private Practice Playbook Sample Forms](https://www.ama-assn.org/system/files/steps-forward-private-practice-playbook-sample-forms.pdf), pp. 2–3 | PROFESSIONAL-GUIDANCE | Sample packet categories: demographic/history information, benefits assignment, privacy notice and acknowledgement; forms require adaptation. Not legal clearance or a mandate to use every form. |
-| S-110 | [ADA Meeting the Doctor](https://www.ada.org/resources/practice/practice-management/meeting-the-doctor) | PROFESSIONAL-GUIDANCE | Patient-intake guidance: explain the visit, interview concerns, check prior radiographs, use understandable language and attend to anxiety. Does not establish AdaCare's implementation. |
-| S-111 | [AHRQ Key Strategies for Clear Communication](https://www.ahrq.gov/health-literacy/improve/precautions/tool4a.html) | PRIMARY-GUIDANCE | Toolkit 3rd edition, Tool 4: qualified interpreters, manageable information, questions and checking understanding. |
-| S-112 | [AHRQ Assess, Select, and Create Easy-to-Understand Materials](https://www.ahrq.gov/health-literacy/improve/precautions/tool11.html) | PRIMARY-GUIDANCE | Tool 11: streamline forms, everyday words, collect need-to-know information once, get patient feedback and assess missing answers. |
-| S-113 | [AHRQ Address Language Differences](https://www.ahrq.gov/health-literacy/improve/precautions/tool9.html) | PRIMARY-GUIDANCE | Tool 9: ask and record spoken/written language preferences and arrange appropriate language access. Scope of legal duties is not assessed here. |
-| S-114 | [AHRQ Make Referrals Easy](https://www.ahrq.gov/health-literacy/improve/precautions/tool21.html) | PRIMARY-GUIDANCE | Tool 21: referral responsibilities, direct information exchange, assistance, instructions, attendance barriers and tracking. Clinical triage and results interpretation are outside the assistant's role. |
-| S-115 | [W3C WAI Multi-page Forms](https://www.w3.org/WAI/tutorials/forms/multi-page/) | PRIMARY-GUIDANCE | Logical steps, progress, optional stages, timing flexibility and preserving entered data during review. Tutorial guidance, not a complete accessibility certification. |
-| S-116 | [W3C WAI User Notification](https://www.w3.org/WAI/tutorials/forms/notifications/) | PRIMARY-GUIDANCE | Explain errors, correction routes and successful submission; provide accessible feedback. |
-| S-117 | [HHS Notice of Privacy Practices](https://www.hhs.gov/hipaa/for-individuals/notice-privacy-practices/index.html) | PRIMARY-GUIDANCE | Receipt acknowledgement is distinct from permission for special disclosures; patient signature is not mandatory; provider documents refusal. Not a complete deployment-specific legal checklist. |
-| S-118 | [CMS Good Faith Estimate](https://www.cms.gov/initiatives/your-patient-rights/medical-bill-rights/get-help/guides-resources/what-good-faith-estimate) | PRIMARY-GUIDANCE | Expected charges and conditional estimate rights for people not using insurance; no blanket rule asserted for every insured visit or equipment order. |
-| S-119 | [MSK Request an Appointment](https://www.mskcc.org/experience/become-patient/appointment?appointment_type=new), What to expect next | CONTEXT-PEER | Care advisors gather records/test results and help connect patients with the appropriate first appointment. An oncology example, not FOH/AON evidence. |
-| S-120 | [Cleveland Clinic Comprehensive Pain Recovery](https://my.clevelandclinic.org/services/comprehensive-pain-recovery-treatment) | CONTEXT-PEER | Multidisciplinary pain service and assessment context. Does not establish Commonwealth's clinical model or booking rules. |
-| S-121 | [Metro Vein What to Expect](https://www.metroveincenters.com/what-to-expect) | CONTEXT-CO | Published consultation → ultrasound → clinician plan → insurance work → treatment sequence. A published pathway, not an observed patient workflow or individual coverage promise. |
-
-The indexed ADA intake PDF returned a 404 when opened, and an American Venous Forum PDF redirected inconsistently. Neither was used to establish the baseline.
-
-## Adding a source
-
-Give it the next free `S-N`, label its authority, give the date it was actually read, and say in
-one line what it supports. A source that changes after it was read gets a new review date and a
-note on what changed. Never silently overwrite the old reading.
+| ID | Source | Authority | Reviewed | Supports |
+|---|---|---|---|---|
+| S-187 | Anthropic, *Pricing* — https://platform.claude.com/docs/en/about-claude/pricing | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Sonnet 5.5 $2/$10, cache hit $0.10; Haiku 5.5 $0.10/$0.50 (≤100K prompt); batch −50%; tool-use system-prompt tokens |
+| S-188 | Anthropic, *Models overview* — https://platform.claude.com/docs/en/about-claude/models/overview | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Model IDs; 1M context and 128K max output for Sonnet 5.5 and Haiku 5.5 |
+| S-189 | Anthropic, *Rate limits* — https://platform.claude.com/docs/en/api/rate-limits | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Tier model (automatic; Evaluation tier), Start/Build/Scale RPM/ITPM/OTPM, monthly spend caps, cache-aware ITPM, `retry-after` and rate-limit headers |
+| S-190 | Anthropic, *Claude API errors* — https://platform.claude.com/docs/en/api/errors | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | HTTP codes and error types (429, 500, 504, 529), error JSON shape, request ID, SDK retry statement, mid-stream errors |
+| S-191 | Anthropic, *API overview* — https://platform.claude.com/docs/en/api/overview | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Auth headers (`Authorization: Bearer` / `x-api-key`), `anthropic-version`, `content-type` |
+| S-192 | Anthropic, *Tool use overview* — https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview · *Define tools* — https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `tool_use` / `tool_result` round trip, `strict: true`; forced `tool_choice` returns 400 on Sonnet 5.5 |
+| S-193 | Anthropic, *Structured outputs* — https://platform.claude.com/docs/en/build-with-claude/structured-outputs | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `output_config.format`, `messages.parse()`, grammar compile latency and 24-hour cache, incompatibility with citations and prefill |
+| S-194 | Anthropic, *Prompt caching* — https://platform.claude.com/docs/en/build-with-claude/prompt-caching | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | 512-token minimum cacheable prefix for Sonnet 5.5 / Haiku 5.5; cache multipliers |
+| S-195 | Anthropic, *Thinking* — https://platform.claude.com/docs/en/build-with-claude/thinking · *Effort* — https://platform.claude.com/docs/en/build-with-claude/effort | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Thinking billed as output and counted in `max_tokens`; effort defaults (Sonnet 5.5 `high`, Haiku 5.5 `medium`); `between_tools` |
+| S-196 | `anthropic` Python SDK 1.17.0 source: `_constants.py`, `_base_client.py`, `_exceptions.py` — https://github.com/anthropics/anthropic-sdk-python/blob/v1.17.0/src/anthropic/_constants.py (pinned source) | PRIMARY-VENDOR (pinned package source) | 2026-10-20 | Default 2 retries, 0.5–8 s backoff, uncapped `retry-after`, 600 s timeout, retried statuses, exception classes (`OverloadedError` 529) |
+| S-197 | FastAPI, *Concurrency and async / await* — https://fastapi.tiangolo.com/async/ | PRIMARY-VENDOR (framework documentation) | 2026-10-20 | `def` endpoints run in an external threadpool; `async def` runs on the event loop |
+| S-198 | AnyIO, *Working with threads* — https://anyio.readthedocs.io/en/stable/threads.html | PRIMARY-VENDOR (framework documentation) | 2026-10-20 | Default worker-thread limiter = 40 |
+| S-199 | Pinned source: `starlette` 1.9.0 `concurrency.py`, `fastapi` 0.156.4 `routing.py`, `anyio` 4.15.1 `_backends/_asyncio.py` | PRIMARY-VENDOR (pinned package source) | 2026-10-20 | `run_in_threadpool` → `anyio.to_thread.run_sync`; `CapacityLimiter(40)` |
+| S-200 | Uvicorn, *Settings* — https://uvicorn.dev/settings/ (old host `www.uvicorn.org` did not resolve) | PRIMARY-VENDOR (framework documentation) | 2026-10-20 | `--workers` defaults to `$WEB_CONCURRENCY` or 1; `--limit-concurrency` returns 503 |
+| S-201 | LangChain docs, *Checkpointers* — https://docs.langchain.com/oss/python/langgraph/checkpointers · *Persistence* — https://docs.langchain.com/oss/python/langgraph/persistence | PRIMARY-VENDOR (framework documentation) | 2026-10-20 | SQLite "for experimentation and local workflows"; Postgres for production; async methods need async savers |
+| S-202 | Pinned source: `langgraph-checkpoint-sqlite` 3.1.2, `langgraph/checkpoint/sqlite/__init__.py` and `aio.py` | PRIMARY-VENDOR (pinned package source) | 2026-10-20 | `SqliteSaver` "does not scale to multiple threads", async methods raise; `AsyncSqliteSaver` "not recommended for production workloads" |
+| S-203 | Python 3.12 docs, `asyncio.to_thread` — https://docs.python.org/3.12/library/asyncio-task.html#asyncio.to_thread | PRIMARY-VENDOR (language documentation) | 2026-10-20 | CPU-bound work in threads is non-blocking only for extensions that release the GIL |
+| S-204 | ONNX Runtime v1.31.0 `onnxruntime/python/onnxruntime_pybind_state.cc` — https://raw.githubusercontent.com/microsoft/onnxruntime/v1.31.0/onnxruntime/python/onnxruntime_pybind_state.cc · pinned `fastembed` 0.9.0 `text/text_embedding.py`, `common/onnx_model.py` | PRIMARY-VENDOR (pinned package source) | 2026-10-20 | `run` releases the GIL during inference; fastembed `threads` and `parallel` parameters |
+| S-205 | Railway docs, *Pricing plans* — https://docs.railway.com/reference/pricing/plans | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Hobby $5 incl. $5 usage; RAM $10/GB-mo, CPU $20/vCPU-mo, egress $0.05/GB, volume $0.15/GB-mo; per-plan limits (Hobby 5 GB volume) |
+| S-206 | Railway docs, *Volumes* — https://docs.railway.com/reference/volumes | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Volume size limits by plan; one volume per service; no replicas with volumes; redeploy downtime |
+| S-207 | Railway, *Langfuse LLM observability* guide — https://docs.railway.com/guides/langfuse-llm-observability · template — https://railway.com/deploy/langfuse | PRIMARY-VENDOR (vendor documentation + template page) | 2026-10-20 | Template deploys Langfuse v3 (six services, ClickHouse 24); minimum 2 vCPU / 4 GB, storage minimums; bucket $0.015/GB-mo; required env vars |
+| S-208 | Railway community template *langfuse v3* (creator INAPP) — https://railway.com/deploy/langfuse-v3 | SECONDARY (third-party template listing) | 2026-10-20 | Claims "roughly $8.50/mo" on Hobby for ~2.2 GB; its per-service figures disagree with S-205 |
+| S-209 | Langfuse, *Self-hosting* — https://langfuse.com/self-hosting · *Docker Compose* — https://langfuse.com/self-hosting/deployment/docker-compose | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | v4 components (web, worker, Postgres, ClickHouse, Redis, blob storage); 4 cores / 16 GiB / 100 GiB recommendation for a VM |
+| S-210 | Langfuse, *Migrate v3 to v4* — https://langfuse.com/self-hosting/upgrade/upgrade-guides/upgrade-v3-to-v4 | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Same components as v3; minimum ClickHouse 25.12, Postgres 15, Redis 7.0; v3 patched to end of January 2027 |
+| S-211 | Langfuse, *Deploy on Railway* — https://langfuse.com/self-hosting/deployment/railway | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Railway template deploys v3, community-maintained, best-effort support |
+| S-212 | Langfuse, *Compatibility* — https://langfuse.com/docs/compatibility | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Python SDK v5 needs self-hosted Langfuse v4.59.0+; SDK v4 works with v3 server ≥ 3.63.0 |
+| S-213 | Langfuse releases — https://github.com/langfuse/langfuse/releases (latest v4.66.0, 2026-10-20) · `docker-compose.yml` — https://raw.githubusercontent.com/langfuse/langfuse/main/docker-compose.yml · PyPI JSON — https://pypi.org/pypi/langfuse/json (5.0.3; latest 4.x 4.18.0) | PRIMARY-VENDOR (release metadata) | 2026-10-20 | Current server and SDK versions; compose image tags |
+| S-214 | Langfuse, *LangChain & LangGraph integration* — https://langfuse.com/integrations/frameworks/langchain | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `from langfuse.langchain import CallbackHandler`, `config={"callbacks": [...]}`, session/user metadata keys, env vars |
+| S-215 | Langfuse, *Masking* — https://langfuse.com/docs/observability/features/masking | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Client-side `mask_otel_spans` (preferred) and legacy `mask`; no server-side masking |
+| S-216 | Langfuse, *Anthropic integration* — https://langfuse.com/integrations/model-providers/anthropic | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `opentelemetry-instrumentation-anthropic` for direct SDK calls; token/cost capture not stated |
+| S-217 | OpenAI, *Pricing* — https://developers.openai.com/api/docs/pricing · *GPT-5.6 Terra* model page — https://developers.openai.com/api/docs/models/gpt-5.6-terra | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `gpt-5.6-terra` $2/$12 (≤272K), cached $0.20; 1,050,000 context; 128,000 output; rate limits by tier |
+| S-218 | Google, *Gemini API pricing* — https://ai.google.dev/gemini-api/docs/pricing (last updated 2026-10-19) · *Models* — https://ai.google.dev/gemini-api/docs/models | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | `gemini-3.8-flash` $0.75/$3.75 to 2026-12-31, $1.50/$7.50 from 2027-01-01; Stable; token limits not stated on the list page |
+| S-219 | OpenRouter models API — https://openrouter.ai/api/v1/models and `/api/v1/models/{slug}/endpoints` for `openai/gpt-5.6-terra`, `google/gemini-3.8-flash`, `anthropic/claude-sonnet-5.5`, `typesafe/jev-1.13`, `typesafe/jev-1.14`, `typesafe/jev-router` | PRIMARY-VENDOR (vendor API metadata) | 2026-10-20 | Per-endpoint prices and context lengths; Jev $0.042/MTok in, 0 out, context 262,144, `data_policy` null |
+| S-220 | OpenRouter, *FAQ* — https://openrouter.ai/docs/faq | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | "no markup on inference pricing"; BYOK 5% fee above $25,000/month; credit-purchase fee not rendered |
+| S-221 | OpenRouter privacy docs: *Logging* — https://openrouter.ai/docs/guides/privacy/logging · *Data collection* — https://openrouter.ai/docs/guides/privacy/data-collection · *Provider selection* — https://openrouter.ai/docs/guides/routing/provider-selection · providers API — https://openrouter.ai/api/v1/providers | PRIMARY-VENDOR (vendor documentation + API metadata) | 2026-10-20 | No prompt storage unless opted in; metadata stored; `data_collection: "deny"`, `zdr: true`; TypeSafe provider record (no HQ or datacenters) |
+| S-222 | TypeSafe AI home page — https://typesafe.ai · launch post *Introducing System One models and Jev* — https://typesafe.ai/blog/introducing-system-one-models-and-jev | PRIMARY-VENDOR (vendor marketing; claims are vendor-reported) | 2026-10-20 | Early access and waitlist; $0.042/MTok input, output free; 70–500 ms latency claim; 255-option cardinality |
+| S-223 | TypeSafe docs: https://docs.typesafe.ai/models · /introduction · /introduction/quickstart · /concepts/system-one · /model-jaggedness/jev-1.13 · /primitives/choice | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Jev 1.13/1.14 IDs and price; 64k/32k context (262k long-context header); endpoint and auth; documented weaknesses (math, counting, dates, adversarial content, option order); "up to 255 options" |
+| S-224 | TypeSafe legal: *Privacy Policy* (updated 2025-11-19) — https://typesafe.ai/legal/privacy-policy · *Master Customer Agreement* (updated 2026-09-23) — https://typesafe.ai/legal/mca · *Data Processing Addendum* (updated 2026-04-24) — https://typesafe.ai/legal/data-processing · *Terms of Use* (updated 2026-09-19) — https://typesafe.ai/legal/terms · docs *Legal* — https://docs.typesafe.ai/legal | PRIMARY-VENDOR (vendor terms) | 2026-10-20 | No training on Input (Privacy Policy, MCA §4.1); no retention period; perpetual telemetry licence "to improve the Services" (MCA §4.3); ZDR for enterprise only |
+| S-225 | Third-party Jev write-ups: Pulumi (Engin Diri, 2026-09-28) — https://www.pulumi.com/blog/route-every-claude-code-message-to-the-right-model-with-jev/ · AWS Builder (Nitin Eusebius, 2026-09-25) — https://builder.aws.com/content/3JoJL1whRdHoUerKMxjg23g2rNe/jev-as-an-llm-router-fast-typed-decisions-for-model-selection · MindStudio (2026-09-22) — https://www.mindstudio.ai/blog/how-to-build-model-router-with-jev · LevelUp article https://levelup.gitconnected.com/stop-using-generative-llms-for-every-decision-meet-jev-96f2ec183fc4 returned HTTP 403, not read | SECONDARY | 2026-10-20 | Usage patterns; Pulumi reports a 73.5% answer change from one planted sentence (unverified); MindStudio's description of "Open Jev" |
+| S-226 | GitHub: TypeSafe org repositories — https://github.com/typesafe-ai · search for "open-jev" — https://api.github.com/search/repositories?q=open-jev | SECONDARY (repository listings) | 2026-10-20 | "Open Jev" repos are community re-implementations, one stating it is "not affiliated with Jev"; TypeSafe's `system-one-adapter-python` wraps LLM APIs |
+| S-229 | OpenRouter API reference, *Errors* — https://openrouter.ai/docs/api-reference/errors | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Status codes 400/401/402/403/408/429/502/503 (+404/412/413/422/500/504); errors can arrive inside a 200 body or stream; automatic provider fallback before the first token; `Retry-After` on 429/503 when available; SDKs never auto-retry 402. Cited by `docs/design/readiness-report.md` (SD-6.3 for the option-B Jev route) |
+| S-230 | OpenRouter API reference, *Limits* — https://openrouter.ai/docs/api-reference/limits | PRIMARY-VENDOR (vendor documentation) | 2026-10-20 | Paid model variants have "no platform-level request cap"; limits can differ per model; upstream-provider 429s; in-flight spending budget can return 402 on prepaid accounts below a balance threshold. Cited by `docs/design/readiness-report.md` (SD-5.5) |
+| S-232 | Railway Central Station threads on the platform HTTP request timeout — https://station.railway.com/questions/can-the-900-second-http-request-timeout-ff86a21d and https://station.railway.com/feedback/increase-max-platform-timeout-beyond-5-m-9d15d4ee | COMMUNITY (vendor forum, staff answers) | 2026-10-21 | Staff: the platform maximum HTTP request time is 15 minutes (900 s), not configurable per service; it was raised from 5 minutes. The docs' public-networking specifications page is cited there but was not read directly | Confirms the 65 s browser give-up and the 60 s turn deadline (SDQ-1) fit under Railway's proxy limit |

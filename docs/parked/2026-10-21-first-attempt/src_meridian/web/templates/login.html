@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Staff sign-in · Meridian{% endblock %}
+{% block main %}
+<h1>Staff console · demo sign-in</h1>
+<div class="card" style="max-width:520px">
+<p>This console is for the demo representative and supervisor. <strong>No Meridian employee uses it.</strong> In the demo, you play the representative yourself.</p>
+<form method="post" action="/staff/login"><label for="pw">Demo password</label><br>
+<input type="password" id="pw" name="password" autocomplete="off"> <button class="btn">Sign in</button></form>
+<p class="small muted">Demo password: <code>{{ password_hint }}</code></p></div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Monitoring · Meridian{% endblock %}
+{% block main %}
+<h1>Monitoring</h1>
+<p class="muted">Health ("is it running") is shown separately from correctness ("is it right"). Correctness comes from the evaluation run on the transcript test set.</p>
+<h2>Health (live)</h2>
+<div class="grid">
+  <div class="card"><h3>Conversations</h3><div class="kpi">{{ m.conversations }}</div><span class="small muted">{{ m.turns }} turns</span></div>
+  <div class="card"><h3>Escalations</h3><div class="kpi">{{ m.escalated }}</div></div>
+  <div class="card"><h3>Failures</h3><div class="kpi">{{ m.errors }}</div><span class="small muted">model and tool errors</span></div>
+  <div class="card"><h3>Latency</h3><div class="kpi">{{ m.p50 or '—' }}s</div><span class="small muted">p50 · p95 {{ m.p95 or '—' }}s per turn</span></div>
+  <div class="card"><h3>Model tokens</h3><div class="kpi">{{ '{:,}'.format(m.tokens) }}</div><span class="small muted">daily cap enforced (handoff when reached)</span></div>
+</div>
+<h2>Escalations by reason</h2>
+<p>{% for r,n in m.by_reason.items() %}<span class="pill muted">{{ r.replace('_',' ') }} · {{ n }}</span> {% else %}<span class="muted">None yet.</span>{% endfor %}</p>
+<h2>Correctness (latest evaluation run)</h2>
+{% if report %}
+<div class="grid">{% for k,v in report.headline.items() %}<div class="card"><h3>{{ k }}</h3><div class="kpi">{{ v }}</div></div>{% endfor %}</div>
+<p class="small muted">Test set: {{ report.meta.description }} · run {{ report.meta.run_at }}</p>
+{% else %}<p class="muted">No evaluation run recorded on this server yet.</p>{% endif %}
+{% endblock %}

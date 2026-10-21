@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Chat · Meridian Home Comfort{% endblock %}
+{% block main %}
+<div class="chat">
+  <div class="tools"><span class="pill ok">Automated assistant</span>
+    <span class="small muted">For gas smells, CO alarms, sparks or smoke: leave the home and call 911 from outside.</span></div>
+  <div id="log" class="log" aria-live="polite">
+    <div class="msg ai"><span class="who">Meridian assistant</span>Hi, I'm Meridian Home Comfort's automated assistant. I can answer questions about our services, membership, billing and warranties, and book or change appointments. You can ask for a person at any time.</div>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="tools"><button class="btn secondary small" id="person" type="button">Talk to a person</button>
+    <button class="btn secondary small" id="newchat" type="button">New chat</button></div>
+  <form class="composer" id="f"><label for="t" class="skip">Message</label>
+    <textarea id="t" rows="2" placeholder="Type your question…" maxlength="1500" required></textarea>
+    <button class="btn" id="send">Send</button></form>
+</div>
+<script>
+const log=document.getElementById('log'),t=document.getElementById('t'),st=document.getElementById('status');
+let tid=localStorage.getItem('mhc_tid')||'';let last=0;let busy=false;
+function add(role,author,text){const d=document.createElement('div');
+  const cls=role==='user'?'user':(author==='ai'?'ai':(author==='system'?'system':'staff'));
+  d.className='msg '+cls;const w=document.createElement('span');w.className='who';
+  w.textContent=role==='user'?'You':(author==='ai'?'Meridian assistant':(author==='system'?'Notice':author));
+  d.appendChild(w);d.appendChild(document.createTextNode(text));log.appendChild(d);log.scrollTop=log.scrollHeight;}
+async function load(){if(!tid)return;const r=await fetch('/api/thread/'+tid+'?after='+last);const j=await r.json();
+  for(const m of j.messages){if(m.id>last){add(m.role,m.author,m.text);last=m.id;}}
+  st.textContent=j.controller==='human'?'A person from our team is in this chat. The assistant is paused.':(j.case_id?('Reference: '+j.case_id):'');}
+async function send(text){if(busy)return;busy=true;document.getElementById('send').disabled=true;st.textContent='Assistant is typing…';
+  add('user','customer',text);
+  try{const r=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({thread_id:tid,text})});
+    const j=await r.json();if(!tid){tid=j.thread_id;localStorage.setItem('mhc_tid',tid);}
+    const r2=await fetch('/api/thread/'+tid+'?after='+last);const j2=await r2.json();
+    for(const m of j2.messages){if(m.id>last){if(!(m.role==='user'&&m.text===text&&m.id===j2.messages[0].id)) {if(m.role!=='user')add(m.role,m.author,m.text);} last=m.id;}}
+    st.textContent=j2.controller==='human'?'A person from our team is in this chat. The assistant is paused.':(j2.case_id?('Reference: '+j2.case_id):'');
+  }catch(e){add('assistant','system','Sorry, something went wrong. Please try again.');}
+  busy=false;document.getElementById('send').disabled=false;}
+document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();const v=t.value.trim();if(v){t.value='';send(v);}});
+t.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('f').requestSubmit();}});
+document.getElementById('person').onclick=()=>send("I'd like to talk to a person.");
+document.getElementById('newchat').onclick=()=>{localStorage.removeItem('mhc_tid');location.reload();};
+if(tid){fetch('/api/thread/'+tid).then(r=>r.json()).then(j=>{for(const m of j.messages){add(m.role,m.author,m.text);last=m.id;}});}
+setInterval(()=>{if(!busy)load();},3000);
+</script>
+{% endblock %}

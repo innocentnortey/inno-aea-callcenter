@@ -1,8 +1,6 @@
-> **Copy** of `Gauntlet AI/principles/` (2026-10-14, `lecture-notes/` and transcripts stay there). Paths below such as `transcripts/` and `course-material/` refer to that repo. Change the original first, then re-copy.
-
 # Gauntlet Principles
 
-Engineering principles extracted from Gauntlet's lectures: the three async pre-work videos (GP-1 – GP-37, 2026-09-13) and seven live cohort lectures on evals, observability, loops and graphs (GP-38 – GP-88, added 2026-09-23), and Week 3's security lecture, PRD and kickoff (GP-89 – GP-106, added 2026-09-28). Each principle has a stable **GP-N** ID (never reused), a one-line statement, what the lecturer actually said with a timestamp, and what it means in practice.
+Engineering principles extracted from Gauntlet's lectures: the three async pre-work videos (GP-1 – GP-37, 2026-09-13) and seven live cohort lectures on evals, observability, loops and graphs (GP-38 – GP-88, added 2026-09-23), Week 3's security lecture, PRD and kickoff (GP-89 – GP-106, added 2026-09-28), the 2026-10-08 system-design session (GP-107 – GP-119), and the identifying-business-problems lecture (GP-120 – GP-130), and the defining-business-metrics lecture (GP-131 – GP-144), both added 2026-10-16. Each principle has a stable **GP-N** ID (never reused), a one-line statement, what the lecturer actually said with a timestamp, and what it means in practice.
 
 **These are the source of truth.** `.claude/rules/` turns them into checks that load automatically while writing code and design docs; every rule cites the GP IDs it enforces. When a principle changes, change it here first, then the rule.
 
@@ -37,6 +35,8 @@ Recorded with **Innocent's own cohort** (he asks questions in E1, E3, O1 and G1)
 | **G2** | Advanced Graph Techniques | Aaron Gallant | `graphs-part2-transcript.md` | `advanced-graphs.pdf` → S-AG | GP-72 – GP-88 |
 | **SEC** | AI Security: Threats & Defenses (OWASP LLM Top 10) | Byron Mackay | **not yet received** | `2026-09-28-ai-security-threats-defenses-slides.pdf` (image-only) → S-SEC | GP-89 – GP-97 |
 | **K3** | Week 3 project kickoff: Byron walks the PRD | Byron Mackay | `2026-09-28-intro-to-week-3-project-byron.md` (AssemblyAI, speaker-labelled) | Week 3 PRD, `2026-09-28-week3-agentforge-prd.pdf` → W3 | GP-98 – GP-106 |
+| **DM** | Defining business metrics (cohort session; leading and lagging indicators defined here) | Presumably Byron Mackay (GQ-25) | `defining-business-metrics.md` | none captured | GP-131 – GP-144 |
+| **BP** | Identifying business problems (cohort session) | Host not named in the captions (see GQ-24) | `identifying-business-problems-transcript.md` | none captured | GP-120 – GP-130 |
 
 `lecture-notes/` holds the full extraction for each lecture: metadata, every candidate principle with verified quotes, which existing GPs it restates, every tool named, and every anti-pattern with a timestamp. The principle files are the curated, de-duplicated layer on top. Slide citations use `S-XX p.N`, where N is the PDF page number.
 
@@ -69,6 +69,8 @@ Aaron, V1 [5:12]: *"they are inherently probabilistic. They're inherently uncert
 | [`observability-in-practice.md`](observability-in-practice.md) | GP-56 – GP-63 | Full-context and hierarchical traces, green ≠ right, what never to log, where traces live, traces as audit trail |
 | [`loops-and-harnesses.md`](loops-and-harnesses.md) | GP-64 – GP-71 | The two decision points, one owner of "done", bounded evaluators, plan-and-execute, cost per decision, classifiers, harnesses |
 | [`adversarial-security.md`](adversarial-security.md) | GP-89 – GP-106 | OWASP LLM Top 10 mapped to the co-pilot; capability not bugs; untrusted output; stacked sanitization; documents as instruction channels; least privilege; HITL outside the model; gateway defenses; cost DoS; context extraction; independent judge; regressions that pass for the right reason; mutation; orchestrator on observability; per-role model choice; trust boundaries; reproducible reports; typed contracts; black-box scope |
+| [`business-metrics.md`](business-metrics.md) | GP-131 – GP-144 | Prove it with a number; health vs value metrics; leading and lagging indicators; a lagging move means investigate; actionable vs vanity; denominators and segments; match what this customer values; a small set; one north star plus supporting metrics; coverage and bias; adoption is not quality; baseline, aspiration and hard gate; review and expect challenge; pick the user first. Source: the defining-business-metrics lecture (DM) |
+| [`problem-framing.md`](problem-framing.md) | GP-120 – GP-130 | Cheaper builds mean longer planning; a PRD is the partner's answer, not the problem; question the assumption inside the question; a complaint is a symptom, observe first; keep asking why; scope the why; tie work to money in as many hops as it takes; name the north star before building; count use, not output; when you can't ask, research, label and try; the engineer owns the "why". Source: the host's identifying-business-problems lecture (BP) |
 | [`system-design.md`](system-design.md) | GP-107 – GP-119 | Economics first, scale buckets, depth where the partner is uncertain, measurable promises, users → work, elapsed time ≠ resource demand, first breaker, queues and overload, autoscaling limits, per-operation CAP, caches as authority, replicas/zones/regions, labelled numbers. Each ends with questions to raise in the design conversation. Source: the 2026-10-08 cohort session (a peer, not staff) and its ChatGPT synthesis |
 | [`graphs.md`](graphs.md) | GP-72 – GP-88 | Static skeleton, state-first, nodes vs edges, supervisor/worker contract, routing as classification, reads vs writes, tool node, risk-tier gates, pause/persist/resume, RAG as edges |
 | [`frameworks.md`](frameworks.md) | — | Every framework and tool the lectures recommend or demo |
@@ -131,6 +133,8 @@ Ranked by how directly they decide a grade. The HTML briefing (`artifacts/2026-0
 | `synthetic-test-data.md` | Seeds, fixtures, golden sets, demo assets | GP-34 – GP-37 |
 | `design-doc-defense.md` | `ARCHITECTURE.md`, `USERS.md`, `AUDIT.md`, `KEY_METRICS.md` | GP-1, GP-3, GP-16, GP-19, GP-30, GP-31 |
 | `system-design-conversation.md` | PRDs, interviews, hard-problems pages, design and architecture docs | GP-107 – GP-119 |
+| `problem-framing.md` | PRDs, brief audits, success-framing docs, converted sources | GP-120 – GP-130 |
+| `business-metrics.md` | `KEY_METRICS.md`, metrics docs, PRDs, success-framing docs | GP-131 – GP-144 |
 
 **Portability (2026-10-14).** Every new coding repo gets a copy of this folder at `docs/principles/` (all principle files and this README; `lecture-notes/` stays here) alongside the rules, via `zero-to-hero` Stage 0. The rules cite GP IDs, so without the copy the citations point nowhere. Change a principle here first, then re-copy.
 

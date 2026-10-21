@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Demo inbox · Meridian{% endblock %}
+{% block main %}
+<h1>Demo delivery inbox</h1>
+<div class="card" role="note" style="background:var(--demo-bg);border-color:var(--demo)"><strong>Simulated messages. Nothing is sent to anyone.</strong> This page exists only so reviewers can complete the one-time-code check. It stands in for the customer's own phone or email. It is not production identity verification.</div>
+<h2>Latest codes</h2>
+{% if not items %}<p class="muted">No codes yet. In the chat, ask about your bill or an appointment to start a check.</p>{% endif %}
+<div class="scroll"><table class="tbl"><thead><tr><th>Time (demo clock)</th><th>Channel</th><th>To</th><th>Message</th></tr></thead><tbody>
+{% for i in items %}<tr><td>{{ i.at }}</td><td>{{ i.channel }}</td><td>{{ i.destination }}</td><td>{{ i.body }}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="small muted">Test customers (from the dataset): MHC-10001 Linda Foster 512-555-0101 · MHC-10002 Omar Patel 512-555-0102 · MHC-10003 Grace Okafor 512-555-0103 · MHC-10004 Daniel Reyes 512-555-0104.</p>
+{% endblock %}

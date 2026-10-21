@@ -1,0 +1,2372 @@
+[
+ {
+  "id": "shared.session-ended",
+  "screen": "*",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "shared.role-reset",
+  "screen": "*",
+  "route": "/staff/queue",
+  "state": "error",
+  "role": "representative",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "shared.staffing-on",
+  "screen": "*",
+  "route": "/",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "shared.staffing-off",
+  "screen": "*",
+  "route": "/",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "shared.offline",
+  "screen": "*",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "shared.slow",
+  "screen": "*",
+  "route": "/",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.default",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); the page loads with the greeting and 'Nothing yet'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.default-resumed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Resume: open the chat once so the tab has a stored thread, apply this (the panel refetches and resyncs), or reload.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.empty",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "empty",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); the greeting is the empty state; the panel reads 'Nothing booked yet.', 'No request open.', 'Not checked. Only needed for private details.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.loading-starting",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); then use the panel Restart; the start call takes 4 s, so the skeleton shows, then 'Starting the chat…'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.loading-replying",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; 'Meridian assistant is replying…' after 300 ms, 'Still working on this…' after 10 s.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.loading-timeout",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the timeout card appears and Try again resends the same turn.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.loading-busy",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; one plain line and the person offer.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.partial-part-answered",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send two messages; the second reply is 'I don't have that information.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.partial-handoff-unsaved",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the chooser stays open; saving uses saveFollowUp.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-no-info",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.error-send-failed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the first call fails, Try again succeeds with the same turn id.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.error-giveup-fast",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "demo: shortened from 65 s / 10 s so the state is reachable. Apply, use Restart, then send a message; it never answers and gives up after 5 s.",
+  "hang": true
+ },
+ {
+  "id": "scr01-core.error-session-gone",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the chat ends with 'This chat has ended.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.error-start-reset",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); then Restart; 'The demo is resetting. Try again in a few seconds.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.error-start-offline",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); then Restart; 'The chat didn't start. Try again.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-limit-rate",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the field disables with the limit sentence, the person key stays.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-limit-booking",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the field stays enabled.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-spend-cap",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the field disables for the rest of the chat.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-session-ended",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the next request answers 401 and the app goes to sign-in; back at '/' the stored chat resumes.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.stale-reconnecting",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); the stream drops after 1.5 s; 'Reconnecting…' shows; the Stream tab Reconnect replays the late message and clears it.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.stale-staffing-on",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 2 s the demo bar, banner and an event line update without a reload.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.stale-staffing-off",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 2 s the banner goes and the event line says nobody online.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.stale-clock-moves",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 2 s the demo bar shows the new date.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-booked",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; 'Your visit' lands.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-handoff",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); tap Talk to a person; 'Your request' lands.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-person-again",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); tap it twice; no second row, the thread scrolls to the card and 'Your request' is highlighted.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-followup-saved",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message (handoff), choose and save in the chooser; 'Follow-up saved: phone call, the number ending in 02, mornings.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-verified",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the Identity block shows the status the example carries.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-change-request",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; 'Your visit' keeps the original with 'Original stays until a representative confirms.'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-live-queued",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); tap Talk to a person; the staffing banner is visible.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-rep-joined",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 1.5 s Riley joins; top bar 'Riley (demo representative). Assistant paused.', placeholder 'Message Riley'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-handed-back",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); Riley joins, then hands the chat back after 8 s.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.success-shift-ended",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); tap Talk to a person (live-queued); after 4 s the shift ends and the handoff card arrives.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-safety-takeover",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the safety card pins above the thread and the strip reads the danger line.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-safety-midbooking",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send two messages; the slot card stays in the thread below the pinned card.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-conditional-safety",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; the conditional card stays inline, not pinned.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.disabled-empty-field",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); Send is disabled until text is typed.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.disabled-pending",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); send a message; Send is disabled, the field is editable, Talk to a person is enabled.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.disabled-chat-closed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 8 s Riley closes the chat; 'This chat has ended.' and 'Start a new chat'.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.flow-reset-live-chat",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Apply in the panel (States tab); after 2.5 s the demo resets; the chat ends.",
+  "hang": false
+ },
+ {
+  "id": "scr01-core.disabled-ended-on-resume",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Resume: open the chat once, apply this (the panel refetches) or reload; the stored thread reads 410.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.safety-takeover",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SAFETY. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.burning-smell-unknown",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is BURNING_CHECK. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.burning-smell-risk-unclear",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CONDITIONAL_SAFETY. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.burning-smell-ruled-out",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SLOT_CARD. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.someone-in-danger",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is EMERGENCY_LINE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.someone-in-danger-staffed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is EMERGENCY_LINE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.quick-checks-offered",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is QUICK_CHECKS. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.quick-checks-shown",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is QUICK_CHECKS. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.urgency-questions",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is URGENCY_QUESTIONS. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.where-card",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is WHERE_PROMPT. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.slot-card",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SLOT_CARD. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.slot-card-members",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SLOT_CARD_MEMBER. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.out-of-area",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is OUT_OF_AREA. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.no-window-fits",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is NO_INFO. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.identity-needed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is LOCATE_PROMPT. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.code-sent",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CODE_SENT. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.code-wrong",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CODE_WRONG. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.code-expired",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CODE_EXPIRED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.code-locked",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CODE_LOCKED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.code-cap-reached",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CODE_CAP_REACHED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.no-match",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is NOT_VERIFIED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.verified",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is VERIFIED_ACCOUNT_INVOICE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.account-answer",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is VERIFIED_ACCOUNT_INVOICE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.account-membership",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is ACCOUNT_MEMBERSHIP. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.account-warranty",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is ACCOUNT_WARRANTY. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.dispute-handoff",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is HANDOFF. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.slot-taken",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SLOT_TAKEN. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.booked",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is BOOKED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.confirm-existing-visit",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is APPOINTMENT. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.fee-free-cancel",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CANCELLED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.fee-bearing-change",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CHANGE_REQUEST. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.fee-bearing-change-staffed",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CHANGE_REQUEST. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.fee-bearing-cancel",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is CHANGE_REQUEST. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.handoff-in-reply",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is HANDOFF. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.handoff-refund",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is HANDOFF. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.handoff-general-only",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is HANDOFF. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.handoff-nobody-online",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Tap Talk to a person",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.handoff-already-open",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Tap Talk to a person",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.live-queued",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Tap Talk to a person",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.failure-signal",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is FAILURE_OFFER. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.no-current-source",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is NO_INFO. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.partial-reply",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is ANSWER_WITH_SOURCE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.answer-with-source",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is ANSWER_WITH_SOURCE. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.limit-rate",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is RATE_LIMITED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.limit-booking-cap",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is BOOKING_CAP. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.spend-cap",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is SPEND_CAP_REACHED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.turn-timeout",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; Try again gets a normal answer",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.busy",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "loading",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is BUSY. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.ai-paused",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "success",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Send any message; the next reply is AI_PAUSED. The force is consumed by that reply.",
+  "hang": false
+ },
+ {
+  "id": "scr01-cards.session-ended-block",
+  "screen": "SCR-1",
+  "route": "/",
+  "state": "disabled",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "Reload the page; the chat resumes from the thread read",
+  "hang": false
+ },
+ {
+  "id": "scr02.default",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr02.empty",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "empty",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr02.empty-after-reset",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "empty",
+  "role": null,
+  "signedIn": null,
+  "notes": "Reached by: open this, go to /demo, reset the demo, come back: the reaction empties the inbox.",
+  "hang": false
+ },
+ {
+  "id": "scr02.loading",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "The skeleton stays until you leave.",
+  "hang": true
+ },
+ {
+  "id": "scr02.error",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "CON-6 503.",
+  "hang": false
+ },
+ {
+  "id": "scr02.error-rate-limited",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "429.",
+  "hang": false
+ },
+ {
+  "id": "scr02.error-network",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr02.stale-new-code",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Starts empty; within about 10 s a code appears and 'New code received' is announced. The first two calls are consumed by StrictMode's double mount.",
+  "hang": false
+ },
+ {
+  "id": "scr02.stale-used-and-expired",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Used and Expired rows.",
+  "hang": false
+ },
+ {
+  "id": "scr02.stale-expires-on-refresh",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Active at first; after a refresh the first code is Expired and a Used one is announced as new.",
+  "hang": false
+ },
+ {
+  "id": "scr02.success-copied",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Press Copy code: 'Copied' shows for 2 s.",
+  "hang": false
+ },
+ {
+  "id": "scr02.disabled-used-expired",
+  "screen": "SCR-2",
+  "route": "/demo/inbox",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Copy is disabled with the status word as the reason.",
+  "hang": false
+ },
+ {
+  "id": "scr03.default",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr03.default-on",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "The switch starts on.",
+  "hang": false
+ },
+ {
+  "id": "scr03.loading",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "'Checking...', switch disabled, static regions visible.",
+  "hang": true
+ },
+ {
+  "id": "scr03.error-read",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Retry link.",
+  "hang": false
+ },
+ {
+  "id": "scr03.error-staffing-write",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Flip the switch: it returns to off with the error line.",
+  "hang": false
+ },
+ {
+  "id": "scr03.error-reset",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "500.",
+  "hang": false
+ },
+ {
+  "id": "scr03.error-reset-in-progress",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "409: the button reads Resetting... for a few seconds.",
+  "hang": false
+ },
+ {
+  "id": "scr03.stale-staffing-changed",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Within about 20 s: 'Staffing changed since you opened this page.' and the switch moves. Quicker: in the panel's per-operation select set getStaffing to ON.",
+  "hang": false
+ },
+ {
+  "id": "scr03.success-on",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr03.success-off-waiting",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Turn the switch off: the 1 waiting customer line.",
+  "hang": false
+ },
+ {
+  "id": "scr03.success-off-none",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "The 0-customers line (valid against StaffingResponse).",
+  "hang": false
+ },
+ {
+  "id": "scr03.success-reset",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "success",
+  "role": "representative",
+  "signedIn": null,
+  "notes": "Reset: the line includes 'Open chats have ended.' and the role-reset sentence; the header role returns to Customer.",
+  "hang": false
+ },
+ {
+  "id": "scr03.success-reset-quiet",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "No chats sentence.",
+  "hang": false
+ },
+ {
+  "id": "scr03.disabled-saving",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Flip the switch: it stays disabled while saving.",
+  "hang": true
+ },
+ {
+  "id": "scr03.disabled-resetting",
+  "screen": "SCR-3",
+  "route": "/demo",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Confirm a reset: the button reads 'Resetting...' and stays disabled.",
+  "hang": true
+ },
+ {
+  "id": "scr04.default",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr04.loading",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Click Representative: 'Switching...' for 4 s.",
+  "hang": false
+ },
+ {
+  "id": "scr04.error-network",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Couldn't switch role. Try again.",
+  "hang": false
+ },
+ {
+  "id": "scr04.error-reset-in-progress",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "503.",
+  "hang": false
+ },
+ {
+  "id": "scr04.stale-session-ended",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Goes to the login screen with the ended line.",
+  "hang": false
+ },
+ {
+  "id": "scr04.stale-staff-as-customer",
+  "screen": "*",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "No forced op: the foundation's role emulation answers 403 and the role-gate panel shows. SCR-4 stale (b).",
+  "hang": false
+ },
+ {
+  "id": "scr04.stale-role-reset",
+  "screen": "*",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "'The demo was reset, so you're back to the customer role. Pick a role again.' SCR-4 stale (b).",
+  "hang": false
+ },
+ {
+  "id": "scr04.success-lands-on-home",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Click a role: you land on its home.",
+  "hang": false
+ },
+ {
+  "id": "scr04.success-stays",
+  "screen": "*",
+  "route": "/demo",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Use the role switch in the header on /demo: the page stays.",
+  "hang": false
+ },
+ {
+  "id": "scr04.disabled-during-switch",
+  "screen": "SCR-4",
+  "route": "/role",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Click a role: all four are disabled.",
+  "hang": true
+ },
+ {
+  "id": "scr05.default",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Four rows in server order (0008 first); Overdue on 0005.",
+  "hang": false
+ },
+ {
+  "id": "scr05.empty",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "empty",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr05.loading",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr05.partial-brief-pending",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr05.error",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Try again loads the seeded queue.",
+  "hang": false
+ },
+ {
+  "id": "scr05.stale-cases-changed",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Wait 10 s or refocus the tab: '2 cases changed. Show them.'; the selected row does not move.",
+  "hang": false
+ },
+ {
+  "id": "scr05.success-resolved-return",
+  "screen": "*",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Resolve with any outcome to land on /staff/queue with 'MHC-C-0007 resolved.' for 4 s; the case director also removes the row.",
+  "hang": false
+ },
+ {
+  "id": "scr05.success-claimed-row",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr05.disabled-no-live-queue",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "The Waiting in chat region explains how to turn the simulation on.",
+  "hang": false
+ },
+ {
+  "id": "scr05.live-queued",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Row MHC-C-0012 'Waiting since 2:14 pm' with Claim and join.",
+  "hang": false
+ },
+ {
+  "id": "scr05.new-handoff",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "After 10 s: '1 case changed. Show them.'",
+  "hang": false
+ },
+ {
+  "id": "scr05.shift-ended",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "After 10 s staffing flips to nobody online and the row moves to Needs my action with its original creation time.",
+  "hang": false
+ },
+ {
+  "id": "scr05.overdue-after-advance",
+  "screen": "SCR-5",
+  "route": "/staff/queue",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "After 10 s: '1 case changed. Show them.', then the Overdue tag on 0006.",
+  "hang": false
+ },
+ {
+  "id": "scr06.default",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Claim split button; Sources tab; Demo seed; Join chat disabled with its reason.",
+  "hang": false
+ },
+ {
+  "id": "scr06.empty-nothing-recorded",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "empty",
+  "role": null,
+  "signedIn": null,
+  "notes": "Sections 5 and 7 read 'Nothing recorded.'",
+  "hang": false
+ },
+ {
+  "id": "scr06.loading",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr06.partial-brief-pending",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr06.partial-source-unavailable",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "DEFAULT already has the FAQ source unreadable.",
+  "hang": false
+ },
+ {
+  "id": "scr06.partial-trimmed",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "partial",
+  "role": null,
+  "signedIn": null,
+  "notes": "Section 3 shows the removed-line note.",
+  "hang": false
+ },
+ {
+  "id": "scr06.error-not-found",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0099",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "The case director answers CASE_NOT_FOUND for an unknown reference.",
+  "hang": false
+ },
+ {
+  "id": "scr06.error-owner-readonly",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "error",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "No named example exists for the owner view: the case director sets allowed_actions to [] for the owner.",
+  "hang": false
+ },
+ {
+  "id": "scr06.error-reason-missing",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Open Release and submit empty. Also Wait without a time, Resolve without an outcome.",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-changed-since",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "DEFAULT has the membership record changed.",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-version-conflict",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Click Claim: the conflict sentence and Reload; Reload shows the case claimed by the demo supervisor.",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-case-changed-elsewhere",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "After 3 s: 'This case changed. Show the latest.'",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-stuck-waiting",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "Header 'Wake-up time passed (Fri 2:00 pm). Pick it back up.'; primary 'Pick it back up'.",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-overdue",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0005",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "The case director re-skins DEFAULT from the queue row: Overdue after the due headline.",
+  "hang": false
+ },
+ {
+  "id": "scr06.stale-shift-ended",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-claimed",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Click Claim: 'Claimed · Riley (demo)'; lifecycle moves to Claimed; Log a call enabled.",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-contact-logged",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Log a call, Reached, Record: activity 'Called · Reached the customer · Demo: recorded, not sent'.",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-resolved",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Resolve with an outcome: lands on /staff/queue with 'MHC-C-0007 resolved.'",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-flagged",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Flag, pick one, Add to review list: 'Added to the review list.'",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-waiting",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Set waiting with a date and time: header 'Wakes ...'.",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-released",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Release with a reason: 'Released.', back to Unassigned.",
+  "hang": false
+ },
+ {
+  "id": "scr06.success-assigned",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Assign to Riley with a reason, or Change priority to P2.",
+  "hang": false
+ },
+ {
+  "id": "scr06.disabled-before-claim",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Resolve, Set waiting, Close unresolved say 'Claim the case first.'; Join chat explains itself; no Assign or priority for the representative.",
+  "hang": false
+ },
+ {
+  "id": "scr06.disabled-live-box",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "Hand back: 'Handed back to the assistant at 2:22 pm'; the live box is disabled.",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-live-queued",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0012",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Lifecycle starts at Live-queued; 'Claim and join'.",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-live-joined",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Live box on the Conversation tab; after 4 s 'Thanks, that helps.' arrives.",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-chat-closed",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "After 7 s: 'Chat closed at 2:24 pm'; live box disabled; Resolve and Close unresolved available.",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-reset-ended",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Live box: 'This chat ended because the demo was reset.'",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-safety",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0008",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "P0 in the title; 'No due time: safety'.",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-fee-bearing",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0009",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "The example's due label says Sat Oct 17; SCREEN_SPECS prints Fri (contract data difference).",
+  "hang": false
+ },
+ {
+  "id": "scr06.flow-seeded",
+  "screen": "SCR-6",
+  "route": "/staff/cases/MHC-C-0007",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "The 'Demo seed' tag.",
+  "hang": false
+ },
+ {
+  "id": "scr07.default",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "default",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "FLOW-8/10 seeds carry the Demo seed tag",
+  "hang": false
+ },
+ {
+  "id": "scr07.empty",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "empty",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr07.loading",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "loading",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr07.error",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr07.error-advance",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Click any advance button",
+  "hang": false
+ },
+ {
+  "id": "scr07.error-reason",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Assign, type a reason, Assign",
+  "hang": false
+ },
+ {
+  "id": "scr07.error-version-conflict",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Assign, type a reason, Assign",
+  "hang": false
+ },
+ {
+  "id": "scr07.stale-lanes-updated",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "stale",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "A reaction swaps the force to AFTER_ADVANCE about 11 s after the first read; the 10 s poll then shows Lanes updated.",
+  "hang": false
+ },
+ {
+  "id": "scr07.success-advanced",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Click Next business morning; a reaction swaps the oversight and clock reads",
+  "hang": false
+ },
+ {
+  "id": "scr07.success-shift-ended",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Turn the switch off; a reaction swaps the oversight read to SHIFT_ENDED_WITH_WAITING",
+  "hang": false
+ },
+ {
+  "id": "scr07.success-assigned",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Assign, reason, Assign; a reaction removes the case from Unowned",
+  "hang": false
+ },
+ {
+  "id": "scr07.success-priority-changed",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Assign, Change priority, pick one, reason",
+  "hang": false
+ },
+ {
+  "id": "scr07.disabled-saving",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "disabled",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Click an advance button and look at the controls for 4 s",
+  "hang": false
+ },
+ {
+  "id": "scr07.disabled-no-back",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "disabled",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "The hint line says how to go back",
+  "hang": false
+ },
+ {
+  "id": "scr07.staffed-live-queue",
+  "screen": "SCR-7",
+  "route": "/staff/oversight",
+  "state": "default",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "R5 live queue line",
+  "hang": false
+ },
+ {
+  "id": "scr08.default",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "default",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr08.empty",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "empty",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "FLOW-12: also what a reset leaves",
+  "hang": false
+ },
+ {
+  "id": "scr08.loading",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "loading",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr08.error",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr08.error-review-forbidden",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Mark reviewed, confirm",
+  "hang": false
+ },
+ {
+  "id": "scr08.error-flag-gone",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "error",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Mark reviewed, confirm",
+  "hang": false
+ },
+ {
+  "id": "scr08.stale-new-flag",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "stale",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "A reaction adds a flag about 3 s after the first read; the 15 s poll shows the line",
+  "hang": false
+ },
+ {
+  "id": "scr08.success-reviewed",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "success",
+  "role": "supervisor",
+  "signedIn": null,
+  "notes": "Mark reviewed, optional note, confirm",
+  "hang": false
+ },
+ {
+  "id": "scr08.disabled-rep",
+  "screen": "SCR-8",
+  "route": "/staff/flags",
+  "state": "disabled",
+  "role": "representative",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr09.default",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "default",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr09.empty",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "empty",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "FLOW-12: also what a reset leaves",
+  "hang": false
+ },
+ {
+  "id": "scr09.loading",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "loading",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr09.partial",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "partial",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "The promises tile shows a dash and its reason",
+  "hang": false
+ },
+ {
+  "id": "scr09.error",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "error",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr09.stale-clock-moved",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "stale",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "Numbers are as of Friday 2:20 pm; the demo clock reads Monday 7:00 am",
+  "hang": false
+ },
+ {
+  "id": "scr09.disabled-zero-denominator",
+  "screen": "SCR-9",
+  "route": "/staff/owner",
+  "state": "disabled",
+  "role": "owner",
+  "signedIn": null,
+  "notes": "No cases to open. on the promises and estimate tiles",
+  "hang": false
+ },
+ {
+  "id": "scr10.default",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.alerts-cap-and-latency",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.alert-zero-traffic",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.alert-failure-and-trace",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.empty",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "empty",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.loading",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "loading",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr10.partial-too-few-turns",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.error",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.error-resetting",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr10.stale-data-age",
+  "screen": "SCR-10",
+  "route": "/monitoring",
+  "state": "stale",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "The line appears at the next 15 s tick",
+  "hang": false
+ },
+ {
+  "id": "scr11.default",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "default",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr11.empty",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "empty",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr11.loading",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "loading",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ },
+ {
+  "id": "scr11.partial-dev-only",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "partial",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr11.error",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr11.error-resetting",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "error",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr11.stale-run-version",
+  "screen": "SCR-11",
+  "route": "/eval",
+  "state": "stale",
+  "role": "customer",
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr12.default",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "default",
+  "role": null,
+  "signedIn": null,
+  "notes": "Signed-out world (the SCR-12 default).",
+  "hang": false
+ },
+ {
+  "id": "scr12.loading",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "loading",
+  "role": null,
+  "signedIn": null,
+  "notes": "Type anything, press Sign in.",
+  "hang": true
+ },
+ {
+  "id": "scr12.error-refused",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr12.error-rate-limited",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "Same sentence as refused (decision G-2).",
+  "hang": false
+ },
+ {
+  "id": "scr12.error-unreachable",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "error",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr12.stale-session-ended",
+  "screen": "SCR-12",
+  "route": "/login?return_to=%2Fstaff%2Fqueue&reason=expired",
+  "state": "stale",
+  "role": null,
+  "signedIn": null,
+  "notes": "This is the page the foundation redirects to from /staff/queue when a call answers UNAUTHENTICATED_EXPIRED.",
+  "hang": false
+ },
+ {
+  "id": "scr12.stale-already-signed-in",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "stale",
+  "role": null,
+  "signedIn": true,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr12.success-chat",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Sign in with anything: you land on the chat as the customer.",
+  "hang": false
+ },
+ {
+  "id": "scr12.success-asked-page",
+  "screen": "SCR-12",
+  "route": "/login?return_to=%2Fstaff%2Fqueue&reason=none",
+  "state": "success",
+  "role": null,
+  "signedIn": null,
+  "notes": "Sign in: you land on /staff/queue (as the customer, so the role-gate panel shows).",
+  "hang": false
+ },
+ {
+  "id": "scr12.disabled-empty-fields",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": false
+ },
+ {
+  "id": "scr12.disabled-in-flight",
+  "screen": "SCR-12",
+  "route": "/login",
+  "state": "disabled",
+  "role": null,
+  "signedIn": null,
+  "notes": "",
+  "hang": true
+ }
+]

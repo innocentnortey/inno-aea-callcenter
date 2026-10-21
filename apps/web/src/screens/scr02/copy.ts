@@ -1,0 +1,13 @@
+export const HEADER_TITLE = "Demo delivery inbox";
+export const H1 = "Simulated messages";
+export const STATEMENT = "Simulated messages. Nothing is sent to anyone. This exists only so reviewers can complete verification.";
+export const FOOT = "This inbox carries codes only. Follow-ups are recorded on the case, never sent.";
+export const BACK = "Back to the chat";
+export const EMPTY_TITLE = "No codes yet.";
+export const EMPTY_BODY = "When the chat sends a code, it appears here. Ask the chat about your bill or book a visit to get one.";
+export const ERROR = "The inbox didn't load. Try again.";
+export const NEW_CODE = "New code received";
+export const COPY = "Copy code";
+export const COPIED = "Copied";
+export const COPY_FAILED = "Copy didn't work. Select the code and copy it.";
+export const STATUS_WORD = { active: "Active", used: "Used", expired: "Expired" } as const;

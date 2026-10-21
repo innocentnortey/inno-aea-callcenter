@@ -1,0 +1,176 @@
+{
+ "captured": "2026-10-20",
+ "source": "docs/data/issued/meridian_dataset/scheduling_db/meridian_scheduling.sqlite (read-only)",
+ "seeded_customers": [
+  {
+   "customer_id": "MHC-10001",
+   "name": "Linda Foster",
+   "phone": "512-555-0101",
+   "email": "linda.foster@example.com",
+   "service_address": "4412 Oak Hollow Dr",
+   "city": "Round Rock",
+   "zip": "78664",
+   "membership_tier": "standard",
+   "membership_renewal_date": "2026-11-03",
+   "system_brand": "Trane",
+   "system_install_date": "2023-05-14"
+  },
+  {
+   "customer_id": "MHC-10002",
+   "name": "Omar Patel",
+   "phone": "512-555-0102",
+   "email": "omar.patel@example.com",
+   "service_address": "901 Brookside Ct",
+   "city": "Kyle",
+   "zip": "78640",
+   "membership_tier": "none",
+   "membership_renewal_date": null,
+   "system_brand": "Goodman",
+   "system_install_date": "2019-08-22"
+  },
+  {
+   "customer_id": "MHC-10003",
+   "name": "Grace Okafor",
+   "phone": "512-555-0103",
+   "email": "grace.okafor@example.com",
+   "service_address": "2207 Windcrest Ave",
+   "city": "Austin",
+   "zip": "78745",
+   "membership_tier": "plus",
+   "membership_renewal_date": "2027-02-18",
+   "system_brand": "Lennox",
+   "system_install_date": "2025-11-30"
+  },
+  {
+   "customer_id": "MHC-10004",
+   "name": "Daniel Reyes",
+   "phone": "512-555-0104",
+   "email": "daniel.reyes@example.com",
+   "service_address": "77 Ridgeline Pass",
+   "city": "Georgetown",
+   "zip": "78626",
+   "membership_tier": "none",
+   "membership_renewal_date": null,
+   "system_brand": "Carrier",
+   "system_install_date": "2026-07-09"
+  }
+ ],
+ "invoice_INV-204411": [
+  {
+   "invoice_id": "INV-204411",
+   "customer_id": "MHC-10002",
+   "appointment_id": null,
+   "issued_date": "2026-10-02",
+   "due_date": "2026-11-01",
+   "amount_cents": 47800,
+   "balance_cents": 47800,
+   "line_items": "[{\"desc\": \"Diagnostic visit\", \"cents\": 8900}, {\"desc\": \"Contactor replacement\", \"cents\": 24500}, {\"desc\": \"After-hours dispatch\", \"cents\": 14400}]"
+  }
+ ],
+ "appointment_MHC-10001": [
+  {
+   "appointment_id": 159,
+   "slot_id": 159,
+   "customer_id": "MHC-10001",
+   "issue_description": "AC blowing warm air",
+   "created_at": "2026-10-14",
+   "status": "scheduled",
+   "is_warranty_visit": 0,
+   "slot_date": "2026-10-22",
+   "window": "08:00-12:00",
+   "zone": "north",
+   "service_type": "hvac_repair",
+   "tech_id": 5
+  }
+ ],
+ "appointment_inside_24h_MHC-57204": [
+  {
+   "appointment_id": 1,
+   "slot_id": 2,
+   "customer_id": "MHC-57204",
+   "issue_description": "Annual tune-up",
+   "created_at": "2026-10-07",
+   "status": "scheduled",
+   "is_warranty_visit": 0,
+   "slot_date": "2026-10-16",
+   "window": "12:00-16:00",
+   "zone": "north",
+   "service_type": "hvac_tune_up"
+  }
+ ],
+ "customer_MHC-57204": [
+  {
+   "customer_id": "MHC-57204",
+   "name": "Michael Foster",
+   "phone": "512-294-5440",
+   "email": "michael.foster@example.com",
+   "service_address": "4170 Pecan Grove Rd",
+   "city": "Austin",
+   "zip": "78745",
+   "membership_tier": "none",
+   "membership_renewal_date": null,
+   "system_brand": "Goodman",
+   "system_install_date": "2021-10-13"
+  }
+ ],
+ "issue_vs_service_mismatch_examples": [
+  {
+   "appointment_id": 2,
+   "issue_description": "Water at indoor unit",
+   "service_type": "hvac_tune_up",
+   "is_warranty_visit": 0
+  },
+  {
+   "appointment_id": 8,
+   "issue_description": "Furnace won't start",
+   "service_type": "plumbing",
+   "is_warranty_visit": 1
+  },
+  {
+   "appointment_id": 16,
+   "issue_description": "AC not cooling",
+   "service_type": "hvac_tune_up",
+   "is_warranty_visit": 0
+  },
+  {
+   "appointment_id": 19,
+   "issue_description": "Kitchen drain backed up",
+   "service_type": "estimate",
+   "is_warranty_visit": 0
+  }
+ ],
+ "slots_north_hvac_repair_sample": [
+  {
+   "slot_id": 1,
+   "slot_date": "2026-10-16",
+   "window": "08:00-12:00",
+   "zone": "north",
+   "service_type": "hvac_repair",
+   "status": "reserved_members"
+  },
+  {
+   "slot_id": 16,
+   "slot_date": "2026-10-16",
+   "window": "08:00-12:00",
+   "zone": "north",
+   "service_type": "hvac_repair",
+   "status": "booked"
+  },
+  {
+   "slot_id": 31,
+   "slot_date": "2026-10-17",
+   "window": "08:00-12:00",
+   "zone": "north",
+   "service_type": "hvac_repair",
+   "status": "booked"
+  },
+  {
+   "slot_id": 36,
+   "slot_date": "2026-10-17",
+   "window": "08:00-12:00",
+   "zone": "north",
+   "service_type": "hvac_repair",
+   "status": "booked"
+  }
+ ]
+}

@@ -13,7 +13,7 @@ paths:
 
 # Design Docs Built to Be Defended
 
-Applies to this project's PRD and design documents (scope line adapted from AgentForge's hard-gate documents for `inno-aea-onboarding`, 2026-10-14). Gauntlet grades whether you can defend what you built, live, in a technical interview — these docs are the script.
+Applies to this project's PRD and design documents (scope line adapted from AgentForge's hard-gate documents for `inno-aea-callcenter`, 2026-10-14). Gauntlet grades whether you can defend what you built, live, in a technical interview — these docs are the script.
 
 Source: `principles/` GP-1, GP-3, GP-16, GP-19, GP-22, GP-30, GP-31, Gauntlet AI repo.
 

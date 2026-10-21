@@ -1,6 +1,6 @@
 # Development log contract
 
-> Source: `Gauntlet AI/artifacts/ICM Rework/module/icm-project/references/dev-log.md` (shared ICM owner), copied 2026-10-14 for `inno-aea-onboarding`. Refresh this copy from the shared owner. **Local destination:** `Gauntlet AI/devlogs/aea-onboarding/` (relative to this repo: `../Gauntlet AI/devlogs/aea-onboarding/`), matching Equinox and Cerbo. If that folder is absent on a host, stage the run file in `docs/devlog/` and move it later.
+> Source: `Gauntlet AI/artifacts/ICM Rework/module/icm-project/references/dev-log.md` (shared ICM owner), copied 2026-10-14. Refresh this copy from the shared owner. **Local destination:** `Gauntlet AI/devlogs/aea-callcenter/` (relative to this repo: `../Gauntlet AI/devlogs/aea-callcenter/`), matching Equinox and Cerbo. Runs from before the 2026-10-20 pivot stay in `Gauntlet AI/devlogs/aea-onboarding/` as history. If the folder is absent on a host, stage the run file in `docs/devlog/` and move it later.
 
 
 A dev log preserves the useful story of a work run: what changed, why, what was checked, and what remains. It supports explanation and resumption. Product decisions, ticket status, acceptance evidence and AI disclosure stay in their existing owners; link to them rather than copying their full records.

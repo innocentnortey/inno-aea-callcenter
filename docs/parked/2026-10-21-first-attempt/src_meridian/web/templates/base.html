@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Meridian Home Comfort{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/app.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="bar">
+  <div class="brand">Meridian Home Comfort<small>Heating · Cooling · Plumbing · Austin</small></div>
+  <span class="pill muted" title="The dataset's fixed date">Demo date: {{ today }}</span>
+  <nav class="links" aria-label="Demo pages"><a href="/">Customer chat</a><a href="/demo/inbox">Demo inbox</a><a href="/staff">Staff console</a><a href="/monitor">Monitoring</a></nav>
+</div></header>
+{% if staffed %}<div class="banner" role="status"><div class="bar">Simulated staffing (demo). No Meridian employee is online; a reviewer can act as the demo representative.</div></div>{% endif %}
+<main id="main">{% block main %}{% endblock %}</main>
+</body>
+</html>

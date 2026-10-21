@@ -13,9 +13,9 @@
 > a 3–4 minute walkthrough video, and a source repo with code, eval set and README). Both must
 > be satisfied.
 >
-> Prior AEA research to reuse: `docs/aea-portfolio-research.md`, `docs/source/source-register.md`,
-> `docs/analysis/`. The earlier brief (Project 1, onboarding assistant) is
-> `docs/source/aea-proj1-onboarding-assistant.md`.
+> Sources are registered as S-100 (Part A) and S-101 (Part B) in `docs/source/source-register.md`.
+> AEA context reused for framing: `docs/analysis/aea-investors.md`. The earlier Project 1 brief
+> (onboarding assistant) and its research are archived in `docs/archive/project-1-onboarding/`.
 
 ---
 

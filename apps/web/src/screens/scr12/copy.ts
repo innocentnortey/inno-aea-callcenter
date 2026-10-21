@@ -1,0 +1,16 @@
+export const BRAND = "Meridian Home Comfort";
+export const H1 = "Demo access";
+export const STATEMENT = "This is a demonstration of Meridian's assistant. These are not Meridian accounts, and everything here is fictional.";
+export const USERNAME = "Username";
+export const PASSWORD = "Password";
+export const HINT = "From the README";
+export const SHOW = "Show password";
+export const SIGN_IN = "Sign in";
+export const SIGNING_IN = "Signing in…";
+export const FOOT = "The username and password are in the README that came with the submission.";
+export const REFUSED = "That username or password didn't work. Check the README and try again.";
+export const UNREACHABLE = "Couldn't reach the demo. Try again.";
+export const ENDED = "Your demo session ended, so please sign in again.";
+export const ALREADY = "You're already signed in. Continue to the demo, or sign out.";
+export const CONTINUE = "Continue";
+export const SIGN_OUT = "Sign out";

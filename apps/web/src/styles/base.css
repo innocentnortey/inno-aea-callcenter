@@ -1,0 +1,74 @@
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--color-text);
+  background: var(--color-canvas);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "cv11";
+  -webkit-font-smoothing: antialiased;
+}
+*, *::before, *::after { box-sizing: border-box; }
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+p { text-wrap: pretty; margin: 0; }
+html { scroll-padding-top: var(--sticky-offset, 0px); }
+:focus-visible { outline: var(--focus-ring-width) solid var(--focus-ring); outline-offset: 2px; }
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+.skip-link {
+  position: absolute; left: 8px; top: -64px; z-index: 50; padding: 8px 12px; border-radius: var(--radius-control);
+  background: var(--color-surface); color: var(--color-text); border: var(--line-control);
+}
+.skip-link:focus { top: 8px; }
+
+/* Type roles (design.md 3.2, 3.3): family, weight and tracking. Size comes from the --text-* tokens. */
+@layer components {
+  .t-section { font-size: var(--text-section); line-height: var(--text-section--line-height); font-weight: 600; letter-spacing: .06em; text-transform: uppercase; }
+  .t-signal { font-family: var(--font-display); font-size: var(--text-signal); line-height: var(--text-signal--line-height); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+  .t-code { font-family: var(--font-mono); font-size: var(--text-code); line-height: var(--text-code--line-height); font-weight: 600; letter-spacing: .2em; }
+  .t-ref { font-family: var(--font-mono); font-size: var(--text-ref); line-height: var(--text-ref--line-height); font-weight: 500; }
+  .t-lead { font-family: var(--font-display); font-size: var(--text-lead); line-height: var(--text-lead--line-height); font-weight: 600; }
+  .t-title { font-family: var(--font-display); font-size: var(--text-title); line-height: var(--text-title--line-height); font-weight: 600; }
+  .t-card-title { font-family: var(--font-display); font-size: var(--text-card-title); line-height: var(--text-card-title--line-height); font-weight: 600; }
+  .t-name { font-family: var(--font-display); font-size: var(--text-name); line-height: var(--text-name--line-height); font-weight: 600; }
+  .t-time-hero { font-family: var(--font-display); font-size: var(--text-time-hero); line-height: var(--text-time-hero--line-height); font-weight: 600; }
+  .t-time-due { font-family: var(--font-display); font-size: var(--text-time-due); line-height: var(--text-time-due--line-height); font-weight: 600; }
+  .t-time-row { font-size: var(--text-time-row); line-height: var(--text-time-row--line-height); font-weight: 600; }
+  .t-time-meta { font-size: var(--text-time-meta); line-height: var(--text-time-meta--line-height); font-weight: 400; }
+}
+
+/* Hover only on pointer devices (design.md 4.2). */
+@media (hover: hover) {
+  .hover-mix:hover { background-color: color-mix(in oklab, var(--hover-base, var(--color-surface)) 92%, var(--color-text)); }
+  .link-text:hover { text-decoration: underline; }
+}
+.press-mix:active { background-color: color-mix(in oklab, var(--hover-base, var(--color-surface)) 86%, var(--color-text)); }
+
+/* Motion is opt-in (design.md 6). */
+@media (prefers-reduced-motion: no-preference) {
+  .motion-control { transition: background-color var(--dur-control) var(--ease-move), color var(--dur-control) var(--ease-move), border-color var(--dur-control) var(--ease-move); }
+  .motion-chevron { transition: transform var(--dur-check) var(--ease-move); }
+  .motion-fade { animation: mhc-fade var(--dur-fade) var(--ease-enter); }
+  /* Landed wash (design.md 6): mint layer on a thread card header, in 160 ms, held 640 ms, out 400 ms; opacity only. */
+  .landed-wash { position: relative; }
+  .landed-wash::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--landed-wash);
+    border-bottom: 1px solid var(--landed-edge);
+    pointer-events: none;
+    opacity: 0;
+    animation: mhc-landed calc(var(--dur-landed-in) + var(--dur-landed-hold) + var(--dur-landed-out)) var(--ease-enter) 1;
+  }
+  /* Check draw: the chosen tile's check stroke draws in --dur-check (stroke-dashoffset on a 14 px glyph). */
+  .check-draw { stroke-dasharray: 24; stroke-dashoffset: 0; animation: mhc-check-draw var(--dur-check) var(--ease-enter) 1; }
+}
+@keyframes mhc-landed { 0% { opacity: 0; } 13.3% { opacity: 1; } 66.7% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes mhc-check-draw { from { stroke-dashoffset: 24; } to { stroke-dashoffset: 0; } }
+@keyframes mhc-fade { from { opacity: 0; } to { opacity: 1; } }
+details[open] > summary .motion-chevron { transform: rotate(180deg); }
+dialog::backdrop { background: var(--color-scrim); }

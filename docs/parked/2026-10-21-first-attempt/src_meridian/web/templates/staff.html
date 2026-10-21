@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Staff console · Meridian{% endblock %}
+{% macro pri(p) %}{% if p=='P0' %}<span class="pill danger">P0 safety</span>{% elif p=='P1' %}<span class="pill urgent">P1 urgent</span>{% else %}<span class="pill muted">{{ p }}</span>{% endif %}{% endmacro %}
+{% macro row(c) %}<tr><td><a href="/staff/case/{{ c.case_id }}">{{ c.case_id }}</a>{% if c.demo_seed %} <span class="pill demo">demo seed</span>{% endif %}</td>
+<td>{{ pri(c.priority) }}</td><td>{{ c.reason.replace('_',' ') }}</td><td>{{ c.state.replace('_',' ') }}</td><td>{{ c.owner or '—' }}</td>
+<td>{{ c.due_at or '—' }}</td><td>{{ (c.followup_channel or '—') }}{% if c.followup_window %} · {{ c.followup_window }}{% endif %}</td></tr>{% endmacro %}
+{% block main %}
+<h1>Staff console</h1>
+<div class="card" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+  <span>Staffing: {% if staffed %}<span class="pill demo">Simulated shift ON</span>{% else %}<span class="pill muted">Nobody online (default)</span>{% endif %}</span>
+  <form class="inline" method="post" action="/staff/staffing"><input type="hidden" name="on" value="{{ 'off' if staffed else 'on' }}">
+    <button class="btn small {{ '' if not staffed else 'secondary' }}">{{ 'End simulated shift' if staffed else 'Start simulated shift' }}</button></form>
+  <form class="inline" method="post" action="/staff/advance"><input type="hidden" name="minutes" value="1440"><button class="btn small secondary">Advance demo clock 1 day</button></form>
+  <form class="inline" method="post" action="/admin/reset" onsubmit="return confirm('Reset the demo database?')"><button class="btn small secondary">Reset demo data</button></form>
+  <span class="small muted">Demo clock: {{ alerts.now }}</span>
+</div>
+
+<h2>Supervisor: what needs action</h2>
+<div class="grid">
+  <div class="card"><h3>P0 / P1</h3><div class="kpi">{{ alerts.priority|length }}</div><span class="small muted">safety and urgent comfort</span></div>
+  <div class="card"><h3>Unowned</h3><div class="kpi">{{ alerts.unowned|length }}</div></div>
+  <div class="card"><h3>Due today</h3><div class="kpi">{{ alerts.due_soon|length }}</div></div>
+  <div class="card"><h3>Overdue</h3><div class="kpi" style="color:var(--danger)">{{ alerts.overdue|length }}</div></div>
+  <div class="card"><h3>Live queue</h3><div class="kpi">{{ alerts.live_queue|length }}</div><span class="small muted">simulated shift only</span></div>
+</div>
+{% if alerts.overdue %}<p><strong>Overdue:</strong> {% for c in alerts.overdue %}<a href="/staff/case/{{ c.case_id }}">{{ c.case_id }}</a> ({{ c.owner or 'unowned' }}) {% endfor %}</p>{% endif %}
+
+<h2>Open cases (P0/P1 first, then due time)</h2>
+<div class="scroll"><table class="tbl"><thead><tr><th>Case</th><th>Priority</th><th>Reason</th><th>State</th><th>Owner</th><th>Due</th><th>Follow-up</th></tr></thead><tbody>
+{% for c in open_cases %}{{ row(c) }}{% else %}<tr><td colspan="7" class="muted">No open cases.</td></tr>{% endfor %}</tbody></table></div>
+
+<h2>Business owner: outcomes</h2>
+<div class="grid">
+  <div class="card"><h3>Conversations</h3><div class="kpi">{{ owner.conversations }}</div><span class="small muted">{{ owner.ai_only }} AI-only · {{ owner.escalated }} handed to people</span></div>
+  <div class="card"><h3>Promises kept</h3><div class="kpi">{{ owner.promises_kept }}/{{ owner.promises_due }}</div><span class="small muted">closed cases contacted before the due time</span></div>
+  <div class="card"><h3>Latency per turn</h3><div class="kpi">{{ owner.p50 or '—' }}s</div><span class="small muted">p50 · p95 {{ owner.p95 or '—' }}s</span></div>
+  <div class="card"><h3>Flags to review</h3><div class="kpi">{{ owner.flags }}</div><span class="small muted">AI mistakes reported by staff</span></div>
+</div>
+<h3 style="margin-top:14px">Why the AI hands off</h3>
+<p>{% for r,n in owner.by_reason.items() %}<span class="pill muted">{{ r.replace('_',' ') }} · {{ n }}</span> {% else %}<span class="muted">No handoffs yet.</span>{% endfor %}</p>
+<p class="small muted">"AI-only" is not the same as "resolved correctly": correctness comes from the evaluation run (<a href="/monitor">Monitoring</a>) and staff flags.</p>
+
+<h2>Recently closed</h2>
+<div class="scroll"><table class="tbl"><thead><tr><th>Case</th><th>Priority</th><th>Reason</th><th>State</th><th>Owner</th><th>Due</th><th>Follow-up</th></tr></thead><tbody>
+{% for c in closed %}{{ row(c) }}{% else %}<tr><td colspan="7" class="muted">None yet.</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

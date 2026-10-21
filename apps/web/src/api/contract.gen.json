@@ -1,0 +1,1802 @@
+{
+  "operations": {
+    "advanceDemoClock": {
+      "auth": true,
+      "con": "CON-8",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/clock",
+      "requestExamples": {
+        "NEXT_MORNING": {
+          "step": "next_business_morning"
+        },
+        "PLUS_4H": {
+          "step": "plus_4h"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "NEXT_MORNING",
+            "PLUS_1H"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "applyCaseAction": {
+      "auth": true,
+      "con": "CON-13",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "MHC-C-0007",
+            "name": "reference"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/cases/{reference}/actions",
+      "requestExamples": {
+        "ASSIGN": {
+          "action": "assign",
+          "assignee": "riley",
+          "expected_version": 3,
+          "reason": "Billing dispute, Riley has the context"
+        },
+        "CHANGE_PRIORITY": {
+          "action": "change_priority",
+          "expected_version": 3,
+          "priority": "P2",
+          "reason": "Customer reports a second invoice"
+        },
+        "CLAIM": {
+          "action": "claim",
+          "expected_version": 3
+        },
+        "RELEASE": {
+          "action": "release",
+          "expected_version": 4,
+          "reason": "Not my area"
+        },
+        "RESOLVE": {
+          "action": "resolve",
+          "expected_version": 8,
+          "outcome": "Credit decision recorded; customer told by phone (demo)"
+        },
+        "WAIT": {
+          "action": "wait",
+          "expected_version": 5,
+          "reason": "Customer asked for Monday morning",
+          "wake_up_at": "2026-10-19T09:00:00-05:00"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "CLAIMED",
+            "WAITING",
+            "RESOLVED",
+            "ASSIGNED",
+            "PRIORITY_CHANGED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "VERSION_CONFLICT",
+            "CASE_ALREADY_CLAIMED",
+            "NOT_ALLOWED_IN_STATE"
+          ],
+          "status": 409
+        },
+        {
+          "examples": [
+            "REASON_REQUIRED",
+            "WAKE_UP_REQUIRED",
+            "OUTCOME_REQUIRED"
+          ],
+          "status": 422
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "createFlag": {
+      "auth": true,
+      "con": "CON-16",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/staff/flags",
+      "requestExamples": {
+        "ANSWER": {
+          "case_ref": "MHC-C-0007",
+          "message_id": "m-2",
+          "note": "Quoted $144 as the fee",
+          "reason": "Quoted $144 as the after-hours fee",
+          "target": "answer"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "ANSWER"
+          ],
+          "status": 201
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        201
+      ]
+    },
+    "getCase": {
+      "auth": true,
+      "con": "CON-12",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "MHC-C-0007",
+            "name": "reference"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/cases/{reference}",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "DEFAULT",
+            "BRIEF_BEING_WRITTEN",
+            "TRIMMED_STOP",
+            "SAFETY_CASE",
+            "LIVE_JOINED",
+            "WAITING",
+            "FEE_BEARING_CHANGE"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getChatThread": {
+      "auth": true,
+      "con": "CON-1",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "thr_9d41",
+            "name": "thread_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/chat/sessions/{thread_id}",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "OPEN",
+            "ENDED_BLOCK"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "SESSION_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "SESSION_ENDED"
+          ],
+          "status": 410
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getDemoClock": {
+      "auth": true,
+      "con": "CON-8",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/clock",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "START",
+            "ADVANCED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getLatestEval": {
+      "auth": true,
+      "con": "CON-20",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/eval/latest",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "BOTH_SPLITS",
+            "DEV_ONLY",
+            "STALE_RUN",
+            "NO_RUN"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getMonitoring": {
+      "auth": true,
+      "con": "CON-19",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/monitoring",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "DEFAULT",
+            "FIRING",
+            "TOO_FEW_TURNS",
+            "EMPTY",
+            "ZERO_TRAFFIC_FIRING",
+            "FAILURE_AND_TRACE_FIRING"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getOversight": {
+      "auth": true,
+      "con": "CON-17",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/staff/oversight",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "SEEDED",
+            "AFTER_ADVANCE",
+            "SHIFT_ENDED_WITH_WAITING",
+            "NOTHING_URGENT"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        }
+      ],
+      "roles": [
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getOwnerMetrics": {
+      "auth": true,
+      "con": "CON-18",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/staff/owner-metrics",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "SEEDED",
+            "EMPTY"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        }
+      ],
+      "roles": [
+        "owner",
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getQueue": {
+      "auth": true,
+      "con": "CON-11",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/staff/queue",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "SEEDED",
+            "STAFFED_WITH_WAITING",
+            "ALL_CAUGHT_UP",
+            "BRIEF_BEING_WRITTEN"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getSession": {
+      "auth": true,
+      "con": "CON-10",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/session",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "CUSTOMER",
+            "REPRESENTATIVE"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "getStaffing": {
+      "auth": true,
+      "con": "CON-7",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/staffing",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "OFF",
+            "ON"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "listDemoInbox": {
+      "auth": true,
+      "con": "CON-6",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/inbox",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "ONE_ACTIVE",
+            "EMPTY",
+            "USED_AND_EXPIRED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "listDemoRoles": {
+      "auth": true,
+      "con": "CON-10",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/session/roles",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "ROLES"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "listFlags": {
+      "auth": true,
+      "con": "CON-16",
+      "method": "GET",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/staff/flags",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "THREE",
+            "EMPTY"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "liveChatAction": {
+      "auth": true,
+      "con": "CON-14",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "MHC-C-0007",
+            "name": "reference"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/cases/{reference}/live",
+      "requestExamples": {
+        "CLOSE": {
+          "action": "close"
+        },
+        "HAND_BACK": {
+          "action": "hand_back"
+        },
+        "JOIN": {
+          "action": "join"
+        },
+        "SEND": {
+          "action": "send",
+          "text": "Hi Omar, I can look at the after-hours charge with you."
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "JOINED",
+            "SENT",
+            "HANDED_BACK",
+            "CLOSED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "NOT_CLAIMED_BY_YOU"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "NOT_LIVE",
+            "CASE_ALREADY_CLAIMED"
+          ],
+          "status": 409
+        }
+      ],
+      "roles": [
+        "representative"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "login": {
+      "auth": false,
+      "con": "CON-22",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/login",
+      "requestExamples": {
+        "PLACEHOLDERS": {
+          "password": "<demo-password>",
+          "username": "<demo-username>"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "LOGGED_IN"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "LOGIN_FAILED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "LOGIN_RATE_LIMITED"
+          ],
+          "status": 429
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "logout": {
+      "auth": true,
+      "con": "CON-22",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/logout",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [],
+          "status": 204
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        204
+      ]
+    },
+    "recordContactActivity": {
+      "auth": true,
+      "con": "CON-15",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "MHC-C-0007",
+            "name": "reference"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/cases/{reference}/activities",
+      "requestExamples": {
+        "CALL": {
+          "expected_version": 4,
+          "kind": "call",
+          "note": "Explained the credit review",
+          "outcome": "reached"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "CALL_REACHED",
+            "EMAIL_LEFT_MESSAGE"
+          ],
+          "status": 201
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "NOT_ALLOWED_IN_STATE",
+            "VERSION_CONFLICT"
+          ],
+          "status": 409
+        }
+      ],
+      "roles": [
+        "representative"
+      ],
+      "stream": false,
+      "success": [
+        201
+      ]
+    },
+    "requestPerson": {
+      "auth": true,
+      "con": "CON-4",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "thr_9d41",
+            "name": "thread_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/chat/sessions/{thread_id}/handoff",
+      "requestExamples": {
+        "BUTTON": {
+          "turn_id": "9a316052-be7f-4e96-8c43-3e5f60718293"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "CASE_CREATED",
+            "LIVE_QUEUED",
+            "ALREADY_OPEN"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "SESSION_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "SESSION_ENDED"
+          ],
+          "status": 410
+        },
+        {
+          "examples": [
+            "HANDOFF_FAILED"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "resetDemo": {
+      "auth": true,
+      "con": "CON-9",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/reset",
+      "requestExamples": {
+        "CONFIRM": {
+          "confirm": true
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "RESET"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 409
+        },
+        {
+          "examples": [
+            "RESET_FAILED"
+          ],
+          "status": 500
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "reviewFlag": {
+      "auth": true,
+      "con": "CON-16",
+      "method": "PATCH",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "flg-3",
+            "name": "flag_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/flags/{flag_id}",
+      "requestExamples": {
+        "REVIEW": {
+          "note": "Fee schedule is right; answer fixed in review",
+          "status": "reviewed"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "REVIEWED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "FLAG_NOT_FOUND"
+          ],
+          "status": 404
+        }
+      ],
+      "roles": [
+        "supervisor"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "saveFollowUp": {
+      "auth": true,
+      "con": "CON-5",
+      "method": "PUT",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "thr_9d41",
+            "name": "thread_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/chat/sessions/{thread_id}/follow-up",
+      "requestExamples": {
+        "EMAIL_GENERAL": {
+          "channel": "email",
+          "destination": "general",
+          "window": "any"
+        },
+        "PHONE_MORNINGS": {
+          "channel": "phone",
+          "destination": "on_record",
+          "window": "morning"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "PHONE_MORNINGS"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "SESSION_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "NOT_ALLOWED_IN_STATE"
+          ],
+          "status": 409
+        },
+        {
+          "examples": [
+            "SESSION_ENDED"
+          ],
+          "status": 410
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "setStaffing": {
+      "auth": true,
+      "con": "CON-7",
+      "method": "PUT",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/demo/staffing",
+      "requestExamples": {
+        "OFF": {
+          "mode": "nobody_online"
+        },
+        "ON": {
+          "mode": "simulated_on_shift"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "TURNED_ON",
+            "TURNED_OFF_WITH_WAITING"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "startChatSession": {
+      "auth": true,
+      "con": "CON-1",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/chat/sessions",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "STARTED",
+            "SIMULATION_ON"
+          ],
+          "status": 201
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "REQUEST_RATE_LIMITED"
+          ],
+          "status": 429
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        201
+      ]
+    },
+    "streamCaseEvents": {
+      "auth": true,
+      "con": "CON-21",
+      "method": "GET",
+      "params": {
+        "header": [
+          {
+            "example": 30,
+            "name": "Last-Event-ID"
+          }
+        ],
+        "path": [
+          {
+            "example": "MHC-C-0007",
+            "name": "reference"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/staff/cases/{reference}/events",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "FRAMES"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "ROLE_NOT_ALLOWED",
+            "ROLE_NOT_ALLOWED_ROLE_RESET"
+          ],
+          "status": 403
+        },
+        {
+          "examples": [
+            "CASE_NOT_FOUND"
+          ],
+          "status": 404
+        }
+      ],
+      "roles": [
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": true,
+      "success": [
+        200
+      ]
+    },
+    "streamChatEvents": {
+      "auth": true,
+      "con": "CON-3",
+      "method": "GET",
+      "params": {
+        "header": [
+          {
+            "example": 30,
+            "name": "Last-Event-ID"
+          }
+        ],
+        "path": [
+          {
+            "example": "thr_9d41",
+            "name": "thread_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/chat/sessions/{thread_id}/events",
+      "requestExamples": {},
+      "responses": [
+        {
+          "examples": [
+            "FRAMES"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "SESSION_NOT_FOUND"
+          ],
+          "status": 404
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": true,
+      "success": [
+        200
+      ]
+    },
+    "submitTurn": {
+      "auth": true,
+      "con": "CON-2",
+      "method": "POST",
+      "params": {
+        "header": [],
+        "path": [
+          {
+            "example": "thr_9d41",
+            "name": "thread_id"
+          }
+        ],
+        "query": []
+      },
+      "path": "/api/chat/sessions/{thread_id}/turns",
+      "requestExamples": {
+        "CHOICE_SLOT": {
+          "payload": {
+            "card_id": "slots-7",
+            "kind": "choice",
+            "option": "56"
+          },
+          "turn_id": "5c9d2c1e-7a3b-4a52-8e0f-9a1b2c3d4e5f"
+        },
+        "CODE": {
+          "payload": {
+            "card_id": "code-1",
+            "code": "482913",
+            "kind": "code"
+          },
+          "turn_id": "6d0e3d2f-8b4c-4b63-9f10-0b2c3d4e5f60"
+        },
+        "FORM_LOCATE": {
+          "payload": {
+            "card_id": "loc-1",
+            "kind": "form",
+            "values": {
+              "name": "Omar Patel",
+              "phone": "512-555-0102"
+            }
+          },
+          "turn_id": "7e1f4e30-9c5d-4c74-8a21-1c3d4e5f6071"
+        },
+        "FORM_WHERE": {
+          "payload": {
+            "card_id": "where-1",
+            "kind": "form",
+            "values": {
+              "zip_or_city": "78704"
+            }
+          },
+          "turn_id": "8f205f41-ad6e-4d85-9b32-2d4e5f607182"
+        },
+        "TEXT": {
+          "payload": {
+            "kind": "text",
+            "text": "Why is my bill $478?"
+          },
+          "turn_id": "b0a7c3d2-8f3a-4f6e-9b6e-2a1d5c7e9f01"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "ANSWER_WITH_SOURCE",
+            "SAFETY",
+            "CONDITIONAL_SAFETY",
+            "BURNING_CHECK",
+            "EMERGENCY_LINE",
+            "NO_INFO",
+            "QUICK_CHECKS",
+            "URGENCY_QUESTIONS",
+            "WHERE_PROMPT",
+            "SLOT_CARD",
+            "SLOT_CARD_MEMBER",
+            "LOCATE_PROMPT",
+            "CODE_SENT",
+            "VERIFIED_ACCOUNT_INVOICE",
+            "ACCOUNT_MEMBERSHIP",
+            "ACCOUNT_WARRANTY",
+            "BOOKED",
+            "APPOINTMENT",
+            "CANCELLED",
+            "CHANGE_REQUEST",
+            "HANDOFF",
+            "LIVE_QUEUED",
+            "FAILURE_OFFER",
+            "SLOT_TAKEN",
+            "OUT_OF_AREA",
+            "CODE_WRONG",
+            "CODE_EXPIRED",
+            "CODE_LOCKED",
+            "CODE_CAP_REACHED",
+            "NOT_VERIFIED",
+            "RATE_LIMITED",
+            "BOOKING_CAP",
+            "SPEND_CAP_REACHED",
+            "TURN_TIMEOUT",
+            "BUSY",
+            "AI_PAUSED",
+            "HANDOFF_STAFFED"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "SESSION_NOT_FOUND"
+          ],
+          "status": 404
+        },
+        {
+          "examples": [
+            "TURN_IN_PROGRESS"
+          ],
+          "status": 409
+        },
+        {
+          "examples": [
+            "SESSION_ENDED"
+          ],
+          "status": 410
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    },
+    "switchRole": {
+      "auth": true,
+      "con": "CON-10",
+      "method": "PUT",
+      "params": {
+        "header": [],
+        "path": [],
+        "query": []
+      },
+      "path": "/api/session/role",
+      "requestExamples": {
+        "CUSTOMER": {
+          "role": "customer"
+        },
+        "OWNER": {
+          "role": "owner"
+        },
+        "REPRESENTATIVE": {
+          "role": "representative"
+        },
+        "SUPERVISOR": {
+          "role": "supervisor"
+        }
+      },
+      "responses": [
+        {
+          "examples": [
+            "TO_REPRESENTATIVE",
+            "TO_SUPERVISOR",
+            "TO_OWNER",
+            "TO_CUSTOMER"
+          ],
+          "status": 200
+        },
+        {
+          "examples": [
+            "VALIDATION_ERROR"
+          ],
+          "status": 400
+        },
+        {
+          "examples": [
+            "UNAUTHENTICATED",
+            "UNAUTHENTICATED_EXPIRED"
+          ],
+          "status": 401
+        },
+        {
+          "examples": [
+            "RESET_IN_PROGRESS"
+          ],
+          "status": 503
+        }
+      ],
+      "roles": [
+        "customer",
+        "representative",
+        "supervisor",
+        "owner"
+      ],
+      "stream": false,
+      "success": [
+        200
+      ]
+    }
+  },
+  "source": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+  "specVersion": "0.1.0-ux3"
+}

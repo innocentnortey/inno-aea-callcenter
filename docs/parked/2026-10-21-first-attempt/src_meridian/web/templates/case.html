@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ c.case_id }} · Staff console{% endblock %}
+{% block main %}
+<p><a href="/staff">← Staff console</a></p>
+<h1>{{ c.case_id }} · {{ brief.why }}</h1>
+<p>{% if c.priority=='P0' %}<span class="pill danger">P0 safety</span>{% elif c.priority=='P1' %}<span class="pill urgent">P1 urgent</span>{% else %}<span class="pill muted">{{ c.priority }}</span>{% endif %}
+ <span class="pill muted">{{ c.state.replace('_',' ') }}</span> <span class="pill muted">owner: {{ c.owner or 'unowned' }}</span>
+ <span class="pill muted">due: {{ c.due_at or '—' }}</span> <span class="pill muted">promise: {{ c.promise_status }}</span>
+ {% if c.demo_seed %}<span class="pill demo">demo seed</span>{% endif %}</p>
+<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))">
+<div class="card brief"><h2 style="margin-top:0">Brief</h2><dl>
+  <dt>Why this came to you</dt><dd>{{ brief.why }}</dd>
+  <dt>What the customer needs</dt><dd><ul>{% for q in brief.customer_needs %}<li>"{{ q }}"</li>{% endfor %}</ul></dd>
+  <dt>What we know for sure</dt><dd>{% if brief.facts %}<ul>{% for f in brief.facts %}<li>{{ f.text }} <span class="small muted">[{{ f.source }} · read {{ f.read_at }}]</span></li>{% endfor %}</ul>{% else %}<span class="muted">None: no records were read.</span>{% endif %}</dd>
+  <dt>What the customer says (not checked)</dt><dd>{% if brief.claims %}<ul>{% for q in brief.claims %}<li class="claim">"{{ q }}"</li>{% endfor %}</ul>{% else %}<span class="muted">None</span>{% endif %}</dd>
+  <dt>What the AI did</dt><dd><ul>{% for a in brief.ai_did %}<li>{{ a }}</li>{% endfor %}</ul></dd>
+  <dt>What we told the customer</dt><dd>"{{ brief.told_customer }}"{% if brief.due_at %} <span class="small muted">(due {{ brief.due_at }})</span>{% endif %}</dd>
+  <dt>What you need to decide</dt><dd>{{ brief.decide }}</dd>
+  <dt>Who and how to reach them</dt><dd>{{ brief.who.identity }}{% if brief.who.customer_id %} Record {{ brief.who.customer_id }}.{% endif %}<br>
+    Follow-up: {{ c.followup_channel or 'not chosen yet (email is the default)' }}{% if c.followup_destination %} · {{ c.followup_destination }}{% endif %}{% if c.destination_on_record == 0 %} <span class="claim">(not on record: verify before sharing account details)</span>{% endif %}{% if c.followup_window %} · {{ c.followup_window }}{% endif %}</dd>
+  {% if brief.seed_note %}<dt>Demo note</dt><dd class="small muted">{{ brief.seed_note }}</dd>{% endif %}
+</dl></div>
+<div class="card"><h2 style="margin-top:0">Conversation</h2>
+  <div style="max-height:420px;overflow:auto;display:flex;flex-direction:column;gap:8px">
+  {% for m in msgs %}<div class="msg {{ 'user' if m.role=='user' else ('ai' if m.author=='ai' else ('system' if m.author=='system' else 'staff')) }}" style="max-width:100%"><span class="who">{{ 'Customer' if m.role=='user' else ('Assistant' if m.author=='ai' else m.author) }} · {{ m.created_at[11:16] }}</span>{{ m.text }}</div>{% endfor %}
+  </div>
+  <h3 style="margin-top:12px">Actions</h3>
+  <div class="tools">
+  {% if c.state in ('unassigned','live_queued') %}<form class="inline" method="post" action="/staff/case/{{ c.case_id }}/action"><input type="hidden" name="action" value="claim"><button class="btn small">Claim</button></form>{% endif %}
+  {% if staffed and c.state in ('live_queued','claimed','unassigned','waiting') and c.reason!='safety' %}<form class="inline" method="post" action="/staff/case/{{ c.case_id }}/action"><input type="hidden" name="action" value="join"><button class="btn small">Join live chat (AI pauses)</button></form>{% endif %}
+  {% if c.state=='in_progress' %}<form class="inline" method="post" action="/staff/case/{{ c.case_id }}/action"><input type="hidden" name="action" value="handback"><button class="btn small secondary">Hand back to AI</button></form>{% endif %}
+  </div>
+  <form method="post" action="/staff/case/{{ c.case_id }}/action" class="composer" style="border:0"><input type="hidden" name="action" value="reply">
+    <textarea name="text" rows="2" placeholder="Reply in the customer's chat (as Riley, demo representative)"></textarea><button class="btn">Send</button></form>
+  <form method="post" action="/staff/case/{{ c.case_id }}/action" class="tools"><input type="hidden" name="action" value="followup">
+    <input type="text" name="text" placeholder="Record follow-up (demo: not sent)" style="flex:1"><button class="btn small secondary">Record follow-up</button></form>
+  <form method="post" action="/staff/case/{{ c.case_id }}/action" class="tools">
+    <select name="outcome" aria-label="Outcome"><option>resolved on contact</option><option>booking changed</option><option>customer unreachable</option><option>escalated further</option><option>no action needed</option></select>
+    <button class="btn small" name="action" value="resolve">Resolve</button><button class="btn small secondary" name="action" value="close">Close unresolved</button></form>
+  <form method="post" action="/staff/case/{{ c.case_id }}/action" class="tools"><input type="hidden" name="action" value="flag">
+    <select name="outcome" aria-label="Flag type"><option value="ai_wrong">AI answer was wrong</option><option value="brief_wrong">Brief was wrong</option><option value="escalation_unnecessary">Handoff was unnecessary</option><option value="kb_wrong">KB document is wrong</option></select>
+    <input type="text" name="text" placeholder="Note"><button class="btn small secondary">Flag for review</button></form>
+</div></div>
+<h2>Sources: what the AI saw vs the current record</h2>
+<div class="scroll"><table class="tbl"><thead><tr><th>Source</th><th>Snapshot (when read)</th><th>Current</th><th></th></tr></thead><tbody>
+{% for s in sources %}<tr><td>{{ s.label }}<br><span class="small muted">{{ s.at }}</span></td><td>{{ s.snapshot }}</td><td>{{ s.current }}</td><td>{% if s.changed %}<span class="changed">changed since</span>{% endif %}</td></tr>{% else %}<tr><td colspan="4" class="muted">No records were read in this conversation.</td></tr>{% endfor %}</tbody></table></div>
+<h2>History</h2>
+<div class="scroll"><table class="tbl"><tbody>{% for e in events %}<tr><td>{{ e.at }}</td><td>{{ e.actor }}</td><td>{{ e.event }}</td><td>{{ e.detail }}</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

@@ -1,5 +1,11 @@
-# Raw Google review dumps: public text, but contains reviewers' own names and health details.
-# Kept local as backing evidence; never commit or mirror.
-docs/evidence/raw-google-reviews/
-# Local text cache of first-party web pages read for research (re-fetchable; cited by URL in the register).
-docs/evidence/raw-page-text/
+# Local caches of fetched web pages or raw third-party text: keep out of git.
+docs/evidence/raw-*/
+
+# Secrets and local runtime (2026-10-20): never commit
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.pyc
+var/

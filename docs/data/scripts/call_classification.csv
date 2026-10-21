@@ -1,0 +1,421 @@
+call_id,initial,events,flags,noise,template,n_turns,duration,agent
+CALL-20260706-0101,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,2m 20s,Denise
+CALL-20260706-0182,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i smell something burning from the vents,17,2m 35s,Denise
+CALL-20260707-0002,SCH-CANCEL,E-IDENT-ACCT-NAME|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,11,1m 7s,Tasha
+CALL-20260707-0053,WAR-REGISTER,E-IDENT-NAME-ADDR|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,9,1m 29s,Marcus
+CALL-20260707-0096,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,2m 5s,Kayla
+CALL-20260707-0148,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,2m 1s,Denise
+CALL-20260707-0170,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,17,2m 23s,Denise
+CALL-20260707-0392,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,2m 9s,Jordan
+CALL-20260708-0115,BILL-PAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,12,1m 59s,Renee
+CALL-20260708-0255,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 48s,Denise
+CALL-20260709-0010,WAR-REGISTER,E-IDENT-ACCT-NAME|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,11,0m 59s,Renee
+CALL-20260709-0082,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,15,2m 3s,Renee
+CALL-20260709-0103,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,1m 57s,Denise
+CALL-20260709-0129,BILL-DUP,E-IDENT-NAME-ADDR|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,2m 21s,Tasha
+CALL-20260709-0134,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,15,2m 6s,Eli
+CALL-20260709-0315,WAR-PARTS,E-IDENT-NAME-ADDR|E-RANGE-QUOTE|E-LABOR-BILLABLE,,driving,my trane compressor died and the system is only three years old is that under warranty,13,1m 45s,Kayla
+CALL-20260709-0347,BILL-AUTOPAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i want to set up autopay for my membership,13,1m 30s,Kayla
+CALL-20260709-0356,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,cutout,i need to pay invoice # can i do it over the phone,12,2m 3s,Renee
+CALL-20260709-0365,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my kitchen sink is backing up,19,1m 51s,Denise
+CALL-20260710-0028,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,1m 58s,Renee
+CALL-20260710-0081,MULTI-REPAIR-PLAN,E-IDENT-NAME-ADDR|E-BOOKED|E-MEMBER-ADDED,,hear,two things my ac is blowing warm and i want to get someone out and i want to know if joining the maintenance plan would save me money on this,15,2m 26s,Kayla
+CALL-20260710-0121,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,,whats my current balance,9,1m 49s,Kayla
+CALL-20260710-0124,SCH-CONFIRM,E-IDENT-NAME-ADDR,,,just wanted to confirm i still have someone coming thursday,9,1m 35s,Denise
+CALL-20260710-0135,MEM-RENEW,E-IDENT-NAME-PHONE|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 9s,Tasha
+CALL-20260710-0136,BILL-REFUND,E-IDENT-NAME-PHONE|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,9,2m 1s,Renee
+CALL-20260710-0254,BILL-AUTOPAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 42s,Kayla
+CALL-20260710-0335,COMPLAINT-OPINION,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,your technician told my wife the system needed a # replacement and i got a second opinion and it was a # capacitor i want to speak to someone in charge,12,1m 21s,Eli
+CALL-20260710-0364,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,1m 16s,Tasha
+CALL-20260710-0373,BILL-EXPLAIN,E-IDENT-NAME-PHONE|E-EMAIL-COPY|E-INVOICE-LINES,,dog,i got an invoice # for # and im not sure what its for,13,2m 17s,Kayla
+CALL-20260711-0030,EST-REPLACE,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,13,1m 24s,Denise
+CALL-20260711-0063,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,14,1m 32s,Marcus
+CALL-20260711-0109,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 19s,Denise
+CALL-20260711-0248,WAR-CLAIM,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,1m 8s,Marcus
+CALL-20260711-0380,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,hear,my thermostat is blank,17,2m 11s,Marcus
+CALL-20260712-0007,WAR-REPEAT,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,10,1m 53s,Eli
+CALL-20260712-0046,SAF-GAS,E-SAFETY-INSTR|E-PRIORITY-NOTE,,hear,i smell gas near my furnace,7,1m 28s,Tasha
+CALL-20260712-0067,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,,are you guys hiring hvac techs i saw a posting,7,1m 57s,Jordan
+CALL-20260712-0104,MEM-PRICE,,,,how much is the maintenance plan,9,1m 28s,Brian
+CALL-20260712-0195,WAR-REGISTER,E-IDENT-ACCT-NAME|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,11,1m 3s,Tasha
+CALL-20260712-0227,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,hear,i need to file a warranty claim the unit you installed last year stopped working,16,1m 34s,Jordan
+CALL-20260712-0328,MULTI-REPAIR-PLAN,E-IDENT-ACCT-NAME|E-BOOKED|E-MEMBER-ADDED,,,two things my ac is blowing warm and i want to get someone out and i want to know if joining the maintenance plan would save me money on this,15,1m 40s,Eli
+CALL-20260713-0036,BILL-AUTOPAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i want to set up autopay for my membership,13,1m 9s,Denise
+CALL-20260713-0075,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,2m 43s,Jordan
+CALL-20260713-0253,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 37s,Tasha
+CALL-20260713-0263,BILL-AUTOPAY,E-IDENT-NAME-ADDR|E-PAYLINK,,hear,i want to set up autopay for my membership,13,2m 19s,Brian
+CALL-20260713-0285,MEM-DISCOUNT,,C-CLAIMS-MEMBER,driving,im a member do i get a discount on a new system,9,1m 5s,Brian
+CALL-20260713-0287,MEM-CANCEL,E-IDENT-NAME-ADDR|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,10,1m 56s,Kayla
+CALL-20260713-0314,MEM-UPGRADE,E-IDENT-NAME-ADDR|E-UPGRADED,,,can i upgrade from the regular plan to the plus plan midyear,10,1m 16s,Tasha
+CALL-20260713-0320,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the ac is making a loud grinding noise,17,2m 33s,Kayla
+CALL-20260714-0019,MEM-UPGRADE,E-IDENT-NAME-PHONE|E-UPGRADED,,,can i upgrade from the regular plan to the plus plan midyear,10,1m 41s,Renee
+CALL-20260714-0178,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the ac runs but the air is warm,17,2m 20s,Marcus
+CALL-20260714-0200,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,driving,i got an email saying my membership is renewing when does it actually charge,12,1m 55s,Eli
+CALL-20260714-0234,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,15,1m 39s,Jordan
+CALL-20260714-0246,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 26s,Brian
+CALL-20260714-0326,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,14,1m 12s,Kayla
+CALL-20260714-0366,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,,are you guys hiring hvac techs i saw a posting,7,1m 29s,Brian
+CALL-20260715-0021,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 22s,Denise
+CALL-20260715-0061,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,cutout,theres water pooling around the indoor unit,17,2m 1s,Tasha
+CALL-20260715-0100,BILL-REFUND,E-IDENT-NAME-PHONE|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,9,2m 7s,Renee
+CALL-20260715-0213,BILL-AUTOPAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i want to set up autopay for my membership,13,1m 9s,Renee
+CALL-20260715-0289,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,2m 25s,Kayla
+CALL-20260715-0351,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,,are you guys hiring hvac techs i saw a posting,7,1m 55s,Eli
+CALL-20260716-0006,MEM-PRICE,,,,how much is the maintenance plan,9,1m 46s,Kayla
+CALL-20260716-0020,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 19s,Tasha
+CALL-20260716-0107,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,1m 52s,Tasha
+CALL-20260716-0240,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,driving,my thermostat is blank,19,1m 35s,Marcus
+CALL-20260716-0317,WAR-REPEAT,E-IDENT-NAME-ADDR|E-BOOKED|E-WARRANTY-BOOK,,driving,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,12,1m 23s,Kayla
+CALL-20260716-0367,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my ac isnt cooling,15,1m 51s,Kayla
+CALL-20260716-0379,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,,are you guys hiring hvac techs i saw a posting,7,0m 50s,Jordan
+CALL-20260717-0180,SAF-SPARK,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,there are sparks coming from the outdoor unit,5,1m 34s,Kayla
+CALL-20260717-0359,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,10,1m 47s,Jordan
+CALL-20260718-0045,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,1m 53s,Denise
+CALL-20260718-0060,MEM-INCLUDE,,C-UNDECIDED,dog,what does the comfort club membership actually include,13,2m 2s,Denise
+CALL-20260718-0062,COMPLAINT-CONDUCT,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,10,2m 1s,Kayla
+CALL-20260718-0111,BILL-DISPUTE,E-IDENT-NAME-ADDR|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 12s,Marcus
+CALL-20260718-0262,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,10,1m 56s,Marcus
+CALL-20260718-0319,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the ac is making a loud grinding noise,17,1m 55s,Tasha
+CALL-20260718-0349,MEM-CANCEL,E-IDENT-NAME-PHONE|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,10,1m 43s,Jordan
+CALL-20260718-0360,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,hear,my kitchen sink is backing up,21,2m 14s,Jordan
+CALL-20260718-0419,BILL-BALANCE,E-IDENT-ACCT-NAME|E-BALANCE-READ,,,whats my current balance,11,1m 29s,Denise
+CALL-20260719-0059,BILL-AUTOPAY,E-IDENT-NAME-ADDR|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 42s,Renee
+CALL-20260719-0153,WAR-PARTS,E-IDENT-ACCT-NAME|E-RANGE-QUOTE|E-LABOR-BILLABLE,,,my goodman compressor died and the system is only three years old is that under warranty,13,1m 59s,Brian
+CALL-20260719-0217,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,1m 36s,Tasha
+CALL-20260719-0226,BILL-AUTOPAY,E-IDENT-NAME-PHONE|E-PAYLINK,,cutout,i want to set up autopay for my membership,13,1m 35s,Marcus
+CALL-20260719-0272,BILL-PAY,E-IDENT-NAME-ADDR|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,10,1m 50s,Eli
+CALL-20260719-0413,MEM-INCLUDE,,C-UNDECIDED,driving,what does the comfort club membership actually include,15,1m 39s,Jordan
+CALL-20260720-0157,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,hear|dog,the ac is making a loud grinding noise,21,2m 34s,Tasha
+CALL-20260720-0216,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,hear,my kitchen sink is backing up,19,2m 15s,Brian
+CALL-20260720-0279,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,cutout,my ac isnt cooling,17,1m 42s,Marcus
+CALL-20260720-0292,WAR-PARTS,E-IDENT-NAME-PHONE|E-RANGE-QUOTE|E-LABOR-BILLABLE,,hear|dog,my carrier compressor died and the system is only three years old is that under warranty,15,1m 45s,Jordan
+CALL-20260720-0371,SCH-TUNEUP,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,17,2m 20s,Kayla
+CALL-20260721-0093,SAF-CO,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,my carbon monoxide detector is going off,5,1m 46s,Jordan
+CALL-20260721-0108,MEM-PRICE,,,,how much is the maintenance plan,9,1m 17s,Eli
+CALL-20260721-0110,SCH-TUNEUP,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i need my annual tuneup,17,1m 54s,Brian
+CALL-20260721-0125,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,10,1m 25s,Tasha
+CALL-20260721-0242,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the ac is making a loud grinding noise,17,2m 18s,Denise
+CALL-20260721-0258,SCH-RESCHED,E-IDENT-NAME-PHONE|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 31s,Kayla
+CALL-20260721-0261,SCH-LATE,E-IDENT-NAME-PHONE|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 30s,Brian
+CALL-20260721-0321,EST-REPLACE,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,13,2m 12s,Brian
+CALL-20260721-0333,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the ac is making a loud grinding noise,15,2m 2s,Jordan
+CALL-20260722-0064,WAR-REPEAT,E-IDENT-NAME-ADDR|E-BOOKED|E-WARRANTY-BOOK,,,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,10,1m 36s,Eli
+CALL-20260722-0161,WAR-TRANSFER,E-XFER-FORM,,,we just bought a house and the previous owner had a system installed by you does the warranty transfer,8,1m 54s,Jordan
+CALL-20260722-0198,COMPLAINT-CONDUCT,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,cutout,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,12,1m 26s,Renee
+CALL-20260722-0249,WAR-REGISTER,E-IDENT-NAME-PHONE|E-REGISTRATION-CLAIM,,dog,did you guys register my new unit with the manufacturer i never got anything,11,1m 32s,Brian
+CALL-20260723-0035,BILL-PAY,E-IDENT-NAME-ADDR|E-PAYLINK,,cutout,i need to pay invoice # can i do it over the phone,12,1m 17s,Kayla
+CALL-20260723-0042,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,dog,i need to file a warranty claim the unit you installed last year stopped working,16,1m 55s,Tasha
+CALL-20260723-0172,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,dog,my thermostat is blank,19,2m 20s,Kayla
+CALL-20260723-0251,MEM-CANCEL,E-IDENT-NAME-ADDR|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,10,1m 34s,Denise
+CALL-20260723-0276,WAR-PARTS,E-IDENT-NAME-PHONE|E-RANGE-QUOTE|E-LABOR-BILLABLE,,,my trane compressor died and the system is only three years old is that under warranty,11,1m 58s,Eli
+CALL-20260724-0040,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,driving,i need to pay invoice # can i do it over the phone,12,2m 9s,Denise
+CALL-20260724-0113,EST-REPLACE,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,13,1m 56s,Marcus
+CALL-20260724-0308,MULTI-REPAIR-PLAN,E-IDENT-ACCT-NAME|E-BOOKED|E-MEMBER-ADDED,,,two things my ac is blowing warm and i want to get someone out and i want to know if joining the maintenance plan would save me money on this,15,2m 0s,Kayla
+CALL-20260724-0325,SCH-CANCEL,E-IDENT-ACCT-NAME|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,11,1m 11s,Jordan
+CALL-20260724-0337,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,15,1m 27s,Marcus
+CALL-20260724-0391,COMPLAINT-REPEAT,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,ive called three times about the same problem and nobody has called me back im done,12,1m 11s,Marcus
+CALL-20260725-0112,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,driving,i have a tech coming tomorrow but something came up can i move it,16,2m 7s,Denise
+CALL-20260725-0288,BILL-DUP,E-IDENT-NAME-PHONE|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,1m 21s,Brian
+CALL-20260725-0293,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,2m 21s,Renee
+CALL-20260725-0329,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,15,2m 9s,Renee
+CALL-20260725-0355,SCH-LATE,E-IDENT-NAME-PHONE|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 30s,Kayla
+CALL-20260725-0378,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,17,2m 31s,Denise
+CALL-20260726-0141,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the ac runs but the air is warm,17,2m 45s,Jordan
+CALL-20260726-0189,COMPLAINT-OPINION,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,hear,your technician told my wife the system needed a # replacement and i got a second opinion and it was a # capacitor i want to speak to someone in charge,16,2m 21s,Marcus
+CALL-20260726-0220,SCH-CANCEL,E-IDENT-NAME-PHONE|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,9,1m 58s,Kayla
+CALL-20260726-0307,MEM-RENEW,E-IDENT-ACCT-NAME|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,12,2m 1s,Eli
+CALL-20260726-0331,BILL-DUP,E-IDENT-NAME-PHONE|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,1m 19s,Denise
+CALL-20260727-0076,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,15,1m 46s,Marcus
+CALL-20260727-0080,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 3s,Jordan
+CALL-20260727-0138,BILL-PAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,10,1m 45s,Denise
+CALL-20260727-0215,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,hear,i need to file a warranty claim the unit you installed last year stopped working,16,1m 36s,Marcus
+CALL-20260727-0300,MEM-DISCOUNT,,C-CLAIMS-MEMBER,,im a member do i get a discount on a new system,7,0m 54s,Jordan
+CALL-20260728-0050,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,15,2m 22s,Kayla
+CALL-20260728-0089,COMMERCIAL,E-PROMISE-1BD-COMMERCIAL,,,i manage a #unit strip center and i need a quote on replacing four rooftop units,8,2m 1s,Marcus
+CALL-20260728-0094,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,hear,my thermostat is blank,17,1m 59s,Tasha
+CALL-20260728-0193,BILL-EXPLAIN,E-IDENT-NAME-ADDR|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 20s,Renee
+CALL-20260728-0194,WAR-REGISTER,E-IDENT-NAME-PHONE|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,9,1m 55s,Marcus
+CALL-20260728-0264,SAF-GAS,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,i smell gas near my furnace,5,1m 5s,Denise
+CALL-20260728-0281,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,15,1m 48s,Denise
+CALL-20260729-0041,COMPLAINT-CONDUCT,E-IDENT-NAME-ADDR|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,10,1m 29s,Kayla
+CALL-20260729-0260,COMPLAINT-CONDUCT,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,cutout,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,14,1m 30s,Jordan
+CALL-20260729-0278,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,hear,the tech quoted me # and the invoice says # thats not what i agreed to,15,1m 36s,Eli
+CALL-20260729-0324,WAR-REPEAT,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,10,1m 45s,Denise
+CALL-20260730-0048,MEM-DISCOUNT,,C-CLAIMS-MEMBER,,im a member do i get a discount on a new system,7,1m 5s,Denise
+CALL-20260730-0054,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,15,1m 45s,Tasha
+CALL-20260730-0183,SCH-CONFIRM,E-IDENT-NAME-PHONE,,hear,just wanted to confirm i still have someone coming thursday,11,0m 59s,Eli
+CALL-20260730-0222,COMPLAINT-CONDUCT,E-IDENT-NAME-ADDR|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,10,1m 19s,Marcus
+CALL-20260730-0223,COMPLAINT-REPEAT,E-IDENT-NAME-ADDR|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,ive called three times about the same problem and nobody has called me back im done,10,1m 54s,Eli
+CALL-20260730-0233,BILL-PAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,12,1m 54s,Renee
+CALL-20260730-0274,WAR-PARTS,E-IDENT-ACCT-NAME|E-RANGE-QUOTE|E-LABOR-BILLABLE,,cutout,my trane compressor died and the system is only three years old is that under warranty,15,2m 2s,Brian
+CALL-20260730-0306,COMPLAINT-REPEAT,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,cutout,ive called three times about the same problem and nobody has called me back im done,14,2m 0s,Kayla
+CALL-20260730-0323,WAR-REGISTER,E-IDENT-NAME-ADDR|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,9,1m 17s,Brian
+CALL-20260730-0346,WAR-TRANSFER,E-XFER-FORM,,dog,we just bought a house and the previous owner had a system installed by you does the warranty transfer,10,2m 14s,Brian
+CALL-20260730-0372,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,15,1m 52s,Marcus
+CALL-20260730-0396,COMMERCIAL,E-PROMISE-1BD-COMMERCIAL,,,i manage a #unit strip center and i need a quote on replacing four rooftop units,8,1m 35s,Marcus
+CALL-20260731-0047,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,cutout|hear,theres water pooling around the indoor unit,21,2m 1s,Marcus
+CALL-20260731-0301,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 33s,Brian
+CALL-20260801-0024,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,15,2m 6s,Kayla
+CALL-20260801-0176,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,driving,i need my annual tuneup,17,2m 17s,Kayla
+CALL-20260801-0208,SCH-RESCHED,E-IDENT-NAME-PHONE|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 2s,Tasha
+CALL-20260801-0334,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,15,1m 42s,Marcus
+CALL-20260802-0015,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the water heater pilot light keeps going out,17,1m 51s,Renee
+CALL-20260802-0016,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,driving,the water heater pilot light keeps going out,19,2m 22s,Renee
+CALL-20260802-0079,COMPLAINT-CONDUCT,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything,10,1m 3s,Eli
+CALL-20260802-0282,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my kitchen sink is backing up,17,2m 24s,Tasha
+CALL-20260803-0004,WAR-PARTS,E-IDENT-NAME-PHONE|E-RANGE-QUOTE|E-LABOR-BILLABLE,,,my carrier compressor died and the system is only three years old is that under warranty,11,1m 26s,Kayla
+CALL-20260803-0056,MEM-UPGRADE,E-IDENT-NAME-ADDR|E-UPGRADED,,,can i upgrade from the regular plan to the plus plan midyear,10,1m 34s,Tasha
+CALL-20260803-0086,WAR-TRANSFER,E-XFER-FORM,,,we just bought a house and the previous owner had a system installed by you does the warranty transfer,8,2m 2s,Eli
+CALL-20260803-0155,EST-REPLACE,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,dog,my system is # years old and im thinking about replacing it what would that cost,15,2m 11s,Renee
+CALL-20260803-0190,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,,whats my current balance,9,1m 6s,Marcus
+CALL-20260804-0188,MEM-CANCEL,E-IDENT-NAME-ADDR|E-AUTORENEW-OFF,,cutout,i want to cancel my comfort club membership,12,1m 17s,Tasha
+CALL-20260805-0154,SCH-CONFIRM,E-IDENT-NAME-PHONE,,,just wanted to confirm i still have someone coming thursday,9,1m 25s,Kayla
+CALL-20260805-0173,WAR-REGISTER,E-IDENT-NAME-ADDR|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,9,1m 27s,Eli
+CALL-20260805-0214,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,13,2m 16s,Denise
+CALL-20260805-0244,BILL-EXPLAIN,E-IDENT-NAME-ADDR|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 59s,Brian
+CALL-20260805-0290,SAF-CO,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,my carbon monoxide detector is going off,5,1m 27s,Eli
+CALL-20260806-0077,BILL-AUTOPAY,E-IDENT-NAME-ADDR|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 3s,Kayla
+CALL-20260806-0102,SCH-CONFIRM,E-IDENT-NAME-PHONE,,,just wanted to confirm i still have someone coming thursday,9,0m 55s,Brian
+CALL-20260806-0174,MEM-UPGRADE,E-IDENT-NAME-PHONE|E-UPGRADED,,driving,can i upgrade from the regular plan to the plus plan midyear,12,1m 55s,Brian
+CALL-20260806-0207,BILL-DUP,E-IDENT-NAME-ADDR|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,1m 25s,Marcus
+CALL-20260806-0230,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,2m 5s,Tasha
+CALL-20260806-0284,SCH-LATE,E-IDENT-ACCT-NAME|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,12,2m 5s,Tasha
+CALL-20260806-0377,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i smell something burning from the vents,19,1m 59s,Jordan
+CALL-20260807-0011,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,15,2m 5s,Jordan
+CALL-20260807-0202,BILL-AUTOPAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i want to set up autopay for my membership,13,1m 51s,Kayla
+CALL-20260807-0312,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 20s,Marcus
+CALL-20260807-0401,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,hear,my thermostat is blank,17,2m 41s,Denise
+CALL-20260808-0146,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,1m 18s,Kayla
+CALL-20260808-0159,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,2m 28s,Marcus
+CALL-20260808-0271,SCH-LATE,E-IDENT-NAME-ADDR|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 13s,Brian
+CALL-20260808-0322,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,17,2m 9s,Renee
+CALL-20260809-0039,WAR-TRANSFER,E-XFER-FORM,,hear,we just bought a house and the previous owner had a system installed by you does the warranty transfer,10,1m 29s,Kayla
+CALL-20260809-0117,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,15,1m 47s,Kayla
+CALL-20260809-0128,MEM-RENEW,E-IDENT-ACCT-NAME|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,12,2m 10s,Marcus
+CALL-20260809-0197,BILL-PAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,12,1m 13s,Eli
+CALL-20260809-0376,MEM-CANCEL,E-IDENT-NAME-PHONE|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,10,1m 33s,Brian
+CALL-20260810-0008,BILL-PAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,12,1m 59s,Marcus
+CALL-20260810-0025,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,17,2m 23s,Kayla
+CALL-20260810-0058,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the water heater pilot light keeps going out,15,1m 36s,Kayla
+CALL-20260810-0078,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,dog,the tech quoted me # and the invoice says # thats not what i agreed to,15,1m 54s,Denise
+CALL-20260810-0088,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,hear,the water heater pilot light keeps going out,19,2m 55s,Jordan
+CALL-20260810-0162,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,cutout,the tech quoted me # and the invoice says # thats not what i agreed to,15,1m 31s,Brian
+CALL-20260810-0210,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,driving,the furnace wont kick on,19,2m 15s,Renee
+CALL-20260810-0219,BILL-DUP,E-IDENT-NAME-ADDR|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,1m 40s,Kayla
+CALL-20260810-0237,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,15,1m 32s,Kayla
+CALL-20260810-0239,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,2m 24s,Kayla
+CALL-20260810-0296,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,cutout,the furnace wont kick on,19,2m 17s,Kayla
+CALL-20260810-0414,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,15,2m 21s,Marcus
+CALL-20260811-0085,WAR-PARTS,E-IDENT-ACCT-NAME|E-RANGE-QUOTE|E-LABOR-BILLABLE,,,my rheem compressor died and the system is only three years old is that under warranty,13,1m 46s,Brian
+CALL-20260811-0275,BILL-AUTOPAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 58s,Brian
+CALL-20260811-0299,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 32s,Kayla
+CALL-20260811-0305,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the water heater pilot light keeps going out,15,2m 1s,Eli
+CALL-20260811-0369,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my kitchen sink is backing up,17,1m 57s,Eli
+CALL-20260812-0116,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my kitchen sink is backing up,17,2m 20s,Marcus
+CALL-20260812-0169,BILL-REFUND,E-IDENT-ACCT-NAME|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,11,1m 32s,Denise
+CALL-20260812-0302,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my thermostat is blank,19,2m 3s,Denise
+CALL-20260812-0405,MEM-UPGRADE,E-IDENT-NAME-PHONE|E-UPGRADED,,,can i upgrade from the regular plan to the plus plan midyear,10,2m 5s,Brian
+CALL-20260813-0018,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,15,2m 45s,Denise
+CALL-20260813-0031,WRONG-NO,,,,is this meridian dental,5,0m 57s,Kayla
+CALL-20260813-0156,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,2m 20s,Renee
+CALL-20260813-0247,SCH-LATE,E-IDENT-NAME-ADDR|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 33s,Denise
+CALL-20260813-0350,WAR-CLAIM,E-IDENT-NAME-ADDR|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,1m 31s,Denise
+CALL-20260813-0398,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,cutout,my ac isnt cooling,17,2m 34s,Renee
+CALL-20260814-0003,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my ac isnt cooling,17,2m 22s,Eli
+CALL-20260814-0122,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,2m 8s,Renee
+CALL-20260814-0123,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,17,2m 49s,Brian
+CALL-20260814-0420,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,15,2m 23s,Jordan
+CALL-20260815-0114,WAR-CLAIM,E-IDENT-NAME-ADDR|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,2m 1s,Renee
+CALL-20260815-0270,MEM-CANCEL,E-IDENT-NAME-ADDR|E-AUTORENEW-OFF,,cutout,i want to cancel my comfort club membership,12,2m 18s,Kayla
+CALL-20260815-0345,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 14s,Brian
+CALL-20260815-0406,WAR-REGISTER,E-IDENT-ACCT-NAME|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,11,1m 11s,Marcus
+CALL-20260816-0038,SAF-CO,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,my carbon monoxide detector is going off,5,1m 56s,Jordan
+CALL-20260816-0097,SCH-LATE,E-IDENT-NAME-PHONE|E-FEE-WAIVED|E-TECH-CALL,,driving,my window was # to # and its ## nobodys here and nobodys called,12,2m 5s,Marcus
+CALL-20260816-0106,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,driving,i got an email saying my membership is renewing when does it actually charge,12,2m 3s,Marcus
+CALL-20260816-0191,BILL-REFUND,E-IDENT-NAME-PHONE|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,9,1m 52s,Renee
+CALL-20260816-0224,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 50s,Eli
+CALL-20260816-0268,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,1m 45s,Marcus
+CALL-20260816-0313,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 37s,Jordan
+CALL-20260816-0368,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 2s,Kayla
+CALL-20260816-0389,WAR-TRANSFER,E-XFER-FORM,,,we just bought a house and the previous owner had a system installed by you does the warranty transfer,8,1m 39s,Brian
+CALL-20260817-0241,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,cutout,the tech quoted me # and the invoice says # thats not what i agreed to,13,2m 3s,Marcus
+CALL-20260817-0330,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,cutout,the ac runs but the air is warm,17,1m 38s,Renee
+CALL-20260817-0354,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,15,1m 52s,Brian
+CALL-20260818-0072,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,15,1m 38s,Renee
+CALL-20260818-0092,BILL-REFUND,E-IDENT-NAME-PHONE|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,9,2m 2s,Marcus
+CALL-20260818-0151,SCH-LATE,E-IDENT-NAME-ADDR|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 35s,Denise
+CALL-20260818-0184,SCH-TUNEUP,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i need my annual tuneup,17,2m 5s,Renee
+CALL-20260818-0206,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,17,2m 5s,Kayla
+CALL-20260818-0243,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,15,2m 2s,Eli
+CALL-20260818-0298,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,,are you guys hiring hvac techs i saw a posting,7,1m 2s,Tasha
+CALL-20260819-0014,BILL-PAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i need to pay invoice # can i do it over the phone,12,2m 1s,Renee
+CALL-20260819-0131,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,,whats my current balance,9,0m 55s,Kayla
+CALL-20260819-0147,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,15,1m 46s,Jordan
+CALL-20260819-0163,MEM-INCLUDE,,C-UNDECIDED,dog,what does the comfort club membership actually include,13,2m 13s,Brian
+CALL-20260819-0177,COMPLAINT-REPEAT,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,hear,ive called three times about the same problem and nobody has called me back im done,12,1m 35s,Eli
+CALL-20260819-0228,COMMERCIAL,E-PROMISE-1BD-COMMERCIAL,,,i manage a #unit strip center and i need a quote on replacing four rooftop units,8,1m 28s,Marcus
+CALL-20260819-0245,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,theres water pooling around the indoor unit,17,2m 16s,Kayla
+CALL-20260820-0013,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,driving,i smell something burning from the vents,19,1m 45s,Brian
+CALL-20260820-0043,BILL-PAY,E-IDENT-NAME-ADDR|E-PAYLINK,,dog,i need to pay invoice # can i do it over the phone,12,1m 53s,Renee
+CALL-20260820-0252,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,1m 32s,Kayla
+CALL-20260820-0374,WRONG-NO,,,,is this meridian dental,5,0m 40s,Eli
+CALL-20260821-0181,MEM-RENEW,E-IDENT-NAME-PHONE|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 24s,Marcus
+CALL-20260821-0199,BILL-EXPLAIN,E-IDENT-ACCT-NAME|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,13,2m 2s,Eli
+CALL-20260821-0310,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,hear,whats my current balance,11,1m 36s,Brian
+CALL-20260821-0353,BILL-REFUND,E-IDENT-ACCT-NAME|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,driving,i want a full refund on the repair it didnt fix anything and i had to call another company,13,2m 13s,Jordan
+CALL-20260822-0175,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,cutout,my kitchen sink is backing up,19,2m 16s,Marcus
+CALL-20260822-0185,SAF-GAS,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,i smell gas near my furnace,5,1m 23s,Renee
+CALL-20260822-0212,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 36s,Renee
+CALL-20260822-0341,SAF-CO,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,my carbon monoxide detector is going off,5,1m 7s,Brian
+CALL-20260822-0343,WAR-REGISTER,E-IDENT-ACCT-NAME|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,11,1m 49s,Jordan
+CALL-20260822-0383,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my kitchen sink is backing up,17,2m 47s,Tasha
+CALL-20260823-0022,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,17,2m 39s,Denise
+CALL-20260823-0068,BILL-REFUND,E-IDENT-ACCT-NAME|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,11,1m 0s,Eli
+CALL-20260823-0142,WAR-TRANSFER,E-XFER-FORM,,,we just bought a house and the previous owner had a system installed by you does the warranty transfer,8,1m 59s,Renee
+CALL-20260823-0295,WAR-CLAIM,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,2m 13s,Jordan
+CALL-20260823-0412,SCH-CONFIRM,E-IDENT-ACCT-NAME,,,just wanted to confirm i still have someone coming thursday,11,1m 35s,Marcus
+CALL-20260824-0033,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,14,1m 53s,Eli
+CALL-20260824-0408,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 27s,Brian
+CALL-20260825-0005,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,17,2m 30s,Eli
+CALL-20260825-0066,BILL-EXPLAIN,E-IDENT-NAME-PHONE|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 30s,Denise
+CALL-20260825-0118,BILL-AUTOPAY,E-IDENT-ACCT-NAME|E-PAYLINK,,,i want to set up autopay for my membership,13,1m 46s,Tasha
+CALL-20260825-0145,BILL-EXPLAIN,E-IDENT-NAME-PHONE|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 27s,Kayla
+CALL-20260825-0192,SCH-RESCHED,E-IDENT-NAME-PHONE|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,2m 7s,Eli
+CALL-20260825-0266,BILL-EXPLAIN,E-IDENT-ACCT-NAME|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,13,2m 16s,Denise
+CALL-20260825-0370,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,cutout|dog,the furnace wont kick on,21,1m 53s,Kayla
+CALL-20260825-0415,BILL-DUP,E-IDENT-ACCT-NAME|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,13,1m 47s,Denise
+CALL-20260826-0073,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,2m 1s,Jordan
+CALL-20260826-0095,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my ac isnt cooling,15,2m 16s,Brian
+CALL-20260826-0225,WAR-CLAIM,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,1m 12s,Brian
+CALL-20260826-0277,SCH-TUNEUP,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,17,2m 41s,Denise
+CALL-20260826-0304,BILL-AUTOPAY,E-IDENT-NAME-PHONE|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 20s,Tasha
+CALL-20260826-0309,SCH-RESCHED,E-IDENT-NAME-ADDR|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 53s,Jordan
+CALL-20260826-0390,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,cutout,my kitchen sink is backing up,17,2m 43s,Denise
+CALL-20260827-0065,BILL-REFUND,E-IDENT-NAME-ADDR|E-PROMISE-2BD-REFUND,C-DOUBTS-PROMISE,,i want a full refund on the repair it didnt fix anything and i had to call another company,9,1m 50s,Denise
+CALL-20260827-0084,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,14,1m 29s,Renee
+CALL-20260827-0091,SCH-RESCHED,E-IDENT-NAME-PHONE|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 48s,Jordan
+CALL-20260827-0149,SCH-RESCHED,E-IDENT-NAME-ADDR|E-RESCHEDULED,,driving,i have a tech coming tomorrow but something came up can i move it,14,1m 14s,Denise
+CALL-20260827-0344,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,15,1m 42s,Eli
+CALL-20260828-0120,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,1m 26s,Jordan
+CALL-20260828-0211,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i need my annual tuneup,17,2m 46s,Kayla
+CALL-20260828-0267,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,13,2m 2s,Marcus
+CALL-20260828-0316,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,2m 1s,Eli
+CALL-20260828-0409,HIRING,E-CAREERS-REDIRECT|E-PASS-ALONG,,dog,are you guys hiring hvac techs i saw a posting,9,2m 3s,Tasha
+CALL-20260829-0049,SCH-RESCHED,E-IDENT-NAME-ADDR|E-RESCHEDULED,,driving|cutout,i have a tech coming tomorrow but something came up can i move it,16,2m 15s,Kayla
+CALL-20260829-0057,WAR-TRANSFER,E-XFER-FORM,,dog,we just bought a house and the previous owner had a system installed by you does the warranty transfer,10,2m 6s,Marcus
+CALL-20260829-0404,MEM-DISCOUNT,,C-CLAIMS-MEMBER,dog,im a member do i get a discount on a new system,9,1m 45s,Renee
+CALL-20260830-0090,SCH-PLUMB,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the water heater pilot light keeps going out,17,1m 50s,Kayla
+CALL-20260830-0105,WAR-TRANSFER,E-XFER-FORM,,,we just bought a house and the previous owner had a system installed by you does the warranty transfer,8,1m 26s,Marcus
+CALL-20260830-0130,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,theres water pooling around the indoor unit,17,2m 26s,Brian
+CALL-20260830-0165,BILL-EXPLAIN,E-IDENT-NAME-PHONE|E-EMAIL-COPY|E-INVOICE-LINES,,driving,i got an invoice # for # and im not sure what its for,13,1m 17s,Kayla
+CALL-20260830-0209,SCH-CONFIRM,E-IDENT-NAME-ADDR,,,just wanted to confirm i still have someone coming thursday,9,1m 47s,Kayla
+CALL-20260830-0259,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,driving|cutout,i got an email saying my membership is renewing when does it actually charge,14,1m 39s,Jordan
+CALL-20260830-0269,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the furnace wont kick on,17,2m 51s,Marcus
+CALL-20260830-0286,COMPLAINT-OPINION,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,your technician told my wife the system needed a # replacement and i got a second opinion and it was a # capacitor i want to speak to someone in charge,12,1m 21s,Denise
+CALL-20260830-0388,SCH-LATE,E-IDENT-NAME-PHONE|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 6s,Renee
+CALL-20260831-0051,COMPLAINT-REPEAT,E-IDENT-ACCT-NAME|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,ive called three times about the same problem and nobody has called me back im done,12,1m 28s,Brian
+CALL-20260831-0167,MEM-RENEW,E-IDENT-NAME-PHONE|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 16s,Brian
+CALL-20260831-0231,MEM-PRICE,,,,how much is the maintenance plan,9,1m 42s,Denise
+CALL-20260831-0297,EST-REPLACE,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,13,2m 17s,Marcus
+CALL-20260831-0339,COMPLAINT-OPINION,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,hear,your technician told my wife the system needed a # replacement and i got a second opinion and it was a # capacitor i want to speak to someone in charge,12,1m 32s,Denise
+CALL-20260831-0362,BILL-DUP,E-IDENT-NAME-ADDR|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,2m 11s,Brian
+CALL-20260901-0127,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,13,2m 5s,Jordan
+CALL-20260901-0238,BILL-DUP,E-IDENT-NAME-ADDR|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,2m 1s,Marcus
+CALL-20260901-0410,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 35s,Brian
+CALL-20260902-0001,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,14,1m 22s,Tasha
+CALL-20260902-0027,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the ac is making a loud grinding noise,19,2m 14s,Brian
+CALL-20260902-0152,SCH-CANCEL,E-IDENT-NAME-PHONE|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,9,1m 49s,Marcus
+CALL-20260902-0168,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,driving,the tech quoted me # and the invoice says # thats not what i agreed to,15,1m 41s,Kayla
+CALL-20260902-0229,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,14,1m 5s,Eli
+CALL-20260902-0375,WAR-CLAIM,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,cutout,i need to file a warranty claim the unit you installed last year stopped working,16,1m 59s,Brian
+CALL-20260902-0386,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,1m 45s,Brian
+CALL-20260903-0026,SCH-RESCHED,E-IDENT-NAME-ADDR|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 38s,Brian
+CALL-20260904-0069,WAR-REGISTER,E-IDENT-NAME-PHONE|E-REGISTRATION-CLAIM,,,did you guys register my new unit with the manufacturer i never got anything,9,1m 3s,Eli
+CALL-20260904-0144,MEM-UPGRADE,E-IDENT-NAME-ADDR|E-UPGRADED,,,can i upgrade from the regular plan to the plus plan midyear,10,1m 27s,Tasha
+CALL-20260904-0186,WRONG-NO,,,,is this meridian dental,5,1m 30s,Renee
+CALL-20260904-0265,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,17,2m 5s,Jordan
+CALL-20260904-0340,SCH-CANCEL,E-IDENT-NAME-ADDR|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,9,1m 55s,Marcus
+CALL-20260904-0418,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i smell something burning from the vents,17,1m 58s,Jordan
+CALL-20260905-0201,BILL-EXPLAIN,E-IDENT-NAME-ADDR|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 12s,Renee
+CALL-20260905-0318,SAF-CO,E-SAFETY-INSTR|E-PRIORITY-NOTE,,,my carbon monoxide detector is going off,5,1m 17s,Renee
+CALL-20260905-0357,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,hear,the ac runs but the air is warm,17,1m 54s,Brian
+CALL-20260905-0363,BILL-EXPLAIN,E-IDENT-ACCT-NAME|E-EMAIL-COPY|E-INVOICE-LINES,,driving,i got an invoice # for # and im not sure what its for,15,2m 4s,Tasha
+CALL-20260906-0032,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i smell something burning from the vents,17,1m 56s,Eli
+CALL-20260906-0055,BILL-AUTOPAY,E-IDENT-NAME-ADDR|E-PAYLINK,,,i want to set up autopay for my membership,11,1m 56s,Denise
+CALL-20260906-0087,MEM-CANCEL,E-IDENT-ACCT-NAME|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,12,1m 54s,Kayla
+CALL-20260906-0132,WAR-REPEAT,E-IDENT-ACCT-NAME|E-BOOKED|E-WARRANTY-BOOK,,,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,12,1m 56s,Brian
+CALL-20260906-0280,WRONG-NO,,,,is this meridian dental,5,0m 48s,Marcus
+CALL-20260906-0283,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 39s,Kayla
+CALL-20260906-0348,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the ac runs but the air is warm,17,2m 26s,Marcus
+CALL-20260906-0399,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 44s,Kayla
+CALL-20260906-0411,COMPLAINT-OPINION,E-IDENT-NAME-PHONE|E-PROMISE-TODAY-MGR,C-DEMANDS-TODAY,,your technician told my wife the system needed a # replacement and i got a second opinion and it was a # capacitor i want to speak to someone in charge,10,2m 8s,Tasha
+CALL-20260907-0140,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 34s,Renee
+CALL-20260907-0143,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my ac isnt cooling,17,1m 50s,Jordan
+CALL-20260907-0204,BILL-EXPLAIN,E-IDENT-NAME-ADDR|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 32s,Tasha
+CALL-20260907-0221,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 6s,Marcus
+CALL-20260907-0232,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the furnace wont kick on,17,2m 13s,Renee
+CALL-20260907-0393,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,my thermostat is blank,15,2m 23s,Eli
+CALL-20260908-0017,MEM-CANCEL,E-IDENT-NAME-PHONE|E-AUTORENEW-OFF,,,i want to cancel my comfort club membership,10,1m 43s,Renee
+CALL-20260908-0029,SCH-BURNING,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i smell something burning from the vents,17,2m 2s,Tasha
+CALL-20260908-0052,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,dog,theres water pooling around the indoor unit,21,2m 42s,Jordan
+CALL-20260908-0158,SCH-CONFIRM,E-IDENT-NAME-ADDR,,dog,just wanted to confirm i still have someone coming thursday,11,1m 25s,Jordan
+CALL-20260908-0160,EST-REPLACE,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,hear,my system is # years old and im thinking about replacing it what would that cost,17,2m 28s,Kayla
+CALL-20260908-0164,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,,whats my current balance,9,1m 6s,Marcus
+CALL-20260908-0205,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,theres water pooling around the indoor unit,19,2m 27s,Marcus
+CALL-20260908-0257,BILL-EXPLAIN,E-IDENT-NAME-ADDR|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 58s,Tasha
+CALL-20260908-0352,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,15,2m 24s,Eli
+CALL-20260908-0407,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 21s,Kayla
+CALL-20260909-0119,BILL-DISPUTE,E-IDENT-ACCT-NAME|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,13,1m 32s,Marcus
+CALL-20260909-0137,BILL-AUTOPAY,E-IDENT-NAME-PHONE|E-PAYLINK,,dog,i want to set up autopay for my membership,13,1m 17s,Kayla
+CALL-20260909-0327,WAR-REPEAT,E-IDENT-NAME-ADDR|E-BOOKED|E-WARRANTY-BOOK,,,does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing,10,2m 17s,Tasha
+CALL-20260909-0416,SCH-CANCEL,E-IDENT-ACCT-NAME|E-CANCEL-DONE,,,i need to cancel my appointment my brotherinlaw ended up fixing it,11,1m 0s,Jordan
+CALL-20260910-0150,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the ac is making a loud grinding noise,15,2m 31s,Denise
+CALL-20260910-0166,SCH-TUNEUP,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,hear,i need my annual tuneup,17,2m 41s,Brian
+CALL-20260910-0203,BILL-BALANCE,E-IDENT-ACCT-NAME|E-BALANCE-READ,,cutout,whats my current balance,13,1m 49s,Marcus
+CALL-20260910-0236,SCH-TUNEUP,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 40s,Denise
+CALL-20260910-0291,WAR-CLAIM,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,1m 51s,Renee
+CALL-20260910-0358,BILL-DUP,E-IDENT-ACCT-NAME|E-PENDING-HOLD,,dog,i think i got charged twice there are two # charges on my card from you guys,15,1m 35s,Brian
+CALL-20260910-0387,BILL-DISPUTE,E-IDENT-NAME-PHONE|E-INVOICE-LINES|E-PROMISE-1BD-BILLING,C-UNVERIFIED-CLAIM-NOT-TOLD|C-UNVERIFIED-CLAIM-QUOTE,,the tech quoted me # and the invoice says # thats not what i agreed to,11,1m 44s,Eli
+CALL-20260910-0400,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,cutout,the ac runs but the air is warm,17,1m 45s,Eli
+CALL-20260911-0034,SCH-CONFIRM,E-IDENT-ACCT-NAME,,cutout,just wanted to confirm i still have someone coming thursday,13,1m 19s,Eli
+CALL-20260911-0171,SCH-RESCHED,E-IDENT-NAME-ADDR|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,12,1m 14s,Eli
+CALL-20260911-0179,SCH-TUNEUP,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,i need my annual tuneup,17,1m 47s,Marcus
+CALL-20260911-0235,MEM-PRICE,,,,how much is the maintenance plan,9,1m 26s,Marcus
+CALL-20260911-0256,EST-REPLACE,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-RANGE-QUOTE,,,my system is # years old and im thinking about replacing it what would that cost,13,1m 11s,Marcus
+CALL-20260912-0083,BILL-BALANCE,E-IDENT-NAME-PHONE|E-BALANCE-READ,,,whats my current balance,9,1m 7s,Tasha
+CALL-20260912-0099,BILL-DUP,E-IDENT-ACCT-NAME|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,13,2m 26s,Denise
+CALL-20260912-0139,MEM-PRICE,,,,how much is the maintenance plan,9,1m 33s,Denise
+CALL-20260912-0218,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,theres water pooling around the indoor unit,19,2m 31s,Tasha
+CALL-20260912-0361,SCH-TUNEUP,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,driving,i need my annual tuneup,19,2m 9s,Marcus
+CALL-20260912-0394,MEM-INCLUDE,,C-UNDECIDED,,what does the comfort club membership actually include,11,2m 1s,Tasha
+CALL-20260913-0012,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the water heater pilot light keeps going out,17,2m 29s,Denise
+CALL-20260913-0044,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,my thermostat is blank,17,2m 40s,Brian
+CALL-20260913-0196,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,theres water pooling around the indoor unit,15,2m 42s,Tasha
+CALL-20260913-0250,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,2m 5s,Jordan
+CALL-20260913-0273,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my ac isnt cooling,15,2m 18s,Jordan
+CALL-20260913-0342,MEM-RENEW,E-IDENT-NAME-PHONE|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,2m 1s,Eli
+CALL-20260913-0382,MEM-RENEW,E-IDENT-NAME-ADDR|E-TERM-READ,,,i got an email saying my membership is renewing when does it actually charge,10,1m 2s,Brian
+CALL-20260914-0009,WAR-CLAIM,E-IDENT-NAME-PHONE|E-BOOKED|E-WARRANTY-BOOK,,,i need to file a warranty claim the unit you installed last year stopped working,12,1m 7s,Renee
+CALL-20260914-0070,SCH-TUNEUP,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,15,2m 12s,Marcus
+CALL-20260914-0074,BILL-BALANCE,E-IDENT-NAME-ADDR|E-BALANCE-READ,,,whats my current balance,9,1m 16s,Kayla
+CALL-20260914-0381,BILL-DUP,E-IDENT-NAME-PHONE|E-PENDING-HOLD,,,i think i got charged twice there are two # charges on my card from you guys,11,1m 44s,Tasha
+CALL-20260915-0133,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,driving,i smell something burning from the vents,19,2m 18s,Jordan
+CALL-20260915-0303,BILL-EXPLAIN,E-IDENT-NAME-PHONE|E-EMAIL-COPY|E-INVOICE-LINES,,,i got an invoice # for # and im not sure what its for,11,1m 25s,Kayla
+CALL-20260915-0385,MEM-PRICE,,,,how much is the maintenance plan,9,1m 49s,Jordan
+CALL-20260916-0098,SCH-LATE,E-IDENT-NAME-ADDR|E-FEE-WAIVED|E-TECH-CALL,,,my window was # to # and its ## nobodys here and nobodys called,10,1m 48s,Tasha
+CALL-20260916-0311,SCH-BURNING,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,cutout,i smell something burning from the vents,21,2m 39s,Kayla
+CALL-20260916-0336,SCH-HVAC,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,2m 27s,Eli
+CALL-20260916-0338,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,15,1m 46s,Jordan
+CALL-20260916-0397,MEM-PRICE,,,,how much is the maintenance plan,9,1m 4s,Tasha
+CALL-20260916-0403,COMMERCIAL,E-PROMISE-1BD-COMMERCIAL,,driving,i manage a #unit strip center and i need a quote on replacing four rooftop units,10,1m 53s,Kayla
+CALL-20260917-0023,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,,i have a tech coming tomorrow but something came up can i move it,14,1m 23s,Denise
+CALL-20260917-0126,SCH-PLUMB,E-IDENT-NAME-ADDR|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,15,2m 34s,Kayla
+CALL-20260917-0187,COMMERCIAL,E-PROMISE-1BD-COMMERCIAL,,,i manage a #unit strip center and i need a quote on replacing four rooftop units,8,1m 29s,Denise
+CALL-20260917-0332,MULTI-REPAIR-PLAN,E-IDENT-ACCT-NAME|E-BOOKED|E-MEMBER-ADDED,,hear,two things my ac is blowing warm and i want to get someone out and i want to know if joining the maintenance plan would save me money on this,17,1m 33s,Kayla
+CALL-20260917-0395,SCH-RESCHED,E-IDENT-ACCT-NAME|E-RESCHEDULED,,dog,i have a tech coming tomorrow but something came up can i move it,16,2m 5s,Marcus
+CALL-20260918-0071,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the furnace wont kick on,17,2m 23s,Kayla
+CALL-20260918-0294,SCH-HVAC,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,the ac is making a loud grinding noise,17,2m 6s,Brian
+CALL-20260918-0384,SCH-TUNEUP,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,i need my annual tuneup,17,2m 34s,Renee
+CALL-20260918-0417,WRONG-NO,,,,is this meridian dental,5,0m 59s,Denise
+CALL-20260919-0037,SCH-PLUMB,E-IDENT-ACCT-NAME|E-SCHEDULE-OFFER|E-BOOKED,,,my kitchen sink is backing up,17,2m 29s,Denise
+CALL-20260919-0402,SCH-HVAC,E-IDENT-NAME-PHONE|E-SCHEDULE-OFFER|E-BOOKED|E-WAITLIST,C-WANTS-EARLIER,,the ac is making a loud grinding noise,17,2m 31s,Brian

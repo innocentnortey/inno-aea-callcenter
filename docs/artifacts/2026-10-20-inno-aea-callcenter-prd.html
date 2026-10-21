@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian AI Agent — Stage 1 Review</title>
+<meta name="review-stage" content="Zero-to-hero Stage 1 · Frame">
+<meta name="review-status" content="APPROVED by Innocent 2026-10-20 (yes to all)">
+<meta name="review-approved-by" content="Innocent ✓ 2026-10-20">
+<meta name="review-date" content="2026-10-20">
+<meta name="review-source" content="docs/prd/inno-aea-callcenter-prd.md|14269ebc1c9e318f82286a93a26746a59a5f9d1592bce6341a41fbdbf3e573d9">
+<meta name="review-source" content="docs/delivery/2026-10-20-angle-and-demo-framing.md|06d2c49844175c7e787841ba3fbefa0eefab755db83c6a58fb15e561b99eeead">
+<meta name="review-source" content="docs/analysis/2026-10-20-brief-audit.md|dff5f25c3d969f651b22bc39e04b4bd434013bbc6c4249e217950a5232d143bd">
+<meta name="review-source" content="docs/analysis/2026-10-20-human-handoff-consolidated-direction.md|68798a2dd9637e66eecb7fc7f56c4540554d8e61e26a751934579fd30f8047c2">
+<meta name="review-source" content="docs/analysis/2026-10-20-human-handoff-product-direction.md|8552edab9b7a598e3d1959841724d2e050e670b6407730502da338a3817fbc14">
+<meta name="review-source" content="docs/data/handoff-information-inventory.md|56ce2be31221815d5e439dd2762181dad07c0f90556f57f4670a598e06abd68f">
+<meta name="review-source" content="docs/analysis/2026-10-20-meridian-company-service-profile.md|232197583bdcd060a5f2890da5283cf0e7157ddf745d7de21cec974fd03ed41f">
+<style>
+:root{
+  --bg:#f6f4ee;--surface:#fffdf8;--surface-2:#f0ece2;--ink:#1c1b19;--muted:#5b584f;--line:#d9d2c3;
+  --accent:#1f5f5b;--focus:#b8541e;
+  --fact:#1f6a5f;--fact-bg:#e3f1ee;
+  --decision:#2b4f8f;--decision-bg:#e6ecf8;
+  --proposal:#7a4f00;--proposal-bg:#fbf0d9;
+  --unknown:#55524a;--unknown-bg:#ecebe6;
+  --awaiting:#a3361c;--awaiting-bg:#fbe7e1;
+  --lane-family:#f3efe6;--lane-assistant:#e9f2f0;--lane-staff:#ecebf5;
+  --space-1:4px;--space-2:8px;--space-3:16px;--space-4:24px;--space-5:40px;--radius:10px;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}}
+:root[data-theme="dark"]{
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font-ui)}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 16px}
+.skip:focus{left:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--space-3)}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);padding:var(--space-4) 0}
+.kicker{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:var(--space-2) 0 var(--space-3)}
+h2{font-size:clamp(21px,2.6vw,26px);line-height:1.25;margin:0 0 var(--space-2)}
+h3{font-size:17px;margin:0 0 var(--space-2)}
+p{margin:0 0 var(--space-3)}
+.lede{font:18px/1.55 var(--font-body);max-width:72ch}
+.status-banner{display:flex;gap:var(--space-3);align-items:flex-start;background:var(--awaiting-bg);
+  border:1px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-3);margin-bottom:var(--space-3)}
+.status-banner strong{color:var(--awaiting)}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:4px var(--space-3);font-size:14px;color:var(--muted);margin:0}
+.meta dt{font-weight:600;color:var(--ink)}
+.meta dt{grid-column:1}.meta dd{grid-column:2;margin:0;overflow-wrap:anywhere}
+code{font:0.88em var(--font-mono);background:var(--surface-2);padding:1px 5px;border-radius:5px}
+section{padding:var(--space-5) 0 var(--space-3);border-bottom:1px solid var(--line)}
+.section-sub{color:var(--muted);max-width:75ch}
+/* status badges */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap;vertical-align:middle}
+.st::before{font-size:11px}
+.st.fact{color:var(--fact);background:var(--fact-bg)} .st.fact::before{content:"●"}
+.st.decision{color:var(--decision);background:var(--decision-bg)} .st.decision::before{content:"◆"}
+.st.proposal{color:var(--proposal);background:var(--proposal-bg)} .st.proposal::before{content:"▲"}
+.st.unknown{color:var(--unknown);background:var(--unknown-bg);border-style:dashed} .st.unknown::before{content:"?"}
+.st.awaiting{color:var(--awaiting);background:var(--awaiting-bg);border-width:2px} .st.awaiting::before{content:"⧗"}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-3);list-style:none;padding:var(--space-3);margin:var(--space-3) 0 0;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+.legend li{display:flex;gap:8px;align-items:center}
+/* cards */
+.grid{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.grid.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.card[data-status="fact"]{border-left-color:var(--fact)}
+.card[data-status="decision"]{border-left-color:var(--decision)}
+.card[data-status="proposal"]{border-left-color:var(--proposal)}
+.card[data-status="unknown"]{border-left-color:var(--unknown);border-left-style:dashed}
+.card[data-status="awaiting"]{border-left-color:var(--awaiting);border-color:var(--awaiting)}
+.card h3{display:flex;justify-content:space-between;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap}
+.card p:last-child,.card ul:last-child{margin-bottom:0}
+.card .src{font-size:13px;color:var(--muted)}
+.big{font-size:20px;font-weight:700;line-height:1.25;margin:var(--space-1) 0 var(--space-2)}
+ul.tight{margin:0;padding-left:20px} ul.tight li{margin:2px 0}
+/* diagrams */
+figure{margin:var(--space-3) 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+figcaption{font-size:14px;color:var(--muted);margin-top:var(--space-2)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{min-width:760px}
+.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.scroll-hint{display:none;font-size:13px;color:var(--muted);margin:0 0 var(--space-2)}
+svg{display:block;width:100%;height:auto;font-family:var(--font-ui)}
+svg .lane-family{fill:var(--lane-family)} svg .lane-assistant{fill:var(--lane-assistant)} svg .lane-staff{fill:var(--lane-staff)}
+svg .lane-label{fill:var(--muted);font-size:13px;font-weight:700}
+svg .node{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .node.fact{stroke:var(--fact)} svg .node.decision{stroke:var(--decision);stroke-width:2}
+svg .node.proposal{stroke:var(--proposal);stroke-dasharray:6 3} svg .node.unknown{stroke:var(--unknown);stroke-dasharray:3 3}
+svg .node.awaiting{stroke:var(--awaiting);stroke-width:2.5}
+svg .node.demo{stroke:var(--proposal);stroke-dasharray:4 4;fill:var(--proposal-bg)}
+svg text{fill:var(--ink);font-size:13px} svg .small{font-size:11.5px;fill:var(--muted)} svg .strong{font-weight:700}
+svg .arrow{stroke:var(--muted);stroke-width:1.6;fill:none} svg .arrow.dash{stroke-dasharray:5 4}
+svg .head{fill:var(--muted)} svg .band{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:2 4}
+svg .band-label{fill:var(--accent);font-weight:700;font-size:12.5px}
+.words{font-size:14px;color:var(--muted);margin:var(--space-2) 0 0;padding-left:20px}
+/* why chain */
+.chain{display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));counter-reset:why}
+.chain .card{position:relative}
+.chain .card::before{counter-increment:why;content:"Why " counter(why);display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+/* timeline */
+.days{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.day h3{margin-bottom:var(--space-2)}
+.day ol{margin:0;padding-left:22px} .day li{margin:5px 0}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:6px;margin-left:4px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted)}
+.cutline{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0;color:var(--awaiting);font-weight:700}
+.cutline::before,.cutline::after{content:"";flex:1;border-top:2px dashed var(--awaiting)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--surface-2)}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+/* story parts (context → problem → why-hard) */
+.part{border-left:3px solid var(--line);padding:2px 0 2px var(--space-3);margin:var(--space-3) 0}
+.part h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 4px}
+.part p{max-width:78ch}
+.part[data-part="context"]{border-left-color:var(--accent)}
+.part[data-part="problem"]{border-left-color:var(--decision)}
+.part[data-part="why-hard"]{border-left-color:var(--awaiting)}
+.ask{background:var(--awaiting-bg);border:2px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-4)}
+.ask h2{color:var(--awaiting)}
+footer{padding:var(--space-4) 0 var(--space-5);font-size:13px;color:var(--muted)}
+@media (max-width:640px){
+  .status-banner{flex-direction:column;gap:var(--space-2)}
+  .meta{grid-template-columns:1fr}
+  .meta dt,.meta dd{grid-column:1}
+  .meta dt:not(:first-child){margin-top:var(--space-2)}
+  figure{padding:var(--space-2)}
+  .scroll-hint{display:block}
+  .cutline{flex-direction:column;gap:var(--space-2);text-align:center}
+  .cutline::before,.cutline::after{flex:none;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media print{
+  html,body{background:#fff;color:#000}
+  .skip{display:none}
+  section{break-inside:auto;padding:16px 0}
+  figure,.card,.day{break-inside:avoid}
+  h2,h3,.section-sub{break-after:avoid}
+  .scroll{overflow:visible} .scroll svg{min-width:0} .scroll-hint{display:none}
+  a{color:#000}
+  a[href^="../"]::after{content:" (" attr(href) ")";font-size:10px}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wrap">
+    <p class="kicker">Zero-to-hero Stage 1 · Frame · local visual review · Markdown is the source of truth</p>
+    <h1>Meridian AI service agent: the problem, the plan, and how it works</h1>
+    <div class="status-banner" role="status">
+      <span class="st awaiting">Awaiting your review</span>
+      <div><strong>Stage 1 approved by you on 2026-10-20 ("yes to all") for scope, targets and the five system answers.</strong> Item 2, the stage shortcuts, was withdrawn the same day: no stage is skipped, and the checklist continues with Stage 2 (data reality).</div>
+    </div>
+    <dl class="meta">
+      <dt>Review date</dt><dd>2026-10-20, about 19:50 CT (rebuilt after the Markdown sources)</dd>
+      <dt>Sources (full documents)</dt>
+      <dd>
+        <a href="../prd/inno-aea-callcenter-prd.md"><code>docs/prd/inno-aea-callcenter-prd.md</code></a>: the PRD draft · <code data-sha-for="docs/prd/inno-aea-callcenter-prd.md">14269ebc1c9e</code><br>
+        <a href="../delivery/2026-10-20-angle-and-demo-framing.md"><code>docs/delivery/2026-10-20-angle-and-demo-framing.md</code></a>: framing and metrics · <code data-sha-for="docs/delivery/2026-10-20-angle-and-demo-framing.md">06d2c4984417</code><br>
+        <a href="../analysis/2026-10-20-brief-audit.md"><code>docs/analysis/2026-10-20-brief-audit.md</code></a>: the problem and the traps · <code data-sha-for="docs/analysis/2026-10-20-brief-audit.md">dff5f25c3d96</code><br>
+        <a href="../analysis/2026-10-20-human-handoff-consolidated-direction.md"><code>docs/analysis/2026-10-20-human-handoff-consolidated-direction.md</code></a>: handoff design and all decisions · <code data-sha-for="docs/analysis/2026-10-20-human-handoff-consolidated-direction.md">68798a2dd963</code><br>
+        <a href="../analysis/2026-10-20-human-handoff-product-direction.md"><code>docs/analysis/2026-10-20-human-handoff-product-direction.md</code></a>: the original handoff research · <code data-sha-for="docs/analysis/2026-10-20-human-handoff-product-direction.md">8552edab9b7a</code><br>
+        <a href="../data/handoff-information-inventory.md"><code>docs/data/handoff-information-inventory.md</code></a>: all 420 calls classified · <code data-sha-for="docs/data/handoff-information-inventory.md">56ce2be31221</code><br>
+        <a href="../analysis/2026-10-20-meridian-company-service-profile.md"><code>docs/analysis/2026-10-20-meridian-company-service-profile.md</code></a>: who Meridian serves · <code data-sha-for="docs/analysis/2026-10-20-meridian-company-service-profile.md">232197583bdc</code>
+      </dd>
+      <dt>Refresh</dt><dd>If any source changes, this page is rebuilt and checked again before you sign off.</dd>
+    </dl>
+    <ul class="legend" data-legend aria-label="Status legend">
+      <li><span class="st fact" data-legend-item="fact">Fact</span> established; a source is named</li>
+      <li><span class="st decision" data-legend-item="decision">Your decision</span> you chose it on 2026-10-20</li>
+      <li><span class="st proposal" data-legend-item="proposal">Proposal</span> Claude proposes it; not yours yet</li>
+      <li><span class="st unknown" data-legend-item="unknown">Unknown</span> not established; who could close it</li>
+      <li><span class="st awaiting" data-legend-item="awaiting">Awaiting approval</span> asked of you at this gate</li>
+    </ul>
+    <nav aria-label="Sections"><p class="src"><a href="#why-h">1 Problem</a> · <a href="#found-h">2 What we found</a> · <a href="#who-h">3 Who calls</a> · <a href="#trap-h">4 Traps</a> · <a href="#flow-h">5 Agent flow</a> · <a href="#kb-h">5b Knowledge</a> · <a href="#hand-h">6 Handoff</a> · <a href="#d4-h">7 Limits</a> · <a href="#metric-h">8 Success</a> · <a href="#design-h">9 Design</a> · <a href="#dec-h">10 Decisions</a> · <a href="#scope-h">11 Plan</a> · <a href="#ask-h">12 Your review</a></p></nav>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+
+<section aria-labelledby="sum-h" data-visual="summary">
+  <h2 id="sum-h">At a glance</h2>
+  <div class="grid three">
+    <article class="card" data-status="fact"><h3>The real problem <span class="st fact">Fact</span></h3><p class="big">Every routine request needs a person, so callers queue.</p><p class="src">420 of 420 calls handled by people; median 111 s. Audit.</p></article>
+    <article class="card" data-status="decision"><h3>Our aim <span class="st decision">Your decision</span></h3><p class="big">Resolve 100% of requests inside our scope correctly.</p><p class="src">Your framing, 2026-10-20. Framing doc §1.</p></article>
+    <article class="card" data-status="fact"><h3>What tonight's scope covers <span class="st fact">Fact</span></h3><p class="big">58.3% of call volume tonight. A clear path to 77.9%.</p><p class="src">Measured on the issued calls. PRD §3.3.</p></article>
+    <article class="card" data-status="decision"><h3>Product choices <span class="st decision">Your decision</span></h3><p class="big">Every handoff, safety, fee and scope choice is recorded.</p><p class="src">Three rounds today. Section 10.</p></article>
+    <article class="card" data-status="proposal"><h3>The plan <span class="st proposal">Proposal</span></h3><p class="big">Build in order, two checkpoints, a cut list, done by 06:00.</p><p class="src">PRD §8. Section 11.</p></article>
+    <article class="card" data-status="awaiting"><h3>Asked of you now <span class="st awaiting">Awaiting approval</span></h3><p class="big">Scope, stage shortcuts, targets, five system questions.</p><p class="src">Section 12. Nothing you already chose is asked again.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="story-h" data-visual="story">
+  <h2 id="story-h">The story so far</h2>
+  <p class="lede">Meridian is a made-up heating, cooling and plumbing company in Austin. Its phone team can't keep up. A homeowner whose AC died in August waits on hold behind people asking for their balance. AEA wants an AI agent that takes the routine calls, so people can focus on the rest, without hiring more staff.</p>
+  <p>Today we read every one of the 420 sample calls, all 17 help documents and the booking database. We sorted the calls into 37 kinds and 11 families. We found which ones the supplied systems can answer, which ones must reach a person, and which ones need systems Meridian never gave us. We studied how service works for a home-services company, designed how a handoff to a person should work, and you made every product choice. This page puts it all in one place.</p>
+</section>
+
+<section aria-labelledby="why-h">
+  <h2 id="why-h">1 · The problem, step by step</h2>
+  <p class="section-sub">A "why-chain" keeps asking "why?" until it reaches something we can change.</p>
+  <div class="chain">
+    <article class="card" data-status="fact"><h3>Callers wait <span class="st fact">Fact</span></h3><p>The brief says staff "cannot keep up with call volume".</p><p class="src">Briefing, Part B.</p></article>
+    <article class="card" data-status="fact"><h3>Every request needs a person <span class="st fact">Fact</span></h3><p>Booking is 31% of calls, billing questions 16%, membership 14%, warranty 11%. All go to a person today.</p><p class="src">Inventory §3.1.</p></article>
+    <article class="card" data-status="fact"><h3>There is no other way in <span class="st fact">Fact</span></h3><p>All 420 are phone calls. Answers sit in messy documents. Bookings sit in a database only staff use.</p><p class="src">Audit §3; transcript index.</p></article>
+    <article class="card" data-status="proposal"><h3>What we can change <span class="st proposal">Proposal</span></h3><p>An agent that answers from current documents, books directly, and hands the rest to a person with its notes and an honest promise.</p><p class="src">Not chosen: "agents are slow" (calls are short), "hire more" (the brief rules it out), "a better phone menu" (routes, fixes nothing).</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="found-h">
+  <h2 id="found-h">2 · What we found in the data</h2>
+  <p class="section-sub">These findings shaped every choice below. Each comes from a script over all 420 calls, not a sample.</p>
+  <div class="grid">
+    <article class="card" data-status="fact"><h3>Handoffs are callbacks <span class="st fact">Fact</span></h3><p>54 calls (12.9%) need a person or a safety step. None was a live transfer. Every one asked for help in its first sentence.</p><p class="src">Inventory §1, §3.3.</p></article>
+    <article class="card" data-status="fact"><h3>Promises were inconsistent <span class="st fact">Fact</span></h3><p>The same kind of case got "today", "1 business day" or "2 business days". No reference numbers. No callback windows.</p><p class="src">Inventory §1, §5.3.</p></article>
+    <article class="card" data-status="fact"><h3>Calls can't be checked <span class="st fact">Fact</span></h3><p>None of the 131 account numbers, 130 phones or 42 invoices in the calls exists in the database. Only four test customers can be checked.</p><p class="src">Inventory §1.</p></article>
+    <article class="card" data-status="fact"><h3>Some systems are missing <span class="st fact">Fact</span></h3><p>74 calls needed things we don't have: payment links, autopay, auto-renew, card records, registration records, repair history.</p><p class="src">Inventory §5.2.</p></article>
+    <article class="card" data-status="fact"><h3>Agents said things the policy doesn't <span class="st fact">Fact</span></h3><p>A $60 quote gap explained by fees that aren't $60. 14 of 15 short-notice reschedules with no $49 fee. Tune-ups quoted the wrong price.</p><p class="src">Inventory §5.3. The calls are not an answer key.</p></article>
+    <article class="card" data-status="fact"><h3>A safety gap <span class="st fact">Fact</span></h3><p>16 callers smelled burning from the vents. All were booked as routine. The policy only covers burning with tripped breakers.</p><p class="src">Inventory §3.2; KB safety policy.</p></article>
+    <article class="card" data-status="fact"><h3>Invoices can't show credits <span class="st fact">Fact</span></h3><p>All 45 invoices with a diagnostic fee also bill a repair, with no credit line. No invoice links to its visit.</p><p class="src">Inventory §10.2.</p></article>
+    <article class="card" data-status="fact"><h3>The data is templated <span class="st fact">Fact</span></h3><p>420 calls come from 46 opening templates. Tests must hold out whole templates, or scores look better than they are.</p><p class="src">Inventory §2; audit D-1.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="who-h">
+  <h2 id="who-h">3 · Who calls, and why</h2>
+  <p class="section-sub">Each bar is one family of call reasons. The filled part is what tonight's agent resolves. The empty part goes to people, or needs a system we don't have.</p>
+  <figure>
+    <p class="scroll-hint">Chart: swipe sideways. The text below lists the same numbers.</p>
+    <div class="scroll" tabindex="0" aria-label="Call reasons chart, scrolls sideways">
+    <svg viewBox="0 0 1040 500" role="img" aria-labelledby="c1t c1d">
+      <title id="c1t">Eleven call families and what the agent resolves tonight</title>
+      <desc id="c1d">Booking 132 of which 116 resolved; billing 67 of which 39; membership 57 of which 38; warranty 45 of which 29; appointment changes 38 of which 29 as time allows; disputes and refunds 24, complaints 16 and safety 9 go to people; out of scope 16 of which 11 resolved by redirect; estimates 12 resolved; two-part 4 go to staff.</desc>
+      <g>
+        <text x="10" y="30" class="strong">Booking 132</text><rect x="250" y="16" width="528" height="20" rx="4" class="node fact"/><rect x="250" y="16" width="464" height="20" rx="4" class="node decision" style="fill:var(--decision-bg)"/><text x="790" y="31" class="small">116 resolved · burning smell → safety path</text>
+        <text x="10" y="72" class="strong">Billing questions 67</text><rect x="250" y="58" width="268" height="20" rx="4" class="node fact"/><rect x="250" y="58" width="156" height="20" rx="4" class="node proposal" style="fill:var(--proposal-bg)"/><text x="530" y="73" class="small">39 resolved · payments, autopay → staff</text>
+        <text x="10" y="114" class="strong">Membership 57</text><rect x="250" y="100" width="228" height="20" rx="4" class="node fact"/><rect x="250" y="100" width="152" height="20" rx="4" class="node proposal" style="fill:var(--proposal-bg)"/><text x="490" y="115" class="small">38 resolved · cancel, upgrade → staff</text>
+        <text x="10" y="156" class="strong">Warranty 45</text><rect x="250" y="142" width="180" height="20" rx="4" class="node fact"/><rect x="250" y="142" width="116" height="20" rx="4" class="node proposal" style="fill:var(--proposal-bg)"/><text x="442" y="157" class="small">29 resolved · registration, repair history → staff</text>
+        <text x="10" y="198" class="strong">Appointment changes 38</text><rect x="250" y="184" width="152" height="20" rx="4" class="node fact"/><rect x="250" y="184" width="116" height="20" rx="4" class="node decision" style="fill:var(--decision-bg)"/><text x="414" y="199" class="small">29 as time allows · late technician → staff</text>
+        <text x="10" y="240" class="strong">Disputes, refunds 24</text><rect x="250" y="226" width="96" height="20" rx="4" class="node fact"/><text x="358" y="241" class="small">→ people, by policy</text>
+        <text x="10" y="282" class="strong">Complaints 16</text><rect x="250" y="268" width="64" height="20" rx="4" class="node fact"/><text x="326" y="283" class="small">→ people, by policy</text>
+        <text x="10" y="324" class="strong">Out of scope 16</text><rect x="250" y="310" width="64" height="20" rx="4" class="node fact"/><rect x="250" y="310" width="44" height="20" rx="4" class="node decision" style="fill:var(--decision-bg)"/><text x="326" y="325" class="small">jobs, wrong numbers resolved · commercial → people</text>
+        <text x="10" y="366" class="strong">Estimates 12</text><rect x="250" y="352" width="48" height="20" rx="4" class="node decision" style="fill:var(--decision-bg)"/><text x="310" y="367" class="small">12 resolved (advisor visit booked)</text>
+        <text x="10" y="408" class="strong">Safety 9</text><rect x="250" y="394" width="36" height="20" rx="4" class="node awaiting"/><text x="298" y="409" class="small">safety instruction first, then a P0 case</text>
+        <text x="10" y="450" class="strong">Two-part 4</text><rect x="250" y="436" width="16" height="20" rx="4" class="node fact"/><text x="278" y="451" class="small">join + book → staff (no billing system)</text>
+      </g>
+    </svg>
+    </div>
+    <figcaption><span class="st fact">Fact</span> call counts (inventory §3) · <span class="st decision">Your decision</span> booking and appointment scope (DEC-1) · <span class="st proposal">Proposal</span> the three answer topics (PRD §3.2).</figcaption>
+  </figure>
+  <h3>What callers need in each situation</h3>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>Situation</th><th>What they need to know</th><th>When urgency changes things</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr data-status="fact"><td>Routine tune-up, membership</td><td>Price or inclusion; next open window</td><td>Low urgency; self-service fits</td><td><span class="st fact">Fact</span> profile §4</td></tr>
+      <tr data-status="decision"><td>No cooling, no heat, active leak</td><td>What to do now; when help comes</td><td>A normal booking. Only if they say someone is in danger: emergency number first and a P1 case</td><td><span class="st decision">Your decision</span> OD-4, narrowed at the Stage 2 check</td></tr>
+      <tr data-status="decision"><td>Reschedule, late technician</td><td>Is there a fee? Should I wait?</td><td>Fee stated before a change; late tech goes to staff</td><td><span class="st decision">Your decision</span> D3, D4</td></tr>
+      <tr data-status="fact"><td>Warranty</td><td>Am I covered? Will I pay labor?</td><td>A dead compressor in summer is a no-cool case</td><td><span class="st fact">Fact</span> profile §4</td></tr>
+      <tr data-status="decision"><td>Billing dispute, refund</td><td>Who reviews it, by when</td><td>Promise from policy; refund requests answered in 2 business days</td><td><span class="st decision">Your decision</span> OD-4</td></tr>
+      <tr data-status="decision"><td>Gas, CO, sparks</td><td>What to do right now</td><td>The instruction overrides everything</td><td><span class="st decision">Your decision</span> D5</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section aria-labelledby="trap-h">
+  <h2 id="trap-h">4 · The traps we must not fall into</h2>
+  <p class="section-sub">The brief's reviewer asks "Did you catch the traps?" These eight decide the grade. Each card says what we do about it.</p>
+  <div class="grid">
+    <article class="card" data-status="decision"><h3>Chasing a big number <span class="st decision">Your decision</span></h3><p>Deflecting calls can look like success. We count only correct resolutions. Abandoned or wrong chats are failures.</p><p class="src">Audit C-4, E-1; framing §2.</p></article>
+    <article class="card" data-status="decision"><h3>"Top 3" by volume <span class="st decision">Your decision</span></h3><p>Big topics include disputes and payments we must not handle. We take the answerable part of each.</p><p class="src">Audit C-2; PRD §3.2.</p></article>
+    <article class="card" data-status="decision"><h3>Old documents <span class="st decision">Your decision</span></h3><p>Archive copies say $149 membership, 90-day warranty, refunds any time. They are left out of search entirely.</p><p class="src">DEC-4; audit K-6, K-8.</p></article>
+    <article class="card" data-status="decision"><h3>Gas leak in a queue <span class="st decision">Your decision</span></h3><p>The safety instruction comes first, in code, before any lookup, queue or case.</p><p class="src">Audit C-7, E-3; D5.</p></article>
+    <article class="card" data-status="decision"><h3>Public link, real records <span class="st decision">Your decision</span></h3><p>Private details need a one-time code sent to the contact on record (simulated). Rate limits and a spend cap.</p><p class="src">Audit C-11, G-2; OD-3.</p></article>
+    <article class="card" data-status="fact"><h3>Calls as answer keys <span class="st fact">Fact</span></h3><p>Agents' answers were often off-policy. Expected answers come from the current KB and database.</p><p class="src">Audit D-5; inventory §5.3.</p></article>
+    <article class="card" data-status="fact"><h3>The real clock <span class="st fact">Fact</span></h3><p>"Today" is Friday 2026-10-16 in this data. The agent uses that fixed date.</p><p class="src">Dataset README; audit C-9.</p></article>
+    <article class="card" data-status="decision"><h3>Giving money away <span class="st decision">Your decision</span></h3><p>The AI never grants a waiver or discount. Staff review contested fees.</p><p class="src">DEC-2 = D3; audit E-4.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="flow-h">
+  <h2 id="flow-h">5 · How the agent handles one message</h2>
+  <p class="section-sub" data-status="decision"><span class="st decision">Your decision</span> <strong>Replaced at Stage 3 (2026-10-20):</strong> your HP-1 choice, a two-layer design, now replaces this flow (PRD §6.1; the Stage 3 page shows it). This drawing is kept as the Stage 1 record. Fee-bearing reschedules now go to a person (R-21).</p>
+  <p class="section-sub">Read it top to bottom. Every box is a step the agent takes for each message. The first three checks are plain code, not the AI model, so they can't be talked out of order.</p>
+  <figure>
+    <p class="scroll-hint">Diagram: swipe sideways. The numbered list below says the same thing.</p>
+    <div class="scroll" tabindex="0" aria-label="Agent flow diagram, scrolls sideways">
+    <svg viewBox="0 0 1040 940" role="img" aria-labelledby="a1t a1d">
+      <title id="a1t">The agent's flow for one customer message</title>
+      <desc id="a1d">A message passes a safety check, a someone-in-danger check and a person-request check, then a router sends it to a knowledge answer, an account lookup after a code, a booking, or a handoff. Failures offer a person. Every handoff creates a case, then goes to an async follow-up or, in the simulation, a live queue where a representative joins the same chat.</desc>
+      <defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="node fact" x="390" y="20" width="260" height="44" rx="8"/><text x="400" y="47" class="strong">Customer message</text>
+      <rect class="node decision" x="390" y="100" width="260" height="58" rx="8"/><text x="400" y="122" class="strong">1 Safety check (code)</text><text x="400" y="141" class="small">gas, CO, sparks, smoke, flames</text>
+      <rect class="node decision" x="700" y="100" width="320" height="58" rx="8"/><text x="710" y="122" class="strong">Leave home, call 911 from outside</text><text x="710" y="141" class="small">shown first · then offer contact · P0 case</text>
+      <rect class="node decision" x="20" y="100" width="330" height="58" rx="8"/><text x="30" y="122" class="strong">Burning smell, breakers unknown</text><text x="30" y="141" class="small">ask: already tripped? smoke? sparks?</text>
+      <rect class="node decision" x="390" y="194" width="260" height="58" rx="8"/><text x="400" y="216" class="strong">2 Someone in danger? (code)</text><text x="400" y="235" class="small">no heat, cooling or leak + danger</text>
+      <rect class="node decision" x="700" y="194" width="270" height="58" rx="8"/><text x="710" y="216" class="strong">Emergency number first</text><text x="710" y="235" class="small">(512) 555-0199 demo · P1 case</text>
+      <rect class="node decision" x="390" y="288" width="260" height="50" rx="8"/><text x="400" y="309" class="strong">3 Asked for a person?</text><text x="400" y="327" class="small">button or words · first ask counts</text>
+      <rect class="node fact" x="390" y="374" width="260" height="50" rx="8"/><text x="400" y="395" class="strong">4 Router: what do they need?</text><text x="400" y="413" class="small">the AI picks one of four paths</text>
+      <rect class="node decision" x="20" y="470" width="225" height="78" rx="8"/><text x="30" y="492" class="strong">Policy question</text><text x="30" y="511" class="small">search current documents</text><text x="30" y="527" class="small">old copies never searched</text>
+      <rect class="node decision" x="270" y="470" width="235" height="78" rx="8"/><text x="280" y="492" class="strong">Account details</text><text x="280" y="511" class="small">code to contact on record</text><text x="280" y="527" class="small">then read invoice, membership</text>
+      <rect class="node decision" x="530" y="470" width="225" height="78" rx="8"/><text x="540" y="492" class="strong">Booking or change</text><text x="540" y="511" class="small">code, then zone · slot · member</text><text x="540" y="527" class="small">· inside 24 h: staff request</text>
+      <rect class="node decision" x="780" y="470" width="240" height="78" rx="8"/><text x="790" y="492" class="strong">Dispute, refund, missing</text><text x="790" y="511" class="small">system: answer within limits,</text><text x="790" y="527" class="small">or hand off (D4 rules)</text>
+      <rect class="node fact" x="120" y="590" width="330" height="52" rx="8"/><text x="130" y="612" class="strong">Answer with its source</text><text x="130" y="630" class="small">or say plainly it isn't known</text>
+      <rect class="node fact" x="530" y="590" width="225" height="52" rx="8"/><text x="540" y="612" class="strong">Write booking (DB copy)</text><text x="540" y="630" class="small">date · window · technician</text>
+      <rect class="node decision" x="120" y="680" width="330" height="58" rx="8"/><text x="130" y="702" class="strong">Failure signal?</text><text x="130" y="721" class="small">2 failed answers · tool fails · corrected</text>
+      <rect class="node decision" x="300" y="776" width="440" height="64" rx="8"/><text x="310" y="798" class="strong">Handoff: case (P0–P4) + 8-heading brief</text><text x="310" y="816" class="small">promise from the policy table · reference</text><text x="310" y="832" class="small">· follow up by email (default) or phone</text>
+      <rect class="node decision" x="40" y="870" width="430" height="56" rx="8"/><text x="50" y="892" class="strong">Nobody online (default): follow-up</text><text x="50" y="911" class="small">within 1 business day · refund requests 2</text>
+      <rect class="node demo" x="560" y="870" width="460" height="56" rx="8"/><text x="570" y="892" class="strong">Simulated shift: live queue → rep joins</text><text x="570" y="911" class="small">the same chat; the AI pauses</text>
+      <path class="arrow" d="M520,64 L520,100" marker-end="url(#ah)"/>
+      <path class="arrow" d="M650,129 L700,129" marker-end="url(#ah)"/><text x="660" y="121" class="small">yes</text>
+      <path class="arrow dash" d="M390,129 L350,129" marker-end="url(#ah)"/><text x="340" y="95" class="small">unclear</text>
+      <path class="arrow" d="M520,158 L520,194" marker-end="url(#ah)"/>
+      <path class="arrow" d="M650,223 L700,223" marker-end="url(#ah)"/><text x="660" y="215" class="small">yes</text>
+      <path class="arrow" d="M520,252 L520,288" marker-end="url(#ah)"/>
+      <path class="arrow" d="M520,338 L520,374" marker-end="url(#ah)"/>
+      <path class="arrow" d="M450,424 L132,470" marker-end="url(#ah)"/>
+      <path class="arrow" d="M490,424 L388,470" marker-end="url(#ah)"/>
+      <path class="arrow" d="M560,424 L642,470" marker-end="url(#ah)"/>
+      <path class="arrow" d="M600,424 L900,470" marker-end="url(#ah)"/>
+      <path class="arrow" d="M132,548 L230,590" marker-end="url(#ah)"/>
+      <path class="arrow" d="M388,548 L340,590" marker-end="url(#ah)"/>
+      <path class="arrow" d="M642,548 L642,590" marker-end="url(#ah)"/>
+      <path class="arrow" d="M285,642 L285,680" marker-end="url(#ah)"/>
+      <path class="arrow" d="M642,642 L450,690" marker-end="url(#ah)"/>
+      <path class="arrow dash" d="M120,709 L8,709 L8,170 L360,170 L360,300 L390,305" marker-end="url(#ah)"/><text x="14" y="660" class="small">yes: offer</text><text x="14" y="676" class="small">a person</text>
+      <path class="arrow" d="M900,548 L700,776" marker-end="url(#ah)"/>
+      <path class="arrow" d="M650,313 L1012,313 L1012,760 L740,800" marker-end="url(#ah)"/><text x="900" y="305" class="small">yes → handoff</text>
+      <path class="arrow" d="M835,252 L835,313"/>
+      <path class="arrow" d="M1012,158 L1012,313"/>
+      <path class="arrow" d="M440,840 L300,870" marker-end="url(#ah)"/>
+      <path class="arrow" d="M600,840 L760,870" marker-end="url(#ah)"/>
+      <path class="arrow dash" d="M560,915 L470,915" marker-end="url(#ah)"/><text x="480" y="864" class="small">shift ends</text>
+    </svg>
+    </div>
+    <figcaption><span class="st decision">Your decision</span> OD-1 to OD-6, D2 to D5, DEC-2, DEC-4 · dashed box = labelled demo simulation · PRD §6.1 has the same flow as a Mermaid chart.</figcaption>
+    <ol class="words">
+      <li><strong>Safety check, in code, every message.</strong> Gas, CO, sparks, smoke or flames: "leave the home and call 911 or the gas utility from outside", before anything else. Then it offers to take contact details and opens a top-priority (P0) case. A burning smell with no breaker information gets two questions first: has a breaker already tripped, and is there smoke, sparks or flames?</li>
+      <li><strong>Danger check.</strong> No heat, no cooling or an active leak is a normal booking, with short skippable questions in the booking note. Only when the customer says someone is in danger because of it does the 24/7 emergency number come first (a made-up demo number, since the KB has none), with a P1 case.</li>
+      <li><strong>Person check.</strong> A request for a person, by button or words, creates a handoff the first time.</li>
+      <li><strong>The router</strong> picks one of four paths. Policy questions search only current documents. Account details need a one-time code sent to the contact on record. Bookings follow zone, slot and member rules, and state the $49 fee for changes inside 24 hours. Disputes, refunds and tasks our systems can't do follow the D4 rules: answer within limits, or hand off.</li>
+      <li><strong>Every answer carries its source</strong>, or says plainly it isn't known. Every booking writes to a copy of the database, never the original.</li>
+      <li><strong>Failure signals</strong> (two failed answers, a tool failing twice, the customer correcting the AI) make the agent offer a person.</li>
+      <li><strong>Handoff</strong> opens a case with a priority, a short brief, a promise from the policy table, a reference and the customer's follow-up choice.</li>
+      <li><strong>Nobody online</strong> (the default): the follow-up promise. <strong>In the labelled simulation</strong>, the case waits in a live queue, and the reviewer, as the demo representative, joins the same chat while the AI pauses. If the shift ends first, the follow-up promise applies.</li>
+    </ol>
+  </figure>
+</section>
+
+<section aria-labelledby="kb-h">
+  <h2 id="kb-h">5b · What the agent knows, and where it comes from</h2>
+  <p class="section-sub">We don't write the knowledge base. Meridian gave us 17 help files. We read every file, split the current ones into small pieces, and turn each piece into numbers that capture its meaning (an "embedding"). Those go into a <strong>vector store</strong>: an index file inside the app that finds the pieces closest in meaning to a question. The agent answers only from what comes back, shows its source, and says so if nothing answers the question (PRD R-9 to R-12).</p>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>Customers ask about</th><th>Answered from</th><th>Never from (outdated)</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr data-status="fact"><td>Membership: price, what's included, renewal, cancel rules</td><td>membership/comfort_club_overview.md; 2026 fee schedule (PDF)</td><td>archive/comfort_club_overview.md ($149, "refund any time")</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>Billing questions: fees, diagnostic credit, payment methods, double charges</td><td>faq/customer_faq.md; fee schedule; price book (CSV); invoice records after the code</td><td>faq/faq_old_copy.md ($79, $129)</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>Warranty: repair, install, parts, registration, transfer</td><td>warranty/warranty_policy.md; install date and brand after the code</td><td>archive/warranty_terms_2023.txt (90 days)</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>Booking: windows, texts, changes, late technicians</td><td>faq/customer_faq.md; technician_arrival_and_etas.md; the booking database</td><td>scheduling_guide.md (48-hour rule)</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>What Meridian does and doesn't do; prices; financing</td><td>service_catalog.md; price book; FAQ</td><td>duct_cleaning.md (empty stub)</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>Service area, hours, holidays</td><td>service_area.md; FAQ; holiday_hours_2026.png (typed up by hand, linked to the image)</td><td>faq/faq_old_copy.md</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="fact"><td>Safety, urgent problems, quick checks</td><td>escalation_and_safety.md (runs as code); troubleshooting_before_you_call.md</td><td>—</td><td><span class="st fact">Fact</span></td></tr>
+      <tr data-status="decision"><td>Staff-only notes (waivers, discounts)</td><td>Shown to staff only, never quoted to customers</td><td>Customer replies</td><td><span class="st decision">Your decision</span> DEC-2</td></tr>
+    </tbody>
+  </table></div>
+  <div class="grid two">
+    <article class="card" data-status="decision"><h3>Questions no file answers <span class="st decision">Your decision</span></h3><p>"How long have you been in business?" gets an honest "I don't have that information", plus an offer of a person. The agent never guesses from general knowledge.</p><p class="src">PRD R-13, §4.3a.</p></article>
+    <article class="card" data-status="fact"><h3>Where the company profile fits <span class="st fact">Fact</span></h3><p>The profile is our research, not company policy. It shaped the urgent path, the optional self-checks, follow-up, mobile use and direction A. The agent never quotes it, because its industry facts aren't Meridian's.</p><p class="src">PRD §4.3a; company profile.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="hand-h">
+  <h2 id="hand-h">6 · What happens when a person takes over</h2>
+  <p class="section-sub">Five parts make a handoff work, ranked. The first two are both needed: without the first nobody can reach a person, and without the second the person starts over.</p>
+  <div class="grid">
+    <article class="card" data-status="decision"><h3>C1 Honest human access <span class="st decision">Your decision</span></h3><p>"Talk to a person" is always visible. The agent offers help early when things go wrong. It never pretends someone is online.</p><p class="src">OD-1, OD-5, OD-6.</p></article>
+    <article class="card" data-status="decision"><h3>C2 A short brief <span class="st decision">Your decision</span></h3><p>Eight fixed headings, about a fifth-grade reading level. Facts and the customer's claims are kept apart. The full chat is one click away.</p><p class="src">Your direction P2, P7; consolidated C2.</p></article>
+    <article class="card" data-status="decision"><h3>C3 Someone owns every case <span class="st decision">Your decision</span></h3><p>Every case has a state, an owner, a next step and a due time. Supervisors see what is unowned, due soon or overdue.</p><p class="src">Your direction P5; consolidated §6.</p></article>
+    <article class="card" data-status="decision"><h3>C4 Sources you can check <span class="st decision">Your decision</span></h3><p>Each fact links to what the AI saw and to the current record, with a "changed since" marker.</p><p class="src">Your direction P6; D6.</p></article>
+    <article class="card" data-status="proposal"><h3>C5 Outcomes and corrections <span class="st proposal">Proposal</span></h3><p>Staff record the outcome and flag AI mistakes into a review list. Nothing changes the AI automatically. First to cut if time runs short.</p><p class="src">Consolidated C5; brief Part B §7.</p></article>
+  </div>
+  <figure>
+    <p class="scroll-hint">Diagram: swipe sideways.</p>
+    <div class="scroll" tabindex="0" aria-label="Case lifecycle diagram, scrolls sideways">
+    <svg viewBox="0 0 1040 200" role="img" aria-labelledby="l1t l1d">
+      <title id="l1t">Case lifecycle</title>
+      <desc id="l1d">A case starts unassigned, or live-queued in the staffed simulation. It is claimed, then in progress, sometimes waiting with a wake-up time, then resolved or closed unresolved. A live-queued case becomes unassigned if the shift ends.</desc>
+      <defs><marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+      <rect class="node demo" x="10" y="20" width="150" height="50" rx="8"/><text x="20" y="42" class="strong">Live-queued</text><text x="20" y="59" class="small">simulated shift only</text>
+      <rect class="node decision" x="10" y="110" width="150" height="50" rx="8"/><text x="20" y="132" class="strong">Unassigned</text><text x="20" y="149" class="small">due time set</text>
+      <rect class="node decision" x="210" y="65" width="140" height="50" rx="8"/><text x="220" y="87" class="strong">Claimed</text><text x="220" y="104" class="small">named owner</text>
+      <rect class="node decision" x="400" y="65" width="170" height="50" rx="8"/><text x="410" y="87" class="strong">In progress</text><text x="410" y="104" class="small">AI paused if live</text>
+      <rect class="node decision" x="400" y="140" width="170" height="50" rx="8"/><text x="410" y="162" class="strong">Waiting</text><text x="410" y="179" class="small">wake-up time required</text>
+      <rect class="node decision" x="640" y="30" width="170" height="50" rx="8"/><text x="650" y="52" class="strong">Resolved</text><text x="650" y="69" class="small">outcome recorded</text>
+      <rect class="node decision" x="640" y="110" width="170" height="50" rx="8"/><text x="650" y="132" class="strong">Closed unresolved</text><text x="650" y="149" class="small">reason recorded</text>
+      <rect class="node fact" x="860" y="65" width="170" height="60" rx="8"/><text x="870" y="87" class="strong">Promise record</text><text x="870" y="104" class="small">kept · missed · changed</text>
+      <path class="arrow" d="M160,45 L210,80" marker-end="url(#ah3)"/>
+      <path class="arrow dash" d="M85,70 L85,110" marker-end="url(#ah3)"/><text x="92" y="95" class="small">shift ends</text>
+      <path class="arrow" d="M160,135 L210,100" marker-end="url(#ah3)"/>
+      <path class="arrow" d="M350,90 L400,90" marker-end="url(#ah3)"/>
+      <path class="arrow" d="M485,115 L485,140" marker-end="url(#ah3)"/>
+      <path class="arrow" d="M570,80 L640,55" marker-end="url(#ah3)"/>
+      <path class="arrow" d="M570,100 L640,135" marker-end="url(#ah3)"/>
+      <path class="arrow dash" d="M810,95 L860,95" marker-end="url(#ah3)"/>
+    </svg>
+    </div>
+    <figcaption><span class="st decision">Your decision</span> lifecycle and alerts, consolidated §6 · safety (P0) and urgent comfort (P1) sit above everything in every queue.</figcaption>
+  </figure>
+  <div class="grid two">
+    <article class="card" data-status="proposal"><h3>Example brief (seeded test case) <span class="st proposal">Proposal</span></h3>
+      <ul class="tight">
+        <li><strong>Why this came to you:</strong> a disputed charge goes to a person.</li>
+        <li><strong>What the customer needs:</strong> "Nobody told me about an after-hours fee. I want that taken off."</li>
+        <li><strong>What we know for sure:</strong> invoice INV-204411 is $478, unpaid. Lines: diagnostic $89, contactor $245, after-hours $144. Our fee schedule says after-hours is $149.</li>
+        <li><strong>What the customer says (not checked):</strong> the tech said $89 to come out.</li>
+        <li><strong>What the AI did:</strong> explained each line; changed and promised nothing.</li>
+        <li><strong>What we told the customer:</strong> "A representative will get back to you within 1 business day."</li>
+        <li><strong>What you need to decide:</strong> should the after-hours charge stay? Should the $89 be credited?</li>
+        <li><strong>Who and how:</strong> record MHC-10002, code entered (demo); phone, mornings.</li>
+      </ul><p class="src">Consolidated §5. Seeded test customer, not a real call.</p></article>
+    <article class="card" data-status="decision"><h3>Staffing, told honestly <span class="st decision">Your decision</span></h3>
+      <ul class="tight">
+        <li><strong>Default:</strong> nobody online. No queue is offered. "A representative will get back to you within 1 business day."</li>
+        <li><strong>Refund requests:</strong> "within 2 business days". That is a reply, not a refund.</li>
+        <li><strong>Simulated shift:</strong> a labelled switch. A banner on both screens says no Meridian employee is online.</li>
+        <li><strong>Two sessions:</strong> the reviewer chats as a customer in one tab and acts as "Riley (demo representative)" in another.</li>
+        <li><strong>Follow-up:</strong> email by default, or phone if the customer prefers. Recorded, never sent.</li>
+      </ul><p class="src">OD-1, OD-2, OD-4, OD-5.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="d4-h">
+  <h2 id="d4-h">7 · Requests our systems can't finish</h2>
+  <p class="section-sub">Your rule: serious cases get human priority, simple limits get a clear answer, and no unfinished task ends with "sorry, I can't".</p>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>Request (calls)</th><th>What the agent does</th><th>Case</th></tr></thead>
+    <tbody>
+      <tr data-status="decision"><td>Pay an invoice (14)</td><td>Reads the balance after the code; never takes card numbers</td><td>Routine follow-up (P4)</td></tr>
+      <tr data-status="decision"><td>Set up autopay (14)</td><td>Says it can't, and has no autopay details; offers a person</td><td>Only if they want it</td></tr>
+      <tr data-status="decision"><td>Stop auto-renew (13)</td><td>Reads the renewal date; explains the rules; no pressure to stay</td><td>Time-sensitive (P2) if renewal is near</td></tr>
+      <tr data-status="decision"><td>Duplicate charge (11)</td><td>Explains pending holds per the FAQ</td><td>Only if both charges posted</td></tr>
+      <tr data-status="decision"><td>Registration check (10)</td><td>States the 30-day policy; can't see records</td><td>Only if they want it</td></tr>
+      <tr data-status="decision"><td>Late technician (9)</td><td>Quotes the policy; offers a free reschedule; flags staff</td><td>Time-sensitive (P2)</td></tr>
+      <tr data-status="decision"><td>Repeat repair (6)</td><td>Books the visit; the technician confirms warranty coverage</td><td>Routine (P4) to check history</td></tr>
+      <tr data-status="decision"><td>Dispute, refund (24)</td><td>Explains lines; promises no outcome</td><td>Standard (P3)</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src"><span class="st decision">Your decision</span> D4, consolidated §9.4 (15 rows there).</p>
+</section>
+
+<section aria-labelledby="metric-h">
+  <h2 id="metric-h">8 · How we measure success</h2>
+  <p class="section-sub">We chose a scope we could build well in the time we had. Inside it, we aim to resolve every request correctly. The bar below shows how much of all call volume each step covers.</p>
+  <figure>
+    <p class="scroll-hint">Chart: swipe sideways. The list below says the same thing.</p>
+    <div class="scroll" tabindex="0" aria-label="Coverage roadmap, scrolls sideways">
+    <svg viewBox="0 0 1040 215" role="img" aria-labelledby="r1t r1d">
+      <title id="r1t">Coverage of call volume: tonight and with more time</title>
+      <desc id="r1d">Tonight's scope covers 58.3 percent. Fee-free appointment changes add 3.6 points, a payment system 6.7, membership billing 5.5, and Meridian's records 3.8, for 77.9 percent. The last 22.1 percent belongs with people by policy or safety, including reschedules that carry a fee.</desc>
+      <rect x="20" y="40" width="583" height="44" rx="4" class="node decision" style="fill:var(--decision-bg)"/><text x="30" y="67" class="strong">Tonight 58.3%</text>
+      <rect x="603" y="40" width="36" height="44" class="node decision"/><text x="606" y="67" class="small">+3.6</text>
+      <rect x="639" y="40" width="67" height="44" class="node proposal" style="fill:var(--proposal-bg)"/><text x="642" y="67" class="small">+6.7</text>
+      <rect x="706" y="40" width="55" height="44" class="node proposal" style="fill:var(--proposal-bg)"/><text x="709" y="67" class="small">+5.5</text>
+      <rect x="761" y="40" width="38" height="44" class="node proposal" style="fill:var(--proposal-bg)"/><text x="763" y="67" class="small">+3.8</text>
+      <rect x="799" y="40" width="221" height="44" rx="4" class="node fact"/><text x="809" y="67" class="strong">People 22.1%</text>
+      <text x="580" y="110" class="small">appointment</text><text x="580" y="125" class="small">changes</text>
+      <text x="642" y="150" class="small">payment</text><text x="642" y="165" class="small">system</text>
+      <text x="709" y="110" class="small">member</text><text x="709" y="125" class="small">billing</text>
+      <text x="740" y="185" class="small">records</text>
+      <text x="809" y="110" class="small">policy, safety, fee-bearing</text><text x="809" y="125" class="small">changes: never automated</text>
+      <text x="20" y="200" class="small">0%</text><text x="640" y="200" class="small">77.9% with more time</text><text x="990" y="200" class="small">100%</text>
+    </svg>
+    </div>
+    <figcaption><span class="st fact">Fact</span> shares measured on the issued calls (PRD §3.3) · <span class="st proposal">Proposal</span> the later steps need systems Meridian would add.</figcaption>
+    <ol class="words">
+      <li>Tonight's scope covers 58.3% of the calls. Inside it, we aim for 100% correct, with 90% as the bar before a topic counts as ready.</li>
+      <li>Fee-free reschedules, confirm and cancel bring it to 61.9%. A payment system brings it to 68.6%. Membership billing reaches 74.0%. Meridian's registration and repair records reach 77.9%. (Recomputed after your Stage 3 decision that the AI never makes a change that carries the $49 fee.)</li>
+      <li>The last 22.1% (disputes, refunds, complaints, safety, and reschedules that carry the fee) belongs with people by design or policy.</li>
+    </ol>
+  </figure>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>Measure</th><th>What it shows</th><th>Bar</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr data-status="proposal"><td><strong>In-scope correct resolution</strong> (main number)</td><td>Of the requests in our scope, how many the AI resolved right with no human</td><td>Aim 100% · bar ≥ 90% per topic</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="proposal"><td>Correct answers</td><td>Answers from current documents; wrong answers on handled chats</td><td>0 from old documents · wrong ≤ 5%</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="proposal"><td>Correct bookings</td><td>Zone, slot and member rules; no double booking</td><td>100%</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="proposal"><td>Promises kept</td><td>Promise matches policy; follow-up before the due time</td><td>100% match · ≥ 90% kept</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="proposal"><td>Access and safety</td><td>A person on the first ask; safety first</td><td>100% · 100%</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="proposal"><td>Right things escalated</td><td>Out-of-scope chats reach people; in-scope chats don't</td><td>≥ 95% · ≤ 10% false</td><td><span class="st proposal">Proposal</span></td></tr>
+      <tr data-status="fact"><td>Coverage and containment</td><td>The brief's number: coverage × in-scope resolution</td><td>Reported with its two parts</td><td><span class="st fact">Fact</span> brief Part A</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section aria-labelledby="design-h">
+  <h2 id="design-h">9 · Look and feel</h2>
+  <p class="section-sub">Meridian has no logo or colours in the data. We picked a direction to explore, not a final brand.</p>
+  <div class="grid">
+    <article class="card" data-status="decision"><h3>Direction A: dependable dispatch <span class="st decision">Your decision</span></h3><p>Organized and on time. Clear timelines for windows and promises. Status shown as labelled steps.</p><p class="src">Profile §7–§8.</p></article>
+    <article class="card" data-status="fact"><h3>Safety and colour <span class="st fact">Fact</span></h3><p>Red is kept for danger only. Colour is never the only signal. About 1 in 12 men can't tell red from green well.</p><p class="src">W3C WCAG 1.4.1; NEI (S-179, S-180).</p></article>
+    <article class="card" data-status="fact"><h3>Phones first <span class="st fact">Fact</span></h3><p>91% of US adults own a smartphone. Someone next to a broken unit may type with one hand.</p><p class="src">Pew 2026 (S-178); profile §6.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="dec-h">
+  <h2 id="dec-h">10 · Every choice you made today</h2>
+  <div class="table-scroll" tabindex="0"><table>
+    <thead><tr><th>ID</th><th>Your choice</th></tr></thead>
+    <tbody>
+      <tr data-status="decision"><td>OD-1, OD-2</td><td>Default unstaffed; a labelled simulated shift; the reviewer joins the same chat as a demo representative</td></tr>
+      <tr data-status="decision"><td>OD-3</td><td>One-time code to the phone or email on record, shown only in a labelled demo inbox</td></tr>
+      <tr data-status="decision"><td>OD-4</td><td>1 business day when nobody is online; refund requests 2; "a representative"; emergency number and P1 only when someone is in danger; no safety time promised</td></tr>
+      <tr data-status="decision"><td>OD-5</td><td>Follow-up by email by default, phone if preferred; recorded, never sent</td></tr>
+      <tr data-status="decision"><td>OD-6</td><td>Two-attempt failure signals, to test and tune</td></tr>
+      <tr data-status="decision"><td>D2, D5</td><td>Burning-smell questions; safety instruction before any contact request</td></tr>
+      <tr data-status="decision"><td>D3 = DEC-2</td><td>State the $49 fee before a change; the AI never waives or discounts</td></tr>
+      <tr data-status="decision"><td>D4, D6</td><td>Unsupported-request rules; full chat history for staff; small snapshots kept 90 days</td></tr>
+      <tr data-status="decision"><td>DEC-1, DEC-4, DEC-5</td><td>Booking first, then reschedule, confirm, cancel; old documents left out of search; no voice</td></tr>
+      <tr data-status="decision"><td>Q-1 to Q-3</td><td>Public repo with the dataset; our deployed database; Dripping Springs and Manor in the central zone</td></tr>
+      <tr data-status="decision"><td>Framework, look</td><td>LangGraph; brand direction A; urgency questions; optional self-checks</td></tr>
+    </tbody>
+  </table></div>
+  <p class="src">Full table: consolidated direction §11.</p>
+</section>
+
+<section aria-labelledby="scope-h">
+  <h2 id="scope-h">11 · The plan for tonight, and the cut line</h2>
+  <div class="days" data-status="proposal">
+    <div class="day"><h3>Part 1 <span class="st proposal">Proposal</span></h3><ol>
+      <li>19:30 Set up: database copy, document intake list <span class="tag">M</span></li>
+      <li>20:00 Core agent: safety, answers with sources, code, booking, handoff <span class="tag">M</span></li>
+      <li>22:00 <strong>Checkpoint A</strong>: safety, booking and promise checks pass</li>
+      <li>22:00 Test set from the calls, and the scoring run <span class="tag">M</span></li>
+      <li>23:00 Staff console: queue, case, join the same chat <span class="tag">S</span></li>
+    </ol></div>
+    <div class="day"><h3>Part 2 <span class="st proposal">Proposal</span></h3><ol>
+      <li>00:30 Deploy on Railway; score again; fix the top failures <span class="tag">M</span></li>
+      <li>01:30 <strong>Checkpoint B</strong>: public link works</li>
+      <li>01:30 Reschedule with the fee rule, then confirm, then cancel <span class="tag">S/C</span></li>
+      <li>03:00 README, technical notes, deploy guide, results <span class="tag">M</span></li>
+      <li>04:30 Video (you record) · 05:30 buffer · 06:00 submit</li>
+    </ol></div>
+  </div>
+  <p class="cutline">CUT LINE: if a checkpoint slips, cut from the bottom up</p>
+  <div class="grid">
+    <article class="card" data-status="proposal"><h3>Cut order <span class="st proposal">Proposal</span></h3><ul class="tight"><li>Owner panel → numbers go in the README</li><li>Cancel, then confirm</li><li>Source snapshot panel → plain links</li><li>Supervisor list → rep queue only</li><li>Joining the same chat: only with your yes</li></ul><p class="src">PRD §8.</p></article>
+    <article class="card" data-status="unknown"><h3>What the data can't tell us <span class="st unknown">Unknown</span></h3><ul class="tight"><li>Real call volume (the calls are templated)</li><li>Real staffing and shifts</li><li>Meridian's real emergency number</li><li>The partner's deadline (GQ-20)</li></ul><p class="src">Inventory §2, §5.2; consolidated §9.1.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="ask-h">
+  <div class="ask" data-status="awaiting">
+    <h2 id="ask-h">12 · What you are asked to review now</h2>
+    <p><span class="st awaiting">Awaiting approval</span> <strong>Stage 1 gate.</strong> Four items. None repeats a choice you already made.</p>
+
+    <article class="card" data-status="awaiting" data-ask="ASK-1">
+      <h3>1 · The PRD's scope <span class="st awaiting">Recommend: yes</span></h3>
+      <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>The brief asks the agent to answer "the top 3 call drivers" from the documents. We counted all 420 calls to find them (section 3).</p></div>
+      <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Pick the three topics the agent answers. Example: "What does the membership include?" is topic A; "Why is my bill $478?" is topic B.</p></div>
+      <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>The biggest topics are not all answerable. Billing includes payments we cannot take and disputes that policy keeps with people. So we take only the answerable part of each.</p></div>
+      <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>Every requirement and test case depends on these three topics. With your yes we build membership, billing-question and warranty answers, plus booking. A different pick changes the tests and the coverage number.</p></div>
+      <p><strong>Recommended:</strong> membership, billing questions and warranty (PRD §3.2), with the must, should and could levels in PRD §4.</p>
+    </article>
+
+    <article class="card" data-status="awaiting" data-ask="ASK-2">
+      <h3>2 · Shortening the later stages for 06:00 <span class="st awaiting">Recommend: yes</span></h3>
+      <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>The checklist has seven more signed stages before building: samples, hard problems, interview, design track, spikes, design and tickets.</p></div>
+      <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Decide what replaces them tonight. Example: the 420-call inventory stands in for the data samples, and the build plan stands in for tickets.</p></div>
+      <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>Skipping a stage loses its checks. But they cannot all run in about 10 hours. The checklist only allows a skip that you record yourself.</p></div>
+      <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>No code may start until this is recorded. With your yes, we write the shortcuts in the Skips table and start the build. With no, we follow every stage and miss 06:00.</p></div>
+      <p><strong>Recommended:</strong> the shortcuts in PRD §10, item 2.</p>
+    </article>
+
+    <article class="card" data-status="awaiting" data-ask="ASK-3">
+      <h3>3 · The bars we measure against <span class="st awaiting">Recommend: yes</span></h3>
+      <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>The scoring run will report numbers. The README and the video show them against these bars (section 8).</p></div>
+      <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Set the bars. Example: if wrong warranty answers go over 5%, warranty questions go to people until fixed.</p></div>
+      <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>We aim for 100% inside our scope, but a run will show the truth. A bar too strict cuts useful topics. One too loose lets wrong answers through.</p></div>
+      <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>The bars decide when a topic is ready or cut, and how we present results. Your yes sets them for the build and the demo.</p></div>
+      <p><strong>Recommended:</strong> aim for 100% in scope, with ≥ 90% per topic before it counts as ready; wrong answers ≤ 5%; the right document found ≥ 90% of the time.</p>
+    </article>
+
+    <article class="card" data-status="awaiting" data-ask="ASK-4">
+      <h3>4 · Five system questions <span class="st awaiting">Recommend the answers below</span></h3>
+      <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>Before we size anything on Railway, the house rules say you answer five questions about load, peaks, failures, money and risk.</p></div>
+      <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Set what the deployed demo must handle. Example: how many reviewers chat at once, and what happens if the server restarts.</p></div>
+      <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>The brief gives a test, not a load. Guessing a number would look like a choice you made. That is the mistake these rules exist to stop.</p></div>
+      <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>They set the database setup, the spend cap and the failure tests. You have answered load and peak. The other three still need a yes or a change before the build starts.</p></div>
+      <ul class="tight"><li><strong>Load: your answer, 2026-10-20.</strong> About 100 conversations a day with the agent, as a big regional company.</li><li><strong>Peak: your answer, 2026-10-20.</strong> A spike of about 20 users at once.</li><li><strong>Failure to survive:</strong> a server restart, with no lost chats or cases.</li><li><strong>Spending:</strong> Railway on your plan; model spend capped daily (suggest $10 a day).</li><li><strong>Hardest thing to prove:</strong> that every number we report is honest.</li></ul>
+    </article>
+
+    <p><strong>Approving these would mean:</strong> the Stage 1 gate closes, the shortcuts are recorded, and the build starts on the PRD's plan. <strong>It would not</strong> change any choice you made earlier. This is not approved yet.</p>
+  </div>
+</section>
+
+</main>
+<footer class="wrap">Local file, not published. The Markdown sources are the source of truth; this page is a synthesis built after them. If a source changes, the page is rebuilt and checked with the zero-to-hero <code>check_review_page.py</code> before any sign-off.</footer>
+
+</body>
+</html>

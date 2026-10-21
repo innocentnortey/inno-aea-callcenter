@@ -1,0 +1,20 @@
+# ICM progress checklist
+Tracks context-system maturity only; product stage lives in [`PROJECT-CHECKLIST.md`](../../PROJECT-CHECKLIST.md).
+Set up by `icm-project` **1.5.0**, invoked from zero-to-hero **1.9.0** Stage 0 (retrofit), 2026-10-20.
+Update the affected row in the same task as the change, with an evidence link.
+Status: pending (names its unblocking event) · provisional · established · verified · n/a (reason).
+
+| Milestone | Status | Evidence / owner | Next check — enabled by |
+|---|---|---|---|
+| Work home, sources and owners located | established | [setup profile](../reference/setup-profile.md); [source register](../../docs/source/source-register.md) | Re-check when the GitLab remote or a VPS copy is created |
+| Purpose, audience and domain meaning (representative task) | provisional | [briefing](../../docs/source/aea-call-center-briefing.md); [brief audit](../../docs/analysis/2026-10-20-brief-audit.md); task: invoice INV-204411 dispute → explain, escalate with brief | Stage 1 gate sign-off by Innocent |
+| Environment, tools and collaboration | established | [setup profile § Locations](../reference/setup-profile.md#locations-and-environment) | Re-check at first deploy (Railway) or VPS move |
+| Blueprint and first delivery step | established | 2026-10-21: PRD 0.4 approved (Stage 4); [system design](../../docs/design/system-design.md) DO-1/DO-2 | Stage 6 gate, then §7 tickets |
+| Entry → router → maintenance instruction | established | 2026-10-21: entry rebuilt to the entry template against the [area map](../reference/area-map.md) (70 lines, 6.4 KB); check_context no FAIL | Re-run check_context at every gate |
+| Fresh-context route walkthrough | verified | 2026-10-21: 56 links in entry, router and area map resolve; traced "build the fee-bearing change request" (entry → router → area map A5 → DO-3 `request_change` → DO-4 `ChangeRequestDraft` → escalation P2) and "what is the per-turn deadline" (→ system design §8.1) | Re-walk after §7 tickets and the first built slice |
+| Code design: planned locations | established | 2026-10-21: [area map](../reference/area-map.md) from [DO-3](../../docs/design/code-design.md); router rows per area added | Verify after the metz review and when §8 builds the first slice |
+| Physical scaffold | provisional | Frontend only: [`apps/web/`](../../apps/web/) built 2026-10-21 (UX-4, gate unsigned; [plan](../../docs/ux/04-prototype/PROTOTYPE_PLAN.md)). Backend spine still absent; [area map](../reference/area-map.md) backend paths are planned | Backend directory spine at the first §7 slice |
+| Routes verified against code and tests | pending | — | First implemented slice with tests (§8) |
+| Integrated-journey protection (real path, evidence levels) | provisional | 2026-10-21: [integrated-journeys rule](../rules/integrated-journeys.md) (inventory §1); routed from entry and router; nothing executable yet | First journey record in `docs/testing/journeys/` from the harness ticket (wave 2) |
+
+Last reconciled: 2026-10-21 — integrated-journeys rule routed (journey row); earlier, UX-4 frontend `apps/web/` recorded (scaffold row); earlier, Stage 6: area map, router rows per area, entry rebuilt, walkthrough verified.

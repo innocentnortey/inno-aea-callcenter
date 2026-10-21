@@ -10,5 +10,5 @@ Innocent makes and shares HTML pages himself. This mirrors the workspace-wide ru
 2. **Complete, standalone document.** `<!doctype html>`, `<html lang="en">`, a `<head>` with charset, viewport and `<title>`, then `<body>`. It must open correctly by double-clicking.
 3. **Self-contained.** Inline CSS and JS; any external font or script needs a working fallback.
 4. **Location.** `docs/artifacts/YYYY-MM-DD-[name].html` in this repo. HTML *renders* of existing docs live in `docs/artifacts/` with the same date and name as the source doc.
-5. **Report the path** and the command to open it: `open "/Users/innocentnortey/Desktop/Nortorious-Technologies/inno-aea-onboarding/docs/artifacts/<file>.html"`.
+5. **Report the path** and the command to open it: `open "/Users/innocentnortey/Desktop/Nortorious-Technologies/inno-aea-callcenter/docs/artifacts/<file>.html"`.
 6. **Design quality still matters** — hierarchy, palette, both themes, phone width. Only the delivery changes.

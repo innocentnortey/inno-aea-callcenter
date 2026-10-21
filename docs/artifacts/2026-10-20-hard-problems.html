@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meridian AI Agent — Stage 3 Review</title>
+<meta name="review-stage" content="Zero-to-hero Stage 3 · Hard problems">
+<meta name="review-status" content="APPROVED by Innocent 2026-10-20 (HP-1 his design, HP-2 C, HP-3 his fee rule, HP-4 B, SP-1 yes)">
+<meta name="review-approved-by" content="Innocent ✓ 2026-10-20">
+<meta name="review-date" content="2026-10-20">
+<meta name="review-source" content="docs/design/hard-problems.md|fbf17dd169149aec4fbcc631ed600882638e5ad3d37d7ae5058459452f18ef3a">
+<meta name="review-source" content="docs/data/worked-pairs.md|5e67c9aaa5dc8e0fbbf5af54e5894906a92c22df6d8d27c4f912b811858d1f0b">
+<style>
+:root{
+  --bg:#f6f4ee;--surface:#fffdf8;--surface-2:#f0ece2;--ink:#1c1b19;--muted:#5b584f;--line:#d9d2c3;
+  --accent:#1f5f5b;--focus:#b8541e;
+  --fact:#1f6a5f;--fact-bg:#e3f1ee;
+  --decision:#2b4f8f;--decision-bg:#e6ecf8;
+  --proposal:#7a4f00;--proposal-bg:#fbf0d9;
+  --unknown:#55524a;--unknown-bg:#ecebe6;
+  --awaiting:#a3361c;--awaiting-bg:#fbe7e1;
+  --lane-family:#f3efe6;--lane-assistant:#e9f2f0;--lane-staff:#ecebf5;
+  --space-1:4px;--space-2:8px;--space-3:16px;--space-4:24px;--space-5:40px;--radius:10px;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --font-body:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+  --font-mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}}
+:root[data-theme="dark"]{
+  --bg:#161513;--surface:#1f1e1b;--surface-2:#2a2824;--ink:#ece8df;--muted:#b5afa1;--line:#3b3832;
+  --accent:#7cc4bd;--focus:#f0a070;
+  --fact:#7fd0c3;--fact-bg:#17302c;--decision:#a9c1f2;--decision-bg:#1d2740;
+  --proposal:#f1c879;--proposal-bg:#3a2d12;--unknown:#c9c5ba;--unknown-bg:#2c2b27;
+  --awaiting:#f6a58f;--awaiting-bg:#3d1f17;
+  --lane-family:#24221e;--lane-assistant:#1b2a28;--lane-staff:#22212d}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--font-ui)}
+a{color:var(--accent);text-underline-offset:2px}
+a:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--surface);padding:8px 16px}
+.skip:focus{left:16px}
+.wrap{max-width:1120px;margin:0 auto;padding:0 var(--space-3)}
+header.top{background:var(--surface);border-bottom:1px solid var(--line);padding:var(--space-4) 0}
+.kicker{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-size:clamp(26px,4vw,36px);line-height:1.15;margin:var(--space-2) 0 var(--space-3)}
+h2{font-size:clamp(21px,2.6vw,26px);line-height:1.25;margin:0 0 var(--space-2)}
+h3{font-size:17px;margin:0 0 var(--space-2)}
+p{margin:0 0 var(--space-3)}
+.lede{font:18px/1.55 var(--font-body);max-width:72ch}
+.status-banner{display:flex;gap:var(--space-3);align-items:flex-start;background:var(--awaiting-bg);
+  border:1px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-3);margin-bottom:var(--space-3)}
+.status-banner strong{color:var(--awaiting)}
+.meta{display:grid;grid-template-columns:max-content 1fr;gap:4px var(--space-3);font-size:14px;color:var(--muted);margin:0}
+.meta dt{font-weight:600;color:var(--ink)}
+.meta dt{grid-column:1}.meta dd{grid-column:2;margin:0;overflow-wrap:anywhere}
+code{font:0.88em var(--font-mono);background:var(--surface-2);padding:1px 5px;border-radius:5px}
+section{padding:var(--space-5) 0 var(--space-3);border-bottom:1px solid var(--line)}
+.section-sub{color:var(--muted);max-width:75ch}
+/* status badges */
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.02em;
+  padding:2px 9px;border-radius:999px;border:1.5px solid currentColor;white-space:nowrap;vertical-align:middle}
+.st::before{font-size:11px}
+.st.fact{color:var(--fact);background:var(--fact-bg)} .st.fact::before{content:"●"}
+.st.decision{color:var(--decision);background:var(--decision-bg)} .st.decision::before{content:"◆"}
+.st.proposal{color:var(--proposal);background:var(--proposal-bg)} .st.proposal::before{content:"▲"}
+.st.unknown{color:var(--unknown);background:var(--unknown-bg);border-style:dashed} .st.unknown::before{content:"?"}
+.st.awaiting{color:var(--awaiting);background:var(--awaiting-bg);border-width:2px} .st.awaiting::before{content:"⧗"}
+.legend{display:flex;flex-wrap:wrap;gap:var(--space-2) var(--space-3);list-style:none;padding:var(--space-3);margin:var(--space-3) 0 0;
+  background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);font-size:14px}
+.legend li{display:flex;gap:8px;align-items:center}
+/* cards */
+.grid{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr))}
+.grid.three{grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))}
+.grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.card{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.card[data-status="fact"]{border-left-color:var(--fact)}
+.card[data-status="decision"]{border-left-color:var(--decision)}
+.card[data-status="proposal"]{border-left-color:var(--proposal)}
+.card[data-status="unknown"]{border-left-color:var(--unknown);border-left-style:dashed}
+.card[data-status="awaiting"]{border-left-color:var(--awaiting);border-color:var(--awaiting)}
+.card h3{display:flex;justify-content:space-between;gap:var(--space-2);align-items:flex-start;flex-wrap:wrap}
+.card p:last-child,.card ul:last-child{margin-bottom:0}
+.card .src{font-size:13px;color:var(--muted)}
+.big{font-size:20px;font-weight:700;line-height:1.25;margin:var(--space-1) 0 var(--space-2)}
+ul.tight{margin:0;padding-left:20px} ul.tight li{margin:2px 0}
+/* diagrams */
+figure{margin:var(--space-3) 0;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+figcaption{font-size:14px;color:var(--muted);margin-top:var(--space-2)}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.scroll svg{min-width:760px}
+.scroll:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.scroll-hint{display:none;font-size:13px;color:var(--muted);margin:0 0 var(--space-2)}
+svg{display:block;width:100%;height:auto;font-family:var(--font-ui)}
+svg .lane-family{fill:var(--lane-family)} svg .lane-assistant{fill:var(--lane-assistant)} svg .lane-staff{fill:var(--lane-staff)}
+svg .lane-label{fill:var(--muted);font-size:13px;font-weight:700}
+svg .node{fill:var(--surface);stroke:var(--line);stroke-width:1.5}
+svg .node.fact{stroke:var(--fact)} svg .node.decision{stroke:var(--decision);stroke-width:2}
+svg .node.proposal{stroke:var(--proposal);stroke-dasharray:6 3} svg .node.unknown{stroke:var(--unknown);stroke-dasharray:3 3}
+svg .node.awaiting{stroke:var(--awaiting);stroke-width:2.5}
+svg .node.demo{stroke:var(--proposal);stroke-dasharray:4 4;fill:var(--proposal-bg)}
+svg text{fill:var(--ink);font-size:13px} svg .small{font-size:11.5px;fill:var(--muted)} svg .strong{font-weight:700}
+svg .arrow{stroke:var(--muted);stroke-width:1.6;fill:none} svg .arrow.dash{stroke-dasharray:5 4}
+svg .head{fill:var(--muted)} svg .band{fill:none;stroke:var(--accent);stroke-width:2;stroke-dasharray:2 4}
+svg .band-label{fill:var(--accent);font-weight:700;font-size:12.5px}
+.words{font-size:14px;color:var(--muted);margin:var(--space-2) 0 0;padding-left:20px}
+/* why chain */
+.chain{display:grid;gap:var(--space-2);grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));counter-reset:why}
+.chain .card{position:relative}
+.chain .card::before{counter-increment:why;content:"Why " counter(why);display:block;font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+/* timeline */
+.days{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.day h3{margin-bottom:var(--space-2)}
+.day ol{margin:0;padding-left:22px} .day li{margin:5px 0}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:0 7px;border-radius:6px;margin-left:4px;border:1px solid var(--line);background:var(--surface-2);color:var(--muted)}
+.cutline{display:flex;align-items:center;gap:var(--space-3);margin:var(--space-4) 0;color:var(--awaiting);font-weight:700}
+.cutline::before,.cutline::after{content:"";flex:1;border-top:2px dashed var(--awaiting)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;vertical-align:top;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--surface-2)}
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:var(--radius);background:var(--surface)}
+/* story parts (context → problem → why-hard) */
+.part{border-left:3px solid var(--line);padding:2px 0 2px var(--space-3);margin:var(--space-3) 0}
+.part h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:0 0 4px}
+.part p{max-width:78ch}
+.part[data-part="context"]{border-left-color:var(--accent)}
+.part[data-part="problem"]{border-left-color:var(--decision)}
+.part[data-part="why-hard"]{border-left-color:var(--awaiting)}
+.ask{background:var(--awaiting-bg);border:2px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-4)}
+.ask h2{color:var(--awaiting)}
+footer{padding:var(--space-4) 0 var(--space-5);font-size:13px;color:var(--muted)}
+@media (max-width:640px){
+  .status-banner{flex-direction:column;gap:var(--space-2)}
+  .meta{grid-template-columns:1fr}
+  .meta dt,.meta dd{grid-column:1}
+  .meta dt:not(:first-child){margin-top:var(--space-2)}
+  figure{padding:var(--space-2)}
+  .scroll-hint{display:block}
+  .cutline{flex-direction:column;gap:var(--space-2);text-align:center}
+  .cutline::before,.cutline::after{flex:none;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+@media print{
+  html,body{background:#fff;color:#000}
+  .skip{display:none}
+  section{break-inside:auto;padding:16px 0}
+  figure,.card,.day{break-inside:avoid}
+  h2,h3,.section-sub{break-after:avoid}
+  .scroll{overflow:visible} .scroll svg{min-width:0} .scroll-hint{display:none}
+  a{color:#000}
+  a[href^="../"]::after{content:" (" attr(href) ")";font-size:10px}
+}
+
+.opts{display:grid;gap:var(--space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));margin:var(--space-3) 0}
+.opt{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:var(--space-3)}
+.opt.rec{border:2px solid var(--proposal);background:var(--proposal-bg)}
+.opt h4{margin:0 0 var(--space-2);font-size:16px}
+.opt dl{margin:var(--space-2) 0 0;font-size:14px}
+.opt dt{font-weight:700;margin-top:var(--space-2)}
+.opt dd{margin:0}
+.opt svg{max-width:340px;margin:var(--space-2) 0}
+.hp{margin:var(--space-4) 0;padding:var(--space-4)}
+.hp > h3{font-size:22px}
+.settled{background:var(--decision-bg);border-radius:var(--radius);padding:var(--space-2) var(--space-3);font-size:14px;margin:var(--space-3) 0}
+.meta-row{display:flex;flex-wrap:wrap;gap:var(--space-2);margin:var(--space-2) 0}
+.measure{font-size:14px}
+.qa td:first-child{white-space:nowrap;font-weight:600}
+.chosen{background:var(--decision-bg);border:2px solid var(--decision);border-radius:var(--radius);padding:var(--space-3);margin:var(--space-3) 0}
+.chosen h4{margin:0 0 var(--space-2);font-size:16px}
+.chosen > svg{max-width:360px;margin:var(--space-2) 0}
+.chosen ul{margin:var(--space-2) 0 0;padding-left:20px}
+.still{background:var(--awaiting-bg);border:1px solid var(--awaiting);border-radius:var(--radius);padding:var(--space-2) var(--space-3);margin:var(--space-3) 0}
+</style>
+
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="top"><div class="wrap">
+  <p class="kicker">Zero-to-hero Stage 3 · Hard problems · local visual review · Markdown is the source of truth</p>
+  <h1>Meridian AI service agent: the four hard problems, and what we suggest for each</h1>
+  <div class="status-banner" role="status"><span class="st decision">Your decision</span>
+    <div><strong>Stage 3 signed by you on 2026-10-20.</strong> HP-1: your two-layer design. HP-2: C, with false alarms at most 10%. HP-3: the AI never makes a change that carries the $49 fee (cancellations included). HP-4: B. Spike SP-1 runs at Stage 5. Next is Stage 4, the interview.</div></div>
+  <dl class="meta">
+    <dt>Review date</dt><dd>2026-10-20, late evening CT; rebuilt the same night with your answers (built after the Markdown register)</dd>
+    <dt>Sources (full documents)</dt><dd>
+      <a href="../design/hard-problems.md"><code>docs/design/hard-problems.md</code></a>: the register, HP-1 to HP-4 · <code data-sha-for="docs/design/hard-problems.md">fbf17dd16914</code><br>
+      <a href="../data/worked-pairs.md"><code>docs/data/worked-pairs.md</code></a>: the worked examples each card rests on · <code data-sha-for="docs/data/worked-pairs.md">5e67c9aaa5dc</code></dd>
+    <dt>Refresh</dt><dd>If either source changes, this page is rebuilt and checked before you sign off.</dd>
+  </dl>
+  <ul class="legend" data-legend aria-label="Status legend">
+    <li><span class="st fact" data-legend-item="fact">Fact</span> from the issued data or a document</li>
+    <li><span class="st decision" data-legend-item="decision">Your decision</span> chosen earlier; not asked again</li>
+    <li><span class="st proposal" data-legend-item="proposal">Proposal</span> Claude suggests; not yours yet</li>
+    <li><span class="st unknown" data-legend-item="unknown">Unknown</span> not established</li>
+    <li><span class="st awaiting" data-legend-item="awaiting">Awaiting approval</span> your choice is needed</li>
+  </ul>
+</div></header>
+<main id="main" class="wrap">
+
+<section aria-labelledby="sum-h" data-visual="summary"><h2 id="sum-h">At a glance</h2>
+  <div class="grid three">
+    <article class="card" data-status="decision"><h3>4 of 4 chosen <span class="st decision">Your decision</span></h3><p class="big">HP-1 your design · HP-2 C · HP-3 your fee rule · HP-4 B.</p><p class="src">Chosen 2026-10-20 and written into the PRD.</p></article>
+    <article class="card" data-status="fact"><h3>5 hard examples covered <span class="st fact">Fact</span></h3><p class="big">WP-2, 3, 4, 6 and 8 each sit on a card.</p><p class="src">From the Stage 2 worked examples.</p></article>
+    <article class="card" data-status="decision"><h3>One spike, done <span class="st decision">Your decision</span></h3><p class="big">SP-1: mix B chosen; p95 ≤ 12.5 s at 20 at once.</p><p class="src">Ran on the VPS, 2026-10-21. Section below.</p></article>
+  </div>
+</section>
+
+<section aria-labelledby="story-h" data-visual="story"><h2 id="story-h">The story so far</h2>
+  <p class="lede">Meridian's customers wait for a person to do routine things: book a visit, ask what a bill is for, ask what the membership covers. We are building a chat agent that does those things correctly and hands everything else to a person honestly.</p>
+  <p>Stage 1 set the scope and the goal: resolve every request in scope correctly. Stage 2 walked eight real requests through by hand, and you checked the three we were unsure of. Five of the eight needed judgement, not just copying a field. Those five, plus the question of how the agent is wired together, are the four hard problems below. Each one shows where it happens in a customer's chat, why it is hard, three ways to solve it, and what we suggest.</p>
+  
+<figure>
+  <p class="scroll-hint">Diagram: swipe sideways. The list below says the same thing.</p>
+  <div class="scroll" tabindex="0" aria-label="Where each hard problem sits, scrolls sideways">
+  <svg viewBox="0 0 1040 250" role="img" aria-labelledby="jm1 jm2">
+    <title id="jm1">Where each hard problem sits in one customer message</title>
+    <desc id="jm2">A message is checked for danger (HP-2), then code and the model decide what happens next (HP-1). Then the agent either answers, does an action with rules (HP-3), or hands off what it can't finish (HP-4).</desc>
+    <defs><marker id="ahj" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker><marker id="ahm" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path class="head" d="M0,0 L10,5 L0,10 z"/></marker></defs>
+    <rect class="node fact" x="10" y="95" width="160" height="60" rx="8"/><text x="22" y="120" class="strong">Customer message</text><text x="22" y="140" class="small">every turn</text>
+    <rect class="node decision" x="210" y="95" width="190" height="60" rx="8"/><text x="222" y="120" class="strong">HP-2 Dangerous?</text><text x="222" y="140" class="small">safety · burning · danger</text>
+    <rect class="node decision" x="440" y="95" width="200" height="60" rx="8"/><text x="452" y="120" class="strong">HP-1 Who decides?</text><text x="452" y="140" class="small">code guards vs. model</text>
+    <rect class="node fact" x="690" y="10" width="330" height="56" rx="8"/><text x="702" y="34" class="strong">Answer from current help files</text><text x="702" y="53" class="small">handled by default (stale copies excluded)</text>
+    <rect class="node decision" x="690" y="97" width="330" height="56" rx="8"/><text x="702" y="121" class="strong">HP-3 Do it, with rules attached</text><text x="702" y="140" class="small">read a bill · book · move a visit</text>
+    <rect class="node decision" x="690" y="184" width="330" height="56" rx="8"/><text x="702" y="208" class="strong">HP-4 Can't finish: honest handoff</text><text x="702" y="227" class="small">promise from policy · brief with no invented facts</text>
+    <path class="arrow" d="M170,125 L210,125" marker-end="url(#ahj)"/>
+    <path class="arrow" d="M400,125 L440,125" marker-end="url(#ahj)"/>
+    <path class="arrow" d="M640,115 L690,40" marker-end="url(#ahj)"/>
+    <path class="arrow" d="M640,125 L690,125" marker-end="url(#ahj)"/>
+    <path class="arrow" d="M640,135 L690,210" marker-end="url(#ahj)"/>
+  </svg></div>
+  <figcaption><span class="st fact">Fact</span> the order comes from the PRD flow (§6.1) · <span class="st decision">Your decision</span> the four hard problems, each with your choice below.</figcaption>
+  <ol class="words"><li>Every message is first checked for danger (HP-2).</li><li>Then code and the model decide what happens next (HP-1).</li><li>The agent answers from current help files, or does an action with rules attached (HP-3), or hands off what it can't finish (HP-4).</li></ol>
+</figure>
+</section>
+
+<section aria-labelledby="hp-h"><h2 id="hp-h">The hard problems, in the order a message meets them</h2>
+  <p class="section-sub">HP-1 comes first because every other card depends on it. Each card opens with where it happens, then the problem, then why it's hard, then why we're asking you. The options come after.</p>
+  
+<article class="card hp" data-status="decision" data-hp="HP-1" data-ask="HP-1" id="hp-1">
+  <h3>HP-1 · Who decides what happens next: code or the model? <span class="st decision">Your decision · your two-layer design</span></h3>
+  <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>Every message goes through this. Linda types: <em>“My AC isn't cooling. Can someone come Saturday, 4 to 7?”</em> (WP-3). Before the agent replies, something must decide: is it dangerous, do they want a person, does it need her private records, should we book? The same wiring serves the CO alarm (WP-5), Omar's invoice (WP-2) and the cancellation (WP-8).</p></div>
+  <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>We must choose which steps are fixed code and where the model may choose. Example: <em>“Cancel my membership. Just make sure it doesn't renew.”</em> → verify, read the renewal date, explain the rules, say the chat can't switch off auto-renew, open a case (WP-8). Which steps does the model pick, and which are forced?</p></div>
+  <div class="part" data-part="why-hard"><h3>Why it's hard</h3><ol><li>Some steps must <strong>always</strong> happen in order. The safety instruction comes first (R-5). The fee is said before a change (R-21). A model that “usually” obeys a prompt is not “always”.</li><li>Other steps can't be scripted. In WP-1 one caller asks three questions at once. A fixed form handles one question at a time and breaks.</li><li>We have hours, not days. Building a scripted flow for every request type won't fit.</li></ol></div>
+  <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>This is the skeleton every later stage builds on. Your choice sets what the build tickets look like and which rules tests can prove. Changing it after the build means rewriting the agent's core.</p></div>
+  <p class="settled" data-status="decision"><span class="st decision">Your decision</span> <strong>Already chosen by you, not asked again:</strong> LangGraph; a safety check in code first on every turn; priorities and promises from code; identity checked in code (consolidated direction §10).</p>
+  <div class="chosen" data-status="decision"><h4><span class="st decision">Your decision</span> What you chose on 2026-10-20</h4><p>Your own drawing: <em>“this makes the most sense, but you don't need to follow that to a T. You can make it make sense for our PRD.”</em> It takes option B further. Code gates and an escalation check hold the always-rules. The model's freedom is split three ways: a planner picks what to do, specialists act with narrow tools, and a responder with <strong>no tools</strong> writes the words.</p><figure><p class="scroll-hint">Diagram: swipe sideways. The list below says the same thing.</p><div class="scroll" tabindex="0" aria-label="Two-layer design, scrolls sideways">
+<svg viewBox="0 0 760 570" role="img" aria-labelledby="tl1 tl2">
+<title id="tl1">Your HP-1 choice: the two-layer design, adapted for the PRD</title>
+<desc id="tl2">Code gates run first. Safety goes to a fixed safety reply. A person request goes straight to handoff. Otherwise a planner decides to just talk or act. Specialists act with scoped tools, an escalation check decides on handoff, turn facts are stored, and a responder with no tools writes the reply.</desc>
+<rect x="10" y="70" width="360" height="430" rx="10" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+<rect x="410" y="70" width="340" height="430" rx="10" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+<text x="24" y="490" class="small strong">Action layer (has tools)</text><text x="424" y="490" class="small strong">Conversation layer (no tools)</text>
+<rect class="node fact" x="40" y="12" width="310" height="40" rx="8"/><text x="52" y="37" class="strong">Customer message</text>
+<rect class="node decision" x="40" y="100" width="310" height="52" rx="8"/><text x="52" y="121" class="strong">Code gates (code)</text><text x="52" y="140" class="small">AI paused · safety · burning · danger · person</text>
+<rect class="node decision" x="40" y="180" width="310" height="52" rx="8"/><text x="52" y="201" class="strong">Planner (small model)</text><text x="52" y="220" class="small">just talk, or act? an ordered task list</text>
+<rect class="node decision" x="40" y="260" width="310" height="52" rx="8"/><text x="52" y="281" class="strong">Specialists (scoped tools)</text><text x="52" y="300" class="small">knowledge · account · scheduling</text>
+<rect class="node decision" x="40" y="340" width="310" height="52" rx="8"/><text x="52" y="361" class="strong">Escalation check (code)</text><text x="52" y="380" class="small">failures · limits · D4 · fee-bearing change</text>
+<rect class="node decision" x="40" y="420" width="310" height="52" rx="8"/><text x="52" y="441" class="strong">Handoff</text><text x="52" y="460" class="small">case · priority · promise (code) · brief</text>
+<rect class="node decision" x="430" y="100" width="300" height="52" rx="8"/><text x="442" y="121" class="strong">Safety reply (fixed text)</text><text x="442" y="140" class="small">no model · sent as is · case by code</text>
+<rect class="node decision" x="430" y="340" width="300" height="52" rx="8"/><text x="442" y="361" class="strong">Turn facts (state)</text><text x="442" y="380" class="small">results · missing info · promise (R-45)</text>
+<rect class="node decision" x="430" y="415" width="300" height="52" rx="8"/><text x="442" y="436" class="strong">Responder (model, no tools)</text><text x="442" y="455" class="small">clean chat + facts · checked (R-46)</text>
+<rect class="node fact" x="430" y="520" width="300" height="40" rx="8"/><text x="442" y="545" class="strong">Send to customer</text>
+<path class="arrow" d="M195,52 L195,100" marker-end="url(#ahm)"/>
+<path class="arrow" d="M350,126 L430,126" marker-end="url(#ahm)"/><text x="360" y="118" class="small">safety</text>
+<path class="arrow" d="M195,152 L195,180" marker-end="url(#ahm)"/>
+<path class="arrow" d="M350,206 L742,206 L742,441 L730,441" marker-end="url(#ahm)"/><text x="560" y="198" class="small">just talk</text>
+<path class="arrow" d="M195,232 L195,260" marker-end="url(#ahm)"/><text x="203" y="250" class="small">act</text>
+<path class="arrow" d="M195,312 L195,340" marker-end="url(#ahm)"/>
+<path class="arrow" d="M195,392 L195,420" marker-end="url(#ahm)"/><text x="203" y="410" class="small">escalate</text>
+<path class="arrow" d="M350,366 L430,366" marker-end="url(#ahm)"/><text x="372" y="358" class="small">no</text>
+<path class="arrow" d="M350,446 L392,446 L392,380 L430,380" marker-end="url(#ahm)"/>
+<path class="arrow dash" d="M40,126 L24,126 L24,446 L40,446" marker-end="url(#ahm)"/><text x="28" y="290" class="small" transform="rotate(-90 28 290)">person</text>
+<path class="arrow" d="M580,392 L580,415" marker-end="url(#ahm)"/>
+<path class="arrow" d="M700,467 L700,520" marker-end="url(#ahm)"/>
+</svg></div>
+<figcaption><span class="st decision">Your decision</span> your drawing, 2026-10-20, adapted: the code gates also hold "AI paused" and the burning-smell questions; the responder's words are checked (HP-4).</figcaption>
+<ol class="words"><li>Code gates run first: AI paused, safety, burning smell, danger, a request for a person.</li><li>Safety gets a fixed reply with no model. A person request goes straight to handoff.</li><li>Otherwise the planner decides: just talk, or act.</li><li>Specialists act with their own tools and context. A code check decides whether to escalate.</li><li>This turn's facts go into state. The responder, with no tools, writes the reply from the clean chat plus those facts.</li></ol></figure><p><strong>Turn-to-turn context management</strong> (your ask, now PRD R-45): state carries the memory between turns, not the chat transcript. That means who the customer is, the open task and what's still missing, the record IDs, and the open case. Each model sees only its slice. Tool output never enters the chat history. Older turns are condensed from state, never from the model's memory. Slot availability is re-read before any write.</p></div>
+  <p class="section-sub">The options we offered, kept for the record:</p>
+  <div class="opts"><div class="opt" data-status="proposal"><h4>A. One agent, rules in the prompt <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h1a"><title id="h1a">Option A: one model loop holds every rule</title><rect class="node decision" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Safety check (code)</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">One model loop, every tool</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Rules live only in the prompt</text></svg><dl><dt>What it is</dt><dd>After the safety check, one model loop with every tool. The prompt carries the rules.</dd><dt>If you pick it</dt><dd>Fastest to write.</dd><dt>Trade-off</dt><dd>Order rules depend on the model obeying. One slip is a wrong answer the grader can find.</dd></dl></div><div class="opt rec" data-status="proposal"><h4>B. Code guards, then one model loop with guarded tools <span class="st proposal">Recommended</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h1b"><title id="h1b">Option B: code guards first, then a model loop whose tools enforce rules</title><rect class="node decision" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Safety · danger · person checks (code)</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">One model loop picks tools</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Each tool checks its rule in code</text></svg><dl><dt>What it is</dt><dd>Code runs the safety, danger and “I want a person” checks. Then one model loop picks tools. Each tool enforces its own rule: private tools refuse until verified; a change needs a quote first (HP-3).</dd><dt>If you pick it</dt><dd>Mixed questions work. The rules that must always hold are code, which tests can prove.</dd><dt>Trade-off</dt><dd>The model still picks <em>which</em> tool. A wrong pick gives an unhelpful reply, not a broken rule. The eval catches it.</dd></dl></div><div class="opt" data-status="proposal"><h4>C. Fixed flows per request type <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h1c"><title id="h1c">Option C: a router sends each message down one scripted flow</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Router picks 1 of 4 flows</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Scripted steps for that flow</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Model only fills in the words</text></svg><dl><dt>What it is</dt><dd>A router sorts the request into knowledge, account, booking or handoff. Each is a scripted flow; the model only writes the words.</dd><dt>If you pick it</dt><dd>The most predictable.</dd><dt>Trade-off</dt><dd>Breaks on mixed requests like WP-1. Four flows to build and test.</dd></dl></div></div>
+  <p data-status="proposal"><span class="st proposal">Proposal</span> <strong>Our suggestion:</strong> <strong>B.</strong> It puts the always-rules in code and leaves the model only what can't be scripted: reading a mixed message and picking the next tool (GP-72). The code written before the shortcut was withdrawn already has this shape, so it would be adjusted, not rewritten.</p>
+  <p class="measure" data-status="proposal"><span class="st proposal">Proposal</span> <strong>How we'll know it worked:</strong> the hard gates already set in Stage 1: safety first in 100% of safety cases, a person on the first ask in 100%, valid bookings in 100%, promise text matching policy in 100%. Scored on WP-2 to WP-8 and the test set.</p>
+  <div class="meta-row"><span class="tag">Evidence: WP-1, WP-4, WP-5, WP-8</span><span class="tag">Status: chosen 2026-10-20 · proven (SP-1) for model mix B, 2026-10-21</span></div>
+</article>
+<article class="card hp" data-status="decision" data-hp="HP-2" data-ask="HP-2" id="hp-2">
+  <h3>HP-2 · Deciding a message is dangerous <span class="st decision">Your decision · C, with false alarms ≤ 10%</span></h3>
+  <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>This is the first check on every message. One customer writes <em>“I smell something burning from the vents”</em> (WP-6). That needs two questions before anything else. Another writes <em>“My AC's out, my mother is 88, and it's 95 degrees in here.”</em> Since your Stage 2 answer, that one gets the emergency number first. A third writes <em>“My AC isn't cooling.”</em> That is a normal booking.</p></div>
+  <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Sort each message, before the model writes a word, into: safety (leave the home immediately), unclear burning smell (ask two questions), someone in danger (emergency number first), or normal. Example: <em>“co alarm keeps going off”</em> → the leave-the-home instruction as the very first words (WP-5).</p></div>
+  <div class="part" data-part="why-hard"><h3>Why it's hard</h3><ol><li><strong>A miss is the worst failure we can have.</strong> A missed CO alarm is a safety failure, not a wrong answer. The gate is 100%.</li><li><strong>People don't use the policy's words.</strong> They write “smells like eggs”, “detector beeping”, or make typos.</li><li><strong>“In danger” has no word list.</strong> It comes from a mix: a hot house <em>and</em> a frail person. A word list fires on “it's hot” and misses “my dad's on oxygen and the power's out”.</li><li><strong>The calls can't teach us.</strong> 0 of 420 calls mention a hot house or a vulnerable person, so every danger test case is made up and labelled that way.</li><li><strong>Firing too often hurts too.</strong> About 53 of 75 HVAC bookings report no heat, no cooling or water. Flag them all, and the real emergencies get lost.</li></ol></div>
+  <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>This sets how safe the agent is and how much it costs per message. Picking C adds one small, cheap model call to every message. Picking A keeps cost at zero but likely misses danger said in everyday words.</p></div>
+  <p class="settled" data-status="decision"><span class="st decision">Your decision</span> <strong>Already chosen by you, not asked again:</strong> the safety list and its instruction (R-5); the two burning-smell questions (D2); the danger rule from your Stage 2 check (R-8); priorities set by code.</p>
+  <div class="chosen" data-status="decision"><h4><span class="st decision">Your decision</span> What you chose on 2026-10-20</h4><p>You chose <strong>C</strong> (“hp-2 c is cool with me”) and the limit of <strong>at most 10% false alarms</strong> on no-danger comfort cases (“that fine with me too”). Word rules decide first; a small classifier may only raise the level, never lower it. It is in the PRD as R-47, and the target is in the framing doc under V4.</p></div>
+  <p class="section-sub">The options we offered, kept for the record:</p>
+  <div class="opts"><div class="opt" data-status="proposal"><h4>A. Word rules only <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 114" role="img" aria-labelledby="h2a"><title id="h2a">Option A: word patterns alone decide</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Word patterns, typo-tolerant</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Match → fixed path; else normal</text></svg><dl><dt>What it is</dt><dd>Hand-written patterns for each trigger.</dd><dt>If you pick it</dt><dd>Instant, free, easy to test.</dd><dt>Trade-off</dt><dd>Misses everyday wording. Can't see “someone in danger”.</dd></dl></div><div class="opt" data-status="proposal"><h4>B. Model classifier only <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 114" role="img" aria-labelledby="h2b"><title id="h2b">Option B: a small model labels every message</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Small model reads the message</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Label → fixed path</text></svg><dl><dt>What it is</dt><dd>A small model labels each message: safety, unclear burning, danger or normal.</dd><dt>If you pick it</dt><dd>Catches paraphrases and combinations.</dd><dt>Trade-off</dt><dd>A model can miss a plain “CO alarm” on a bad day. A 100% gate can't rest on it alone.</dd></dl></div><div class="opt rec" data-status="proposal"><h4>C. Rules first, then a classifier that can only raise the level <span class="st proposal">Recommended</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h2c"><title id="h2c">Option C: rules decide first; a small model may only raise the level</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Word patterns decide first</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Small model may raise, never lower</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Level → fixed path, never model words</text></svg><dl><dt>What it is</dt><dd>Word rules run first and decide alone when they match. Then a small, cheap model reads the message. It may <strong>raise</strong> a normal message to burning-unclear or danger, never lower one. Its label only picks a fixed path.</dd><dt>If you pick it</dt><dd>Rules guarantee the plain cases. The model catches everyday wording and danger mixes. If the model fails, the rules still stand.</dd><dt>Trade-off</dt><dd>One extra small call per message: cost and about a second of wait, an assumption we measure in the first run. Some false alarms; we measure those too.</dd></dl></div></div>
+  <p data-status="proposal"><span class="st proposal">Proposal</span> <strong>Our suggestion:</strong> <strong>C.</strong> The rules make the 100% gate provable on plain cases. The small model is the only way to notice “someone is in danger”. Because it can only raise the level, its worst mistake is an unneeded emergency-number line, never a missed instruction.</p>
+  <p class="measure" data-status="proposal"><span class="st proposal">Proposal</span> <strong>How we'll know it worked:</strong> safety caught 100% of the time (the 9 real safety calls plus labelled made-up variants); danger caught 100% on labelled made-up cases; false alarms on no-danger comfort cases at most 10% (our target, to confirm with you). Scored on WP-3, WP-5, WP-6.</p>
+  <div class="meta-row"><span class="tag">Evidence: WP-3, WP-5, WP-6</span><span class="tag">Status: chosen 2026-10-20 · measured in SP-1 and the first eval run</span></div>
+</article>
+<article class="card hp" data-status="decision" data-hp="HP-3" data-ask="HP-3" id="hp-3">
+  <h3>HP-3 · Doing things that have rules attached <span class="st decision">Your decision · no fee-bearing change by the AI</span></h3>
+  <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>This happens after the customer enters their code. Omar asks what his $478 invoice is for (WP-2). Linda wants a Saturday evening slot that doesn't exist (WP-3). Another customer wants to move today's 12–4 visit, two hours before it starts (WP-4).</p></div>
+  <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Let the model talk naturally, while code guarantees the rules. Nothing private comes before the code. The bill is explained as billed. The fee is said <em>before</em> a change and agreed to. The slot fits the zone and membership. No slot is booked twice. Example: <em>“Can I move it?”</em> with the visit two hours away → “A $49 late-change fee applies to changes within 24 hours …” → under your rule, a request to staff, never the move (WP-4).</p></div>
+  <div class="part" data-part="why-hard"><h3>Why it's hard</h3><ol><li><strong>Order matters, and the model steers the chat.</strong> In the real call, the person moved the visit and never mentioned the $49. A model can do the same if the move tool works at any time.</li><li><strong>The “yes” must answer <em>this</em> quote</strong>, not an earlier question.</li><li><strong>Records disagree with policy.</strong> Omar's bill says $144 after-hours; the fee list says $149. You chose “explain as billed”. If the model sees both numbers, it may bring up the gap.</li><li><strong>Booking rules are spread out:</strong> zone by town, service type, member-only slots, open status, the fixed “today”.</li><li><strong>The DB's issue notes can't be trusted:</strong> 109 of 159 appointments list an issue that doesn't match the service booked.</li></ol></div>
+  <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>This decides whether “the fee is always said first” and “no bad bookings” are promises we can prove with tests, or hopes. It also sets how many tools the build needs.</p></div>
+  <p class="settled" data-status="decision"><span class="st decision">Your decision</span> <strong>Already chosen by you, not asked again:</strong> a code sent to the phone or email on record (OD-3); never a fee waiver (D3); writes to a working copy in one transaction (R-19); explain, never judge a bill; Omar's line explained as billed (your WP-2 answer).</p>
+  <div class="chosen" data-status="decision"><h4><span class="st decision">Your decision</span> What you chose on 2026-10-20</h4><p><strong>Inside 24 hours, the AI never moves the appointment, even on a yes.</strong> It verifies, explains the $49 fee, records the requested change for a representative, and says plainly that the original appointment stays until a person confirms. It never says “charged”. It is a <strong>handoff</strong>, not an AI-resolved change. <strong>With no fee</strong>, the AI reschedules under the normal booking rules. No waiver, as before.</p><svg viewBox="0 0 340 264" role="img" aria-labelledby="h3d"><title id="h3d">Your HP-3 rule: the fee-bearing path ends with a person, never an AI write</title><rect class="node decision" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Verify: code to the contact on record</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node decision" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Inside 24 h? (code, fixed clock)</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node decision" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Yes: explain the $49; never move it</text><path class="arrow" d="M170,142 L170,156" marker-end="url(#ahm)"/><rect class="node decision" x="10" y="158" width="320" height="34" rx="7"/><text x="22" y="180">Staff request: P2, due at window start</text><path class="arrow" d="M170,192 L170,206" marker-end="url(#ahm)"/><rect class="node decision" x="10" y="208" width="320" height="34" rx="7"/><text x="22" y="230">Say: your visit stays until confirmed</text></svg><p><strong>The faster staff path</strong> (you asked for one; we designed it). In WP-4 the visit starts in two hours, so “within 1 business day” alone can't help. The case is P2 with its internal due time at the window start, and the supervisor sees it at once. If someone is online, the customer is offered the live queue first. If phone support is open (the help files say Mon–Fri 7am–7pm, Sat 8am–4pm), the reply says so; the files give no number, so none is shown. If nobody can confirm in time, the reply says so plainly: <em>“Until a representative confirms, please plan on the technician arriving 12–4pm.”</em></p><p><strong>What this changes in our numbers.</strong> 14 of the 15 reschedule calls fall inside 24 hours, so they now belong with people. Tonight's 58.3% is unchanged. The roadmap now reaches 77.9%, not 81.2%, and 22.1% stays with people (PRD §3.3).</p><p><strong>Cancellations inside 24 hours</strong> are handled the same way (your “yes”, 2026-10-20). All 6 real cancellation calls were more than 24 hours out, so the numbers don't change again.</p></div>
+  <p class="section-sub">The options we offered, kept for the record:</p>
+  <div class="opts"><div class="opt" data-status="proposal"><h4>A. Plain tools, rules in the prompt <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h3a"><title id="h3a">Option A: the model may call the write tool at any time</title><rect class="node decision" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Verified customer</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Model calls “move visit” directly</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Prompt says: say the fee first</text></svg><dl><dt>What it is</dt><dd>Book, move and read-invoice tools work once verified. The prompt says “state the fee first”.</dd><dt>If you pick it</dt><dd>Least code.</dd><dt>Trade-off</dt><dd>The real-call failure (moved, fee never said) stays possible.</dd></dl></div><div class="opt rec" data-status="proposal"><h4>B. Two steps: quote, then commit <span class="st proposal">Recommended</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h3b"><title id="h3b">Option B: a quote with the exact fee line, then a commit that checks for a yes</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Quote tool checks rules, writes fee line</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Customer sees the quote, says yes</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Commit tool refuses without that yes</text></svg><dl><dt>What it is</dt><dd>A quote tool checks the rules and returns the exact fee sentence the reply must show. The commit tool refuses unless that quote was shown and the customer's <em>next</em> message is a yes. The invoice tool returns lines as billed; the $144-vs-$149 gap goes to a staff-only note the model never sees.</dd><dt>If you pick it</dt><dd>Every rule becomes a code check with a test. The model still handles “actually, Tuesday instead”.</dd><dt>Trade-off</dt><dd>A bit more tool code. If the model skips the quote, the commit refuses and it tries again; the log shows it.</dd></dl></div><div class="opt" data-status="proposal"><h4>C. Buttons for actions <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 164" role="img" aria-labelledby="h3c"><title id="h3c">Option C: buttons, not words, confirm each change</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Model offers slots</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Customer taps a button to confirm</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">App writes the change; model can&#x27;t</text></svg><dl><dt>What it is</dt><dd>Slot choice and “Confirm the change ($49)” are buttons. The model can't call write tools.</dd><dt>If you pick it</dt><dd>The customer's yes is never unclear.</dd><dt>Trade-off</dt><dd>More screen work in the time box. Typing “yes” wouldn't book.</dd></dl></div></div>
+  <p data-status="proposal"><span class="st proposal">Proposal</span> <strong>Our suggestion:</strong> <strong>B</strong>, with an optional confirm button under each quote, so the customer can type “yes” or tap it. It makes the booking and fee rules provable without taking the conversation away from the model.</p>
+  <p class="measure" data-status="proposal"><span class="st proposal">Proposal</span> <strong>How we'll know it worked:</strong> 100% valid bookings and 0 double bookings; the fee line comes before the change in 100% of cases; nothing private before a correct code; no unprompted $149 on Omar's bill, with the gap in the staff brief. Scored on WP-2, WP-3, WP-4.</p>
+  <div class="meta-row"><span class="tag">Evidence: WP-2, WP-3, WP-4</span><span class="tag">Status: chosen 2026-10-20</span></div>
+</article>
+<article class="card hp" data-status="decision" data-hp="HP-4" data-ask="HP-4" id="hp-4">
+  <h3>HP-4 · What we can&#x27;t finish: an honest handoff <span class="st decision">Your decision · B</span></h3>
+  <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>This happens at the end of a chat the agent can't complete. Linda asks to switch off auto-renewal (WP-8). The help file says staff can, but the database has no field to change. Another customer demands a refund (WP-7). Omar disputes a line on his bill (WP-2).</p></div>
+  <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Say plainly what was and wasn't done. Give the promise from policy. Hand staff a brief they can act on without asking again, with no fact the system didn't actually see. Example: <em>“Just make sure it doesn't renew.”</em> → “I can't switch off auto-renewal from this chat. I've created a request for a representative to do it before your renewal date of November 3,” then the 1-business-day promise and a reference. <strong>Never</strong> “Done, auto-renew is off”, which is what the person in the real call said.</p></div>
+  <div class="part" data-part="why-hard"><h3>Why it's hard</h3><ol><li><strong>Models like to sound finished.</strong> “I've taken care of that” is a natural last line, and it is false when nothing was changed.</li><li><strong>One invented fact in a brief is worse than no brief.</strong> Staff act on it; the reviewer checks it. The gate is 0 invented facts.</li><li><strong>Facts and claims look alike.</strong> “It didn't fix anything” is the customer's claim, not a fact (WP-7).</li><li><strong>The promise must match policy word for word.</strong> In the early code the model kept restating it, so we had to strip its timing sentences.</li></ol></div>
+  <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>This decides whether the two handoff gates, “promise matches policy” and “0 invented facts”, are checked by code or trusted to the prompt. It adds two small checkers to the build.</p></div>
+  <p class="settled" data-status="decision"><span class="st decision">Your decision</span> <strong>Already chosen by you, not asked again:</strong> the promise and due time come from a policy table (OD-4); the list of requests the systems can't complete and their priorities (D4); eight fixed brief headings, five from code and three from the model (R-28).</p>
+  <div class="chosen" data-status="decision"><h4><span class="st decision">Your decision</span> What you chose on 2026-10-20</h4><p>You chose <strong>B</strong> (“B is fine with me”). Code adds the promise and reference. A completion check blocks “done” unless a change really happened, and a fact check removes any number the system never looked up. It is in the PRD as R-46.</p></div>
+  <p class="section-sub">The options we offered, kept for the record:</p>
+  <div class="opts"><div class="opt" data-status="proposal"><h4>A. Prompt rules only <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 114" role="img" aria-labelledby="h4a"><title id="h4a">Option A: the prompt alone keeps the model honest</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Model writes the reply and brief</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Prompt: never claim it&#x27;s done</text></svg><dl><dt>What it is</dt><dd>The model writes the handoff reply and its brief headings, following the prompt.</dd><dt>If you pick it</dt><dd>Least code.</dd><dt>Trade-off</dt><dd>No way to prove “0 invented facts”; “all done” can slip through.</dd></dl></div><div class="opt rec" data-status="proposal"><h4>B. Code writes the promise; checks guard the model&#x27;s words <span class="st proposal">Recommended</span></h4><svg viewBox="0 0 340 214" role="img" aria-labelledby="h4b"><title id="h4b">Option B: code adds the promise, and two checks guard the model&#x27;s text</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Model writes its part</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">“Done?” check: only if a change succeeded</text><path class="arrow" d="M170,92 L170,106" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="108" width="320" height="34" rx="7"/><text x="22" y="130">Fact check vs. the lookup log</text><path class="arrow" d="M170,142 L170,156" marker-end="url(#ahm)"/><rect class="node decision" x="10" y="158" width="320" height="34" rx="7"/><text x="22" y="180">Code adds promise + reference</text></svg><dl><dt>What it is</dt><dd>Code adds the promise, reference and due time after the model's text. A completion check blocks “done”, “cancelled” or “refunded” unless a change actually succeeded. A fact check compares every number, date, ID and amount in the brief with what the system looked up; anything unmatched is removed and flagged.</dd><dt>If you pick it</dt><dd>Both handoff gates become code checks with tests.</dd><dt>Trade-off</dt><dd>Two small checkers to build. They may block a harmless phrase; the eval shows it and we tune.</dd></dl></div><div class="opt" data-status="proposal"><h4>C. No model in the handoff <span class="st proposal">Option</span></h4><svg viewBox="0 0 340 114" role="img" aria-labelledby="h4c"><title id="h4c">Option C: a fixed template and the raw chat, no model summary</title><rect class="node proposal" x="10" y="8" width="320" height="34" rx="7"/><text x="22" y="30">Fixed reply template</text><path class="arrow" d="M170,42 L170,56" marker-end="url(#ahm)"/><rect class="node proposal" x="10" y="58" width="320" height="34" rx="7"/><text x="22" y="80">Brief = facts + full chat</text></svg><dl><dt>What it is</dt><dd>The reply is a fixed template. The brief is the facts plus the full chat, with no summary.</dd><dt>If you pick it</dt><dd>Nothing can be invented.</dd><dt>Trade-off</dt><dd>Staff must read the whole chat to find the need, which defeats the brief.</dd></dl></div></div>
+  <p data-status="proposal"><span class="st proposal">Proposal</span> <strong>Our suggestion:</strong> <strong>B.</strong> It keeps the useful summary staff need and makes both handoff gates provable.</p>
+  <p class="measure" data-status="proposal"><span class="st proposal">Proposal</span> <strong>How we'll know it worked:</strong> promise text matches policy in 100% of handoffs; 0 invented facts and at least 90% of required items in briefs; 0 “done” claims without a real change. Scored on WP-2, WP-7, WP-8.</p>
+  <div class="meta-row"><span class="tag">Evidence: WP-8, WP-7, WP-2</span><span class="tag">Status: chosen 2026-10-20</span></div>
+</article>
+</section>
+
+<section aria-labelledby="def-h"><h2 id="def-h">Handled by default</h2>
+  <p class="section-sub">We looked at each of these and found no hard choice. Each is a known pattern or one of your earlier decisions.</p>
+  <ul class="tight"><li data-status="fact"><span class="st fact">Fact</span> <strong>Old copies in the help files (WP-1).</strong> Archive, the old FAQ copy and the outdated scheduling guide are never searched (DEC-4, R-10). Tested: 0 answers from excluded files.</li><li data-status="fact"><span class="st fact">Fact</span> <strong>PDF, spreadsheet and image files.</strong> All parsed; the holiday image is typed out by hand and linked (R-9).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>The fixed “today”.</strong> Set to Fri 2026-10-16, never the server clock (R-3).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Zones.</strong> Town → zone; Dripping Springs and Manor are central (Q-3, R-18).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Identity code.</strong> Simulated code to the contact on record, demo inbox, stored hashed (OD-3, R-15).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>A person on the first ask.</strong> Checked by code before any tool (R-2, OD-6).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Honest staffing.</strong> Nobody online by default; a labelled simulation mode (R-30).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Cases and overdue alerts.</strong> App tables plus a scheduled job on the fixed clock (R-25, R-33).</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Monitoring, privacy, spend brakes.</strong> R-35, R-36, R-41.</li><li data-status="fact"><span class="st fact">Fact</span> <strong>A test set that keeps the number honest.</strong> Split by transcript template (R-38); run at Stage 9.</li><li data-status="fact"><span class="st fact">Fact</span> <strong>Surviving a restart.</strong> Database file on a Railway volume and a saved conversation state (SD-7.2).</li></ul>
+</section>
+
+<section aria-labelledby="qa-h"><h2 id="qa-h">The system-design questions, walked</h2>
+  <p class="section-sub">The course's design checklist asks these before any design. You answered the five big ones on 2026-10-20 (load, peak, restart, spend, what to prove). The rest are answered from the documents below, or wait for Stage 6. None needs a new question for you.</p>
+  <div class="table-scroll" tabindex="0"><table class="qa">
+    <thead><tr><th>Principle</th><th>Answer</th><th>Source</th></tr></thead>
+    <tbody><tr data-status="fact"><td>GP-107 Cost</td><td>One correct chat saves about 111 seconds of staff talk time. The cap allows about $0.10 per chat ($10 a day ÷ about 100 chats). We don&#x27;t trade accuracy for cost.</td><td>Framing §1; PRD §10</td></tr><tr data-status="fact"><td>GP-108 Size</td><td>About 100 chats a day, about 20 at once: one server, one database file, no queue, no separate search service.</td><td>PRD §5, §6.2</td></tr><tr data-status="fact"><td>GP-109 Uncertainty</td><td>The partner asks “is the containment number real?” HP-1, HP-2, HP-4 and the eval are the centre of the design.</td><td>Brief Part B</td></tr><tr data-status="fact"><td>GP-110 Promises</td><td>Never broken: safety first, valid bookings, policy promise text, nothing private before a code. Usually met: 8 seconds per reply at p95 (an assumption). Where timing starts and stops: Stage 6.</td><td>PRD §4, §5</td></tr><tr data-status="fact"><td>GP-111 Work per message</td><td>Rule checks, one small model call (HP-2), one to four main model calls (an assumption), a search, a few database reads.</td><td>PRD §5; HP-2</td></tr><tr data-status="fact"><td>GP-112 Trace one request</td><td>Stage 6 traces one request step by step.</td><td>—</td></tr><tr data-status="fact"><td>GP-113 First to break</td><td>Probably the model provider at 20 chats at once (an assumption). A 20-chat load test at Stage 9 will show it.</td><td>PRD §5</td></tr><tr data-status="fact"><td>GP-114 Overload</td><td>Safety never waits (no model). Model calls wait to a deadline, then hand off. Spend cap reached: hand off.</td><td>PRD §5, R-41</td></tr><tr data-status="fact"><td>GP-115 Autoscaling</td><td>No. One server sized for 20 at once.</td><td>PRD §5</td></tr><tr data-status="fact"><td>GP-116 Refuse or guess</td><td>Bookings, identity and promises refuse rather than guess. Help-file answers show the document date.</td><td>R-11, R-19, HP-3</td></tr><tr data-status="fact"><td>GP-117 Cache</td><td>None needed. The search index is rebuilt from the help files.</td><td>PRD §6.2</td></tr><tr data-status="fact"><td>GP-118 Failures to survive</td><td>A restart (your SD-7.2 answer). One server.</td><td>PRD §10</td></tr><tr data-status="fact"><td>GP-119 Labels</td><td>Every number marked target, assumption, calculation or measured. Revisit triggers at Stage 6.</td><td>Register</td></tr></tbody></table></div>
+</section>
+
+<section aria-labelledby="sp-h"><h2 id="sp-h">The one spike, approved</h2>
+  <p class="section-sub">You asked us to say if anything needs a spike. A spike is a short, throwaway experiment that answers one question before we build on a guess. Spikes run at Stage 5, after the interview.</p>
+  <article class="card" data-status="decision" data-ask="SP-1">
+    <h3>SP-1 · Is the two-layer turn fast and cheap enough? <span class="st decision">Your decision · yes, at Stage 5</span></h3>
+    <div class="part" data-part="context"><h3>Where this comes up in the project</h3><p>Your HP-1 design answers each message in steps: a planner, one or more specialists, then a responder. With HP-2's option C, a small danger classifier runs too. Each step is a model call.</p></div>
+    <div class="part" data-part="problem"><h3>The problem we're solving</h3><p>Find out whether one customer turn stays under 8 seconds and whether a whole chat fits the budget. Example: a booking like Linda's (WP-3) takes several turns, and each turn makes three or more model calls. We haven't counted them on a real run yet.</p></div>
+    <div class="part" data-part="why-hard"><h3>Why it's hard</h3><p>You set a $10-a-day model budget for about 100 chats, so about $0.10 per chat. We haven't measured what one turn costs. More calls also means more waiting, and the 8-second limit is checked at a spike of 20 chats at once.</p></div>
+    <div class="part" data-part="why-asked"><h3>Why we're asking you, and what your answer changes</h3><p>If the numbers don't fit, we'd find out after the build, when changing models or merging steps is expensive. The spike tests two model mixes on the eight worked examples and picks the cheapest one that is still correct, under 8 seconds and within $0.10 a chat. If none fits, the trade-off comes back to you.</p></div>
+    <p data-status="decision"><span class="st decision">Your decision</span> <strong>Result, 2026-10-21</strong> (brief §3–§4, run on the VPS, $3.94 spent). All four mixes passed every safety and honesty gate, across 190 scored chats. Cost was about $0.02 a chat, far under budget. Speed was the problem: at 20 chats at once, no mix stayed under 8 seconds at p95. Gemini Flash and Terra also fell below 90% on the other checks. You chose <strong>mix B</strong>: Jev plans and checks for danger, and Sonnet writes the replies. You also set the line at <strong>12.5 seconds</strong>; B measured 10.2 s at 20 at once and 7.6 s one at a time. The 8-second line was an assumption, now replaced.</p>
+  </article>
+</section>
+
+<section aria-labelledby="ask-h"><div class="card" data-status="decision">
+  <h2 id="ask-h">What you decided at this stage</h2>
+  <p><span class="st decision">Your decision</span> <strong>Stage 3 gate signed, 2026-10-20.</strong></p>
+  <ol>
+    <li><strong>HP-1:</strong> your two-layer design, plus turn-to-turn context management (PRD §6.1, R-45).</li>
+    <li><strong>HP-2:</strong> C, word rules first and a classifier that can only raise the level; false alarms at most 10% (R-47).</li>
+    <li><strong>HP-3:</strong> the AI never moves or cancels an appointment when the change carries the $49 fee. It sends a staff request, and the original stays (R-21, R-22). No-fee changes stay automatic; no waivers.</li>
+    <li><strong>HP-4:</strong> B, code adds the promise and two checks guard the model's words (R-46).</li>
+    <li><strong>SP-1:</strong> the speed-and-cost spike runs at Stage 5.</li>
+  </ol>
+  <p><strong>What comes next:</strong> Stage 4, the interview, records these in the PRD and asks for its approval. Nothing is built yet.</p>
+</div></section>
+</main>
+<footer class="wrap">Local file, not published. The Markdown register is the source of truth; this page is a synthesis built after it. If a source changes, the page is rebuilt and checked with the zero-to-hero <code>check_review_page.py</code> before any sign-off.</footer>
+</body>
+</html>
