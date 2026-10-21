@@ -9,7 +9,6 @@ from __future__ import annotations
 
 from langgraph.runtime import Runtime
 
-from meridian.adapters.sqlite.rows import ConversationRow
 from meridian.agent.context import GraphDeps
 from meridian.domain.state import ChatLine, Controller, ConversationState, LoadContextUpdate
 from meridian.domain.turn import TurnContext
@@ -56,8 +55,9 @@ def _controller_from(row: object) -> Controller:
 
     Any other result (an ended thread, a changed lookup contract) raises: guessing "ai" could hide a person's chat.
     """
-    if isinstance(row, ConversationRow):
-        return row.controller
+    stored = getattr(row, "controller", None)  # structural: agent/ never imports adapters (DO-3 2.1, PD-4)
+    if isinstance(stored, Controller):
+        return stored
     if row is None:
         return Controller(kind="ai")
     raise ValueError(
