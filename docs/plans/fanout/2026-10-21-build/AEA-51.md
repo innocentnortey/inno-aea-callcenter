@@ -1550,3 +1550,24 @@ reaches them), Part B (AC-3), Part C, and `test_login_gate` (AC-4), `test_greeti
 
 **Gates:** none human; no paid call; the wave-3 merge runs `seam-audit-agent` across AEA-50…53 with all journeys
 (integrated-journeys §5).
+
+---
+
+## Deviations
+
+Recorded by the implementer (pass 1, base `main` at `6659403`, 2026-10-21).
+
+1. **Anthropic mock transport is `httpx2`, not `httpx`.** §5 B1 builds the Anthropic client with `http_client=httpx.Client(...)`.
+   In this repository the Anthropic SDK sits on `httpx2` (AEA-17's `tests/contract/_anthropic_fixtures.py` uses
+   `httpx2.MockTransport`). `tests/contract/test_model_ports_contract.py` therefore uses `httpx2` for the Anthropic rows and
+   `httpx` for the Jev rows. The client keeps `max_retries=2`, so the test also proves the adapter makes one attempt. Every
+   PD-11 row passed on the first run with no expectation changed.
+2. **Pass 2 is still blocked, and AEA-39 is no longer one of the blockers.** AEA-39 merged (`12e46ee`; `act.py` has no
+   `NotImplementedError`). A0's pass-2 greps still show the other prerequisites missing: `compose.py` builds none of the
+   slot, account or appointment blocks (AEA-21b, §8 R-13), `register_tracing` does not read `Key("trace_override")`
+   (AEA-19-F1, §8 R-1), and `TurnService` checks `allow_turn()` before `parse_intake` (AEA-40-F1, §8 R-14). A0 says to stop
+   on any difference, so only pass 1 was built. `Key("run_graph")` is **not** provided, the docstring carries the pass-1
+   wording.
+3. **`open_customer_run`'s default is a module constant** (`DEFAULT_OPTIONS = RunOptions()`), because ruff B008 forbids a call
+   in an argument default. Same behaviour, same signature otherwise.
+4. **Check 6 (strict contract mode)** is not run in pass 1, as §5 *Two passes* says.
