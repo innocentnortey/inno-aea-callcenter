@@ -410,6 +410,16 @@ demo pair 200 (AEA-30's `demo_clock` is bound on main, so wave-2 finding 1 no lo
 
 **Carried, still open:** earlier wave-2 findings 2 to 9 and the wave-0 findings 1 and 3 (see the sections above); finding 1 of the first wave-2 audit (login 500) is now resolved by AEA-30.
 
+**Second audit pass at `12e46ee` (2026-10-21, `audit-W2b`, since removed; `audit-W2` at `b9be4dc` untouched).** Same verdict: security n/a, seams FAIL with no blocker or high.
+Paths that exist connect; `reply_composer` and `run_graph` stay unbound until AEA-51 (`chat.py` raises "not bound"). Act-node seam signatures match; mypy 0 issues in 130 files; ruff clean.
+Journeys plus contract: 704 passed, 56 skipped, 1 xfailed, 15 errors (AEA-58 browser journeys, no `apps/web/dist`, not run). Full suite without browser journeys: 2834 passed, 82 skipped,
+3 xfailed, 3 failed. The 3 failures add nothing new to the lists above: `test_wf15_reset_script` (`2 == 1`, cause unconfirmed), `test_no_journey_yet_prints_zero_and_exits_0` (`38 journeys affected`),
+and the timing flake `test_export_never_blocks_hanging_exporter` (worst 0.0558 s against 0.05 s, also in an isolated re-run; fix by widening the threshold or a fake clock, acceptance 10 straight `-n 2` passes).
+Assembled-app probe (in-process, fake keys): `/healthz` 200; bad login 401; good login 200; unauthenticated session, clock and queue 401; customer on `/api/staff/queue` 403 `ROLE_NOT_ALLOWED`;
+representative on oversight and owner-metrics 403; supervisor 200; owner 200 on owner-metrics; monitoring, eval, inbox, staffing and flags 200 for staff; `POST /api/chat/sessions` 500 (AEA-51 gap).
+The "login 500, expected until AEA-30" note is stale (AEA-30 is merged). A scripted operation-to-route check found only `/healthz` because routes are included lazily in the lifespan, so it was
+inconclusive; contract-to-route coverage rests on `tests/contract` and `tests/api`. Merge gate needs `apps/web/dist` built outside the backend worktree (`MERIDIAN_WEB_DIST_DIR`).
+
 **Next action:** continue wave 3 per `build-ledger.md` (AEA-40 and AEA-51 have worktrees under `inno-aea-callcenter-wt/`; `docs/plans/fanout/2026-10-21-build/AEA-60.md` is an
 uncommitted planner edit, not swept in). Cut tickets for findings 1, 3, 4 and 5 above; build dist (or add the skip) before the next merge gate so the 15 browser errors do not mask a real failure.
 
