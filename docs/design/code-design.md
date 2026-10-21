@@ -696,10 +696,13 @@ tests/                                       planned
 │                     brakes; recursion limit; deadline halts; restart between write and checkpoint
 ├── api/              FastAPI TestClient per CON group: schemas, named errors, cookies, idempotent turn_id, SSE replay
 ├── capture/          CAP-1…CAP-9 (DO-6): drive the real entry point; seeded values absent from body, log, trace
+├── journeys/         integrated journeys (rule integrated-journeys): support/ = AEA-57's harness (real app under uvicorn
+│                     on a disposable DB copy, scripted model at the provider boundary, client, DB reader, record writer);
+│                     j<N>/test_aea_<NN>.py, one file per ticket per journey; browser/ (AEA-58)
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
