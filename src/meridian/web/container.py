@@ -614,16 +614,17 @@ def register_staff_session(container: Container, app: FastAPI, *, settings: Any,
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-40 customer API: TurnService, the CON-2 route and the start-up turn sweep (web.md §9, §14).
+    """AEA-40 customer API: SessionService, TurnService, CON-1 and CON-2 routes, the start-up turn sweep (web.md §9, §14).
 
-    Provides deps.TURN_SERVICE and includes the chat router. Reads Key("demo_clock") and Key("run_graph") (AEA-30,
-    AEA-51) only when a request needs them, so the app builds before those tickets bind them; until then a call
-    raises RuntimeError("not bound: <key>"). The session service and the two CON-1 routes wait on AEA-02b and an
-    AEA-03 follow-up. On start it fails every turn still `running` and logs one turn_sweep count line (R-W-4). An
-    app create_app did not build has no web shell, so this does nothing.
+    Provides deps.SESSION_SERVICE and deps.TURN_SERVICE and includes the chat router once per app. Reads
+    Key("demo_clock") and deps.DEMO_SERVICE (AEA-30), deps.REPLY_COMPOSER and Key("run_graph") (AEA-51) only when a
+    request needs them, so the app builds before those tickets bind them; until then a call raises
+    RuntimeError("not bound: <key>"). On start it fails every turn still `running` and logs one turn_sweep count line
+    (R-W-4). An app create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.services.session import SessionService
     from meridian.services.turn import TurnService
-    from meridian.web.deps import TURN_SERVICE, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.deps import DEMO_SERVICE, SESSION_SERVICE, TURN_SERVICE, UOW_FACTORY, WALL_CLOCK
     from meridian.web.logging import emit_record
     from meridian.web.middleware import WebShellState
     from meridian.web.routes.chat import CHAT_LOGGER, build_router
@@ -649,6 +650,13 @@ def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: 
         def now(self) -> Any:
             return lazy(demo_clock_key).now()
 
+    class _Demo:
+        def staffing(self) -> Any:
+            return lazy(DEMO_SERVICE).staffing()
+
+        def clock_view(self) -> Any:
+            return lazy(DEMO_SERVICE).clock_view()
+
     def settled_view(settled: Any, identity: Any, controller: Any) -> Any:
         return lazy(reply_composer_key).settled_view(settled, identity, controller)
 
@@ -669,7 +677,21 @@ def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: 
             settings.agent_version,
         ),
     )
-    app.include_router(build_router())
+    container.provide(
+        SESSION_SERVICE,
+        lambda c: SessionService(
+            c.get(UOW_FACTORY),
+            _DemoClock(),
+            _Demo(),
+            limits,
+            settled_view,
+            settings.agent_version,
+            wall_clock=c.get(WALL_CLOCK),
+        ),
+    )
+    if not getattr(app.state, "chat_routes_included", False):
+        app.include_router(build_router())
+        app.state.chat_routes_included = True
 
     def sweep() -> None:
         uow = container.get(UOW_FACTORY)
