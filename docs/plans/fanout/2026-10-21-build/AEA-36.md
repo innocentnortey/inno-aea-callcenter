@@ -795,8 +795,8 @@ force-push.
 
 ### Do not
 
-- Edit any file outside §2.1, including `tests/graph/test_spine.py` even if `test_stubs_raise_loudly` goes red (R-1:
-  report it).
+- Edit any file outside §2.1. In `tests/graph/test_spine.py`, change nothing beyond §0 step 4 (three rows and one
+  import name); never touch `tests/graph/_spine_doubles.py`.
 - Edit `test_front.py` after the test-writer's commit (implementer).
 - Call a model, the gateway, retrieval, the specialist runner, scheduling, `deps.cases` or `deps.brief` from any node
   here; open a unit of work in `gates` or `safety`.
@@ -952,21 +952,21 @@ list) so the report can quote it.
 `tests/unit/` and `tests/graph/` files on `main` that touch `agent/`: AEA-21's `tests/unit/agent/test_*.py`,
 `tests/unit/agent/nodes/test_compose*.py`, `tests/graph/test_spine.py`, `tests/graph/test_run_graph.py` (`test_spine.py`
 and `_spine_doubles.py` import `meridian.agent.nodes.front` directly; the graph tests replace its functions with
-doubles). **Known exception:**
-`tests/graph/test_spine.py::test_stubs_raise_loudly` asserts the front functions still raise `NotImplementedError`; it
-goes red once this ticket lands unless R-1's follow-up is in. Do not edit it; report it.
+doubles). **No known exception any more:** D-1 (§0 step 4) deletes `test_stubs_raise_loudly`'s three `front` rows, so
+`tests/unit/agent tests/graph` must be fully green. Tests that AEA-34, AEA-38 and AEA-40 added under
+`tests/unit/agent/nodes/` and `tests/graph/` run in G-5 too; they import no `front` symbol.
 
 ### 7.3 Gates (cheapest first; stop at the first red)
 
 | # | Command | Passing looks like |
 |---|---|---|
-| G-1 | `uv run ruff check src/meridian/agent/nodes/front.py tests/unit/agent/nodes/test_front.py` | `All checks passed!` |
-| G-2 | `uv run ruff format --check src/meridian/agent/nodes/front.py tests/unit/agent/nodes/test_front.py` | `2 files already formatted` |
-| G-3 | `uv run mypy src/meridian/agent tests/unit/agent/nodes/test_front.py` | `Success: no issues found` |
+| G-1 | `uv run ruff check src/meridian/agent/nodes/front.py tests/unit/agent/nodes/test_front.py tests/graph/test_spine.py tests/journeys/j5/test_aea_36.py` | `All checks passed!` |
+| G-2 | `uv run ruff format --check src/meridian/agent/nodes/front.py tests/unit/agent/nodes/test_front.py tests/graph/test_spine.py tests/journeys/j5/test_aea_36.py` | `4 files already formatted` |
+| G-3 | `uv run mypy src/meridian/agent tests/unit/agent/nodes/test_front.py tests/graph/test_spine.py tests/journeys/j5/test_aea_36.py` | `Success: no issues found` (whole-repo mypy is 0 errors on `8a205b2` since the AEA-29 typing fix; if you also run plain `uv run mypy`, it must stay at 0) |
 | G-4 | `uv run pytest tests/unit/agent/nodes/test_front.py -q -rA` | `21 passed` (16 functions; `test_burning_and_danger_paths` collects 6 rows); report the count and time |
-| G-5 | `grep -rlE "agent\.nodes(\.front| import .*front)|nodes import .*front" tests eval` then `uv run pytest tests/unit/agent tests/graph -q -n 2` | the grep lists the affected files (on `5531664` and `a81f59d`: `tests/graph/_spine_doubles.py`, `tests/graph/test_spine.py`, plus `tests/unit/agent/nodes/test_front.py`); all pass except, while R-1 is open, the three `front` cases of `test_stubs_raise_loudly` (the earlier run saw `298 passed, 3 failed`; report the line verbatim) |
+| G-5 | `grep -rlE "agent\.nodes(\.front| import .*front)|nodes import .*front" tests eval` then `uv run pytest tests/unit/agent tests/graph -q -n 2` | the grep lists `tests/graph/_spine_doubles.py`, `tests/graph/test_spine.py` (before D-1; after D-1 only `_spine_doubles.py`) and `tests/unit/agent/nodes/test_front.py`; pytest: **all passed, 0 failed** (D-1 removed the three R-1 reds; the earlier runs saw `298 passed, 3 failed` and `308 passed, 3 failed`). Report the line verbatim |
 | G-6 | `uv run python -m tests.journeys.affected --base main --list-only`, then the same without `--list-only` | prints the changed-file count and the affected journeys; every listed journey passes or is skipped `blocked-on AEA-NN`; none fails |
-| G-7 | `uv run pytest -m journey tests/journeys/j5/test_aea_36.py -rs -q` | `1 skipped` with a reason naming `blocked-on AEA-NN` (the first unbound need's owner), or `1 passed` if every need is bound; never a failure or a collection error. Quote the line |
+| G-7 | `uv run pytest -m journey tests/journeys/j5/test_aea_36.py -rs -q` | `1 skipped` with a reason naming `blocked-on AEA-NN`; on `8a205b2` expected `blocked-on AEA-51` (`reply_composer` / `run_graph`; AEA-29, 30, 40 and 44 are merged). `1 passed` if every need is bound. Never a failure or a collection error. Quote the line |
 
 No full suite (no shared fixture, setting or dependency change). No paid model call anywhere.
 
@@ -984,7 +984,7 @@ Same table shape as `docs/testing/journeys/2026-10-21-AEA-04.md`:
 | Result | counts and time from G-4/G-5; the G-6 and G-7 output quoted (the J-5 step's blocked reason) |
 | Evidence location | this file; GitLab issue #36 comment |
 | Remaining limitations | Nodes run outside the compiled graph; routing (AEA-21), wording (compose/AEA-03), the real `HandoffService` (AEA-29) and `IdentityService` (AEA-27) are doubles; CAP-2 at the real entry point and the checkpoint-wide sentinel test are AEA-51's |
-| Blocked by | the owners G-7 names (on `a81f59d` and `dd1b110` the first unbound need is `demo_clock`, so G-7 reports `blocked-on AEA-30`; after it: AEA-40 `turn_service`/`submitTurn`, AEA-51 `run_graph` and graph wiring, AEA-29 `handoff_service`); AEA-57 is merged and no longer blocks |
+| Blocked by | the owner G-7 names. On `8a205b2` that is expected to be AEA-51 (`reply_composer`, `run_graph` and the graph wiring). AEA-29 (`handoff_service`), AEA-30 (`demo_clock`), AEA-40 (`turn_service`, `submitTurn`) and AEA-57 are merged and no longer block |
 | Journeys that will exercise this code | J-5 (`tests/journeys/j5/test_aea_36.py`, this ticket, §7.6), J-3 (identity step before booking), J-1 (every turn passes the gate) |
 
 ### 7.6 J-5 journey file (AC-13): `tests/journeys/j5/test_aea_36.py` (implementer writes it; harness rules in `tests/journeys/support/README.md`)
@@ -1055,15 +1055,11 @@ stopped).
 
 ## 8. Risks and requests
 
-- **R-1 · Collision with AEA-21's `test_stubs_raise_loudly` (request to the orchestrator; still open on `main` `dd1b110`:
-  `tests/graph/test_spine.py` lines 104–133, the parametrize has no guard).**
-  `tests/graph/test_spine.py` parametrizes `(front, "gates" | "safety" | "identity", "front.py")` and calls
-  `fn(None, None, deps=None)` expecting `NotImplementedError` "stub from AEA-21". Once this ticket fills the nodes, the
-  call raises `AttributeError` instead, so three cases turn red. AEA-34's plan R-1 raised the same thing and proposes
-  the guard that serves every node ticket: `if "stub from AEA-21" not in inspect.getsource(fn): pytest.skip("filled by
-  its node ticket")`. **Request:** the orchestrator applies that guard on `main` (a follow-up on AEA-21's file) before
-  this ticket's merge; until then the three `front` cases are the known, reported red in G-5. This ticket never edits
-  `tests/graph/**`.
+- **R-1 · Collision with AEA-21's `test_stubs_raise_loudly`: resolved by deviation D-1 (§15).** The test
+  parametrizes `(front, "gates" | "safety" | "identity", "front.py")` and expects the stub's `NotImplementedError`.
+  With the nodes built, those three cases raise `AttributeError`. On `8a205b2` they are still present: `d724301` removed
+  only the reply rows. Under the standing permission the orchestrator relayed, the implementer deletes the three
+  `front` rows and the unused import in its own commit (§0 step 4). This ticket changes nothing else in `tests/graph/`.
 - **R-2 · Journey file written now, blocked by the harness (AC-13; changed in the second refresh).** AEA-57 is merged,
   and its `journey.step(needs=…)` reports a step whose service is unbound as *blocked* (skipped, never passed, never
   red). So this ticket writes `tests/journeys/j5/test_aea_36.py` (§7.6) instead of deferring it; it turns into
@@ -1085,6 +1081,10 @@ stopped).
   Recommended: keep the service's (CON-4 needs it too) and make this node skip its own retry when the exception reports
   `attempts >= 2`, as a short follow-up on `front.py` once `CaseWriteFailed` is on `main`. Not done here, because it
   would rely on AEA-29's exception shape, which is beyond the DO-4 signature.
+  **Update on `8a205b2`:** `CaseWriteFailed` is now on `main` (`services/handoff.py`, carrying `.attempts = 2` and
+  `.cause = "write_error"`). The node still keeps its own retry, for three reasons: AC-6 and the frozen tests require
+  it; PA-1 forbids importing `meridian.services`; and reading attributes beyond DO-4 by duck typing would invent a
+  contract. The request to AEA-51 / the orchestrator stands as written.
 - **R-5 · Engineering choices made here (reversible, reported):** PA-4 rule ids (`R7.burning_yes`,
   `R7.burning_unsure`, `R47.classifier_danger`, `R47.classifier_burning_unclear`, fallbacks `R5.safety`,
   `R8.danger_words`); PA-2 no service call without a form or code; PA-3 `ValueError` on impossible routes;
@@ -1095,8 +1095,14 @@ stopped).
 - **R-7 · Shared context rows.** The A7d row is shared with AEA-37, and the `**Built:**` line and ICM row with every
   ticket: edit only this ticket's text; trivial text conflicts at merge are expected and resolved by keeping both
   sides.
-- **R-8 · Disk** (`/` 81% used, 18 GB free at the fourth refresh, 2026-10-21; 10 worktrees exist): one worktree, hardlinked venv, no `node_modules`; AC-8's temp DB copies are
+- **R-8 · Disk** (`/` 83% used, 16 GB free at the fifth refresh, 2026-10-21; 6 worktrees exist): one worktree, hardlinked venv, no `node_modules`; AC-8's temp DB copies are
   removed by `temp_sqlite()`.
+- **R-9 · AEA-37 edits the same lines of `test_spine.py` (merge-step note, no request).** AEA-37's resume note gives
+  it the same permission for the `plan` rows. Its rows (110–112) sit right below this ticket's (107–109), and both
+  tickets edit line 17's import. So whichever branch merges second gets a text conflict there. The correct union is:
+  line 17 = `from meridian.agent.nodes import act`; the parametrize keeps only the three `act` rows; nothing else
+  changes. The orchestrator's merge step resolves it that way and re-runs `tests/graph`. The other A7d edits shared
+  with AEA-37 (area-map row, ICM row) follow R-7.
 - **No contract change, no decision reopened.** Nothing here alters `ui-contracts.openapi.yaml`, `UI_CONTRACTS.md`, DO-4
   or addenda types, or D-4…D-15. GRC-3 A and CAS-16 A are built as decided.
 
@@ -1105,7 +1111,7 @@ stopped).
 ## 9. Readiness
 
 **READY.** No product decision is open (GRC-3 and CAS-16 decided as recommended, D-14). Prerequisites (imports this
-plan truly needs) — **all merged (`5531664`; unchanged on `a81f59d` and `dd1b110`)**; nothing is `blocked-on`:
+plan truly needs) — **all merged (`5531664`; unchanged on `a81f59d`, `dd1b110` and `8a205b2`)**; nothing is `blocked-on`:
 
 - **AEA-02** — every domain type in §4.2 (incl. `HandoffReason.BURNING_RULED_OUT`, `GatesUpdate.burning_card_id`).
 - **AEA-12** — `decide_gate`, `flags_from_state`, `burning_card_id` (and `parse_intake` in tests); transitively AEA-04,
@@ -1117,8 +1123,8 @@ plan truly needs) — **all merged (`5531664`; unchanged on `a81f59d` and `dd1b1
 - **AEA-10** — `temp_sqlite()`, `TempStore`, `SqliteUnitOfWorkFactory`, `core.reads.identity_state`, `format_wall`
   (AC-8 only; the node reaches the read through `deps.uow`).
 
-AEA-11 (fakes) is in the slice-plan row but not needed: the tests carry their own doubles. AEA-27 and AEA-29 are
-injected (`deps.identity`, `deps.handoff`) and replaced by doubles. **Gates:** none (no human, paid or live gate).
+AEA-11 (fakes) is in the slice-plan row but not needed: the tests carry their own doubles. AEA-27 and AEA-29 (both
+merged) are injected (`deps.identity`, `deps.handoff`) and replaced by doubles. **Gates:** none (no human, paid or live gate).
 **Security:** frozen tests first; `security-privacy-agent` reads this diff at the wave-2 merge.
 
 ---
@@ -1184,3 +1190,57 @@ injected (`deps.identity`, `deps.handoff`) and replaced by doubles. **Gates:** n
   owed; neither role merges to main: the orchestrator merges by wave along the dependency tree); §1.2 (AEA-27 merged,
   still injected); step 0 (an `IdentityService` signature check; the stub grep prints nothing on the existing branch);
   §7.4 *Blocked by*; R-1, R-8 figures; §9.
+
+## 14. Refresh log (2026-10-21, fifth refresh: `dd1b110` / branch `118e0a1` → `main` `8a205b2`)
+
+**Checked, unchanged.**
+- `git diff b559c75 8a205b2` touches none of `src/meridian/{domain,gates,policy}/`,
+  `src/meridian/agent/{context,signals,routers,graph}.py`, `src/meridian/agent/nodes/front.py`, `tests/fixtures/`,
+  `tests/journeys/support/`, `docs/plans/tickets/AEA-36.md`, `docs/plans/slice-plan.md`, `docs/plans/7b-decisions/` or
+  `docs/plans/stage7-signoff.md`. So §3–§7's names, signatures, phrases and gate preconditions stand.
+- `GraphDeps.identity` and `.handoff` are still `Any` aliases.
+- The branch's `front.py` (`712b9e9`, unchanged at `118e0a1`) matches §4.
+- The frozen `test_front.py` is unchanged since `76fe4c2`; it is the only commit on that path.
+- The worktree is clean.
+
+**What moved on main.**
+- AEA-29 merged (`ef561fc`). `services/handoff.py` `HandoffService.open(self, req, ctx)` matches §4.4. It retries once
+  inside and raises `CaseWriteFailed(attempts=2)`, which has `.attempts` and `.cause = "write_error"`.
+- `stage7/cases.md` gained §5a, the list of AEA-29's built additions. Nothing in it is a type or signature this ticket
+  uses.
+- AEA-30, 34, 38, 40 and 43 merged. They added tests under `tests/unit/agent/nodes/`, `load_context.py` and
+  `reply.py` bodies, and the chat routes.
+- `d724301` dropped the stale reply rows and the `reply` import from `test_stubs_raise_loudly`. The three `front` rows
+  remain.
+
+**Changed in this plan.**
+- Header and §0: role A this round is merge main (one predicted area-map conflict, exact resolution), D-1 stub rows,
+  gates, record. No test-writer.
+- §1.2: AEA-29 merged; the J-5 blocker is now AEA-51 only.
+- §2.1: new owned row `tests/graph/test_spine.py` (D-1). §2.2 updated to match.
+- §3.1: AC-13 row. §3.3: the collision row is resolved by D-1.
+- Step 0: `HandoffService.open` signature check.
+- §5 *Do not*: the `test_spine.py` limit.
+- §7.2: no known exception left.
+- G-1…G-3 cover `test_spine.py` and the J-5 file. G-5 expects 0 failed. G-7 expects `blocked-on AEA-51`.
+- §7.4: *Blocked by*.
+- §8: R-1 resolved, R-4 updated, R-8 disk figure, new R-9 (AEA-37's edit to the same lines of `test_spine.py`).
+- §9; new §15.
+
+## 15. Deviations
+
+- **D-1 · `tests/graph/test_spine.py` (AEA-21's file) gets one narrow edit on this branch.**
+  - **The edit.** Delete the three `front` rows of `test_stubs_raise_loudly` and the now-unused `front` import (§0 step
+    4). Nothing else.
+  - **Basis.** The orchestrator's resume note for ticket 36 relays Innocent's standing permission of 2026-10-21 ("just
+    do whatever you recommend"): when a graph-node ticket is built, the now-stale stub rows of that node are deleted,
+    plus an import that becomes unused, and nothing else in the file. Same pattern as the merged `d724301` (reply
+    rows).
+  - **Why.** Once `front.py` is built, those rows call `fn(None, None, deps=None)` and get `AttributeError` instead of
+    the stub's `NotImplementedError`. That makes three permanent reds, which would block every merge gate that runs
+    `tests/graph`.
+  - **Risk.** It is a test-only edit and weakens no assertion about built code. The `plan` and `act` rows stay until
+    their tickets land.
+  - **Commit:** _(implementer appends the SHA here)_.
+- **D-2 · AC-5 wording vs routing** (unchanged from R-3). `BURNING_ASK` does reach the safety node (DO-3 §5.4,
+  `route_after_gates`). The node returns `{}` there: no case, no signal (PA-3). AC-5's evidence holds.
