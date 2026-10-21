@@ -40,6 +40,7 @@ from tests.api.demo_support import (
     signed_in,
 )
 from tests.api.web_shell_support import (
+    FakeSessionStore,
     app_log_text,
     assert_matches,
     captured_log,
@@ -201,7 +202,8 @@ def test_clock_is_demo_clock_and_get_only(monkeypatch: pytest.MonkeyPatch, tmp_p
     """invariant (AC-5): the clock is the service's demo clock whatever the wall clock reads; GET is the only method."""
     from meridian.web.routes.demo import build_router
 
-    h = demo_app(monkeypatch, make_settings(tmp_path))
+    # the session outlives the 3-day wall advance below, so only the route's clock source can change the answer
+    h = demo_app(monkeypatch, make_settings(tmp_path), store=FakeSessionStore(lifetime_s=4 * 86_400))
     cookie, _ = signed_in(h)
     with make_client(h.app) as client:
         r = client.get(CLOCK, headers=cookie)
@@ -214,6 +216,7 @@ def test_clock_is_demo_clock_and_get_only(monkeypatch: pytest.MonkeyPatch, tmp_p
         assert first["date_label"] == START_DATE_LABEL
         h.wall.advance(3 * 86400)
         again = client.get(CLOCK, headers=cookie)
+        assert again.status_code == 200, again.text
         assert again.json() == first
     methods = {
         m for route in build_router().routes if getattr(route, "path", "") == CLOCK for m in route.methods
