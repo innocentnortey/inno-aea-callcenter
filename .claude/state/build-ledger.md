@@ -21,7 +21,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-16 | #16 | B | merged | aea-16-aea-16-retrieval-ingest | 576a4bf | ruff check/format clean; mypy clean (50 files); affected tests 25 passed (retrieval, skeleton, import direction) plus 17 affected-journey tests; journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
 | AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
 | AEA-18 | #18 | B sec | planned | aea-18-aea-18-jev-adapter |  |  | AEA-02 |
-| AEA-19 | #19 | B sec | frozen-tests | aea-19-aea-19-langfuse-sink |  |  | AEA-02,AEA-04 |
+| AEA-19 | #19 | B sec | merged | main | b766d72 (merge of c8b149c) | ruff check/format clean; mypy clean (61 files); 181 affected tests passed (web, adapters, contract, policy, import direction, skeleton); no shared fixture/config touched, no full suite; journey record docs/testing/journeys/2026-10-21-AEA-19.md | - |
 | AEA-20 | #20 | B sec | merged | main | e79b660 (merge of 9ff964e) | ruff check/format clean; mypy clean (52 files); 108 affected tests passed (agent gateway, import direction, skeleton, checks); no shared fixture/config touched, no full suite; journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-21 | #21 | B | planned | aea-21-graph-spine |  |  | AEA-02,AEA-03 |
 | AEA-22 | #22 | B sec | merged | aea-22-aea-22-tool-dispatch | d76092f (merge of 8397546) | ruff check/format clean; mypy clean (54 files); 136 affected tests passed (agent, skeleton, import direction, affected journeys); no shared fixture/config touched, no full suite; journeys 0 affected, record mock-tested, blocked by AEA-57 | AEA-02,AEA-04 |
