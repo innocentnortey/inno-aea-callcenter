@@ -503,10 +503,71 @@ def register_staff_session(container: Container, app: FastAPI, *, settings: Any,
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-40 customer API: SessionService, TurnService, CON-1 and CON-2 routes, the start-up turn sweep (web.md §9, §14).
+    """AEA-40 customer API: TurnService, the CON-2 route and the start-up turn sweep (web.md §9, §14).
 
-    No-op until AEA-40 fills it.
+    Provides deps.TURN_SERVICE and includes the chat router. Reads Key("demo_clock") and Key("run_graph") (AEA-30,
+    AEA-51) only when a request needs them, so the app builds before those tickets bind them; until then a call
+    raises RuntimeError("not bound: <key>"). The session service and the two CON-1 routes wait on AEA-02b and an
+    AEA-03 follow-up. On start it fails every turn still `running` and logs one turn_sweep count line (R-W-4). An
+    app create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.services.turn import TurnService
+    from meridian.web.deps import TURN_SERVICE, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.logging import emit_record
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.chat import CHAT_LOGGER, build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+    run_graph_key: Key[Any] = Key("run_graph")
+    ledger_key: Key[Any] = Key("ledger")
+    trace_key: Key[Any] = Key("trace")
+    reply_composer_key: Key[Any] = Key("reply_composer")
+
+    def lazy(key: Key[Any]) -> Any:
+        try:
+            return container.get(key)
+        except ContainerError as exc:
+            if str(exc) == f"not provided: {key.name}":
+                raise RuntimeError(f"not bound: {key.name}") from None
+            raise
+
+    class _DemoClock:
+        def now(self) -> Any:
+            return lazy(demo_clock_key).now()
+
+    def settled_view(settled: Any, identity: Any, controller: Any) -> Any:
+        return lazy(reply_composer_key).settled_view(settled, identity, controller)
+
+    def run_graph(turn_input: Any, ctx: Any) -> Any:
+        return lazy(run_graph_key)(turn_input, ctx)
+
+    container.provide(
+        TURN_SERVICE,
+        lambda c: TurnService(
+            c.get(UOW_FACTORY),
+            _DemoClock(),
+            c.get(WALL_CLOCK),
+            c.get(ledger_key),
+            c.get(trace_key),
+            run_graph,
+            settled_view,
+            limits,
+            settings.agent_version,
+        ),
+    )
+    app.include_router(build_router())
+
+    def sweep() -> None:
+        uow = container.get(UOW_FACTORY)
+        with uow(write=True) as tx:
+            swept = tx.core.turns.fail_running()
+            tx.commit()
+        emit_record(CHAT_LOGGER, {"record": "turn_sweep", "count": len(swept)})
+
+    container.on_start(sweep)
 
 
 def register_events(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
