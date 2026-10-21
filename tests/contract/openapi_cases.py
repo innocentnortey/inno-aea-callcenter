@@ -112,6 +112,7 @@ LOCAL_DRIVER_ONLY: Final[Mapping[str, str]] = MappingProxyType(
         "live_case_unclaimed": "seeds an unclaimed live case; proved by the route's local driver (mock-tested)",
         "case_claimed_by_supervisor": "seeds a supervisor-owned case; proved by the route's local driver (mock-tested)",
         "case_events": "seeds case-stream events; proved by the route's local driver (mock-tested)",
+        "rate_limited": "needs the rate limiter to refuse the request; proved by the route's local driver (mock-tested)",
     }
 )
 PATH_WORDS: Final = frozenset({"started", "unknown", "malformed", "other_session", "ended", "seeded_case"})
@@ -119,10 +120,10 @@ MALFORMED_THREAD_ID: Final = "thr_9d41"
 ALLOWED_DRIVE_KEYS: Final = frozenset(
     {
         "name", "status", "code", "preconditions", "setup", "body", "path", "thread", "reference",
-        "events", "last_event_id", "frames", "response_example",
+        "events", "last_event_id", "frames", "response_example", "reader_example",
     }
 )  # fmt: skip
-# "response_example" is checked by the route's own driver; the runner ignores it.
+# "response_example" and "reader_example" are checked by the route's own driver; the runner ignores them.
 
 
 @dataclass(frozen=True)
