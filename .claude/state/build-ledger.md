@@ -51,7 +51,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-46 | #46 | B sec | merged | aea-46-aea-46-live-takeover | 6da3818 (merge; code commit 0d152ee) | ruff check/format clean; mypy clean (87 files); 332 affected tests passed (api, services, unit/web, contract); journeys 9 passed, 4 skipped (J-7 mock-tested, blocked by AEA-57/AEA-52); no shared fixture/config touched, no full suite | AEA-10,AEA-23 |
 | AEA-47 | #47 | B sec | merged | aea-47-staff-clock-advance | 23dd4ac | ruff check/format clean; mypy clean; tests/api+contract+unit+journeys 996 passed, 1 skipped, 1 stale test failing on main too (test_no_journey_yet_prints_zero); J-6 record skipped until AEA-45/57; no full suite | AEA-23 |
 | AEA-48 | #48 | B | ready |  |  |  | AEA-23 |
-| AEA-49 | #49 | B | ready |  |  |  | AEA-23 |
+| AEA-49 | #49 | B sec | merged | aea-49-aea-49-serve-web-dist | 95e2504 (code a5467a8) | ruff check/format clean; mypy clean (88 files); 324 passed/4 skipped (api, unit/web, services, capture cap11, journeys); no shared fixture/config touched, no full suite; journey record mock-tested, blocked by AEA-57 | AEA-23 |
 | AEA-50 | #50 | B sec | ready |  |  |  | AEA-16,AEA-31,AEA-32,AEA-33,AEA-19,AEA-23 |
 | AEA-51 | #51 | B | ready |  |  |  | AEA-17,AEA-18,AEA-20,AEA-26,AEA-27,AEA-28,AEA-29,AEA-33,AEA-34,AEA-35,AEA-36,AEA-37,AEA-38,AEA-39,AEA-40,AEA-42,AEA-43,AEA-11,AEA-19,AEA-30,AEA-44,AEA-46,AEA-57,AEA-59 |
 | AEA-52 | #52 | B | ready |  |  |  | AEA-29,AEA-30,AEA-40,AEA-41,AEA-44,AEA-45,AEA-46,AEA-47,AEA-31,AEA-32,AEA-43,AEA-57,AEA-59 |
