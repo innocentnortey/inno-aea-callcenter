@@ -7,7 +7,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-01 | #1 | B | merged | aea-01-aea-01-foundation | 07924f5 (code commit 893b825) | ruff check/format clean; mypy clean (68 files); full suite 121 passed (pyproject, lock and conftest are new); journeys: 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-02 | #2 | B sec | planned |  |  |  | AEA-04 |
 | AEA-03 | #3 | B | merged | aea-03-fixed-customer-texts | 60617f9 | merge of 44730d2: ruff check/format clean; 14 tests pass (policy texts, import direction); type check n/a (no pyproject yet); journey record at mock-tested, blocked by AEA-57 | - |
-| AEA-04 | #4 | B sec | sent-back | aea-04-aea-04-redaction | 22023f2 (code commit 9145044) | conflict: content conflicts in .claude/reference/area-map.md and docs/design/code-design.md when merging; implementer merges main into branch | - |
+| AEA-04 | #4 | B sec | blocked | aea-04-aea-04-redaction | 22023f2 (code commit 9145044) | merge gate failed: Format gate red. After merging (no conflicts), `uv run ruff check src tests` passed and `uv run ruff format --check` failed (latest state from the build workflow; text shortened) | - |
 | AEA-05 | #5 | B | planned |  |  |  | AEA-02 |
 | AEA-06 | #6 | B | ready |  |  |  | - |
 | AEA-07 | #7 | D | merged | main | 5073dd0 (docs, pushed to main as a fast-forward); ledger row in bc02266 | docs/technical-documentation.md: 13 sections, links resolve, figures sourced or pending, 6+1 open decisions labelled proposed; diff touches docs, SUBMISSION.md and .claude/state only | - |
@@ -27,7 +27,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-22 | #22 | B sec | ready |  |  |  | AEA-02,AEA-04 |
 | AEA-23 | #23 | B sec | ready |  |  |  | AEA-01,AEA-02,AEA-04 |
 | AEA-24 | #24 | B sec | ready |  |  |  | AEA-01 |
-| AEA-25 | #25 | D | ready |  |  |  | AEA-01 |
+| AEA-25 | #25 | D | merged | main | 0ad71f9 (README, SUBMISSION D-3, resume); ledger row in the next commit | README.md has the 8 sections in order; ruff, format, mypy, pytest (121 passed) exit 0; env names, percentages, secret words and links checked by grep; diff touches README.md, SUBMISSION.md and .claude/state only | - |
 | AEA-26 | #26 | B | ready |  |  |  | AEA-10 |
 | AEA-27 | #27 | B sec | ready |  |  |  | AEA-04,AEA-10,AEA-13 |
 | AEA-28 | #28 | B | ready |  |  |  | AEA-10,AEA-13 |
