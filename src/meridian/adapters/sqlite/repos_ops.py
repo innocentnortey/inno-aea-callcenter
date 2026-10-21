@@ -12,6 +12,7 @@ from zoneinfo import ZoneInfo
 from pydantic import JsonValue
 
 from meridian.adapters.sqlite.db import format_wall, integrity_errors, last_row_id, parse_wall
+from meridian.adapters.sqlite.repos_metrics import MetricsRepo
 from meridian.domain.common import MeridianModel
 from meridian.ports.runtime import ExportStatus
 
@@ -431,12 +432,13 @@ class SignalsRepo:
 
 
 class OpsRepos:
-    """Ops repositories over one connection (body AEA-32, cases.md §8): health, deploy, eval, signals."""
+    """Ops repositories over one connection (body AEA-32, cases.md §8): health, deploy, eval, signals, metrics (AEA-53)."""
 
     health: HealthRepo
     deploy: DeployRepo
     eval: EvalRepo
     signals: SignalsRepo
+    metrics: MetricsRepo
 
     def __init__(self, conn: sqlite3.Connection) -> None:
         self._conn = conn
@@ -444,3 +446,4 @@ class OpsRepos:
         self.deploy = DeployRepo(conn)
         self.eval = EvalRepo(conn)
         self.signals = SignalsRepo(conn)
+        self.metrics = MetricsRepo(conn)
