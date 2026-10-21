@@ -70,6 +70,7 @@ class TextId(StrEnum):
     # --- followup ---
     FOLLOWUP_LEGEND = "followup.legend"
     FOLLOWUP_SAVED_PHONE = "followup.saved_phone"
+    FOLLOWUP_SAVED_EMAIL_GENERAL = "followup.saved_email_general"
     RECORDED_NOT_SENT = "followup.recorded_not_sent"
     # --- booking ---
     BOOKED = "booking.booked"
@@ -199,6 +200,9 @@ _TEXTS: Final[dict[TextId, str]] = {
     # --- followup ---
     TextId.FOLLOWUP_LEGEND: "We'll follow up by email unless you'd prefer a phone call.",
     TextId.FOLLOWUP_SAVED_PHONE: "Follow-up saved: phone call, the number ending in {digits}, {window}.",
+    # Provisional wording pending the UX session (FU-saveFollowUp-text): the saved line's shape with no destination,
+    # because a general destination holds no address.
+    TextId.FOLLOWUP_SAVED_EMAIL_GENERAL: "Follow-up saved: email, {window}.",
     TextId.RECORDED_NOT_SENT: "Demo: recorded, not sent",
     # --- booking ---
     TextId.BOOKED: "You're booked. Here are the details.",
