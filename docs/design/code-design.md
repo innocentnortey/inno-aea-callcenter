@@ -209,7 +209,7 @@ src/meridian/                                    planned                        
 │   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink       A0    0
 ├── gates/
 │   ├── rules.py                                 typo-tolerant rules: safety, burning, danger, person, policy A1    1
-│   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate       A1    1
+│   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate       A1    1   built AEA-12 40dd865
 ├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3
 ├── adapters/
 │   ├── sqlite/db.py                             connections, WAL, busy_timeout, SqliteUnitOfWork            A0    0
