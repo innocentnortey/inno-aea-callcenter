@@ -185,6 +185,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `web/{app,middleware,deps,errors,logging}.py`, `web/routes/auth.py`, `web/schemas/auth.py`, `services/reset_gate.py` (AEA-23, branch `aea-23-aea-23-web-shell`).
 **Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
+**Built:** `services/turn.py`, `web/routes/chat.py` (`submitTurn`), `web/schemas/chat.py` (`TurnRequest`), the `register_chat` hunk (AEA-40 Part A, `d7fb642`); Part B (`services/session.py`, the CON-1 routes) is blocked on AEA-02b and an AEA-03 follow-up.
 
 ```
 src/meridian/                                    planned                                                     area  wave
