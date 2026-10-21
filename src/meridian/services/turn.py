@@ -1,7 +1,8 @@
 """CON-2 behind the route: one customer turn, in DO-4 section 14's order as web.md section 9 completes it.
 
-`TurnService.run_turn` admits the turn (30 in flight), checks the spend gate, records the turn as running with the
-customer's redacted message, runs the injected graph outside any database transaction with a 60 s budget, then
+`TurnService.run_turn` admits the turn (30 in flight), parses the intake, checks the spend gate unless the
+deterministic gates answer the turn with no model (AEA-40-F1), records the turn as running with the customer's
+redacted message, runs the injected graph outside any database transaction with a 60 s budget, then
 stores the reply, the turn record and the check events. It never reads the graph's own state, keeps no list of past
 messages, and holds no transaction open across `run_graph`. The service imports nothing from `web/` or `agent/`; the
 route and the container hunk hand it the pieces it needs.
@@ -40,7 +41,10 @@ from meridian.domain.staff import CUSTOMER_SPEAKER_NAME
 from meridian.domain.state import Controller, IdentityState
 from meridian.domain.turn import (
     CheckEvent,
+    GateFlags,
+    GateKind,
     GraphOutcome,
+    Intake,
     RunGraph,
     TurnBudget,
     TurnContext,
@@ -51,7 +55,7 @@ from meridian.domain.turn import (
     TurnRecord,
     TurnTrace,
 )
-from meridian.gates.gate import parse_intake
+from meridian.gates.gate import decide_gate, parse_intake
 from meridian.policy.limits import Limits
 from meridian.policy.texts import TextId, render
 from meridian.ports.runtime import Clock, TraceSink, UnitOfWork, UnitOfWorkFactory
@@ -71,6 +75,12 @@ _NOTICE_TEXT: Final[dict[str, TextId]] = {
     "RATE_LIMITED": TextId.RATE_LIMITED,
     "TURN_TIMEOUT": TextId.TURN_TIMEOUT,
 }
+# AEA-40-F1 (DO-4 section 11: "safety and CON-4 still work" at our cap). These gate kinds route to
+# safety -> compose with no model node. Decided with no conversation state: TurnService never reads it.
+_NO_MODEL_GATES: Final = frozenset({GateKind.SAFETY, GateKind.DANGER_RULE, GateKind.BURNING_ASK})
+_STATELESS_FLAGS: Final = GateFlags(
+    ai_paused=False, burning_card_id=None, code_card_open=False, open_task_ids=()
+)
 
 
 class RunTurn(MeridianModel):
@@ -141,6 +151,14 @@ def next_outcome(stored: str, trace_outcome: TurnOutcome, closed_every_open_task
 def reopened_outcome(stored: str) -> str | None:
     """A customer message reopens ai_resolved and abandoned; handed_off and safety_reply never reopen."""
     return "open" if stored in ("ai_resolved", "abandoned") else None
+
+
+def answered_without_model(intake: Intake) -> bool:
+    """True when the deterministic gates answer this turn with no model call, so our spend cap never refuses it."""
+    gate = decide_gate(intake, _STATELESS_FLAGS)
+    if gate.kind in _NO_MODEL_GATES:
+        return True
+    return gate.kind is GateKind.BURNING_ANSWER and gate.burning_answer in ("yes", "unsure")
 
 
 def _notice_parts(
@@ -315,11 +333,11 @@ class TurnService:
             self._slots.release()
 
     def _run(self, cmd: RunTurn, now: dt.datetime, mono_start: float) -> TurnResponse:
-        if not self._spend.allow_turn():
+        intake = parse_intake(cmd.payload)  # pure: a refused turn still stores nothing
+        if not answered_without_model(intake) and not self._spend.allow_turn():
             return self._reject(
                 cmd, code="SPEND_CAP_REACHED", reason="spend_cap", now=now, mono_start=mono_start
             )
-        intake = parse_intake(cmd.payload)
         ids = self._ids(cmd)
 
         # T1: running row + customer message + reopen + CON-21 event commit together or not at all.
