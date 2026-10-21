@@ -162,8 +162,30 @@ def register_storage(container: Container, app: FastAPI, *, settings: Any, limit
 def register_web(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-23 web shell: login routes, reset gate, rate limiter, public paths, web/deps.py bindings (web.md §1–§7).
 
-    No-op until AEA-23 fills it.
+    Binds the reset gate, the rate limiter, the one stream CapacityLimiter(4) and the wall clock create_app chose,
+    and registers the two public paths. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import anyio
+
+    from meridian.services.reset_gate import ResetGate
+    from meridian.web.deps import (
+        RATE_LIMITER,
+        RESET_GATE,
+        STREAM_POLL_LIMITER,
+        STREAM_POLL_THREADS,
+        WALL_CLOCK,
+    )
+    from meridian.web.middleware import RateLimiter, WebShellState
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    container.provide(RESET_GATE, lambda _c: ResetGate())
+    container.provide(RATE_LIMITER, lambda _c: RateLimiter(limits.web))
+    container.provide(STREAM_POLL_LIMITER, lambda _c: anyio.CapacityLimiter(STREAM_POLL_THREADS))
+    container.provide(WALL_CLOCK, lambda _c: shell.wall_clock)
+    shell.public_paths.add_exact("POST", "/api/login")
+    shell.public_paths.add_exact("GET", "/healthz")
 
 
 def register_ops(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
