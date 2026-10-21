@@ -128,7 +128,7 @@ Dockerfile, railway.json, scripts/    deployment
 ## Documents
 
 - Technical documentation: [`docs/technical-documentation.md`](docs/technical-documentation.md)
-- Deployment guide: `docs/deployment-guide.md` (`pending: AEA-54`)
+- Deployment guide: [`docs/deployment-guide.md`](docs/deployment-guide.md) (live URL `pending: AEA-56`)
 - Test results: `pending: Stage 9`
 - Submission checklist: [`SUBMISSION.md`](SUBMISSION.md)
 - The brief: [`docs/source/aea-call-center-briefing.md`](docs/source/aea-call-center-briefing.md)

@@ -253,7 +253,20 @@ adds none.
 
 ## Verification and evidence
 
-Commands and file paths are planned; their final names are set in the code design (DO-3).
+Commands and file names are final (AEA-24). Every run needs `MERIDIAN_EVAL_KEY`, `MERIDIAN_DEMO_USERNAME` and
+`MERIDIAN_DEMO_PASSWORD` in the environment (never on a command line); `--judge` also needs `ANTHROPIC_API_KEY`.
+
+- Freeze, once per scored run, on the commit being scored: `python -m eval.harness freeze` (writes the git-ignored
+  `eval/harness/freeze.json`; a run refuses with exit 3 when the file is missing or the harness source changed since).
+- Scored suites: `python -m eval.harness run --suite worked-pairs|e2e|load --split dev|held-out --repeats 3
+  --base-url URL [--db-copy PATH] [--heldout-key-dir PATH] [--experiment XP-N] [--judge] [--dry-run]`. `worked-pairs` takes
+  no split (dev cases only); `load` is dev only (`--conversations N`, default 20); `--experiment` is refused with
+  `--split held-out`; `--dry-run` plays canned replies and writes no report. Reports go to
+  `eval/reports/<run_id>.json` and `<run_id>.md` (load adds `<run_id>.client_side_turn_timings.jsonl`).
+- Retrieval: `python -m eval.run_retrieval --index-dir PATH`.
+- Exit codes: 0 completed, gates pass; 1 incomplete (no measure reported); 2 usage or configuration error (no request,
+  no report); 3 refused or failed (not frozen, tamper, held-out hash mismatch, spend preflight, login); 4 completed with
+  a failed hard gate or DB-copy finding; 5 a known secret was about to be written (that output is not written).
 
 | Suite | Command or procedure | Evidence a reviewer sees |
 |---|---|---|

@@ -1,23 +1,37 @@
 # Plan — [AEA-29] cases and handoff: case service, handoff service, brief
 
-**Status:** planned — **READY**, with two preconditions the orchestrator clears before the implementer starts (§9):
-the test-writer amends two frozen-test defects (F-1, F-2, §3d), and the implementer merges `main` into the AEA-29 branch
-(Step 0). AC-23 alone stays `blocked-on UX session: OpenAPI amendment`.
+**Status:** planned — **READY**. The test-writer's amendments F-1 and F-2 are committed (`8b646cc`). The implementer
+merges `main` into the AEA-29 branch again and finishes the uncommitted draft already in the worktree (Step 0, RF-25).
+AC-23 alone stays `blocked-on UX session: OpenAPI amendment`.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/29 (body identical to
 `docs/plans/tickets/AEA-29.md`; checked 2026-10-21, no comments) · **Wave:** 2 · **Lane:** build-loop · **Risk:**
 `risk::security` (frozen tests first; `security-privacy-agent` at the wave merge)
-**Base revision:** committed `main` `29ca543` (AEA-02, 02b, 03, 04, 05, 10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 26,
-31, 32, 33, 41, 42, 44, 46, 47, 48, 49, 57, 59 merged). The primary checkout is mid-merge of AEA-17 (staged files,
-conflict markers in its working copy of `area-map.md`); this plan was checked against `git show HEAD:<path>` only.
-**Frozen tests:** branch `aea-29-aea-29-cases-handoff` at `7c60f77` (worktree
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-29`), four files, written by `test-writer-agent` from the previous
-version of this plan. Read line by line for this refresh (§3d).
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (written 11:01 UTC, refreshed 12:30 UTC, refreshed again
-~16:00 UTC against `29ca543` and the frozen tests) · **Implementer:** fanout-implementer (Sonnet).
+**Base revision:** committed `main` `dd1b110`: the `29ca543` set (AEA-02, 02b, 03, 04, 05, 10, 11, 12, 13, 14, 15, 16,
+19, 20, 21, 22, 23, 26, 31, 32, 33, 41, 42, 44, 46, 47, 48, 49, 57, 59) plus AEA-17, 18, 27 and 28. The primary checkout
+is clean on `main`.
+**Frozen tests:** branch `aea-29-aea-29-cases-handoff` (worktree `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-29`):
+four files written by `test-writer-agent` at `7c60f77`, amended F-1/F-2 at `8b646cc`; the branch merged `main` at
+`0a85270` (merge commit `71554a5`). Read line by line (§3d).
+**Draft in the worktree:** uncommitted files from an earlier implementer run (newest 16:19 UTC): `container.py` modified,
+ten new files. Step 0 keeps them; RF-25.
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (written 11:01 UTC; refreshed 12:30, ~16:00 and ~16:30 UTC,
+the last against `dd1b110`, the amended frozen tests and the draft) · **Implementer:** fanout-implementer (Sonnet).
 
 ---
 
 ## Refresh log
+
+### Latest refresh (~16:30 UTC, `main` `dd1b110`)
+
+| # | Change | Evidence |
+|---|---|---|
+| RF-23 | **`main` moved `29ca543` → `dd1b110`: AEA-17, 18, 27, 28 merged.** None of them changes `domain/`, `ports/`, `policy/`, `web/deps.py`, `adapters/sqlite/{rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py` or the frozen files. The Step 0.4 import check, re-run on `dd1b110`, prints `ok`. `web/container.py` changed in `register_jev`, `register_identity` and `register_scheduling`, the three functions just above `register_cases`. | `git diff --stat 29ca543 main`; `git diff 0a85270 main -- src/meridian/web/container.py` |
+| RF-24 | **F-1 and F-2 are done** (`8b646cc`): `"promise.text"` is gone from `_DIFFERENCES`, and `guidance()` gives each reason its own passage id. The precondition is cleared. | `git show 8b646cc --stat` |
+| RF-25 | **An uncommitted draft exists in the worktree** from an earlier implementer run: `container.py` (the `register_cases` hunk, matching Step 9) and all ten new files of §2. It is the starting point: Step 0.3 keeps it across the merge, Step 0.5 reconciles it with this plan. Its `cases.py` is **799 lines**, over the 600-line service cap (RF-27). | `git -C …-wt/AEA-29 status --short`; `wc -l` |
+| RF-26 | **New lookup formats from AEA-27 and AEA-28.** `read_invoices` writes `"INV-204411 total $478.00 balance $478.00 lines …"`, `read_membership` `"membership tier plus renewal 2026-11-03"`, `read_warranty` `"warranty install 2019-04-01 brand …"`. AEA-28's scheduling tools write record ids with a prefix (`"appointment:4471"`, `"slot:88"`) and text such as `"booked slot:88"`. The old `^[0-9]+$` appointment rule missed them all. So: one classifier `record_kind` (Step 1.20), one title producer `row_title` (Step 1.21), and `parse_seen(result_seen, record_id=None)` reads the AEA-27 strings (Step 1.18). | `agent/tools/account.py` lines 126–133, 217–254; `agent/tools/scheduling.py` lines 266–270, 283, 308–312, 342–346, 388–392 |
+| RF-27 | **A third private module, `services/_case_actions.py`,** holds the bodies of `apply`, `set_followup` and `record_activity` as functions over the caller's unit of work. `CaseService` keeps thin wrappers that open the unit of work and commit only when the result is not a `CaseActionRejected`. That brings `cases.py` under 600 lines; no other ticket owns a `services/_case_*` path (slice plan §1, §3). | §4.2; Steps 7, 8 |
+| RF-28 | **No new consumer.** AEA-27 and AEA-28 neither import nor call `CaseService` / `HandoffService` (grep). AEA-27's staff notes reach the brief through the unchanged `AccountResult.staff_notes` type (`agent/tools/account.py` `staff_notes_for`), so Step 2's H3 path holds. | `grep -n "handoff\|open_case" src/meridian/services/{scheduling,identity}.py` → nothing |
+| RF-29 | **Sibling hunks now type the store key as `uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")`.** `deps.UOW_FACTORY` is the same key (equal by name), so Step 9 is unchanged. | `container.py` `register_identity` |
 
 ### Earlier refresh (12:30 UTC), still holds
 
@@ -28,7 +42,7 @@ texts missing from `policy/texts.py`; RF-8 one-shot import check in Step 0; RF-9
 re-verified on `29ca543` with an import check (every name in §4.1 resolves) and by reading `repos_cases.py`,
 `repos_cases_state.py`, `repos_core.py`, `repos_core_aux.py`, `rows.py`, `policy/handoff.py`, `policy/texts.py`.
 
-### This refresh (~16:00 UTC, `main` `29ca543`)
+### Previous refresh (~16:00 UTC, `main` `29ca543`), still holds unless RF-23…RF-29 say otherwise
 
 | # | Change | Evidence |
 |---|---|---|
@@ -69,8 +83,10 @@ This ticket builds the **services**: no route, no SQL, no model call. It also fi
   - `resolve_staff_guidance`: the pure prefix-to-passage resolver.
   - `CaseWriteFailed`.
 - `src/meridian/services/cases.py`: `CaseService` with every DO-4 §13 method, plus `CaseNotFound`.
-- Two private helper modules in the A6 area (old R-9): `services/_case_rules.py` (pure rules and display values) and
-  `services/_case_views.py` (turns rows into the `domain.views` types). Each file stays under the 600-line service cap.
+- Three private helper modules in the A6 area (old R-9, RF-27): `services/_case_rules.py` (pure rules and display values),
+  `services/_case_views.py` (turns rows into the `domain.views` types) and `services/_case_actions.py` (the staff write
+  bodies of `apply`, `set_followup` and `record_activity`, over the caller's unit of work). Each file stays under the
+  600-line service cap.
 - `src/meridian/web/container.py`: the `register_cases` hunk only.
 
 **Concretely (the worked pair WP-7, demo clock Fri 2026-10-16 10:00 Chicago, nobody online):**
@@ -132,6 +148,7 @@ Decisions D-4…D-15 are all taken as recommended (`docs/plans/stage7-signoff.md
 | `src/meridian/services/handoff.py` | create | implementer (Steps 2, 4) |
 | `src/meridian/services/cases.py` | create | implementer (Steps 3, 5, 6, 7, 8) |
 | `src/meridian/services/_case_views.py` | create | implementer (Step 6) |
+| `src/meridian/services/_case_actions.py` | create | implementer (Steps 7, 8) |
 | `src/meridian/web/container.py` | modify: **the `register_cases` function only** (docstring and body) | implementer (Step 9) |
 | `tests/services/_case_fixtures.py` | exists (frozen); amendment F-2 by the **test-writer** | test-writer |
 | `tests/services/_allowed_actions_table.py` | exists (frozen) | test-writer |
@@ -241,7 +258,7 @@ it yourself.
 | O-19 | No `Promise(` constructor in `src/meridian/services/` | graph-core §10 (GRC-2) | in-ticket; grep gate | §7 |
 | O-20 | No `import sqlite3`, no SQL in `services/` | DO-3 §2.1 | in-ticket; grep gate | §7 |
 | O-21 | AEA-31's seed calls `BriefAssembler()` then `assemble` / `attach_extraction(brief, extraction, None)` on every first boot | `container.py` `register_reset`; `services/reset.py` `seed_demo` | in-ticket: defaults keep both calls valid; TK proves the real seed assembles | 2, 10 |
-| O-22 | `result_seen` comes in three formats | RF-15 | `parse_seen` | 1 |
+| O-22 | `result_seen` comes in several formats, and record ids may carry a prefix | RF-15, RF-26 | `parse_seen(result_seen, record_id)`, `record_kind`, `row_title` | 1, 6 |
 | O-23 | The case view's identity reads verified for a case opened by a verified customer | RF-16 | `identity_view(identity, case_customer=…)` | 1, 6 |
 
 ### 3c. Entry-point registration
@@ -303,7 +320,7 @@ everything else.
 
 ## 4. Shared code to use
 
-### 4.1 Imports (all verified on `29ca543` with one import check; Step 0.4 repeats it)
+### 4.1 Imports (all verified on `dd1b110` with one import check, ~16:30 UTC; Step 0.4 repeats it)
 
 | Name | Module | Used in |
 |---|---|---|
@@ -531,11 +548,32 @@ def promise_status_after_resolve(promise_due: dt.datetime | None, now: dt.dateti
 def promise_status_after_activity(outcome: str, promise_due: dt.datetime | None, now: dt.datetime, current: str) -> str: ...
 def fill_promise_text(promise: Promise, case_ref: str) -> str: ...
 def mask(text: str) -> str: ...
-def parse_seen(result_seen: str) -> dict[str, JsonValue]: ...
+def parse_seen(result_seen: str, record_id: str | None = None) -> dict[str, JsonValue]: ...
+RecordKind: TypeAlias = Literal["invoice", "customer", "appointment", "slot"]
+def record_kind(record_id: str) -> tuple[RecordKind, str] | None: ...
+def row_title(row: LookupRow) -> str: ...
 def staffing_view(mode: str) -> StaffingView: ...
 ```
 
 **`src/meridian/services/_case_views.py`**: private builders that only `cases.py` calls (Step 6 lists them).
+
+**`src/meridian/services/_case_actions.py`** (RF-27): private; the staff write bodies, each over the caller's unit of
+work and **never committing**. `CaseService` opens `with self._uow(write=True) as tx:`, calls one of these, calls
+`tx.commit()` only when the result is not a `CaseActionRejected`, and returns the result. So every rejection rolls back,
+including one found after a first write (`record_activity`'s activity row).
+
+```python
+def apply_in(tx: UnitOfWork, case_ref: CaseRef, action: CaseAction, actor: StaffActor, expected_version: int,
+             now: dt.datetime) -> CaseSummaryView | CaseActionRejected: ...          # Step 7
+def set_followup_in(tx: UnitOfWork, thread_id: ThreadId, choice: FollowUpChoice,
+                    now: dt.datetime) -> FollowUp | CaseActionRejected: ...           # Step 8
+def record_activity_in(tx: UnitOfWork, case_ref: CaseRef, activity: ActivityIn, actor: StaffActor,
+                       now: dt.datetime) -> ActivityResult | CaseActionRejected: ...  # Step 8
+def version_conflict(tx: UnitOfWork, row: CaseRow) -> CaseActionRejected: ...          # Step 7.4, shared by both
+```
+
+It imports `_case_rules` and `_case_views` (for `summary_view`, `live_state_of`); `cases.py` imports it. Nothing outside
+`services/cases.py` imports any `_case_*` module (tests excepted).
 
 ---
 
@@ -560,14 +598,25 @@ Every file:
 
 1. Work in `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-29` (branch `aea-29-aea-29-cases-handoff`).
    `export UV_LINK_MODE=hardlink`; never copy a venv; no `node_modules`; check `df -h /home` first (stop if under 4 GB free).
-2. `git log --oneline -5` shows the test-writer's amendment commit for **F-1 and F-2** on top of `7c60f77`. Then confirm:
+2. Frozen amendments F-1 and F-2 are committed (`8b646cc`, RF-24). Confirm:
    - `grep -n '"promise.text"' tests/services/test_cases.py` prints nothing;
-   - `grep -n 'agent_discretion_notes.md#3"' tests/services/_case_fixtures.py` prints nothing.
+   - `grep -c 'agent_discretion_notes.md#3"' tests/services/_case_fixtures.py` prints `0`.
 
    If either fails, stop and report `blocked-on test-writer amendment F-1/F-2`.
-3. `git merge --no-edit main`. It must bring in `src/meridian/domain/views.py`, `agent/nodes/compose.py` and
-   `services/reset.py`. The frozen files are new paths, so no conflict is expected; a conflict anywhere is a stop.
-   Then `uv sync`.
+3. Keep the draft across a second merge of `main` (RF-23, RF-25):
+   1. `git status --short` must list exactly ` M src/meridian/web/container.py` plus these ten untracked paths:
+      `src/meridian/services/{_case_rules,_case_views,cases,handoff}.py`, `tests/journeys/j6/test_aea_29.py`,
+      `tests/journeys/j7/test_aea_29.py`, `tests/services/test_cases_contract.py`,
+      `tests/unit/services/test_brief_assembler.py`, `tests/unit/services/test_case_rules.py`,
+      `tests/unit/web/test_register_cases.py`. Any other entry (above all a modified frozen file) is a stop: report it.
+   2. `git stash push -m "AEA-29 draft register_cases" -- src/meridian/web/container.py`.
+   3. `git merge --no-edit main`. It brings AEA-18, 27 and 28. The ten draft files are new paths, so the merge does not
+      touch them. A conflict is a stop.
+   4. `git stash pop`. If `container.py` conflicts, take `main`'s text everywhere except inside `def register_cases`, and
+      the stash's text inside it. Then run `git restore --staged src/meridian/web/container.py` and `git stash drop`.
+      Without a conflict, `git stash pop` drops the stash itself.
+   5. Check: `git diff HEAD -- src/meridian/web/container.py` changes lines inside `def register_cases` only.
+   6. `uv sync`.
 4. Prove every import in one command (it must print `ok`):
    ```bash
    uv run python -c "
@@ -601,8 +650,13 @@ Every file:
    print('ok')"
    ```
    If a name is missing, stop and report `blocked-on <owner>`. Never define it here.
-5. Red check: `uv run pytest tests/services/test_handoff.py tests/services/test_cases.py -q` fails at collection with
-   `ModuleNotFoundError: No module named 'meridian.services…'`. Anything else is a stop.
+5. **The draft is the starting point, not a result** (RF-25). Before running anything, read each draft file against this
+   plan, step by step, and change what differs. Keep what matches. Known differences:
+   - `parse_seen`, `record_kind` and `row_title` (RF-26; Steps 1.18, 1.20, 1.21, 2.3, 6.6);
+   - the `_case_actions.py` split (RF-27; §4.2, Steps 7, 8);
+   - file sizes (gate H2: the draft's `cases.py` is 799 lines).
+
+   Do not re-prove the frozen tests red; the test-writer did that at `7c60f77` and `8b646cc`.
 
 ### Step 1 — `services/_case_rules.py`, then `tests/unit/services/test_case_rules.py`
 
@@ -746,18 +800,50 @@ oversight lanes, labels, masking. No I/O and no clock read; every time is an arg
     placeholders. *Invariant:* the words are the table's.
 18. `mask(text)` → `redact(text, RedactionProfile.SONNET).text`.
 
-    `parse_seen(result_seen)` (RF-15):
+    `parse_seen(result_seen, record_id=None)` (RF-15, RF-26). The first rule that matches wins:
     1. `s = result_seen.strip()`.
     2. If `s.startswith("{")`, try `json.loads(s)`; when that gives a `dict`, return it.
-    3. Otherwise `pairs = re.findall(r"([A-Za-z_][A-Za-z0-9_]*)=([^\s;,]+)", s)`. When `pairs` is non-empty, return
-       `{k: int(v) if re.fullmatch(r"-?[0-9]+", v) else v for k, v in pairs}`.
-    4. Otherwise return `{"seen": s}`.
+    3. AEA-27 invoices (`"INV-204411 total $478.00 balance $478.00 lines $144.00 / $334.00; INV-…"`): when `record_id`
+       matches `^INV-[0-9]{6}$` and `m = re.search(re.escape(record_id) + r" total (-?\$[0-9,]+\.[0-9]{2}) balance (-?\$[0-9,]+\.[0-9]{2})", s)`
+       is set, return `{"amount_cents": _cents(m[1]), "balance_cents": _cents(m[2])}`. Private `_cents(text)`: remove
+       `-`, `$`, `,` and `.`, take `int(...)`, negate when `text` starts with `-` (`"$1,234.56"` → `123456`, `"-$5.00"` →
+       `-500`). The invoice "total" is `invoices.amount_cents` (`repos_identity._view`).
+    4. AEA-27 membership: `m = re.fullmatch(r"membership tier (\S+) renewal (\S+)", s)` → `{"membership_tier": m[1],
+       "membership_renewal_date": None if m[2] == "none" else m[2]}`.
+    5. AEA-27 warranty: `m = re.fullmatch(r"warranty install (\S+)(?: brand (.+))?", s)` → `{"system_install_date": None
+       if m[1] == "none" else m[1]}`, plus `"system_brand": None if m[2] == "none" else m[2]` when `m[2] is not None`.
+    6. `pairs = re.findall(r"([A-Za-z_][A-Za-z0-9_]*)=([^\s;,]+)", s)`. When `pairs` is non-empty, return
+       `{k: int(v) if re.fullmatch(r"-?[0-9]+", v) else v for k, v in pairs}` (AEA-31's seed, kb_search).
+    7. Otherwise return `{"seen": s}` (AEA-28's `booked slot:88`, `out_of_area:…`, `slot_taken:…` and the rest).
+
+    *Invariant:* a format nobody parses gives `{"seen": …}`, whose key no `current` has, so `changed_since` reads `False`;
+    it never invents a change.
 19. `staffing_view(mode)`:
     - `nobody_online` → `StaffingView(mode=mode, label="Nobody online", banner=None)`;
     - `simulated_on_shift` → `StaffingView(mode=mode, label="Simulated staff on shift (demo)",
       banner=TEXTS[TextId.STAFFING_BANNER])`.
 
     [OpenAPI `Staffing` examples]
+
+20. `RecordKind` and `record_kind(record_id)` (RF-26): the one classifier of a `lookup_log.record_ids` entry. The first
+    rule that matches wins:
+    - `^INV-[0-9]{6}$` → `("invoice", record_id)`;
+    - `^MHC-[0-9]{5}$` → `("customer", record_id)`;
+    - `^(?:appointment:)?([0-9]+)$` → `("appointment", <the digits>)`. AEA-28 writes `appointment:N`; older rows and
+      AEA-31's seed write `N`;
+    - `^slot:([0-9]+)$` → `("slot", <the digits>)`;
+    - otherwise `None`.
+21. `row_title(row)`: the one producer of a lookup's display title, used by brief H5 ("Looked up …") and by
+    `CaseSource.title`. With `k = record_kind(row.record_ids[0]) if row.record_ids else None`:
+    - invoice → `f"Invoice {id}"`;
+    - customer → `"Warranty record"` when `row.tool == "read_warranty"`, otherwise `"Membership record"`;
+    - appointment → `f"Appointment {n}"`;
+    - slot → `"Open visit windows"` when `row.tool == "find_windows"`, otherwise `f"Visit window {n}"`;
+    - no kind, but passages → `row.passage_ids[0].split("#")[0]`;
+    - otherwise `row.tool`.
+
+    The tool names are string literals here, each with a comment naming `agent/tools/account.py` or
+    `agent/tools/scheduling.py` (`services/` never imports `agent/`).
 
 Write `tests/unit/services/test_case_rules.py` (§7.2) and run it (§7.3 A).
 
@@ -808,12 +894,7 @@ start-up fails (cases §5).
      Use `.get("appointment", "")`, and skip an item whose record is missing. Kind `ai_action`; source
      `SourceRef(kind="action", ref=f"{a.kind.value}:{a.key.record_id}")`.
    - Then, for each usable row whose `tool != "staff_guidance"`: an `ai_action` item `f"Looked up {row_title(row)}."`,
-     sourced on the row. `row_title` is a private function **in `_case_rules.py`**, shared with Step 6:
-     - first record id matching `^INV-[0-9]{6}$` → `f"Invoice {rid}"`;
-     - `^MHC-[0-9]{5}$` → `"Membership record"`;
-     - `^[0-9]+$` → `f"Appointment {rid}"`;
-     - otherwise, with passages, the file part of the first passage id (`pid.split("#")[0]`);
-     - otherwise `row.tool`.
+     sourced on the row. `row_title` is Step 1.21's, shared with Step 6 (RF-26).
 4. **H6 told** (state; the only producer of promise words, AC-5): when `case.promise.text != ""`, one `told_customer`
    item `fill_promise_text(case.promise, str(case.case_ref))`, then one `told_customer` item per `extra_lines` entry.
    Each has source `SourceRef(kind="policy_row", ref=case.promise.policy_row)`. Safety (`text == ""`) gives no items.
@@ -1057,21 +1138,25 @@ All three open **one read-only** unit of work (`with self._uow() as tx:`) and re
        or `{"passage_id": str(r.passage_ids[0])}` when no brief item cites it;
      - `current = snapshot`, `changed_since=False`, `changed_note="No change since the snapshot"`,
        `current_unavailable=False`.
-   - Otherwise `audience="customer"`, `snapshot = parse_seen(r.result_seen)`, `rid = r.record_ids[0] if r.record_ids
-     else None`:
-     - `rid` matches `^INV-[0-9]{6}$` → `inv = tx.core.reads.invoice(InvoiceId(rid))`; `title=f"Invoice {rid}"`,
-       `ref=f"invoices/{rid}"`; `current = None if inv is None else {"amount_cents": inv.amount_cents,
-       "balance_cents": inv.balance_cents, "issued_date": inv.issued_date.isoformat(), "due_date":
-       inv.due_date.isoformat(), "appointment_id": inv.appointment_id}`.
-     - `^MHC-[0-9]{5}$` → `c = tx.core.reads.customer(CustomerId(rid))`; `title="Membership record"`,
-       `ref=f"customers/{rid}"`; `current = None if c is None else {"membership_tier": c.membership_tier,
-       "membership_renewal_date": c.membership_renewal_date.isoformat() if c.membership_renewal_date else None}`.
-       **Never** name, phone, email or address (AC-13).
-     - `^[0-9]+$` → `a = tx.core.reads.appointment(int(rid))`; `title=f"Appointment {rid}"`, `ref=f"appointments/{rid}"`;
+   - Otherwise `audience="customer"`. Set `rid = r.record_ids[0] if r.record_ids else None`,
+     `kind = record_kind(rid) if rid else None`, `snapshot = parse_seen(r.result_seen, record_id=rid)` and
+     `title = row_title(r)` (RF-26; the same words as the brief's "Looked up …" item). Then, by `kind`:
+     - invoice → `inv = tx.core.reads.invoice(InvoiceId(rid))`; `ref=f"invoices/{rid}"`; `current = None if inv is None
+       else {"amount_cents": inv.amount_cents, "balance_cents": inv.balance_cents, "issued_date":
+       inv.issued_date.isoformat(), "due_date": inv.due_date.isoformat(), "appointment_id": inv.appointment_id}`.
+     - customer, with `r.tool == "read_warranty"` → `c = tx.core.reads.customer(CustomerId(rid))`;
+       `ref=f"customers/{rid}#warranty"`; `current = None if c is None else {"system_install_date":
+       c.system_install_date.isoformat() if c.system_install_date else None, "system_brand": c.system_brand[:40] if
+       c.system_brand else None}`.
+     - customer, any other tool → `c` as above; `ref=f"customers/{rid}"`; `current = None if c is None else
+       {"membership_tier": c.membership_tier, "membership_renewal_date": c.membership_renewal_date.isoformat() if
+       c.membership_renewal_date else None}`. **Never** name, phone, email or address (AC-13).
+     - appointment with number `n` → `a = tx.core.reads.appointment(int(n))`; `ref=f"appointments/{n}"`;
        `current = None if a is None else {"slot_date": a.slot_date.isoformat(), "window": a.window, "status":
        a.status, "service_type": a.service_type, "technician": a.technician}`.
-     - No record id but passages → `title = ref = r.passage_ids[0].split("#")[0]`; `current=None`.
-     - Neither → `title = ref = r.tool`; `current=None`.
+     - slot with number `n` → `ref=f"slots/{n}"`; `current=None` (`core.reads` has no slot read).
+     - no kind, but passages → `ref = r.passage_ids[0].split("#")[0]`; `current=None`.
+     - neither → `ref = r.tool`; `current=None`.
      - Version fields: records get `version_date=None` and `version_label="live record"`. Passages get
        `version_label = snapshot["version_label"]` when it is a `str`, otherwise `"undated"`, and `version_date` =
        `dt.date.fromisoformat(snapshot["version_date"])` when that parses, otherwise `None`.
@@ -1144,8 +1229,10 @@ All three open **one read-only** unit of work (`with self._uow() as tx:`) and re
 
 ### Step 7 — `apply(case_ref, action, actor, expected_version, now)` (AC-9, AC-10, AC-18)
 
-One `with self._uow(write=True) as tx:`. **Every rejection returns without `tx.commit()`**: the exit rolls back and
-nothing changes. **The `expected_version` parameter decides; `action.expected_version` is ignored.** Check in this order:
+The body is `_case_actions.apply_in(tx, …)` (RF-27). `CaseService.apply` is the wrapper of §4.2: one
+`with self._uow(write=True) as tx:`, then `result = apply_in(...)`, `tx.commit()` only when `result` is not a
+`CaseActionRejected`, then `return result`. **A rejection therefore never commits**: the exit rolls back and nothing
+changes. **The `expected_version` parameter decides; `action.expected_version` is ignored.** Check in this order:
 
 1. `row = tx.cases.cases.get(case_ref)`; `None` → `CaseActionRejected(code=CASE_NOT_FOUND, details={"reference":
    str(case_ref)})`.
@@ -1183,14 +1270,17 @@ nothing changes. **The `expected_version` parameter decides; `action.expected_ve
    - `"promise_status_to": new`.
 9. Append `StreamEvent(type="case_changed", payload={"version": v, "lifecycle": <new lifecycle>}, at=now)` to
    `case_stream(case_ref)`.
-10. Re-read the row; build `summary_view(tx, row, actor.role, staffing, now)`; `tx.commit()`; return it.
+10. Re-read the row; build and return `summary_view(tx, row, actor.role, staffing, now)`. The wrapper commits.
 
 *Protects:* listed ⇔ accepted (Step 1.2–1.5); one `case_event` per change with the actor role; version + 1; ownership
 stored as a role and rendered through `STAFF_PERSONAS`.
 
 ### Step 8 — `set_followup` and `record_activity` (AC-12, AC-13, AC-14, AC-10)
 
-**`set_followup(thread_id, choice, now)`**, in one write unit of work:
+Both bodies live in `_case_actions.py` (`set_followup_in`, `record_activity_in`) behind the same kind of wrapper as
+Step 7: the wrapper opens the write unit of work and commits only a non-rejection (RF-27).
+
+**`set_followup(thread_id, choice, now)`**:
 
 1. `row = tx.cases.cases.get_for_thread_open(thread_id)`; `None` → `CaseActionRejected(code=NOT_ALLOWED_IN_STATE,
    details={"state": "no_open_case"})`.
@@ -1209,10 +1299,10 @@ stored as a role and rendered through `STAFF_PERSONAS`.
    window=choice.window, saved_line=saved_line, updated_at=now))`. **`destination` stores the choice word
    (`on_record` / `general`), never the phone or email** (AC-13).
 5. Append one `CaseEventRow(case_ref=row.case_ref, kind="followup_saved", actor_role="system", detail={"channel":
-   choice.channel, "on_record": …, "window": choice.window}, at=now)`. No version change. `tx.commit()`.
+   choice.channel, "on_record": …, "window": choice.window}, at=now)`. No version change. The wrapper commits.
 6. Return `FollowUp(channel=..., destination_label=..., on_record=..., window=..., saved_line=...)`.
 
-**`record_activity(case_ref, activity, actor, now)`**, in one write unit of work:
+**`record_activity(case_ref, activity, actor, now)`**:
 
 1. Checks, in order:
    - Unknown case → `CASE_NOT_FOUND`.
@@ -1236,7 +1326,8 @@ stored as a role and rendered through `STAFF_PERSONAS`.
    - Append `case_changed` to the case stream.
 5. Return `ActivityResult(activity=Activity(activity_id=f"act-{aid}", kind=…, outcome=…, note=<masked note>, at=now,
    by=actor.signature, label="Demo: recorded, not sent"), case=summary_view(tx, <re-read row>, actor.role, staffing,
-   now))` after `tx.commit()`.
+   now))`. The wrapper commits. Every earlier rejection (including `VERSION_CONFLICT` after the activity insert) returns a
+   `CaseActionRejected`, so the wrapper rolls the activity row back.
 
 *Protects:* R-34. The label is on every activity, and no "sent you", "emailed you" or "called you" wording appears.
 
@@ -1351,7 +1442,10 @@ AEA-52 (integrated staff side)."
    - `customer_id` only when verified, and the case view's verified rule (O-14, RF-16);
    - `CaseWriteFailed`;
    - `resolve_staff_guidance` and the missing-file behaviour (O-16);
-   - email/general follow-up blocked on the AEA-03 follow-up (O-15).
+   - email/general follow-up blocked on the AEA-03 follow-up (O-15);
+   - the `lookup_log` formats `parse_seen` reads, the `record_kind` classifier, and the gap: no shared structured
+     `result_seen` format across tools, no slot read for `current` (RF-26, R-20);
+   - the private module split `_case_rules.py` / `_case_views.py` / `_case_actions.py` (RF-27).
 
    Edit nothing else in the file.
 6. Run `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` and fix any FAIL in the files you own.
@@ -1360,7 +1454,7 @@ AEA-52 (integrated staff side)."
 
 1. Run §7.3 A–H in order. Stop at the first red and fix only owned files.
 2. Commit 1 (code and implementer tests):
-   - `git add src/meridian/services/_case_rules.py src/meridian/services/_case_views.py src/meridian/services/cases.py
+   - `git add src/meridian/services/_case_rules.py src/meridian/services/_case_views.py src/meridian/services/_case_actions.py src/meridian/services/cases.py
      src/meridian/services/handoff.py src/meridian/web/container.py tests/services/test_cases_contract.py
      tests/unit/services/test_case_rules.py tests/unit/services/test_brief_assembler.py
      tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py`.
@@ -1432,7 +1526,22 @@ stays skipped (AC-23).
   - `'{"amount_cents": 47800}'` → that dict;
   - `"INV-204411 amount_cents=47800 balance_cents=47800"` → `{"amount_cents": 47800, "balance_cents": 47800}`;
   - `"below_floor=false; faq/x.md#3=0.812"` → `{"below_floor": "false"}`;
-  - `"no pairs here"` → `{"seen": "no pairs here"}`.
+  - `"no pairs here"` → `{"seen": "no pairs here"}`;
+  - `"INV-204411 total $478.00 balance $478.00 lines $144.00 / $334.00"` with `record_id="INV-204411"` →
+    `{"amount_cents": 47800, "balance_cents": 47800}`; the same string with `record_id=None` → `{"seen": …}`
+    (no `k=v` pair in it); a `"-$5.00"` balance → `-500`;
+  - `"membership tier plus renewal 2026-11-03"` → `{"membership_tier": "plus", "membership_renewal_date":
+    "2026-11-03"}`; `"membership tier none renewal none"` → `{"membership_tier": "none", "membership_renewal_date":
+    None}`;
+  - `"warranty install none"` → `{"system_install_date": None}`;
+  - `"booked slot:88"` → `{"seen": "booked slot:88"}`.
+- `test_record_kind_and_row_title` (RF-26):
+  - `record_kind` of `"INV-204411"`, `"MHC-10002"`, `"4471"`, `"appointment:4471"`, `"slot:88"`, `"faq/x.md"` →
+    `("invoice", "INV-204411")`, `("customer", "MHC-10002")`, `("appointment", "4471")` twice, `("slot", "88")`, `None`;
+  - `row_title` (rows built with `LookupRow.model_validate`): `read_invoices` on `INV-204411` → "Invoice INV-204411";
+    `read_warranty` on `MHC-10002` → "Warranty record"; `read_membership` on it → "Membership record"; `move_visit` on
+    `("appointment:4471", "slot:88")` → "Appointment 4471"; `find_windows` on `("slot:88",)` → "Open visit windows";
+    `kb_search` with passage `faq/x.md#3` and no record → "faq/x.md".
 - `test_mask_removes_contacts`: MHC-10002's phone and email, read at run time through `temp_sqlite()`, are absent after
   `mask`, and "[phone ending" is present.
 - `test_staffing_view_labels`: both modes, with the label, and the banner `TEXTS[TextId.STAFFING_BANNER]` / `None`.
@@ -1546,7 +1655,7 @@ container settings are `types.SimpleNamespace(index_dir=<dir>)`):
 
 ### 7.3 Commands (in the worktree; `export UV_LINK_MODE=hardlink` first; cheapest first; stop at the first red)
 
-Owned Python files: `F="src/meridian/services/_case_rules.py src/meridian/services/_case_views.py
+Owned Python files: `F="src/meridian/services/_case_rules.py src/meridian/services/_case_views.py src/meridian/services/_case_actions.py
 src/meridian/services/cases.py src/meridian/services/handoff.py src/meridian/web/container.py
 tests/services/test_cases_contract.py tests/unit/services/test_case_rules.py tests/unit/services/test_brief_assembler.py
 tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py"`.
@@ -1560,7 +1669,8 @@ tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/jou
 | E | Journeys | `uv run pytest -m journey tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py -q`, then `uv run python -m tests.journeys.affected --base main` (any change under `tests/journeys/` selects every journey) | 2 passed; the affected run is green, skips only with "blocked" / "not bound" / "route not registered" reasons |
 | F | Contract boundary | `uv run pytest tests/contract -q` | as green as on `main`; no new failure; skips only with "not bound" / "route not registered" reasons (the seed now satisfies `seeded_case_ref`) |
 | G | Full suite, once before the final commit | `uv run --with pytest-xdist pytest -n 2 -q` | green. **Why the full suite** (rule `build-loop-test-scope`, "code reached by everything"): `register_cases` now builds at every app start, and `register_reset`'s first-boot seed now runs this ticket's `BriefAssembler` at every real app start (RF-17). A failure that does not reproduce when its node id is re-run serially (`uv run pytest <nodeid>`) is reported with both results |
-| H | Collect + greps | `uv run pytest --collect-only -q >/dev/null`; `grep -n "Promise(" src/meridian/services/{cases,handoff,_case_rules,_case_views}.py` → nothing; `grep -nE "import sqlite3\|\.execute\(" src/meridian/services/{cases,handoff,_case_rules,_case_views}.py` → nothing; `grep -nE "meridian\.(agent\|web)" src/meridian/services/{cases,handoff,_case_rules,_case_views}.py` → nothing; `grep -rnE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|@[a-z]+\.(com\|org\|net)" tests/services/test_cases_contract.py tests/unit/services tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py` → nothing | as stated |
+| H | Collect + greps | `uv run pytest --collect-only -q >/dev/null`; `grep -n "Promise(" src/meridian/services/{cases,handoff,_case_rules,_case_views,_case_actions}.py` → nothing; `grep -nE "import sqlite3\|\.execute\(" src/meridian/services/{cases,handoff,_case_rules,_case_views,_case_actions}.py` → nothing; `grep -nE "meridian\.(agent\|web)" src/meridian/services/{cases,handoff,_case_rules,_case_views,_case_actions}.py` → nothing; `grep -rnE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|@[a-z]+\.(com\|org\|net)" tests/services/test_cases_contract.py tests/unit/services tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py` → nothing | as stated |
+| H2 | File sizes | `wc -l src/meridian/services/{cases,handoff,_case_rules,_case_views,_case_actions}.py tests/services/test_cases_contract.py tests/unit/services/test_case_rules.py tests/unit/services/test_brief_assembler.py tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py` | each service file ≤ 600 lines, each test file ≤ 500 (`code-structure.md`); the frozen `test_cases.py` (R-17) is exempt |
 
 **Existing tests that must stay green:**
 - `tests/unit/web/test_container.py` (unchanged file; the filled hunk is skipped by its docstring rule);
@@ -1605,7 +1715,9 @@ tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/jou
   `status = 'open'`, so it never marks a `changed` promise missed. **Note for AEA-30 / AEA-53 (M-13):** include
   `changed` where "open promise" is meant, or accept the rule as written.
 - **R-8 `_PresenceSource`** is a private typing `Protocol` (no runtime seam).
-- **R-9 Two private modules** keep each file under the 600-line cap; they are not new seams.
+- **R-9 Three private modules** (`_case_rules.py`, `_case_views.py`, `_case_actions.py`) keep each file under the
+  600-line cap; none is a new seam. `_case_actions.py` is new in this refresh (RF-27). No other ticket owns a
+  `services/_case_*` path (slice plan §1, collision map §3); the orchestrator's overlap check should see it listed.
 - **R-10 CON-4 cases have no brief** (D-9): `brief_status` stays `being_written`.
 - **R-11 Staff copy owned here** (reason labels, identity lines, `TRIM_NOTE`, "No name given", "System", "Agent
   discretion notes", "No account match needed for safety."). All of it is in `_case_rules.py`; the UX session may revise
@@ -1629,6 +1741,17 @@ tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/jou
 - **R-18 AC-23** waits for the UX session's OpenAPI amendment and an AEA-02b follow-up adding `events` to
   `views.CaseDetail`. Then one step here: read `tx.core.events.latest_id(case_stream(ref))` inside `detail`'s unit of
   work, and un-skip the frozen test (test-writer).
+- **R-19 Two writers in one worktree.** The draft in `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-29` came
+  from an earlier implementer run (uncommitted; newest file 16:19 UTC). **The orchestrator confirms that run has ended**
+  before dispatching the implementer on this plan. Two agents editing the same worktree would overwrite each other.
+- **R-20 Lookup formats belong to other tickets.** AEA-27 (`agent/tools/account.py`), AEA-28 (`agent/tools/scheduling.py`),
+  AEA-31 (seed) and the kb tool each write their own `result_seen` text. `parse_seen` reads today's strings. If one
+  changes, `changed_since` falls back to `False` (never a false "changed"). **Request (orchestrator, follow-up, not
+  blocking):** one structured `result_seen` (JSON) across the tools; recorded in cases §5a. Slots have no `current`
+  read, so their sources show `current_unavailable=True`.
+- **R-21 Merge order.** This ticket's blockers (AEA-10, 11, 14, 16) are all merged. Its consumers reach it by injection
+  with doubles, so it waits on none of them. At a wave merge, the only textual overlap is the shared context lines (R-12)
+  with AEA-30 and AEA-31, and `web/container.py`, where each ticket edits its own `register_*` function.
 - **No signed-contract change and no D-4…D-15 reversal.** Nothing here edits the OpenAPI, `UI_CONTRACTS.md` or
   `docs/ux/**`.
 
@@ -1636,12 +1759,13 @@ tests/unit/web/test_register_cases.py tests/journeys/j6/test_aea_29.py tests/jou
 
 ## 9. Readiness
 
-**READY.** Every import this ticket needs is on `main` `29ca543`. Two preconditions come before the implementer starts:
+**READY.** Every import this ticket needs is on `main` `dd1b110` (import check re-run ~16:30 UTC: `ok`).
 
 | Precondition | Who | Check |
 |---|---|---|
-| Test-writer amendment **F-1** (`_DIFFERENCES` drops `"promise.text"`) and **F-2** (distinct passage id per reason in `guidance()`), committed on `aea-29-aea-29-cases-handoff` with a refreshed frozen-test manifest | orchestrator → `test-writer-agent` | Step 0.2 greps |
-| `git merge --no-edit main` into the AEA-29 branch (brings AEA-02b, AEA-21, AEA-31 code) | implementer, Step 0.3 | the Step 0.4 import check prints `ok` |
+| Test-writer amendment **F-1** and **F-2** committed on `aea-29-aea-29-cases-handoff` | test-writer | **cleared** (`8b646cc`); Step 0.2 greps |
+| The earlier implementer run in the AEA-29 worktree has ended (R-19) | orchestrator | no agent is writing in the worktree |
+| `git merge --no-edit main` into the AEA-29 branch again (AEA-18, 27, 28), with the draft's `container.py` hunk stashed around it | implementer, Step 0.3 | the Step 0.4 import check prints `ok` |
 
 Evidence-level only (not merge blockers):
 - AEA-30, AEA-45 and AEA-52 for AC-22's integrated level;
