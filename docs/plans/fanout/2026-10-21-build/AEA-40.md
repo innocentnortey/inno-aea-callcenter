@@ -1,43 +1,75 @@
 # Plan — [AEA-40] customer API: sessions and turns (CON-1, CON-2)
 
-**Status:** planned — **READY** (both parts). Refreshed again 2026-10-21 against `main` at **`2ec19ad`**. The only
-commit since the previous base `b559c75` is `2ec19ad` (docs: `docs/plans/fanout/2026-10-21-build/AEA-29.md`), so every
-signature, import and line number below still holds. Part B's two old blockers are on `main`: AEA-02b
-(`meridian.domain.views.ClockView` / `StaffingView`, merge `5305d57`) and AEA-03b (`TextId.HISTORY_CODE_ENTERED` /
-`HISTORY_DETAILS_SENT`, merge `19e046b`). AEA-30 and AEA-51 are still **not** on `main` (ledger rows `ready`).
+**Status:** planned — **READY** (finish-up run). Third refresh, 2026-10-21 about 17:45 UTC, against `main` at
+**`c9b17ea`** and the branch at **`5a4cdf0`**. Everything in §4 was re-checked: `main` changed none of the modules this
+ticket imports since the branch's merge base `b559c75`.
 **Issue:** GitLab `innocentnortey/inno-aea-callcenter` #40 (= `docs/plans/tickets/AEA-40.md`) · **Base revision:**
-`2ec19ad` (main).
-**Branch already in flight (continue it, do not restart):** `aea-40-aea-40-sessions-turns` at **`6891c3c`**, worktree
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-40`. It holds the frozen tests (`61d5bd8`, test-writer), Part A
-code (`d7fb642`), Part A docs (`f8d3355`) and **Step 0's merge of `b559c75` (`6891c3c`, done)**. Its merge base with
-`main` is `b559c75`.
-**Uncommitted work in that worktree at refresh time (an implementer run in progress; keep it, never discard it):**
-- `src/meridian/services/session.py` (new, 344 lines): a Part B draft with §4.6's names (`GREETING_TURN_ID`,
-  `GREETING_BLOCK_ID`, `EVENT_LINE_TYPES`, `DemoReads`, `greeting_block`, `ChatLimits`, `ChatOpened`, `HistoryEntry`,
-  `ThreadHistory`, `_option_labels`, `_customer_text`, `SessionService.open` / `.thread`). Treat it as Steps B1–B3 in
-  progress: check it line by line against B1–B3 below and finish it; do not rewrite it from scratch.
-- `.claude/reference/area-map.md`: removes a stray "AEA-40 Part A (d7fb642): …" clause that Step 0.3 put in the **A9
-  Staff console** row by mistake. That fix is correct; keep it. The A8 row keeps its Part A clause until Step D.
-**Step T has not run:** `tests/services/chat_storage.py` does not exist, `chat_doubles.py` is still 1,002 lines and the
-two journey files still carry the old `@pytest.mark.skip` stubs naming AEA-57.
+`c9b17ea` (main).
+**Branch (continue it; never restart it, never rebase it):** `aea-40-aea-40-sessions-turns` at **`5a4cdf0`**, worktree
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-40`. The worktree was **clean** at refresh time. Merge base with
+`main`: `b559c75`; `main` is 56 commits ahead of it.
 **Lane / risk:** `lane::build-loop` · **`risk::security`**. The frozen tests (§3.1) are the test-writer's. The
-implementer never edits them. The `security-privacy-agent` reads this diff at the wave merge.
-**Planner:** Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-21. Second refresh of the plan at this path: the header,
-§0 facts 1–2, Step 0 (now done) and §9 changed; everything else is unchanged from the `b559c75` refresh.
+implementer never edits a test file. The `security-privacy-agent` reads this diff at the wave merge.
+**Planner:** Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-21. Third refresh: the header, §0, §1.2, §2.1, §3.1's state
+note, Step 0, Step T's status, the new **Step R**, §7.3, §7.4, §8 and §9 changed. Everything else holds as written.
 **Implementer:** `fanout-implementer` on Sonnet, in the worktree above. All paths are repo-relative.
-**Merging:** the implementer commits on the branch only. It never merges into `main`, never pushes and never
-force-pushes. The orchestrator's merge step merges branches in dependency-tree order: AEA-40 is a parent of AEA-51,
-AEA-52, AEA-58 and AEA-62.
+**Merging:** the implementer commits on the branch only. It never merges the branch into `main`, never pushes and never
+force-pushes. Merging `main` **into the branch** (Step R1) is a normal commit on the branch and is part of this run.
+The orchestrator's merge step merges branches in dependency order: AEA-40 is a parent of AEA-51, AEA-52, AEA-58 and
+AEA-62.
+
+### What the branch holds (oldest first)
+
+| Commit | What | By |
+|---|---|---|
+| `61d5bd8` | Frozen failing tests (the manifest in §3.1) | test-writer |
+| `d7fb642` | Part A: `services/turn.py`, `submitTurn`, `TurnRequest`, the `register_chat` hunk with the restart sweep | implementer |
+| `f8d3355` | Part A docs and context rows | implementer |
+| `6891c3c` | Merge of `main` at `b559c75` | implementer |
+| `e74e3c2` | Part B: `services/session.py`, `startChatSession`, `getChatThread`, their wire models; `register_chat` binds `SESSION_SERVICE` | implementer |
+| `23bd73e` | Part B docs: journey record, area-map A8, ICM row, code-design `**Built:**` line | implementer |
+| `8fc2d33` | Review fix (Low): `thread()` logs `thread_turn_skipped` with ids only when a stored response cannot be read | implementer |
+| `5a4cdf0` | Step T: J-1/J-9 integrated stubs replaced by `journey.step(needs=…)` tests; `chat_doubles.py` split into `chat_doubles.py` (474 lines), `chat_storage.py` (455), `chat_hooks.py` (117); import lines only | test-writer |
+
+### Why this refresh: the code review of `e74e3c2`/`23bd73e` and what happened to each finding
+
+`code-review-agent` returned **FAIL** with five findings. Its own run at that point: ruff and mypy clean; 1,871 passed,
+96 skipped, 1 xfailed, 1 failed (the stale test in finding 5) over `tests/services`, `tests/api`, `tests/unit`, the
+AEA-40 journeys and `tests/contract`; the contract runner for the three chat operations gave 6 passed, 17 skipped
+(`not bound: demo_clock`).
+
+| # | Severity | Finding | Disposition |
+|---|---|---|---|
+| 1 | High | Step T never ran: the J-1 and J-9 integrated tests were still `@pytest.mark.skip` stubs naming AEA-57 | **Done** in `5a4cdf0` (test-writer) |
+| 2 | Medium | `tests/services/chat_doubles.py` was 1,002 lines (500-line test cap) | **Done** in `5a4cdf0`: three files, each under 500 |
+| 3 | Medium | Orchestration: Step T must run, then the journey record's *Blocked by* line must drop its Step T mention | Step T done; the record is **Step R3** of this run |
+| 4 | Low | `thread()` silently skipped an unreadable stored response | **Fixed** in `8fc2d33` (ids-only warning record) |
+| 5 | Low | `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` fails | Stale test of another ticket; fails on `main` too. Not this ticket's; §8 R-16 |
+
+### What is left: this run's whole job is Step R
+
+1. **R0:** verify the worktree.
+2. **R1:** merge `main` into the branch, resolving three docs-row conflicts.
+3. **R2:** re-run every gate on the merged branch, including the tests and journeys `main` added that now reach the
+   chat routes.
+4. **R3:** regenerate the journey record.
+5. **R4:** commit and report.
+
+No production code is expected to change. Then the reviewer re-reviews.
 
 ## 0. Read this first (seven facts that shape every step)
 
-1. **Part A is built. Part B is in progress.** On the branch, `services/turn.py`, `submitTurn`, `TurnRequest` and
-   the `register_chat` hunk are committed, and the Part A tests passed at `d7fb642`. `services/session.py` exists only
-   as an uncommitted draft (header); `startChatSession`, `getChatThread`, their wire models and the Step H hunk changes
-   do not exist yet.
-2. **Step 0 (take `main`) is done** at `6891c3c` (merge of `b559c75`). `main` has moved one docs-only commit since
-   (`2ec19ad`, AEA-29's plan file). Do **not** merge it again: it touches no file this ticket reads or owns, and the
-   orchestrator's merge step brings it in. Step 0 below now only verifies.
+1. **Parts A and B are built, reviewed and fixed; Step T is done.** Every acceptance criterion except AC-15's
+   integrated half is green on the branch. AC-15's integrated tests are blocked by AEA-30 and AEA-51, and the harness
+   reports them that way.
+2. **`main` moved 56 commits** since the merge base: AEA-29, AEA-34, AEA-38, AEA-43, AEA-24, AEA-50 and AEA-54 merged,
+   plus ledger and plan commits. **None of them changed a module this ticket imports:** `domain/*`, `policy/*`,
+   `ports/*`, `adapters/sqlite/*`, `web/{deps,middleware,errors,logging,app}.py`, `services/person_request.py`.
+   - On `main`, `web/container.py` gained the `register_cases` and `register_demo_routes` bodies. Git merges those with
+     the branch's `register_chat` body without a conflict.
+   - A read-only trial merge (`git merge-tree`) shows exactly **three conflicts**, all in docs rows:
+     `.claude/reference/area-map.md`, `.claude/state/icm-progress.md`, `docs/design/code-design.md`. Step R1 says how
+     to resolve each.
 3. **Services never import `web/` or `agent/`** (DO-3 §2.1). So:
    - `LimitVerdict` (web) is read through the `TurnVerdict` Protocol;
    - `ReplyComposer.settled_view` (agent) arrives as an injected callable;
@@ -46,8 +78,8 @@ AEA-52, AEA-58 and AEA-62.
    A service may import another service's types (DO-3 has no ban). This plan uses `PersonRequestOutcome` from
    `services/person_request.py` (AEA-42) to read stored CON-4 rows.
 4. **Siblings are injected and doubled.** Four container keys are still unprovided on `main`:
-   - `Key("demo_clock")` and `deps.DEMO_SERVICE`, bound by AEA-30;
-   - `deps.REPLY_COMPOSER` and `Key("run_graph")`, bound by AEA-51.
+   - `Key("demo_clock")` and `deps.DEMO_SERVICE`, bound by AEA-30 (ledger: `blocked`, not merged);
+   - `deps.REPLY_COMPOSER` and `Key("run_graph")`, bound by AEA-51 (ledger: `blocked`, not merged).
 
    `register_chat` resolves each one lazily, at call time, so the app builds before they exist. A call made before then
    raises `RuntimeError("not bound: <key>")`. AEA-59's contract runner and AEA-57's journey steps report exactly that
@@ -56,10 +88,8 @@ AEA-52, AEA-58 and AEA-62.
    real demo, almost every stored `at` in a thread is the same instant. Step B3's merge rule handles that (§8 R-1).
 6. **No literal code, card number or full phone number** appears in any file, tests included. Tests build them at run
    time from a seeded `random.Random`. The frozen helpers already do this (`synthetic()`).
-7. **The frozen journey files predate AEA-57's harness.** Their `@pytest.mark.skip` stubs still name AEA-57 as a
-   blocker, but AEA-57 has merged. Step T (a small test-writer amendment, dispatched before the implementer) replaces
-   them with harness steps that report the real blockers (AEA-30, AEA-51). Step T also splits the 1,002-line
-   `tests/services/chat_doubles.py` under the 500-line test cap.
+7. **The tests are frozen at `61d5bd8`, amended at `5a4cdf0`.** The implementer edits no file under `tests/`. A red
+   test whose cause is in a test file or in another ticket's file is reported, never fixed here.
 
 ---
 
@@ -113,15 +143,19 @@ AEA-52, AEA-58 and AEA-62.
 
 ### 1.2 Context
 
-Stage 8, wave 2, area A8 (DO-3 §8). The build ledger (`.claude/state/build-ledger.md` row AEA-40) says `ready`, with
-blockers AEA-03, 10, 11, 12, 23, 02b, 03b, all merged. On `main` now:
+Stage 8, wave 2, area A8 (DO-3 §8). The build ledger (`.claude/state/build-ledger.md` row AEA-40) says `blocked` with
+the review run's NEEDS-DECISION ("dispatch test-writer-agent for plan Step T … then send the branch back to the
+implementer for the journey record 'Blocked by' line"). Step T is now committed (`5a4cdf0`), so that decision is
+answered and only Step R remains. The ticket's own blockers (AEA-03, 10, 11, 12, 23, 02b, 03b) are all merged. On
+`main` now:
 
-- **Merged since the first plan:** AEA-21 (graph spine and `ReplyComposer` class, not bound), AEA-41, AEA-42, AEA-44,
-  AEA-46, AEA-47, AEA-48, AEA-49, AEA-31, AEA-32, AEA-57 (journey harness), AEA-59 (contract runner), AEA-02b, AEA-03b,
-  AEA-27, AEA-28.
-- **Not on `main`:** AEA-30 (`demo_clock`, `demo_service`) and AEA-51 (`reply_composer`, `run_graph`).
+- **Merged:** AEA-21 (graph spine, `ReplyComposer` class, not bound), AEA-24, AEA-27, AEA-28, AEA-29, AEA-31, AEA-32,
+  AEA-34, AEA-38, AEA-41, AEA-42, AEA-43, AEA-44, AEA-46, AEA-47, AEA-48, AEA-49, AEA-50, AEA-54, AEA-57 (journey
+  harness), AEA-59 (contract runner), AEA-02b, AEA-03b.
+- **Not on `main`:** AEA-30 (`demo_clock`, `demo_service`; ledger `blocked`) and AEA-51 (`reply_composer`, `run_graph`;
+  ledger `blocked`, waiting on this ticket among others).
 
-The AEA-51 plan already reads this ticket's lazy keys (its plan line 375: `register_chat` reads `Key("run_graph")`,
+The AEA-51 plan already reads this ticket's lazy keys (`register_chat` reads `Key("run_graph")`,
 `Key("reply_composer")`, `Key("trace")` and `Key("ledger")`).
 
 ### 1.3 Sources checked
@@ -189,23 +223,22 @@ The AEA-51 plan already reads this ticket's lazy keys (its plan line 375: `regis
 
 ### 2.1 Owned files (the only files anyone working this ticket creates or edits)
 
-| File | State on the branch | Action | Who |
+| File | State on the branch at `5a4cdf0` | Action in this run | Who |
 |---|---|---|---|
-| `src/meridian/services/turn.py` | built (563 lines) | keep; fix only if a test goes red after the merge | implementer |
-| `src/meridian/services/session.py` | absent | **create** (Part B) | implementer |
-| `src/meridian/web/routes/chat.py` | `submitTurn` only | **add** `start_chat_session`, `get_chat_thread` | implementer |
-| `src/meridian/web/schemas/chat.py` | `TurnRequest` only | **add** `EventsRef`, `StartSessionResponse`, `ChatThreadTurn`, `ChatThread` | implementer |
-| `src/meridian/web/container.py` | `register_chat` body (Part A) | modify **only** `register_chat`'s body and docstring (Step H) | implementer |
-| `tests/services/chat_doubles.py` | frozen, 1,002 lines | split in Step T (no assertion change) | **test-writer** |
-| `tests/services/chat_storage.py` | absent | **create** in Step T (the second half of `chat_doubles.py`) | **test-writer** |
-| `tests/services/test_turn.py`, `tests/services/test_session.py` | frozen | Step T may update import lines only | **test-writer** |
-| `tests/api/chat_support.py`, `tests/api/test_chat.py`, `tests/api/test_chat_capture.py`, `tests/api/test_contract_cases_chat.py` | frozen | Step T may update import lines only | **test-writer** |
-| `tests/unit/web/test_register_chat.py`, `tests/contract/cases/chat.py` | frozen | none | **test-writer** |
-| `tests/journeys/j1/test_aea_40.py`, `tests/journeys/j9/test_aea_40.py` | frozen | Step T replaces the skip stubs | **test-writer** |
-| `docs/testing/journeys/2026-10-21-AEA-40.md` | Part A version | rewritten by `--journey-record=AEA-40` (Step D.4), then the implementer adds the *Remaining limitations* lines | implementer |
-| `.claude/reference/area-map.md` | conflict at merge | the A8 row's status cell only | implementer |
-| `.claude/state/icm-progress.md` | conflict at merge | the one AEA-40 *Routes verified* row only | implementer |
-| `docs/design/code-design.md` | conflict at merge | the one AEA-40 `**Built:**` line only | implementer |
+| `src/meridian/services/turn.py` | built (563 lines) | none; fix only if a Step R2 gate goes red and the cause is here | implementer |
+| `src/meridian/services/session.py` | built (362 lines) | none; same rule | implementer |
+| `src/meridian/web/routes/chat.py` | built (147 lines): `start_chat_session`, `get_chat_thread`, `submit_turn` | none; same rule | implementer |
+| `src/meridian/web/schemas/chat.py` | built (62 lines): `TurnRequest`, `EventsRef`, `StartSessionResponse`, `ChatThreadTurn`, `ChatThread` | none; same rule | implementer |
+| `src/meridian/web/container.py` | `register_chat` body and docstring built | the merge brings `main`'s other hunks in; never edit any hunk but `register_chat` | implementer |
+| `tests/services/chat_doubles.py`, `chat_storage.py`, `chat_hooks.py` | frozen (`5a4cdf0`) | none | test-writer |
+| `tests/services/test_turn.py`, `tests/services/test_session.py` | frozen (`5a4cdf0`) | none | test-writer |
+| `tests/api/chat_support.py`, `tests/api/test_chat.py`, `tests/api/test_chat_capture.py`, `tests/api/test_contract_cases_chat.py` | frozen (`5a4cdf0`) | none | test-writer |
+| `tests/unit/web/test_register_chat.py`, `tests/contract/cases/chat.py` | frozen | none | test-writer |
+| `tests/journeys/j1/test_aea_40.py`, `tests/journeys/j9/test_aea_40.py` | frozen (`5a4cdf0`, harness steps) | none | test-writer |
+| `docs/testing/journeys/2026-10-21-AEA-40.md` | written at `23bd73e` (names Step T as a blocker) | **regenerate** (Step R3) | implementer |
+| `.claude/reference/area-map.md` | A8 row carries the AEA-40 clause | **merge conflict**: resolve the first A8 row only (Step R1) | implementer |
+| `.claude/state/icm-progress.md` | AEA-40 *Routes verified* row | **merge conflict**: keep both sides (Step R1) | implementer |
+| `docs/design/code-design.md` | AEA-40 `**Built:**` line | **merge conflict**: keep both sides (Step R1) | implementer |
 
 ### 2.2 Shared surfaces you read but never edit
 
@@ -243,7 +276,9 @@ manifest, frozen at `61d5bd8` and amended in Step T. Abbreviations:
 - **TA** = `tests/api/test_chat.py`
 - **TC** = `tests/api/test_chat_capture.py`
 
-"State at `d7fb642`" is the state before the merge. **Every row must be green after Step B5.**
+"State at `d7fb642`" is the history column (before Part B). **Now:** at `8fc2d33` the reviewer's run shows every row
+green except AC-15's integrated half. At `5a4cdf0` that half is two harness steps that report `blocked-on AEA-30,
+AEA-51`, plus one skip that cites §8 R-6. **Every row must still be green after Step R1's merge (Step R2).**
 
 | AC | Kind | Implemented in | Frozen test(s) (names binding) | State at `d7fb642` |
 |---|---|---|---|---|
@@ -290,7 +325,7 @@ Also frozen and binding (route and service extras): TA `::test_start_session_tag
 
 ---
 
-## 4. Shared code to use (copied from `main` at `b559c75`, identical at `2ec19ad`; never paraphrase)
+## 4. Shared code to use (copied from `main` at `b559c75`; re-checked identical at `c9b17ea`; never paraphrase)
 
 ### 4.1 Domain (AEA-02, AEA-02b)
 
@@ -505,36 +540,27 @@ class ChatThread(MeridianModel):                    # = OpenAPI ChatThread
 adds no new seam beyond `TurnVerdict` (built), `DemoReads` and the `SettledViewFn` alias. Each one is the minimum a
 service needs from a module it may not import.
 
-### Step 0 — verify the branch (done at `6891c3c`; implementer; no product code)
+### Step 0 — verify the branch (implementer; no product code)
 
-The merge of `b559c75` is committed (`6891c3c`). Do only these checks:
+Step 0's earlier merge (`6891c3c`, `main` at `b559c75`) is history. This run's merge is Step R1.
 
 1. `cd /home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-40`, `export UV_LINK_MODE=hardlink`, `df -h /home`
    (below 3 GB free: stop and report).
-2. `git status --short`. Expected: ` M .claude/reference/area-map.md` and `?? src/meridian/services/session.py` (the
-   in-progress draft), plus whatever a later run of this plan added. **Never** `git checkout --`, `git stash`,
-   `git clean` or `git reset` them. Anything else uncommitted: stop and report.
-3. `git log --oneline -1` shows `6891c3c` (or a later commit of this ticket). Do not run `git merge main` again
-   (§0 fact 2).
-4. Import check: `uv run python -c "import meridian.web.app, meridian.services.turn"` succeeds.
-5. **Part A still green on the merged branch** (run once if no earlier report shows it):
-   `uv run pytest tests/services/test_turn.py tests/unit/web tests/unit/test_import_direction.py tests/api/test_app.py
-   -q -p no:cacheprovider`.
-   - Expected: all pass, except `test_register_chat.py::test_wires_services_routes_and_lazy_siblings` (it needs
-     `SESSION_SERVICE`, Step H). `test_import_direction.py` may also flag the uncommitted `session.py` draft until B1
-     is finished; fix the draft, never the test.
-   - If another Part A test is red, fix **`services/turn.py` or the hunk** (never the test) and record the cause in
-     the report.
+2. `git status --short`. Expected: **no output**. If anything is uncommitted, stop and report it. **Never**
+   `git checkout --`, `git stash`, `git clean` or `git reset` anything.
+3. `git log --oneline -1` shows `5a4cdf0` (or a later commit of this ticket). `git log --oneline -1 main` shows
+   `c9b17ea` or later.
+4. Import check: `uv run python -c "import meridian.web.app, meridian.services.turn, meridian.services.session"`
+   succeeds.
 
-The merge-conflict resolutions Step 0.3 used are kept for the record: A8 row = main's cell with the Part A clause
-inserted before "; the rest planned"; ICM progress and code-design keep both sides' rows, the AEA-40 Part A line last.
-The A9 row must **not** carry the Part A clause (the uncommitted fix above removes it).
+### Step T — test-writer amendment (**done** at `5a4cdf0`; kept as the record of what was frozen)
 
-### Step T — test-writer amendment (dispatched by the orchestrator **before** the implementer's Part B work)
-
-**Who:** `test-writer-agent`, on the same branch (Step 0's merge `6891c3c` is already there). It touches only the
-test files listed below, never the uncommitted `session.py` or `area-map.md`, and commits only its own paths. **Assertions do not change.** Then re-record the frozen-test manifest (hashes) and
-commit `test(AEA-40): journey stubs onto the AEA-57 harness; split chat_doubles under the 500-line cap`.
+**Who:** `test-writer-agent`, on this branch. **Status:** committed as `5a4cdf0`
+(`test(AEA-40): journey stubs onto the AEA-57 harness; split chat_doubles under the 500-line cap`). It followed T1–T3
+below with one difference: T3's split made **three** files, not two. `HookedUow`, its proxies, `fail_after` and
+`fail_first_call` went to `tests/services/chat_hooks.py` (117 lines). The rest of the second half went to
+`chat_storage.py` (455 lines), and `chat_doubles.py` is now 474 lines. Only import lines changed in the tests that use
+them. The text below is what was asked; the implementer does nothing in this step.
 
 **T1. `tests/journeys/j1/test_aea_40.py`.** Keep `test_j1_login_start_one_turn_reload_resumes_the_same_thread`
 (mock level) unchanged. Replace the `@pytest.mark.skip` stub `test_j1_through_the_real_server_with_the_scripted_model`
@@ -642,7 +668,136 @@ def test_j9_timeout_and_busy_through_the_real_server() -> None:
 
 The two new harness tests report `blocked-on AEA-30, AEA-51` (skipped). They are red for the right reason.
 
-### Part A — built; the reference for reviewers and for any fix after the merge
+### Step R — finish-up (this run; implementer)
+
+Run Step 0 first. Then R1 → R4 in order. Stop at the first red gate and report it, except where a step says how to fix.
+
+#### R1 — merge `main` into the branch (a merge commit; no rebase, no force)
+
+**Why:** the gates must prove the state that will land: the chat routes next to `main`'s new `register_cases` and
+`register_demo_routes` hunks, the demo routes, the new contract cases and the journeys that now reach the chat routes.
+
+1. `git merge --no-ff --no-commit main`. Git stops with **exactly three** conflicted files. Check with
+   `git diff --name-only --diff-filter=U`:
+   - `.claude/reference/area-map.md`
+   - `.claude/state/icm-progress.md`
+   - `docs/design/code-design.md`
+
+   If any other file is conflicted (for example `src/meridian/web/container.py`), run `git merge --abort`, then stop and
+   report the file list. Do not resolve a conflict in source or tests.
+2. **`.claude/reference/area-map.md`.** There is one conflict block, on the **first** `A8 Customer API` row.
+   - Take `main`'s side of that row. It is the side whose last cell contains `AEA-43 (db9ef50): web/routes/demo.py,
+     web/schemas/demo.py and the register_demo_routes hunk built; the rest planned |`.
+   - In that row, insert exactly `AEA-40 (e74e3c2): services/{turn,session}.py, web/routes/chat.py,
+     web/schemas/chat.py, register_chat hunk built; ` immediately before `the rest planned |`.
+   - The result is one row with no markers. Do **not** touch the second, stale `A8 Customer API` row lower down, or
+     the duplicate A6 and A12 rows (§8 R-15).
+   - *Invariant:* every ticket's clause in the A8 cell survives (AEA-23, 41, 42, 49, 43, 40).
+3. **`.claude/state/icm-progress.md`.** There is one conflict block among the `Routes verified against code and tests`
+   rows. Keep **every** row from `main`'s side, in its order (AEA-43, AEA-38, AEA-34, AEA-29, AEA-50). Then put the
+   branch's AEA-40 row (`… area map A8 → services/{turn,session}.py, web/routes/chat.py … (AEA-40, e74e3c2; 164 pass)
+   …`) **last**. Change no row's text.
+4. **`docs/design/code-design.md`.** There is one conflict block among the `**Built:**` lines. Keep `main`'s four lines
+   (AEA-38, AEA-34, AEA-29, AEA-24), in order, then the branch's AEA-40 line **last**. Change no line's text.
+5. Check the resolution. Each command must print exactly the stated value:
+
+   | Command | Expected |
+   |---|---|
+   | `grep -rn '^<<<<<<<\|^=======$\|^>>>>>>>' .claude/reference/area-map.md .claude/state/icm-progress.md docs/design/code-design.md` | no output |
+   | `grep -c 'A8 Customer API' .claude/reference/area-map.md` | `2` |
+   | `grep -c 'AEA-40 (e74e3c2)' .claude/reference/area-map.md` | `1` |
+   | `grep -c 'AEA-43 (db9ef50)' .claude/reference/area-map.md` | `1` |
+   | `grep -c '^| Routes verified against code and tests' .claude/state/icm-progress.md` | `35` |
+   | `grep -c '^\*\*Built:\*\*' docs/design/code-design.md` | `17` |
+   | `uv run python /tmp/aea40_same_hunk.py` (script below) | `register_chat unchanged` |
+
+   The script compares `register_chat`'s source before and after the merge. Write it to `/tmp/aea40_same_hunk.py`
+   (outside the repo; never commit it):
+
+   ```python
+   import ast, subprocess
+   def hunk(src: str) -> str:
+       tree = ast.parse(src)
+       return next(ast.get_source_segment(src, n) or "" for n in tree.body
+                   if isinstance(n, ast.FunctionDef) and n.name == "register_chat")
+   before = subprocess.run(["git", "show", "HEAD:src/meridian/web/container.py"], capture_output=True, text=True,
+                           check=True).stdout
+   after = open("src/meridian/web/container.py", encoding="utf-8").read()
+   print("register_chat unchanged" if hunk(before) == hunk(after) else "register_chat CHANGED")
+   ```
+
+   `HEAD` is still `5a4cdf0` here, because the merge is not committed yet. Any other output: `git merge --abort`,
+   then stop and report.
+
+6. Commit the merge with explicit paths:
+   `git add .claude/reference/area-map.md .claude/state/icm-progress.md docs/design/code-design.md`, then
+   `git commit -m "Merge main (c9b17ea) into aea-40-aea-40-sessions-turns" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"`.
+   Use the short sha `git rev-parse --short main` prints if `main` has moved past `c9b17ea`. If `main` has moved and a
+   **new** conflict appears in a file outside the three above, abort and report, as in item 1.
+
+#### R2 — the gates on the merged branch
+
+Run §7.3 gates 1–9 in order and stop at the first red.
+
+- **The cause is in an owned source file** (§2.1, `src/…`): fix it there, keeping Part A's invariants and Step B3's
+  rules. Re-run from gate 1, and commit the fix separately (R4).
+- **The cause is in a test file, or in another ticket's file:** do not edit it. Stop and report the node id, the
+  failure output and which file you believe is at fault. This applies to any of `main`'s new tests that now reach
+  the chat routes.
+
+#### R3 — regenerate the journey record
+
+1. Run `uv run pytest -m journey tests/journeys/j1/test_aea_40.py tests/journeys/j9/test_aea_40.py -rs -q
+   -p no:cacheprovider --journey-record=AEA-40`.
+   - Expected: **4 passed** (the four mock tests) and **3 skipped**.
+   - Two of the skips are the harness steps `test_j1_code_turn_and_reload_through_the_real_server` and
+     `test_j9_rate_limited_through_the_real_server`. They are reported blocked on an unbound need owned by AEA-30 or
+     AEA-51.
+   - The third skip is `test_j9_timeout_and_busy_through_the_real_server`, with §8 R-6's reason.
+   - Nothing may fail.
+2. The plugin rewrites `docs/testing/journeys/2026-10-21-AEA-40.md`. Use today's Chicago date if it differs, and
+   then also `git add` the new file; delete nothing. Open the file and make sure these fields read as follows. Edit
+   only a field the generator left empty or wrong:
+   - **Tested revision:** the merge commit from R1 (`git rev-parse --short HEAD`).
+   - **Level:** `mock-tested` (the mock tests pass; the integrated harness steps are blocked, not run).
+   - **Result:** the counts from item 1, exactly as pytest printed them.
+   - **Remaining limitations:** keep the lines the `23bd73e` record had:
+     - no real graph (AEA-51);
+     - TURN_TIMEOUT and BUSY not yet through the real server (plan R-6);
+     - history order exact only where plan B3's anchors reach (R-1);
+     - a retried failed turn sums spend rows of every attempt;
+     - API level only (browser journeys: AEA-58);
+     - scripted model only (live models: AEA-61).
+   - **Blocked by:** exactly `AEA-30, AEA-51 (TURN_TIMEOUT and BUSY at integrated level also need the AEA-57
+     follow-up in plan R-6)`. The Step T mention is gone: that is review finding 3.
+
+#### R4 — commits and report (explicit paths; never `git add -A`; never push; never merge into `main`)
+
+- **Only if R2 changed source:** `git add <the changed src/meridian/... paths>`, message
+  `fix(AEA-40): <what> after merging main`.
+- **The record:** `git add docs/testing/journeys/2026-10-21-AEA-40.md`, message
+  `docs(AEA-40): journey record after Step T and the main merge`.
+- Every message ends with the line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+- Report:
+  - each gate's command and result, with counts;
+  - `git log --oneline main..HEAD`;
+  - `git diff --name-only main...HEAD`;
+  - the review findings 1–5 with their disposition (header table);
+  - R-16's stale test, if you saw it.
+
+**Must not (this run):**
+
+- edit any file under `tests/`;
+- edit `web/app.py`, `web/deps.py`, `web/middleware.py`, `web/logging.py`, any other `register_*` hunk, `domain/*`,
+  `policy/*`, `adapters/*`, `apps/web/**`, `docs/ux/**`, the OpenAPI file;
+- add a `TextId`, a container key or a `NEED_OWNERS` entry;
+- run the full suite (§7.3 says why it is not needed);
+- call a paid model;
+- bind ports 4019 or 5184;
+- copy a venv;
+- use `pytest -n` above 2.
+
+### Part A — built at `d7fb642`; the reference for reviewers and for any fix after the merge
 
 Part A is built at `d7fb642` exactly as the first plan's Steps A1–A6 said. Change it only when a test goes red after
 Step 0. The invariants a fix must keep:
@@ -682,7 +837,9 @@ Step 0. The invariants a fix must keep:
 - write SQL;
 - import `sqlite3`, `meridian.web.*` or `meridian.agent.*`.
 
-### Part B — sessions and history
+### Part B — sessions and history (built at `e74e3c2`, docs `23bd73e`, review fix `8fc2d33`; reference only)
+
+Steps B1–E below are **done**. They stay as the reference the reviewer checks the code against. Change Part B only when a Step R gate goes red and the cause is in an owned source file.
 
 #### Step B1 — `services/session.py`: types and `open`
 
@@ -1021,36 +1178,66 @@ edits them. This is a `risk::security` slice: the test-writer owns every test fi
 - `tests/journeys/j7/*`;
 - `tests/contract/test_openapi_server.py`.
 
-### 7.3 Gates (cheapest first; stop at the first red)
+### 7.3 Gates (cheapest first; stop at the first red; run them on the merged branch, Step R2)
 
-The affected set is `tests/services tests/api tests/unit/web tests/unit/test_import_direction.py tests/contract`, plus
-every file `grep -rl "services.turn\|services.session\|routes.chat\|schemas.chat\|register_chat\|chat_doubles\|chat_storage" tests/`
-lists. `web/container.py` changes in one hunk only; there is no shared fixture, settings or lockfile change, so **no
-full suite**.
+**The affected set.** It is the union of two parts:
 
-| # | Gate | Command | Passing looks like |
+- **This ticket's diff:** `tests/services`, `tests/api`, `tests/unit/web`, `tests/unit/test_import_direction.py`,
+  `tests/contract`.
+- **Tests on `main` that call the chat routes, `register_chat` or the chat services.** Once the routes register, these
+  run code they used to skip as "route not registered":
+  - `tests/api/test_app.py`, `test_events.py`, `test_openapi_check.py`, `test_openapi_sets.py`;
+  - `tests/unit/web/test_container.py`, `test_deps.py`, `test_middleware.py`, `test_events_frames.py`,
+    `test_register_person_request.py`, `test_reset_gate.py`;
+  - `tests/contract/test_openapi_server.py`, `test_openapi_fixtures.py`;
+  - the journey files `j1/test_aea_49.py`, `j1/test_aea_57.py`, `j1/test_aea_59.py`, `j2/test_aea_38.py`,
+    `j3/test_aea_{27,28,34,43}.py`, `j4/test_aea_28.py`, `j7/test_aea_42.py`.
+
+  The directories in the first part already contain all of these except the journeys. Gate 6b runs the journeys.
+
+**No full suite.** `web/container.py` changes in one hunk only. There is no `conftest.py`, settings, dependency or
+lockfile change, and no module imported across the codebase changes. `eval/harness/tests` drive a stub app, not these
+routes. `tests/deploy` is deploy-marked and runs before a deploy.
+
+| # | Gate | Command (from the worktree root) | Passing looks like |
 |---|---|---|---|
 | 1 | Lint | `uv run ruff check src/meridian/services/turn.py src/meridian/services/session.py src/meridian/web/routes/chat.py src/meridian/web/schemas/chat.py src/meridian/web/container.py` | `All checks passed!` |
-| 2 | Format | `uv run ruff format --check <same paths>` | `… files already formatted` |
-| 3 | Type check | `uv run mypy` | `Success: no issues found` (strict; `src`, `tests`, `eval`) |
+| 2 | Format | `uv run ruff format --check src/meridian/services/turn.py src/meridian/services/session.py src/meridian/web/routes/chat.py src/meridian/web/schemas/chat.py src/meridian/web/container.py` | `5 files already formatted` |
+| 3 | Type check | `uv run mypy` | `Success: no issues found in N source files` (strict; `src`, `tests`, `eval`) |
 | 4 | Forbidden reads | `grep -n "ConversationState\|meridian.agent\|meridian.web\|sqlite3" src/meridian/services/turn.py src/meridian/services/session.py` | no output |
-| 5 | Affected tests | `uv run --with pytest-xdist pytest -n 2 tests/services tests/api tests/unit/web tests/unit/test_import_direction.py -q` (iterate on single files without `-n`) | all passed; the only skips are journey/harness skips naming AEA-30/AEA-51 |
-| 6 | Affected journeys | `uv run python -m tests.journeys.affected --base main`, then `uv run pytest -m journey tests/journeys/j1/test_aea_40.py tests/journeys/j9/test_aea_40.py -rs --journey-record=AEA-40` | the mock tests pass; the harness tests are skipped `blocked-on AEA-30, AEA-51`; nothing fails |
-| 7 | Contract cases (AC-22) | `uv run pytest tests/contract/test_openapi_server.py -k "startChatSession or getChatThread or submitTurn" -rs` | passes, or skips with `not bound: demo_clock` / `demo_service` / `reply_composer` only. The `CONTRACT_STRICT=1` form is the wave-merge gate and stays red until AEA-30/AEA-51 land; record that, do not chase it |
+| 5 | Affected tests | `uv run --with pytest-xdist pytest -n 2 tests/services tests/api tests/unit/web tests/unit/test_import_direction.py tests/contract -q -rs -p no:cacheprovider` | See the rule below the table |
+| 6a | Affected journeys | `uv run python -m tests.journeys.affected --base main` | exit code 0 |
+| 6b | All journeys (cheap, and the chat routes now exist for every one of them) | `uv run --with pytest-xdist pytest -m journey tests/journeys -n 2 -rs -q -p no:cacheprovider` | **0 failed**; each skip names its blocker (AEA-30, 45, 51, 52, 53 or an AEA-57 follow-up). The AEA-40 files give 4 passed, 3 skipped |
+| 7 | Contract cases (AC-22) | `uv run pytest tests/contract/test_openapi_server.py -k "startChatSession or getChatThread or submitTurn" -rs -p no:cacheprovider` | **0 failed**; skips only `not bound: demo_clock` / `demo_service` / `reply_composer` / `run_graph`. Reviewer's run at `8fc2d33`: 6 passed, 17 skipped. The `CONTRACT_STRICT=1` form is the wave-merge gate and stays red until AEA-30 and AEA-51 land; record that, do not chase it |
 | 8 | Diff scope | `git diff --name-only main...HEAD` | only §2.1 files |
 | 9 | Context | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no FAIL |
+
+**Gate 5 passes when:**
+
+- **0 failed.**
+- Every skip names an unmerged ticket or an unbound key: `not bound: demo_clock` / `demo_service` / `reply_composer` /
+  `run_graph`, `blocked-on AEA-30/45/51/52/53`, or `route not registered` for an operation that is **not** one of this
+  ticket's three.
+- At most one xfail (AEA-59's AC-14 value-leak item).
+- A `route not registered` skip that names `startChatSession`, `getChatThread` or `submitTurn` is **red** for this
+  ticket: the router is not included.
+
+`tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` is outside gate 5's paths. It fails
+on `main` too (§8 R-16). If you run it, report it and do not fix it.
 
 Paste the result of every gate into the report, with counts. Never call a paid model: nothing here is marked `live`, and
 the journey harness blocks outbound sockets.
 
 ### 7.4 Journey record
 
-`--journey-record=AEA-40` writes it (Step D.4). It must read as follows:
+`--journey-record=AEA-40` writes it (Step R3). It must read as follows:
 
-- **Level:** `mock-tested` for the mock tests. The harness tests are blocked.
-- **Blocked by:** AEA-30, AEA-51 (and §8 R-6 for TURN_TIMEOUT/BUSY at integrated level).
-- **Journeys that will exercise this code:** J-1 and J-9 at `integrated with a scripted model`, J-7 reload (AEA-52),
-  and AEA-57's J-1 steps 4–7.
+- **Level:** `mock-tested` for the mock tests. The two harness steps are reported blocked.
+- **Blocked by:** `AEA-30, AEA-51 (TURN_TIMEOUT and BUSY at integrated level also need the AEA-57 follow-up in plan
+  R-6)`. No mention of Step T: it is done (`5a4cdf0`).
+- **Tested revision:** the R1 merge commit.
+- **Journeys that will exercise this code:** J-1 and J-9 at `integrated with a scripted model` (once AEA-30 and AEA-51
+  land), J-7 reload (AEA-52), and AEA-57's J-1 steps 4–7.
 
 ---
 
@@ -1059,37 +1246,47 @@ the journey harness blocks outbound sockets.
 | # | Risk / request | What to do |
 |---|---|---|
 | R-1 | **History order under the frozen demo clock.** Messages, events and turns share no ordering column. Step B3 is exact for AC-16…AC-18, for CON-4 followed by a takeover, and for customer lines typed during a takeover. It can misplace two cases: a demo-wide `staffing_changed` line written mid-conversation, and a customer line typed after a hand back (it shows before `ai_resumed`). | **Request to the orchestrator (non-blocking):** an AEA-10 follow-up that adds one insertion-order value (a UTC `wall_at` with sub-second precision, written by the repositories) to `messages`, `events` and `turns`. B3's sort key then becomes `(at, wall_at)`. AEA-52's J-7 reload is where it would show. |
-| R-2 | **Step T is a test-writer dispatch.** The implementer cannot edit frozen files. | Orchestrator: dispatch `test-writer-agent` with Step T before (or in parallel with) the implementer's Steps B1–H. Step B5's journey check needs T1/T2. Everything else does not. |
+| R-2 | Step T was a test-writer dispatch. | **Closed:** committed as `5a4cdf0`. |
 | R-3 | `SessionService` takes a keyword-only `wall_clock` (default: UTC now) beyond web.md §14's signature, so `started_wall_at` is written. AEA-32's zero-traffic alert reads it. The change is additive. | Record it as a deviation on issue #40 and in the build ledger. No decision is needed. |
 | R-4 | **AEA-57's J-1 step "4 start session"** reads `SELECT demo_now FROM demo_state WHERE id = 1`. No row exists until AEA-30 writes one (AEA-30 plan R-15). The step is blocked today on AEA-30/AEA-51. | Not this ticket's file or table. `SessionService.open` reads the clock through `DemoClock` and never writes `demo_state`. Orchestrator: route it to AEA-30 (seed the row at boot without overwriting) or to an AEA-57 follow-up. |
-| R-5 | `web/logging.py`'s allow-list has no `turn_sweep` or `turn_error` record, so the formatter writes them as `{"record": "log", "length": N}`. That is safe, but the count is not readable in production logs. | **Request:** an AEA-23 follow-up that adds `"turn_sweep": {"record", "count"}` and `"turn_error": {"record", "request_id", "turn_id", "thread_id", "error_kind"}`. Tests read the `LogRecord` attribute, so nothing waits on it. |
-| R-6 | **TURN_TIMEOUT and BUSY through the real server.** The scripted adapter cannot hold a provider call, so a DEADLINE halt or 30 in-flight turns cannot be produced through the real server. | **Request:** an AEA-57 follow-up: a `ScriptEntry` that blocks until the test releases it (or a monotonic-clock override in `ContainerOverrides`). Until then those two J-9 steps are mock-tested and the record says so (Step T2's skip reason). |
+| R-5 | `web/logging.py`'s allow-list has no `turn_sweep`, `turn_error` or (since `8fc2d33`) `thread_turn_skipped` record. The formatter writes them as `{"record": "log", "length": N}`. That is safe, but the values cannot be read in production logs. | **Request:** an AEA-23 follow-up that adds `"turn_sweep": {"record", "count"}`, `"turn_error": {"record", "request_id", "turn_id", "thread_id", "error_kind"}` and `"thread_turn_skipped": {"record", "turn_id", "thread_id"}`. Tests read the `LogRecord` attribute, so nothing waits on it. |
+| R-6 | **TURN_TIMEOUT and BUSY through the real server.** The scripted adapter cannot hold a provider call, so a DEADLINE halt or 30 in-flight turns cannot be produced through the real server. | **Request:** an AEA-57 follow-up: a `ScriptEntry` that blocks until the test releases it (or a monotonic-clock override in `ContainerOverrides`). Until then those two J-9 steps are mock-tested, and the record says so (the skip reason in `test_j9_timeout_and_busy_through_the_real_server`). |
 | R-7 | A CON-4 `turn_id` reused on CON-2 has a stored body that is not a `TurnResponse`. `begin` also reports another thread's `turn_id` as `running`. | Both answer 409 `TURN_IN_PROGRESS` (built). Never a 500, never another thread's reply. |
 | R-8 | Reopening an `abandoned` conversation keeps its old `ended_wall_at` (`set_outcome` uses `COALESCE`). | A note for AEA-53 (M-18 reads `outcome`). No change here. |
 | R-9 | A retried failed turn sums the spend rows of every attempt of that `turn_id`. | Intended (cost per `turn_id`); stated in the journey record. |
-| R-10 | Collision: `web/container.py` is shared. | Edit only `register_chat`'s body and docstring; the module-level import block never changes. |
+| R-10 | Collision: `web/container.py` is shared. | Edit only `register_chat`'s body and docstring. The R1 merge brings `main`'s other hunks in untouched; R1 item 5's script proves `register_chat` did not change. |
 | R-11 | AEA-40-3 (card `answered` after a reload) contradicts web.md §14. | Not built here; it stays with the orchestrator. |
-| R-12 | `test_turn.py` (684 lines) and `test_chat.py` (588 lines) exceed the 500-line test cap, and every test in them is named by an AC or by this plan. | Accepted for this ticket: moving a test would break a node id the signed ticket cites. Step T says so in its commit message. A reviewer finding on this cites this row. |
-| R-13 | `services/turn.py` is 563 lines (service target 400, hard cap 600). | Do not grow it. Part B goes in `session.py`. If a post-merge fix would cross 600 lines, stop and report instead of splitting on your own. |
-| R-14 | **An implementer run is already in progress in the AEA-40 worktree** (uncommitted `session.py` draft, area-map A9 fix, 16:46 UTC). A second implementer started on the same worktree would overwrite it. | Orchestrator: resume or wait for that run rather than dispatching a parallel one; the next implementer continues from the draft (Step 0.2). The test-writer's Step T touches only test paths, so it may run alongside. |
+| R-12 | `test_turn.py` (684 lines) and `test_chat.py` (591 lines) exceed the 500-line test cap, and every test in them is named by an AC or by this plan. | Accepted for this ticket: moving a test would break a node id the signed ticket cites. `5a4cdf0`'s commit message says so (precedent `f247370`). A reviewer finding on this cites this row. |
+| R-13 | `services/turn.py` is 563 lines (service target 400, hard cap 600). | Do not grow it. If a post-merge fix would cross 600 lines, stop and report instead of splitting on your own. |
+| R-14 | Two agents in one worktree would collide. At refresh time no run was active and the worktree was clean at `5a4cdf0`. | Orchestrator: dispatch exactly one implementer for Step R. Step 0.2 stops it if it finds uncommitted work. |
+| R-15 | **Duplicate rows in `main`'s area map.** It has two `A8 Customer API` rows (the second is stale, without AEA-43's clause), and duplicate A6 and A12 rows. The wave-2 seam audit already flagged the duplicate A6 row. | R1 resolves only the first A8 row and leaves the duplicates alone (AC-23: "only this ticket's rows changed"). **Request:** fold all three duplicates into the pending `lane::direct` area-map cleanup ticket. |
+| R-16 | `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` fails on `main` (stale since the first journey landed; AEA-57's ledger row records it). | Not this ticket's. It is outside the gate 5 paths. Report it if seen; never fix it here. |
+| R-17 | **Merge order and what unblocks the integrated level.** AEA-40 has no unmerged blocker. AEA-51, 52, 58 and 62 wait on it. The J-1 and J-9 harness steps need both AEA-30 (`demo_clock`, `demo_service`) and AEA-51 (`reply_composer`, `run_graph`), so they stay blocked after AEA-30 alone merges. | Merge AEA-40 when Step R is green and re-reviewed. Re-run the AEA-40 journeys after AEA-51 merges, to move AC-15 to `integrated with a scripted model`. |
 
 ---
 
 ## 9. Readiness
 
-- **READY.** Every import Part A and Part B need is on `main` at `2ec19ad` (unchanged from `b559c75` for this
-  ticket's surfaces). Sibling services that are not merged
-  (AEA-30's demo clock and DemoService, AEA-51's reply composer and graph) are called through injection and doubled in
-  tests, so they are **not** blockers.
-- **Order:**
-  1. Step 0 is done (`6891c3c`); the implementer only runs its checks;
-  2. Step T (test-writer, not yet run) alongside B1–H (implementer, B1–B3 in progress as an uncommitted draft);
-  3. B5, D, E.
+- **READY.** Every import Part A and Part B use is on `main` at `c9b17ea`, unchanged since `b559c75`. Sibling services
+  that are not merged are called through injection and doubled in tests, so they are **not** blockers:
+  - AEA-30: the demo clock and `DemoService`;
+  - AEA-51: the reply composer and the graph.
+- **The review run's NEEDS-DECISION is answered:** the test-writer's Step T is committed (`5a4cdf0`). What is left is
+  implementer work only.
+- **Order for this run:**
+  1. Step 0 (verify);
+  2. R1 (merge `main`; three docs conflicts);
+  3. R2 (gates 1–9);
+  4. R3 (journey record);
+  5. R4 (commits and report).
+
+  Then `code-review-agent` re-reviews. At the wave merge, `security-privacy-agent` reads the diff.
 - **Record-level only, not merge blockers:**
   - AC-15's integrated level waits on AEA-30 and AEA-51, plus §8 R-6 for TURN_TIMEOUT/BUSY.
   - AC-22's `CONTRACT_STRICT=1` run waits on AEA-30 and AEA-51.
 - **No NEEDS-DECISION.** No signed contract (OpenAPI, `UI_CONTRACTS.md`) changes. D-8 (start fresh after signing in
-  again) is honoured by `owned_thread`'s 404. Every other choice above is engineering and is recorded.
+  again) is honoured by `owned_thread`'s 404. No decision in `docs/plans/stage7-signoff.md` D-4…D-15 is answered
+  differently here. Every other choice above is engineering and is recorded.
 
 ## Gates
 

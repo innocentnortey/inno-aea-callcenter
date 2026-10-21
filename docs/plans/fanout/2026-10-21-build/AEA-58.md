@@ -1,17 +1,18 @@
 # Plan — [AEA-58] browser journeys: Playwright against the production build
 
-**Status:** planned — READY (refreshed against `main` `68b1412`). Every import this slice needs is on `main`: AEA-57's
+**Status:** planned — READY (refreshed against `main` `c9b17ea`). Every import this slice needs is on `main`: AEA-57's
 harness (merged `bd79a29`), AEA-49's frontend serving (merged `543cb04`), AEA-23's `openapi_check`, AEA-44's login
 sessions. The UX-4 gate is signed (checklist §4b, Innocent ✓ 2026-10-21). What is **not** on `main` is reported at run time as *blocked* steps, never
 imported and never passed: `demo_clock` (AEA-30, every successful sign-in), the chat routes (AEA-40), `run_graph` /
 `reply_composer` (AEA-51, the turn), and the UX session's selector contract `docs/plans/ux-join/selectors.md` (every
-on-screen step; see §8 R-1).
+on-screen step; see §8 R-1). The build ledger still lists AEA-40 as a merge edge; this plan imports nothing from AEA-40
+(§8 R-12).
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/58 (identical to
-`docs/plans/tickets/AEA-58.md`) · **Base revision:** `main` `68b1412` · **Wave:** 3 · **Lane:** build-loop ·
+`docs/plans/tickets/AEA-58.md`) · **Base revision:** `main` `c9b17ea` · **Wave:** 3 · **Lane:** build-loop ·
 **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests) · **Gate:** `gate::ux4` (met)
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-58-browser-journeys` at
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-58`), cut from `main` at or after `68b1412`.
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-58`), cut from `main` at or after `c9b17ea`.
 
 **Refresh log.** First written against `35aefdd`. Refreshed 2026-10-21 against `68b1412` (merges since: AEA-17, AEA-18,
 AEA-21, AEA-27, AEA-28, AEA-34, AEA-38, AEA-59, AEA-02b, AEA-03b). Checked and unchanged since `35aefdd`:
@@ -25,6 +26,20 @@ AEA-57's `scripted_overrides`, so nothing in this plan changes. Still **not** on
 `data-chat-state`, `data-speaker` or `data-block-type` hook exists in `apps/web/src` either). What changed in this plan:
 step 13's exact ICM row and DO-3 insertion point (the files moved on), §7's note on reds already on `main`, §8 R-9 and
 R-10.
+
+**Second refresh, 2026-10-21, against `c9b17ea`** (merges since `68b1412`: AEA-43 demo routes `db9ef50`, AEA-29 cases and
+handoff `d3facfe`, AEA-24 eval harness, AEA-50 deploy image, AEA-54 docs, the `test_spine` stale-row fix `f63ec50`).
+Re-checked and unchanged: `tests/journeys/support/**` (incl. `NEED_OWNERS`, `OPERATION_OWNERS`: all 30 operations
+mapped), `tests/conftest.py`, `tests/api/openapi_check.py`, `src/meridian/web/{frontend,middleware,app,deps}.py`,
+`routes/auth.py`, `config.py`, `apps/web/**`, `pyproject.toml` (no `playwright` yet), `uv.lock`, `docs/plans/ux-join/`
+(still no `selectors.md`; no `data-login-message` / `data-chat-state` / `data-speaker` / `data-block-type` hook in
+`apps/web/src`), the stage7 addenda this plan cites (only `cases.md` changed), D-4…D-15, the ticket and its slice-plan
+row. `web/container.py` gained the `register_cases` (AEA-29) and `register_demo_routes` (AEA-43) hunks: `getDemoClock`,
+`getStaffing`, `listDemoInbox`, `setStaffing`, `resetDemo` are now **routed**, while `register_demo` (AEA-30),
+`register_chat` (AEA-40) and `register_graph` (AEA-51) are still no-ops. The step-13 anchors (area-map row `3+` ending
+`; the rest planned`, the ICM row at `2788964`, DO-3 §9's `browser/ (AEA-58)` and *Built on `main`* sentence) are
+unchanged. What changed in this plan: §4.7 (the API calls the production shell makes), §5 *must not* (no `networkidle`
+after sign-in), §7 (reds on `main`, capture row C-10), §8 R-2, R-9, R-11, R-12, §9 *Gates*.
 
 ---
 
@@ -73,7 +88,7 @@ AC-16).
 | Evaluation plan | DO-5 `docs/design/evaluation-plan.md` | n/a: deterministic pass/fail; no E-n number (ticket *Evaluation*) |
 | Observability contract | DO-6 `docs/design/observability-contract.md` rows WF-1 (records `request`, `conversation`, `turn`), WF-18 (`request`, `auth_event` ok/rejected/logged_out/rate_limited with the opaque session id), WF-19 (`request` with route `spa_fallback` or `/assets/{file}`) | AC-11 |
 | Key-metrics registry | DO-7 | n/a: test-only, no record added (ticket *Metrics*) |
-| Current code read for this plan | `tests/journeys/support/{plugin,run,env,server,client,db,logtap,steps,record,scripted_model}.py` and `README.md` (AEA-57, on `main`); `tests/journeys/j1/test_aea_57.py`; `tests/journeys/{README.md,affected.py}`; `tests/conftest.py`; `tests/api/openapi_check.py`; `src/meridian/web/{frontend,middleware,app,container,deps}.py`, `routes/auth.py`; `src/meridian/config.py`; `src/meridian/policy/limits.py` (`WebLimits`); `apps/web/{package.json,playwright.config.ts,README.md,scripts/check-dist.mjs,scripts/paths.mjs,src/dev/install.ts}`; `pyproject.toml`; re-read at `68b1412`: `web/container.py` (new hunks), `adapters/sqlite/schema/{00_core,20_spend,90_staff}.sql` (`conversations.demo_session`, `turns.response`, `turns.status`, `staff_sessions.session_id`, `spend_ledger.cost_usd`), `adapters/sqlite/repos_core.py` (stored response = `turns.response`) | §4 |
+| Current code read for this plan | `tests/journeys/support/{plugin,run,env,server,client,db,logtap,steps,record,scripted_model}.py` and `README.md` (AEA-57, on `main`); `tests/journeys/j1/test_aea_57.py`; `tests/journeys/{README.md,affected.py}`; `tests/conftest.py`; `tests/api/openapi_check.py`; `src/meridian/web/{frontend,middleware,app,container,deps}.py`, `routes/auth.py`; `src/meridian/config.py`; `src/meridian/policy/limits.py` (`WebLimits`); `apps/web/{package.json,playwright.config.ts,README.md,scripts/check-dist.mjs,scripts/paths.mjs,src/dev/install.ts}`; `pyproject.toml`; re-read at `68b1412`: `web/container.py` (new hunks), `adapters/sqlite/schema/{00_core,20_spend,90_staff}.sql` (`conversations.demo_session`, `turns.response`, `turns.status`, `staff_sessions.session_id`, `spend_ledger.cost_usd`), `adapters/sqlite/repos_core.py` (stored response = `turns.response`); re-read at `c9b17ea`: `web/container.py` (`register_cases`, `register_demo_routes` hunks; `register_demo`, `register_chat`, `register_graph` still no-ops), `web/routes/demo.py`, `routes/auth.py` (the 401/429 paths precede the clock reading), `tests/journeys/support/steps.py` (owner maps), `tests/journeys/j1/test_aea_49.py` (AEA-49's mock-tested HTTP check; not edited), `apps/web/src/{state/session.tsx,state/demoStatus.tsx,screens/scr01/core/gateway.ts,screens/scr01/core/useChat.ts}` (the shell's own API calls) | §4 |
 
 ---
 
@@ -371,6 +386,13 @@ getDemoClock.
   `:48` `host.id = "mhc-dev-panel-root";`.
 - Same-origin relative `/api` calls with `credentials: "include"` (`src/api/client.ts`); thread id kept per tab in
   `sessionStorage` (N-31). Neither is a contract; the tests assert behaviour through the network log, not storage.
+- **API calls the production shell makes on its own** (read 2026-10-21 at `c9b17ea`; expect them in the network log,
+  never assert their absence): `getSession` (`src/state/session.tsx`, on load and after sign-in; a signed-out 401 is
+  documented), `getDemoClock` + `getStaffing` (`src/state/demoStatus.tsx`, signed in), `logout` (`session.tsx`, the
+  "Sign out" control), and on SCR-1 `startChatSession` / `getChatThread` / `submitTurn` (`src/screens/scr01/core/gateway.ts`)
+  plus `streamChatEvents` (`src/screens/scr01/core/useChat.ts`, an SSE stream opened after a thread exists; AEA-41's
+  route is mounted). All of them pass through `validate_exchanges` (AC-7). AC-4's and AC-5's operation-sequence
+  assertions only count `startChatSession` / `submitTurn` / `getChatThread`; the printed sequence shows the others too.
 - SCR-12 copy (ticket AC-6, SCREEN_SPECS SCR-12 *error*): `"That username or password didn't work. Check the README and try again."`;
   throttle line (UI_CONTRACTS.md CON-22, `LOGIN_RATE_LIMITED` row, line 101): `"Too many attempts. Wait a moment and try again."`.
   These are **expected text values**, not selectors.
@@ -1037,6 +1059,11 @@ Order matters: put "9e records" **before** "9d" so a blocked throttle line does 
   tick "Show password".
 - Turn a blocked step into a pass, a skip with another message, or a removed assertion; `pytest.skip` directly (use
   `browser_step`).
+- Call `page.wait_for_load_state("networkidle")` after a sign-in: the signed-in shell polls and holds an SSE stream open,
+  so the network never goes idle. Signed-out pages (steps 2b, 8a) are the only `networkidle` waits; signed in, wait for a
+  named operation (`bp.net.wait_for`) or `page.wait_for_timeout(…)`.
+- Treat a `500` from a mounted route as "blocked" in `validate_exchanges`. A 500 is an undocumented status and fails the
+  teardown (AC-7); report it with the server log line. Only an **unrouted** operation is counted as blocked (PA-2).
 - Read `eval/cases/heldout/` or any key directory; call a paid model; `git add -A`; push; force-push.
 
 ---
@@ -1068,11 +1095,12 @@ run with `perl -e 'alarm 300; exec @ARGV'`. pytest `-n 2` at most (not needed he
 | C-7 | AC-12 | `MERIDIAN_WEB_DIST_DIR=$(mktemp -d) uv run pytest -m journey tests/journeys/j1/test_aea_58.py -q` | **errors** (not skips) whose text names `npm --prefix apps/web run build` and `MERIDIAN_REQUIRE_FRONTEND` |
 | C-8 | AC-13, AC-10 | `git -C /home/linuxuser/workspaces/inno-aea-callcenter status --porcelain apps/web`; `grep -rn heldout tests/journeys/browser tests/journeys/j1/test_aea_58.py tests/journeys/j9/test_aea_58.py`; `grep -rnE "locator\(\|get_by_" tests/journeys --include=*.py \| grep -v tests/journeys/browser/selectors.py` | all three print nothing |
 | C-9 | AC-17 | `git diff --stat main...HEAD` | only the owned files of §2 |
+| C-10 | capture verification (WF-1, WF-18, WF-19; AC-11) | inside C-2: `tests/journeys/j1/test_aea_58.py::test_browser_path_records` and the J-9 step "9e records" | 11a passes on today's `main` (`spa_fallback` 303/200 and `/assets/{file}` 200 records, `caller_role` `anonymous`, `x-request-id` on each); 11b–11e and 9e pass or report `blocked-on` their owners (AEA-30, AEA-40, AEA-51, UX session) |
 
 **Reds already on `main` (not this ticket's; do not fix, do not count against it):**
 `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (stale since the first journey
-landed, AEA-57 ledger row) and four reply-stub tests in `tests/graph/test_spine.py` (stale since AEA-38, AEA-34 ledger
-row). None is in C-1…C-5. If the merge agent's full suite shows them, it compares with the same run on `main` and
+landed, AEA-57 ledger row; still present at `c9b17ea`). The four `tests/graph/test_spine.py` stub rows noted at the
+first refresh were fixed on `main` (`f63ec50`). Neither file is in C-1…C-5. If the merge agent's full suite shows them, it compares with the same run on `main` and
 treats only new reds as this ticket's.
 
 **Full suite:** `pytest-playwright` is a new dev dependency and a pytest plugin that loads into every session, so this
@@ -1086,7 +1114,7 @@ every `tests/journeys/j*/test_aea_*.py`, and the whole suite at merge.
 
 ## 8. Risks and requests
 
-- **R-1 (biggest): the UX selector contract does not exist** (re-checked at `68b1412`: no file, no commit ever touched
+- **R-1 (biggest): the UX selector contract does not exist** (re-checked at `c9b17ea`: no file, no commit ever touched
   that path, and none of the contract's `data-*` hooks is in `apps/web/src`). `docs/plans/ux-join/selectors.md` was due before UX-4
   sign-off (`FOR-UX-SESSION.md` §2) but UX-4 was signed without it, and `apps/web` has only `data-screen="SCR-1"` and
   `data-entry`. Consequence: every on-screen step (sign-in form, SCR-12 drawn, chat entries, composer, sign-out, refusal
@@ -1097,7 +1125,11 @@ every `tests/journeys/j*/test_aea_*.py`, and the whole suite at merge.
 - **R-2: run-time blocked owners on today's `main`.** Every successful sign-in needs `demo_clock` (AEA-30); chat steps
   need AEA-40's routes; the turn needs `run_graph` / `reply_composer` (AEA-51, wave 3). These show as *blocked*, not
   failed, and the record's *Blocked by* names them. Under `--journeys-strict` (wave merge, pre-deploy) they fail, as
-  intended.
+  intended. AEA-29 (`case_service`, `handoff_service`) is now merged and no J-1/J-9 step needs it. **The wrong-pair and
+  throttled paths do not need AEA-30:** `routes/auth.py` answers `401 LOGIN_FAILED` / `429 LOGIN_RATE_LIMITED` before
+  `sessions.start` reads the demo clock, so J-9 keeps `LOGIN_NEEDS = ("login_sessions",)`. (`resume.md`'s wave-2 audit
+  line "even wrong credentials give 500" disagrees with the code; if C-2 shows a 500 on a wrong pair, report it as a
+  finding with the log line. Do not relabel the step as blocked.)
 - **R-3: duplication with AEA-57's `open_journey`.** `server.open_browser_journey` repeats ~35 lines because
   `journey_environ` hard-codes the no-frontend settings and `support/` is AEA-57's. Optional follow-up on AEA-57 (not
   requested now): an `environ_overrides` argument on `open_journey`, after which `server.py` shrinks to a call.
@@ -1120,10 +1152,21 @@ every `tests/journeys/j*/test_aea_*.py`, and the whole suite at merge.
 - **R-9: dependency footprint.** `uv add --dev "pytest-playwright>=0.10"` also pulls its own dependencies (among them
   `playwright`, `greenlet`, `pyee`, `pytest-base-url` and what they need); all of them land in `uv.lock` only, never as
   extra `pyproject.toml` lines. `pytest-base-url` adds a `base_url` fixture and a `--base-url` option; this plan uses
-  neither (contexts get `base_url=run.base_url` directly). Disk at refresh: 18 GB free on `/`.
+  neither (contexts get `base_url=run.base_url` directly). Disk at the second refresh: 16 GB free on `/`; system Chrome
+  `153.0.8010.47`; Node `v24.21.0`; `apps/web/node_modules` present in the primary checkout.
 - **R-10: duplicate ICM row.** `.claude/state/icm-progress.md` has two *Integrated-journey protection* rows; the older
   (evidence "nothing executable yet") is stale since AEA-57. Not this ticket's to delete (context-maintenance: replace
   evidence in the affected row); reported so the orchestrator's wave-3 context pass can drop it.
+- **R-11: the shell's own calls are validated too.** After sign-in the production shell calls `getSession`,
+  `getDemoClock`, `getStaffing` and, on SCR-1, `streamChatEvents` (§4.7). These routes are now mounted (AEA-43, AEA-41,
+  AEA-44), so their responses are **validated**, not counted as unrouted. Sign-in needs AEA-30, which also binds the demo
+  service behind `getDemoClock` / `getStaffing`, so on `main` none of them is reached signed in. If a later partial merge
+  leaves a mounted route answering 500 (service not bound), the teardown fails: that is the intended seam signal. The
+  implementer reports it with the operationId and the server log line, and does not suppress it.
+- **R-12: ledger edge vs import.** `.claude/state/build-ledger.md` lists AEA-58 as blocked on AEA-40, AEA-49, AEA-57
+  (slice plan row: 40, 49, 57 + UX-4). This plan imports nothing from AEA-40. Its routes are reached over HTTP and
+  report *blocked-on AEA-40* until they merge (AC-3's greeting-after-reload assertion is the ticket's own AEA-40 edge).
+  Whether to dispatch before AEA-40 merges is the orchestrator's call; the plan works either way.
 - **No contract change needed.** Decisions 5 and 6 (D-7, D-8) are applied as written; WEB-1 is A (D-4). Nothing here asks
   for an OpenAPI or `UI_CONTRACTS.md` edit.
 
@@ -1131,7 +1174,11 @@ every `tests/journeys/j*/test_aea_*.py`, and the whole suite at merge.
 
 ## 9. Readiness
 
-**READY.** No import is missing: AEA-57, AEA-49, AEA-23 and AEA-44 are on `main` `68b1412`, and UX-4 is signed.
+**READY.** No import is missing: AEA-57, AEA-49, AEA-23 and AEA-44 are on `main` `c9b17ea`, and UX-4 is signed.
 Run-time dependencies (reported as *blocked* steps, never imported, never passed): AEA-30 (`demo_clock`), AEA-40 (chat
 routes, AEA-40-1 greeting), AEA-51 (`run_graph`, `reply_composer`), and the UX session's `selectors.md` plus its hooks in
 `dist` (R-1). No `NEEDS-DECISION`.
+
+**Gates.** `gate::ux4`: met (UX-4 signed, Innocent ✓ 2026-10-21). No paid, live or human gate: the suite uses the
+scripted model only (AEA-61 owns live smoke). The full suite runs at this ticket's merge because a dev dependency and a
+session-wide pytest plugin are added (§7 *Full suite*).

@@ -3,16 +3,40 @@
 **Status:** planned — READY, **blocked-on AEA-58** (its `tests/journeys/browser/` package plus the three additions in
 §8 R-1, which the orchestrator should fold into AEA-58's plan before AEA-58 is built, or land as one AEA-58 follow-up
 merged first) and **AEA-51** (`tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`, §4.4).
-AEA-52, AEA-29, AEA-37, AEA-39, AEA-40, AEA-45 and the UX session's `docs/plans/ux-join/selectors.md` are **run-time**
+AEA-52, AEA-37, AEA-39, AEA-40, AEA-45 and the UX session's `docs/plans/ux-join/selectors.md` are **run-time**
 dependencies: missing ones show as *blocked* steps with their owner, never imported and never passed. No
 `NEEDS-DECISION`: Decision 6 (D-8, start fresh) and WEB-1 (D-4, option A) are applied as decided; no contract change.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/62 (identical to
-`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `bb9a471` · **Wave:** 4 · **Lane:** build-loop ·
+`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `c9b17ea` (earlier versions: `e22aebb`, `bb9a471`) · **Wave:** 4 · **Lane:** build-loop ·
 **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests) · **Gate:** inherits
 `gate::ux4` through AEA-58.
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-62-browser-journeys` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-62`), cut from `main` **after** AEA-58 and AEA-51 merged.
+
+**Refresh 3 (2026-10-21, against `main` `c9b17ea`; read this box first).** Merged since `bb9a471`: **AEA-29** (cases and
+handoff services, merge `ef561fc`), plus AEA-24, AEA-50 and AEA-54 (none of those three touches this slice). Still not
+merged: AEA-58, AEA-51, AEA-52, AEA-30, AEA-35, AEA-37, AEA-39, AEA-40, AEA-45. `docs/plans/ux-join/selectors.md` is still
+unpublished. AEA-58's refreshed plan (working copy at `c9b17ea`) still does **not** carry additions A-1…A-3, so §8 R-1
+stands unchanged; its helper names in §4.2 still match. AEA-51's plan names in §4.4 are unchanged. `src/meridian/agent/`
+is unchanged since `bb9a471`, so §4.5 and §4.6's graph lines still hold. What changed in this version, all from reading
+AEA-29's merged code:
+1. **AC-9's "`case_created` case event" is two rows on `main`.** `services/cases.py::CaseService.open_case` appends a
+   `case_events` row with `kind = 'case_opened'` and an `events` row on the thread stream (`stream` = the bare thread id)
+   with `type = 'case_created'` (stage7/cases.md: "`case_created` goes to the thread stream"). Step 5 asserts **both**
+   (one each, the stream payload's `case_ref` equal to the reference). No expectation is loosened.
+2. **AC-11's staff guidance exists only with the built index.** `web/container.py::_guidance()` reads
+   `<index_dir>/staff_notes.json`; without it the server logs `staff_guidance_unavailable` and the brief gets no guidance
+   item. `test_j6_case_view_brief_and_promise` therefore runs `browser_run(J6, index=True)`.
+3. **The guidance item's text is the whole KB bullet** (`StaffGuidance.text`, matched by prefix in
+   `services/handoff.py::resolve_staff_guidance`), placed under heading 7 with kind `fact`. AC-11 matches it with
+   `startswith(STAFF_GUIDANCE_FOR[HandoffReason.REFUND][0])`.
+4. **Wire shapes of the case view** (`services/_case_views.py`): `source_id = f"src-{lookup_log.id}"`; an item's
+   `source_ids` lists only its `lookup_log` sources; every wire item text passes through `mask()`. AC-11's
+   stored-vs-shown check therefore compares titles, item counts and kinds for all eight headings, and exact texts only
+   for headings 2 and 4 (customer quotes with no contact value).
+5. `handoff_service` and `case_service` are bound on `main`; J-6 steps now block only on AEA-45 (`getQueue`, `getCase`),
+   AEA-40, AEA-51, AEA-30 and the UX selectors. The icm-progress rows moved to lines 43 and 52.
 
 **Refresh note (2026-10-21, against `main` `bb9a471`; the first version was written against `e22aebb`).** Still true:
 AEA-58, AEA-51, AEA-52, AEA-29, AEA-40, AEA-45 are not merged; `tests/journeys/support/` is unchanged; `selectors.md`
@@ -59,7 +83,7 @@ case. Every `/api/*` response Chrome received is checked against the OpenAPI whe
 
 AEA-51 and AEA-52 prove J-2, J-3, J-6 and J-8 through the HTTP API; AEA-58 proves J-1 in a browser. This ticket moves
 the integrated legs of J-2, J-3, J-6 and J-8 into Chrome (slice plan §0a, Amendment 1), using AEA-58's browser harness,
-AEA-57's support package and AEA-51's script helpers, all unchanged. On `main` today (`bb9a471`) neither AEA-58's
+AEA-57's support package and AEA-51's script helpers, all unchanged. On `main` today (`c9b17ea`) neither AEA-58's
 `browser/` package nor AEA-51's helpers exist, `join_plan` (AEA-37) and the specialist runner (AEA-35/39) are not
 merged, and `docs/plans/ux-join/selectors.md` has not been published, so until those land every on-screen step reports
 *blocked* with its owner.
@@ -78,7 +102,7 @@ merged, and `docs/plans/ux-join/selectors.md` has not been published, so until t
 | Evaluation plan | DO-5 | n/a: no E-n suite, no number (ticket *Evaluation*) |
 | Observability contract | DO-6 rows WF-1, WF-3 ("`thread_id` of the code request"), WF-4, WF-18, WF-19 | AC-17 |
 | Key-metrics registry | DO-7 M-7, M-9, M-10, M-18, M-22, M-27 | Source columns asserted present on the rows each journey creates; no value reported |
-| Current code read (`main` `bb9a471`) | `tests/journeys/support/{steps,run,client,db,scripted_model,plugin,server,record,logtap,README}.py/md`, `tests/journeys/j1/test_aea_57.py`, `tests/journeys/affected.py`; `src/meridian/agent/routers.py` (`route_after_gates`, `route_after_identity`, `_route_planned`), `agent/nodes/reply.py` (`_task_status`), `agent/tools/{knowledge,account,scheduling}.py` (tool names, argument models, descriptions), `adapters/retrieval_fastembed.py`, `retrieval/settings.py`, `domain/{turn,specialists,handoff,records,common}.py`, `policy/{handoff,texts,limits}.py`, `web/{logging,middleware,frontend}.py`, `web/routes/{auth,demo}.py`, `adapters/sqlite/schema/00_core.sql`; the AEA-58 and AEA-51 plans in this folder (AEA-58 §5 steps 2–8; AEA-51 Part C1, Part D1) | §4 |
+| Current code read (`main` `c9b17ea`) | `src/meridian/services/{cases,handoff,_case_views,_case_rules}.py` (AEA-29: `open_case` events, `BriefAssembler`, `resolve_staff_guidance`, `case_sources`, `brief_view`, `mask`), `adapters/sqlite/schema/{60_cases,90_staff}.sql`, `adapters/sqlite/repos_cases_state.py` (`next_case_ref`), `web/container.py` (`_guidance`), `web/deps.py` (`HANDOFF_SERVICE`, `CASE_SERVICE`); `tests/journeys/support/{steps,run,client,db,scripted_model,plugin,server,record,logtap,README}.py/md`, `tests/journeys/j1/test_aea_57.py`, `tests/journeys/affected.py`; `src/meridian/agent/routers.py` (`route_after_gates`, `route_after_identity`, `_route_planned`), `agent/nodes/reply.py` (`_task_status`), `agent/tools/{knowledge,account,scheduling}.py` (tool names, argument models, descriptions), `adapters/retrieval_fastembed.py`, `retrieval/settings.py`, `domain/{turn,specialists,handoff,records,common}.py`, `policy/{handoff,texts,limits}.py`, `web/{logging,middleware,frontend}.py`, `web/routes/{auth,demo}.py`, `adapters/sqlite/schema/00_core.sql`; the AEA-58 and AEA-51 plans in this folder (AEA-58 §5 steps 2–8; AEA-51 Part C1, Part D1) | §4 |
 
 ### Source-contract reconciliation
 
@@ -93,6 +117,9 @@ merged, and `docs/plans/ux-join/selectors.md` has not been published, so until t
 | A fresh login is role `customer`; landing on `/staff/cases/<ref>` after re-sign-in shows the role panel, not the case | staff.md §2 | implicit | AC-15 asserts the URL only | step 6 |
 | Opening a new browser tab on `/` starts a second chat (thread id per tab, N-31) | SCREEN_SPECS SCR-1 | implicit | tab B in AC-13 / AC-20 opens `/role` (SCR-4), never `/` | step 6 |
 | Element screenshots for cards in flows that showed identity values | ticket ("screenshot of the account card only") | yes | needs AEA-58 addition A-3 | §8 R-1 |
+| "a `case_created` case event" (AC-9) | stage7/cases.md (thread stream gets `case_created`); `services/cases.py::open_case` | yes | decided: assert `case_events.kind = 'case_opened'` (1 row) **and** `events` (`stream` = thread id, `type = 'case_created'`, 1 row, payload `case_ref` = ref) | step 5 (AC-9) |
+| Staff guidance needs `staff_notes.json` from the built index | `web/container.py::_guidance` | implicit | AC-11 runs with `index=True` | step 5 (AC-11) |
+| Wire brief texts are masked; `source_ids` only from `lookup_log` sources | `services/_case_views.py::brief_view` | implicit | AC-11 compares stored and shown by title, count and kind; exact text for headings 2 and 4 | step 5 (AC-11) |
 | Redaction of stored text, SSE frame bodies, live models, J-4/5/7/9/10 in a browser | CAP-n, AEA-41/59, AEA-61, slice plan | excluded | other-ticket | — |
 | Selector contract for every asserted state | FOR-UX-SESSION §3 | yes | blocked-on UX session (run time, per step) | §4.3 |
 
@@ -116,7 +143,7 @@ merged, and `docs/plans/ux-join/selectors.md` has not been published, so until t
 | `tests/journeys/j8/test_aea_62.py` | create | J-8: role switch and resume, refusal then allowed, signed out and expired, header for four roles, role change elsewhere, evidence clean, records present (AC-13…AC-17, AC-19, AC-20) | ≤ 500 |
 | `docs/testing/journeys/<run-date>-AEA-62.md` + folder `docs/testing/journeys/<run-date>-AEA-62/` (PNGs) | create (written by command C-6, then committed) | AC-18 record and screenshots | generated |
 | `.claude/reference/area-map.md` | modify **one cell**: row `3+`, last column | AC-21 | — |
-| `.claude/state/icm-progress.md` | modify **one row**: the *Integrated-journey protection* row whose evidence cell names AEA-57 (today line 42) | AC-21 | ≤ 400 chars |
+| `.claude/state/icm-progress.md` | modify **one row**: the *Integrated-journey protection* row whose evidence cell names AEA-57 (today line 43) | AC-21 | ≤ 400 chars |
 | `docs/design/code-design.md` | modify §9 only: the `journeys/` lines of the `tests/` tree and the *Built on `main`* sentence | AC-21 | — |
 
 `tests/journeys/browser/README.md` is **not** edited: AEA-58's plan gives its README no journey list for later tickets,
@@ -157,9 +184,9 @@ static ones is **`integrated with a scripted model`**. Step names in quotes are 
 | AC-6 | **journey** (WP-3; WF-1) | Code to phone ending 01; Monday windows 56/42/58, no Saturday; pick 8–12 → "You're booked. Here are the details." + confirmation card + "What's settled"; slot 56 not open, one appointment, one `booked` action with CON-2's `turn_id`, window-search lookups, no case, issued SHA unchanged | `book_slot_56()` driver | `tests/journeys/j3/test_aea_62.py::test_j3_book_to_confirmation` | integrated |
 | AC-7 | **journey** (R-45, WP-4F turn-4 shape) | Reload: same thread, greeting first, confirmation card, settled visit; `getChatThread`, no second `startChatSession`; "Yes, please." reply kept whole (completion `pass`); settled = actions; counts unchanged | Driver + reload + follow-up turn | `j3/test_aea_62.py::test_j3_reload_and_follow_up_remembers` | integrated |
 | AC-8 | failure/refusal | After reload, replaying the booking turn or tapping the old card's 1–5 pm window books nothing; counts and slot statuses equal | Driver + replay + old card | `j3/test_aea_62.py::test_j3_old_card_writes_nothing` | integrated |
-| AC-9 | **journey** (WP-7; WF-1) | Handoff card: `MHC-C-NNNN` (≥ 0009), refund promise + "I can't promise an outcome.", due "Tue Oct 20 · 7:00 pm", follow-up legend; settled request; one `refund` P3 case, promise = table text `open`, `case_created` event, turn and conversation `handed_off` | `refund_case()` driver | `tests/journeys/j6/test_aea_62.py::test_j6_refund_handoff_in_chat` | integrated |
+| AC-9 | **journey** (WP-7; WF-1) | Handoff card: `MHC-C-NNNN` (≥ 0009), refund promise + "I can't promise an outcome.", due "Tue Oct 20 · 7:00 pm", follow-up legend; settled request; one `refund` P3 case, promise = table text `open`, `case_opened` case event + `case_created` thread-stream event, turn and conversation `handed_off` | `refund_case()` driver | `tests/journeys/j6/test_aea_62.py::test_j6_refund_handoff_in_chat` | integrated |
 | AC-10 | **journey** | One click "Acting as" Representative → `/staff/queue`, "Riley · demo representative"; new row "P3 · Standard", ref, refund reason, "Unowned", due; four seeds; MHC-C-0008 "P0 · Safety" first; role column `representative` same `session_id`; reading writes no `case_events` | Driver + switch | `j6/test_aea_62.py::test_j6_case_in_staff_queue` | integrated |
-| AC-11 | **journey** (WF-4; R-28, R-29) | SCR-6 `/staff/cases/<ref>`: "Unassigned, nobody owns it yet"; promise text + Open; eight headings = `BRIEF_TITLES`; section 4 "Customer says · not checked" with both claims; refund guidance sourced (CAS-33); every chip → `#src-<source_id>`; stored brief = shown; no `case_events`, `cases.version` unchanged | Driver + switch + open row | `j6/test_aea_62.py::test_j6_case_view_brief_and_promise` | integrated |
+| AC-11 | **journey** (WF-4; R-28, R-29) | SCR-6 `/staff/cases/<ref>`: "Unassigned, nobody owns it yet"; promise text + Open; eight headings = `BRIEF_TITLES`; section 4 "Customer says · not checked" with both claims; refund guidance sourced (CAS-33); every chip → `#src-<source_id>`; stored brief = shown; no `case_events`, `cases.version` unchanged | Driver (built index) + switch + open row | `j6/test_aea_62.py::test_j6_case_view_brief_and_promise` | integrated |
 | AC-12 | **journey** (WP-8) | New chat: verify, renewal read; "I can't switch off auto-renewal from this chat."; handoff "…within 1 business day"; "Done, auto-renew is off" absent; SCR-5 lists it "P3 · Standard"; `membership_cancel` P3 case + promise; completion `trimmed` row; customer row unchanged | Own driver; parallel specialists through `by_marker` | `j6/test_aea_62.py::test_j6_membership_cancel_honest_limit` | integrated |
 | AC-13 | **journey** (N-29, N-31, STF-19) | Switch to Representative → SCR-5; back to Customer → SCR-1 same conversation (`getChatThread`, no `startChatSession`); reload SCR-6 keeps the case and role (`getSession`); tab A chat works while tab B is representative; one `staff_sessions` row whose role follows; one conversation; no `case_events` from reads | Two tabs, one context | `tests/journeys/j8/test_aea_62.py::test_j8_role_switch_and_resume` | integrated |
 | AC-14 | failure/refusal (rule §3.5) | Customer on `/staff/queue`: SCR-4 line, no staff data, `getQueue` 403 `ROLE_NOT_ALLOWED` `wrong_role`; Representative on that page → 200 | One tab | `j8/test_aea_62.py::test_j8_customer_refused_then_switch_allowed` | integrated |
@@ -381,6 +408,15 @@ Script arguments (exact; built from the models so a rename fails at import):
 - `routers.route_after_specialists` → escalation; `route_after_facts` → `["responder", "brief"]` when a handoff was
   created, else `["responder"]`.
 - `web/middleware.py`: the `request` record's `thread_id` comes only from a `{thread_id}` path parameter.
+- `services/cases.py::CaseService.open_case` (AEA-29, merged): reference = `max(highest number, 8) + 1` (so the first
+  live case is `MHC-C-0009`); writes `cases`, `promises`, one `case_events` row `kind = 'case_opened'`, one `actions` row
+  `case_opened`, and one `events` row `stream = <thread_id>`, `type = 'case_created'`, payload JSON with `case_ref`.
+- `services/handoff.py::BriefAssembler`: headings 1, 3, 5, 6, 8 from stored facts; heading 2 (`needs`) and 4 (`claims`)
+  from the extraction, each quote kept only if it is a substring of that customer message (kind `claim`); heading 7 =
+  staff guidance items (kind `fact`, source the `staff_guidance` lookup row) plus the open decision (kind `decision`).
+- `web/container.py::_guidance()`: guidance only when `<settings.index_dir>/staff_notes.json` exists.
+- `services/_case_views.py`: `CaseSource.source_id = f"src-{lookup_log.id}"`; the guidance source has `title = "Agent
+  discretion notes"`, `audience = "staff_only"`; `BriefItemView.text = mask(item.text)`.
 
 ### 4.7 Wire and storage shapes (OpenAPI and schema, read only)
 
@@ -416,9 +452,9 @@ Script arguments (exact; built from the models so a rename fails at import):
   (`record_ids`, `passage_ids` are JSON arrays), `check_events(id, thread_id, at, check_kind ∈ {completion, fact,
   brief_fact, brief_quote, gate, classifier, brake}, turn_id, result ∈ {pass, trimmed, fallback, fired, raised},
   removed, claim_kinds, codes)`, `spend_ledger(thread_id, turn_id, role, …)`, `identity_threads(thread_id, status,
-  customer_id, …)`, `cases(case_ref, thread_id, reason, priority, due_at, version, seed, …)`, `case_events(case_ref,
-  kind, …)`, `promises(case_ref, policy_row, text, status, due_at, …)`, `case_briefs(case_ref, brief_json, status)`,
-  `staff_sessions(session_id, role, …)`; issued `customers`, `appointment_slots(slot_id, slot_date, window, tech_id,
+  customer_id, …)`, `cases(case_ref, thread_id, reason, priority, due_at, version, seed, …)`, `case_events(id, case_ref,
+  kind, event_key, actor_role, detail_json, at)`, `events(id, stream, type, payload, at)`, `promises(case_ref, policy_row, text, status, due_at, …)`, `case_briefs(case_ref, brief_json, status)`,
+  `staff_sessions(token_hash, session_id, role, role_reset_pending, signed_in_demo, created_real, expires_real)`; issued `customers`, `appointment_slots(slot_id, slot_date, window, tech_id,
   zone, service_type, status)`, `appointments(appointment_id, slot_id, customer_id, status, …)`.
 - Dates: compare stored `due_at` with `datetime.fromisoformat(value) == datetime(2026, 10, 20, 19, 0, tzinfo=CHI)`
   (aware comparison; `CHI = ZoneInfo("America/Chicago")`).
@@ -803,11 +839,12 @@ Any]`), steps:
      == "refund"`; `c["priority"] == "P3"`; `datetime.fromisoformat(c["due_at"]) == datetime(2026, 10, 20, 19, 0,
      tzinfo=CHI)`; `p = run.db.one("SELECT * FROM promises WHERE case_ref = ?", (ref,))`; `p["text"] ==
      PROMISE_TABLE["R26.refund"]` and `p["status"] == "open"`; `run.db.count("case_events", "case_ref = ? AND kind =
-     'case_created'", (ref,)) == 1`; `run.db.scalar("SELECT outcome FROM turns WHERE turn_id = ?", (t.turn_id,)) ==
+     'case_opened'", (ref,)) == 1`; `ev = run.db.rows("SELECT payload FROM events WHERE stream = ? AND type =
+     'case_created'", (tid,))`; `len(ev) == 1 and json.loads(ev[0]["payload"])["case_ref"] == ref` (refresh 3 item 1); `run.db.scalar("SELECT outcome FROM turns WHERE turn_id = ?", (t.turn_id,)) ==
      "handed_off"`; `run.db.scalar("SELECT outcome FROM conversations WHERE thread_id = ?", (tid,)) == "handed_off"`.
      Print the card text and rows. `brun.screenshot(bp, "handoff-card")` (no identity values were shown in this chat).
    - Step "9d records": `assert_turn_records`.
-2. **`test_j6_case_in_staff_queue(browser_journey_factory)`** (AC-10) — driver; step "10a switch"
+2. **`test_j6_case_in_staff_queue(browser_journey_factory)`** (AC-10) — `browser_run(J6)`; driver; step "10a switch"
    (`needs=STAFF_NEEDS, operations=("switchRole", "getQueue"), selectors=("shell.role.representative", "screen.scr5",
    "queue.row", "queue.row_by_ref")`): `before = run.db.one("SELECT session_id, role FROM staff_sessions")`;
    `events_before = run.db.count("case_events")`; `page.set_viewport_size({"width": DESKTOP.width, "height":
@@ -823,7 +860,9 @@ Any]`), steps:
    - Stored: `after = run.db.one("SELECT session_id, role FROM staff_sessions")`; same `session_id`, role
      `representative` (before `customer`); `run.db.count("case_events") == events_before`. Print the row order and
      texts, role before and after. `brun.screenshot(bp, "scr5")`.
-3. **`test_j6_case_view_brief_and_promise(browser_journey_factory)`** (AC-11) — driver; switch as 10a (only the 200 and
+3. **`test_j6_case_view_brief_and_promise(browser_journey_factory)`** (AC-11) — **`browser_run(J6, index=True)`**
+   (the staff guidance needs `staff_notes.json`, §4.6; without the cached model the run blocks with owner
+   "environment (fastembed model cache)", never passes); driver; switch as 10a (only the 200 and
    the path); step "11a open case" (`needs=STAFF_NEEDS, operations=("getCase",), selectors=("queue.row_by_ref",
    "screen.scr6", "case.root", "case.owner", "case.promise", "case.promise.open", "brief.section_by_number",
    "brief.heading", "brief.item.tag", "case.sources_tab", "case.source_by_id")`): `version_before =
@@ -837,14 +876,17 @@ Any]`), steps:
      "brief.item.tag")` text contains "Customer says · not checked", and `sec4.inner_text()` contains "It didn't fix
      anything" and "I had to call another company".
    - API: `[h["title"] for h in d["brief"]["headings"]] == list(BRIEF_TITLES)`; heading 4 items with `kind == "claim"`
-     include both quote texts; `guide = [i for h in d["brief"]["headings"] for i in h["items"] if i["text"] ==
-     STAFF_GUIDANCE_FOR[HandoffReason.REFUND][0]]`; `guide and all(i["source_ids"] for i in guide)`; `ids = {s for h in
+     include both quote texts; `h7 = d["brief"]["headings"][6]`; `guide = [i for i in h7["items"] if i["kind"] == "fact" and
+     i["text"].startswith(STAFF_GUIDANCE_FOR[HandoffReason.REFUND][0])]`; `len(guide) == 1 and guide[0]["source_ids"]`;
+     `g_src = next(s for s in d["sources"] if s["source_id"] == guide[0]["source_ids"][0])`; `g_src["audience"] ==
+     "staff_only"`; `ids = {s for h in
      d["brief"]["headings"] for i in h["items"] for s in i["source_ids"]}`; `ids <= {s["source_id"] for s in
      d["sources"]}`; `d["promise"]["status"] == "open"`.
    - Visible chips: click `locate(page, "case.sources_tab")`; for each `sid` in `sorted(ids)`: `locate_by(page,
      "case.source_by_id", sid)` is visible. Print heading titles, claims, and `sid → title` pairs.
    - Stored: `stored = json.loads(run.db.scalar("SELECT brief_json FROM case_briefs WHERE case_ref = ?", (ref,)))`; its
-     heading titles == `BRIEF_TITLES` and per heading the item texts equal `d`'s; `cases.version == version_before`;
+     heading titles == `BRIEF_TITLES`; per heading `[i["kind"] for i in items]` equal `d`'s (same count, same order);
+     for headings 2 and 4 the item texts equal `d`'s exactly (wire texts elsewhere are masked, §4.6); `cases.version == version_before`;
      `case_events` count unchanged. `brun.screenshot(bp, "case-brief")`.
 4. **`test_j6_membership_cancel_honest_limit(browser_journey_factory)`** (AC-12; WP-8) — **`browser_run(J6,
    index=True)`** (its knowledge specialist calls `kb_search`), PHONE. "12a sign in and chat"; "12b ask, locate, code"
@@ -1015,7 +1057,7 @@ representative", "supervisor": "Demo supervisor", "owner": "Demo business owner"
 
 ### Step 7 — run while iterating
 
-C-1 per file (§7). Expect *blocked* skips with owners where AEA-52/29/37/39/40/45 or the UX selector rows are missing;
+C-1 per file (§7). Expect *blocked* skips with owners where AEA-30/37/39/40/45/51/52 or the UX selector rows are missing;
 **no failures**. A failure whose cause is the real system storing or showing something other than the expected value is
 a **seam finding on the owning ticket**: report it; never edit the expectation (AEA-57 §2 rule). Known likely finding:
 AC-17's WF-3 line (§8 R-9).
@@ -1041,7 +1083,7 @@ commit body.
      clause as AEA-58 left it): `; browser legs of J-2, J-3, J-6, J-8 `tests/journeys/j{2,3,6,8}/test_aea_62.py`
      actual (AEA-62, `<sha>`)`.
    - `.claude/state/icm-progress.md`: the *Integrated-journey protection* row whose evidence cell names AEA-57 (today
-     line 42; **not** the older row at line 49): replace the evidence link with the AEA-62 record
+     line 43; **not** the older row at line 52): replace the evidence link with the AEA-62 record
      (`[…-AEA-62.md](../../docs/testing/journeys/<date>-AEA-62.md)`), keep the row ≤ 400 characters; next cell: `Every
      J-2/3/6/8 browser step integrated under --journeys-strict (needs the UX selector contract)`. Do not delete or merge
      the duplicate row; mention it in the commit body.
@@ -1155,7 +1197,7 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 - **R-6 shared context rows.** AEA-58, AEA-61 and AEA-55 also edit area-map row `3+`, the icm-progress journey row and
   DO-3 §9. Each edit is one clause; the merge agent keeps both sides. AC-21's `browser/README.md` journey list is a
   follow-up on AEA-58 (its README has no such list). `icm-progress.md` carries two *Integrated-journey protection*
-  rows (lines 42 and 49 today); this slice edits only the AEA-57 one and reports the duplicate for context upkeep.
+  rows (lines 43 and 52 today); this slice edits only the AEA-57 one and reports the duplicate for context upkeep.
 - **R-7 test-to-test imports.** j3, j6 and j8 import helpers from `tests.journeys.j2.test_aea_62` (only non-`test_`
   names), as AEA-58 imports from `j1/test_aea_57.py`. The convention check forbids a separate helper module in `j<N>/`,
   and AC-1 limits this ticket to four files. j2 is therefore the tightest file against the 500-line cap (C-5).
@@ -1174,6 +1216,13 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
   `read_membership` and no account tool description naming `kb_search` (true on `main`). If a later change puts
   `kb_search` into the account specialist's request text, both specialists get the knowledge table and the step fails
   loudly (`invalid_output`); report it.
+- **R-12 source-card DOM id.** The wire `source_id` is already `src-<lookup_log id>` (§4.6), while the ticket and audit
+  A2 speak of `#src-<source_id>`. Which DOM id the Sources tab renders is the UX session's `case.source_by_id` row; the
+  test passes the wire `source_id` as the row's `{value}` and never builds an id itself. A row that cannot resolve a wire
+  id is a seam finding on the UX session.
+- **R-13 AC-11 needs the fastembed cache.** Like AC-2, AC-3, AC-5 and AC-12, AC-11 now needs `bge-small-en-v1.5` in
+  `var/fastembed`; without it the test blocks with owner "environment (fastembed model cache)". Index build is once per
+  process (`built_index_dir` is cached), so the extra cost is one more server start, not a second build.
 - **No contract change needed.** WEB-1 option A (D-4) and start-fresh (D-8) are applied as decided.
 
 ---
@@ -1183,7 +1232,7 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 **READY**, **BLOCKED-ON AEA-58** (its `browser/` package plus additions A-1, A-2, A-3 of §8 R-1) and **AEA-51** (the
 imports in §4.4: `tests/integration/customer_support.py` — `StepScript`, `step_overrides`, `built_index_dir`,
 `fastembed_offline` — and `tests/graph/worked_pair_scenarios.py`). Run-time dependencies, reported as *blocked* steps
-with their owners and never passed: AEA-52 / AEA-29 / AEA-45 (cases, queue, case view), AEA-40 (chat routes, AEA-40-1
+with their owners and never passed: AEA-52 / AEA-45 (queue and case-view routes; AEA-29's services are merged), AEA-40 (chat routes, AEA-40-1
 greeting after reload), AEA-37 / AEA-35 / AEA-39 (plan join and specialists, through AEA-51's `run_graph`), AEA-27
 (identity, merged), AEA-28 (booking, merged), AEA-31 (reset, merged) and AEA-43 (demo inbox, merged), and the UX
 session's `selectors.md` rows plus its B1/B2, A-5 and B-3 fixes in `dist`. No `NEEDS-DECISION`.

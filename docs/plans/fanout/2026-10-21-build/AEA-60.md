@@ -1,12 +1,12 @@
 # Plan — [AEA-60] contract: prompt ↔ consumer checks (rendered prompts vs parsers, ToolDefs and schemas)
 
-**Status:** planned — **READY**, build **blocked-on AEA-35, AEA-37, AEA-39** (refresh 1: AEA-17, 18, 21, 27, 28 and 38 have
-merged; the three left are real imports of this test, §9). Journey level additionally waits on AEA-40 and AEA-51 (steps
+**Status:** planned — **READY**, build **blocked-on AEA-35, AEA-37, AEA-39** (refresh 2 at `c9b17ea`: the same three as
+refresh 1; they are real imports of this test, §9). Journey level additionally waits on AEA-30, AEA-40 and AEA-51 (steps
 skip, never pass, until then).
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/60 (spec copy:
-`docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` at `bb9a471` (refresh 1, 2026-10-21; first written at `35aefdd`) · **Lane:** `lane::build-loop` ·
+`docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` at `c9b17ea` (refresh 2, 2026-10-21; refresh 1 at `bb9a471`; first written at `35aefdd`) · **Lane:** `lane::build-loop` ·
 **Risk:** none (no `risk::security`: no test-writer, no wave-merge security review) · **Wave:** 3 · **Gates:** none
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (first written at `35aefdd`; refreshed at `bb9a471`) · **Implementer:**
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (first written at `35aefdd`; refreshed at `bb9a471` and `c9b17ea`) · **Implementer:**
 `fanout-implementer` on Sonnet · **Slug / branch:** `prompt-consumer-checks` → `aea-60-prompt-consumer-checks`, worktree
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-60` (the orchestrator creates it from `main` once §9's blockers
 have merged).
@@ -14,6 +14,32 @@ have merged).
 Read this whole file before writing code. Every decision is made here (§5.0 lists them as PD-n). **If the code on `main`
 disagrees with a name in this plan, the code on `main` wins: follow it and say so in your report.** If a name this plan
 needs is **missing** on `main`, stop and report `BLOCKED-ON <ticket>`; never invent it, never add product code.
+
+### Refresh 2 (2026-10-21, `main` at `c9b17ea`): what changed since `bb9a471` (read this first)
+
+1. **Merged since refresh 1:** AEA-29 (case service, handoff service, `BriefAssembler`; merge `ef561fc`), AEA-24 (eval
+   harness), AEA-50 (deploy image), AEA-54 (deployment guide). `git diff --stat bb9a471..main` over `src/`,
+   `tests/fakes/`, `tests/fixtures/`, `tests/journeys/support/`, `tests/unit/agent/_gateway_doubles.py`,
+   `tests/conftest.py`, `tests/contract/` and `pyproject.toml` touches only `src/meridian/services/{cases,handoff,
+   _case_actions,_case_rules,_case_views}.py` and `src/meridian/web/container.py`. Every other §4 name is unchanged
+   (re-read on `c9b17ea`: `agent/nodes/reply.py` `brief` / `checks` / `_store_brief`, `agent/prompts/reply.py`,
+   `nodes/compose.py`, `context.py`, `gateway.py`, the AEA-11 fakes, the AEA-57 harness and `NEED_OWNERS`).
+2. **PD-9 changed: the brief consumer is now real.** `GraphDeps.brief` is `RecordingBriefAssembler`, a subclass of the
+   real `meridian.services.handoff.BriefAssembler` (pure: no I/O, no clock) that records each `attach_extraction` call
+   and delegates to `super()` (§5.2). AC-9's "headings 2, 4 and 7 `not_generated`" and `status == "failed"` are now
+   asserted on the real assembler's output (§5.8 item 11). `GraphDeps.cases` stays `CasesDouble`: the real
+   `CaseService` needs a case opened through `HandoffService`, which is AEA-51's integration, and storing the brief is
+   not what AC-9 checks.
+3. **Build blockers unchanged.** In `.claude/state/build-ledger.md`, AEA-35 and AEA-39 are still `blocked` on the same
+   NEEDS-DECISION (where the specialist task types live; §9.1 of each plan), and AEA-37 is still `blocked` with its
+   build on `aea-37-graph-plan-node` at `36dc321`, not merged. `stage7-signoff.md` D-4…D-15 do not touch this ticket.
+4. **Journey blockers moved.** AEA-29 and AEA-44 are merged, so `case_service`, `handoff_service` and
+   `login_sessions` are bound. The steps now skip on AEA-30 (`demo_clock`, `demo_service`; ledger `blocked`), AEA-40
+   (`session_service`, `turn_service`, the CON-2 operations) and AEA-51 (`run_graph`, `reply_composer`). Copy whatever
+   the harness prints.
+5. **Context budget:** `.claude/state/icm-progress.md` is now 15,697 B (§7.2 G-11).
+
+Nothing else changed: the AC text, owned files, PD-1…PD-8 and PD-10…PD-14, the case table and the checks stand.
 
 ### Refresh 1 (2026-10-21, `main` at `bb9a471`): what changed since `35aefdd`
 
@@ -63,8 +89,8 @@ Deliverables: one contract test module `tests/contract/test_prompts_vs_consumers
 
 ### 1.2 Context (why now)
 
-Wave 3, Amendment 1 (slice plan §0a). On `bb9a471` the adapters (AEA-17/18), dispatcher (AEA-22), account and
-scheduling tools (AEA-27/28) and the reply node and prompt (AEA-38) are on `main`; routing (AEA-37) is built on its
+Wave 3, Amendment 1 (slice plan §0a). On `c9b17ea` the adapters (AEA-17/18), dispatcher (AEA-22), account and
+scheduling tools (AEA-27/28) and the reply node and prompt (AEA-38) and the brief assembler (AEA-29) are on `main`; routing (AEA-37) is built on its
 branch; the specialists (AEA-35) and the act node (AEA-39) are planned only; AEA-61's live smoke waits for this ticket. The
 test is data-driven from the real inventory (`Role`, `SPECS`, the registry built from the three factories), so later
 tools, options and report fields are checked without editing it.
@@ -82,7 +108,7 @@ tools, options and report fields are checked without editing it.
 | Observability contract | DO-6 `docs/design/observability-contract.md` WF-1 (line 76), `model_call` span = "the full rendered context and raw output **after masking**" (line 113) | AC-14 records; PD-7 (AC-10 reading) |
 | Key-metrics registry | DO-7 M-3, M-12, M-16, M-17, M-24 | Records AC-13/AC-14 assert stay computable; no target set |
 | Decisions | `docs/plans/stage7-signoff.md` D-14 (CAS-16 option A → `HandoffReason.BURNING_RULED_OUT` is on `main`; DAT-2 option B → keys outside the repo) | Code-only set includes `burning_ruled_out`; AC-12 guards `eval/cases/heldout/` and `~/.meridian-sealed/` |
-| Sibling code and plans | On `main` `bb9a471`: the AEA-17, 18, 21, 27, 28 and 38 modules (read). AEA-37 branch `aea-37-graph-plan-node` at `36dc321` (read). Plans only: `docs/plans/fanout/2026-10-21-build/AEA-35.md` §4.4–§4.6, `AEA-39.md` §5 | Exact builder and node names in §4 |
+| Sibling code and plans | On `main` `c9b17ea`: the AEA-17, 18, 21, 27, 28, 29 and 38 modules (read). AEA-37 branch `aea-37-graph-plan-node` at `36dc321` (read). Plans only: `docs/plans/fanout/2026-10-21-build/AEA-35.md` §4.4–§4.6, `AEA-39.md` §5 | Exact builder and node names in §4 |
 
 ### 1.4 Source-contract reconciliation
 
@@ -180,7 +206,7 @@ All unit tests are in `tests/contract/test_prompts_vs_consumers.py` (prefix `::`
 | AC-10 [negative] | Markers `zq-rejected-option-7731`, `…zq-rejected-query-7731` (301 chars), `zq-rejected-draft-7731` absent from every record of AC-7…AC-9 | `case_corpus` (Step 7); PD-7 for the specialist `model_call` raw output | `::test_rejected_values_absent_from_records` |
 | AC-11 [failure/refusal] | Six drifted copies fail by role, field and value; prompt modules unchanged | `pytest.raises(PromptDrift, match=…)` on the helpers | `::test_check_fails_on_drift[<case>]`; `git diff --name-only` shows no `src/` path |
 | AC-12 [negative] | Dev data only; no held-out open; no socket connect | module audit hook + socket guard + per-test check (Step 5) | `::test_no_heldout_reads_and_no_network` |
-| AC-13 [journey] | J-5 NODANGER with classifier outside options books normally (no case, one `classifier` `fallback` event); J-9 (a) both planners malformed → handoff reply, turn `degraded_handoff`/`model_error`, case `ai_failure` P3; J-9 (b) malformed draft → code-built reply, `degraded_handoff`/`model_error` | Step 8 on AEA-57's harness; level `integrated with a scripted model` once AEA-40 + AEA-51 bind; until then the steps report *blocked* | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
+| AC-13 [journey] | J-5 NODANGER with classifier outside options books normally (no case, one `classifier` `fallback` event); J-9 (a) both planners malformed → handoff reply, turn `degraded_handoff`/`model_error`, case `ai_failure` P3; J-9 (b) malformed draft → code-built reply, `degraded_handoff`/`model_error` | Step 8 on AEA-57's harness; level `integrated with a scripted model` once AEA-30, AEA-40 and AEA-51 bind; until then the steps report *blocked* | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
 | AC-14 [capture] | Per malformed case: `CallRecord` `status="error"` + failure kind (ledger row + sink span per attempt); `signal` fields; check events; one `lookup_log` row per dispatched call | `assert_records` over `MALFORMED_CASES` (Step 7) | `::test_malformed_cases_leave_their_records[<case>]` |
 | AC-15 [regression/context] | DO-3 §9 line, ICM row, record; area map unchanged | Step 9 | `git diff --name-only` |
 | PA-1 (plan-added, in AC-3's test) | Every `HandoffReason` not in the code-only set is produced by some offered `handoff` option | §5 Step 5 | `::test_join_plan_accepts_every_offered_value[reverse_reachability]` |
@@ -189,7 +215,7 @@ All unit tests are in `tests/contract/test_prompts_vs_consumers.py` (prefix `::`
 
 ## 4. Shared code to use (copied from `main`, the addenda and the sibling plans)
 
-**Rule for this section:** names marked **(main)** were read on `main` at `bb9a471` (refresh 1). Names marked **(branch)** were
+**Rule for this section:** names marked **(main)** were read on `main` at `c9b17ea` (refresh 2). Names marked **(branch)** were
 read on a sibling's built branch; names marked **(plan)** come from a sibling's plan. When those land, the code on
 `main` wins.
 
@@ -327,7 +353,7 @@ from tests.fakes import (WORKED_PAIRS_NOW, FakeAnthropicChoiceModel, FakeChoiceM
 from langgraph.runtime import Runtime          # Runtime(context=ctx) is the node's `runtime` argument
 ```
 
-### 4.3 Siblings — what this test imports (status on `main` at `bb9a471`)
+### 4.3 Siblings — what this test imports (status on `main` at `c9b17ea`)
 
 | Import | From | Status | Signature this plan uses |
 |---|---|---|---|
@@ -338,6 +364,7 @@ from langgraph.runtime import Runtime          # Runtime(context=ctx) is the nod
 | `meridian.agent.nodes.compose`: `ReplyComposer` | AEA-21 | **main** | `ReplyComposer().compose(state, ctx) -> ComposedReply`; with `state.checked.fallback_used` → path `"degraded"`, outcome `"degraded_handoff"`, `degrade_reason="model_error"`, and a `FailureOfferBlock` (`type="failure_offer"`, `person_key=True`) |
 | `meridian.agent.nodes.reply`: `responder`, `brief`, `checks`; module attribute `check_quotes` | AEA-38 | **main** (`042ad35`) | `fn(state, runtime, *, deps) -> update`. `responder` raises `RuntimeError` unless `state.facts` and `state.settled` are set; on a failure it returns `{"draft": None}` and emits `responder_fallback` (node `"responder"`, role `"responder"`, cause = failure kind, `attempt=len(outcome.calls)`). `brief`: `deps.cases.open_case_for_thread(thread_id)` returning `None` → `{"brief_extraction": None}`; else, in one `deps.uow()`, `tx.core.lookup_log.for_thread(thread_id)` and `tx.core.messages.recent(thread_id, turns=deps.limits.context.window_turns)`; then `deps.cases.attach_brief(case.case_ref, deps.brief.assemble(case, state, lookups))`; `shown = brief_shown([(r.id, r.text) for r in rows if r.role == "customer"], deps.limits.context.window_line_chars)`; `Role.BRIEF` call; a failure → `brief_failed` (node `"brief"`, cause = failure kind) and `{"brief_extraction": None}`. `checks`: brief path only when `state.handoff is not None and state.handoff.created`; `state.draft is None` → `CheckedReply(text="", fallback_used=True)` with `completion` and `fact` events `result="fallback"`; extraction `None` → `deps.brief.attach_extraction(draft_brief, None, None)`; else it rebuilds the same `shown`, calls `check_quotes(ext, shown)` (imported into this module by name, so `MonkeyPatch.setattr(meridian.agent.nodes.reply, "check_quotes", spy)` intercepts it), then `attach_extraction(draft_brief, kept, facts_check)` and adds `brief_quote` and `brief_fact` events (`CheckEvent.from_check`: `"trimmed"` when there are removals, `removed=len`, `claim_kinds` = sorted removal kinds, `codes=()`). `attach_brief` is called once in `brief` and once in `checks` (so `CasesDouble.attached` has 2 entries on a brief turn) |
 | `meridian.agent.prompts.reply`: `LABEL_THIS_TURN`, `LABEL_SETTLED`, `brief_shown` | AEA-38 | **main** | `LABEL_THIS_TURN = "WHAT HAPPENED THIS TURN"`, `LABEL_SETTLED = "ALREADY DONE IN THIS CONVERSATION"` (both rendered in the responder's `system_dynamic`); `brief_request(case, shown).user == "CUSTOMER MESSAGES:\n" + "\n".join(f"[message {mid}] {text}" for mid, text in shown.items())`, which `prompts_compare.BRIEF_LINE` parses; `output_model` is `ResponderDraft` / `BriefExtraction`. `brief_shown` applies `RedactionProfile.SONNET` and cuts each line to `window_line_chars` |
+| `meridian.services.handoff`: `BriefAssembler` | AEA-29 | **main** (`ef561fc`) | `BriefAssembler(staff_guidance: Mapping[PassageId, StaffGuidance] \| None = None)`; `assemble(case: CaseSummary, state: ConversationState, lookups: Sequence[LookupRow]) -> Brief` (pure; `status="being_written"`; headings 2 and 4 start empty); `attach_extraction(brief: Brief, extraction: BriefExtraction \| None, check: CheckResult \| None, *, customer_messages: Mapping[int, str] \| None = None) -> Brief`: `extraction is None` → headings 2, 4, 7 `not_generated=True` and `status="failed"`; otherwise `status="ready"`. The reply node never passes `customer_messages`. `CaseService(uow, clock, *, handoff_block=None, settled_view=None)` (`meridian.services.cases`) is **not** used here (PD-9) |
 | `meridian.agent.tools.account`: `account_tools` | AEA-27 | **main** (`13adc86`) | `account_tools(uow) -> tuple[ToolDef, ...]`: `read_invoices` (`ReadInvoicesArgs.invoice_number`), `read_membership`, `read_warranty`; kind `account_read`, `requires_verified=True` |
 | `meridian.agent.tools.scheduling`: `scheduling_tools` | AEA-28 | **main** (`2c2e8c5`) | `scheduling_tools(scheduling: SchedulingService) -> tuple[ToolDef, ...]`; on `main` the names are `find_windows`, `book_visit`, `move_visit`, `cancel_visit`, `request_visit_change`. **Still read them from the registry, never hard-code them.** The factory only closes over the service, so `SchedulingDouble` (raises on any method other than `slice_inputs`) is enough |
 | `meridian.agent.prompts.routing`: `DANGER_FIELD` | AEA-37 | **branch** `aea-37-graph-plan-node` at `36dc321` (built, not merged) | `DANGER_FIELD = "danger_level"`. `planner_request(PlannerInput)` and `classifier_request(latest: str)` build the requests (system text and fields are module constants, identical every turn); the classifier system text quotes `"normal"`, the planner's quotes `"none"` and `"no"` (all are options, so `check_wording_keys` passes) |
@@ -369,7 +396,7 @@ journeys read.
 | PD-6 | AC-4's code-only check applies to every option of the **planner** and **planner_fallback** requests. The classifier's `danger_level` options are `DangerAssessment.label` values (AC-2 requires exactly `normal, burning_unclear, danger`), not `HandoffReason`s, so they are excluded. Forbidden field names for tools, `report_facts` and reply output models: `{"priority", "case_ref", "case_reference", "reference", "promise", "promise_text", "due_at", "customer_id"}` | AC-2 vs AC-4 literal overlap |
 | PD-7 | AC-10: markers are placed **only** in values a consumer rejects. `zq-rejected-option-7731` and `zq-rejected-draft-7731` are rejected by the adapter (value `None`), so they must be absent from **every** record incl. trace spans. The 301-char query is rejected later by **dispatch**, after a schema-valid tool step; DO-6 line 113 requires the specialist `model_call` span to hold "the raw output after masking", so `…zq-rejected-query-7731` is asserted **present** in exactly that span's `masked_output` and absent from everything else (incl. `ToolError.message`, `ToolCallRecord`, lookup rows, logs, signals, node spans, the DB). The brief marker goes in the schema-invalid 6-claims extraction | DO-4 §0 ("errors never carry values") vs DO-6 (signed); ticket's expected-answer authority is the signed contracts |
 | PD-8 | `report_facts` schema passes when it equals `spec.report_model.model_json_schema()` **or** its title-stripped form (AEA-35 PD-9 sends the untrimmed one; both are generated from the report model) | AC-5 |
-| PD-9 | `GraphDeps.cases` (AEA-29 `CaseService`) and `GraphDeps.brief` (AEA-29 `BriefAssembler`) are doubles honouring DO-4 §7/§13; AC-9's "headings 2, 4, 7 `not_generated`" is asserted at the seam: the checks node called `attach_extraction(brief, None, None)` and stored that result (the real assembler's behaviour is AEA-29's AC and AEA-51's integration). `identity`, `handoff`, `demo` are `Unused` sentinels that fail loudly if touched | slice plan rule 1 ("siblings … by injection, tested with a double") |
+| PD-9 | (refresh 2) `GraphDeps.brief` = `RecordingBriefAssembler`: the **real** AEA-29 `BriefAssembler` (on `main`, pure), subclassed only to record `attach_extraction` calls. AC-9's headings 2, 4, 7 `not_generated` and `status="failed"` are asserted on its real output. `GraphDeps.cases` = `CasesDouble` (the two methods the reply node calls, DO-4 §13; it must never raise, because `_store_brief` would turn that into a `brief_failed` `write_error` signal): the real `CaseService` needs a case opened through `HandoffService`, which is AEA-51's integration. `identity`, `handoff`, `demo` are `Unused` sentinels that fail loudly if touched | the ticket's `brief` row names `BriefAssembler.attach_extraction` as a consumer; AEA-29 merged at `ef561fc`; slice plan rule 1 for `CaseService` |
 | PD-10 | Unit tests feed raw **HTTP** bodies through `httpx.MockTransport` (Jev) and `httpx2.MockTransport` (Anthropic). Journeys use AEA-57's scripted adapter, which takes the raw **output text** per role and parses it like the adapters (`tests/journeys/support/scripted_model.py`), so no AEA-57 follow-up is needed | ticket AC-13; AEA-57 docstring |
 | PD-11 | One case table `MALFORMED_CASES` (in `prompts_cases.py`) feeds AC-7, AC-8, AC-9 (outcomes), AC-14 (records) and AC-10 (markers). Each test re-runs its cases in a fresh world (cheap: the issued DB is 115 KB) | one source of truth for cases |
 | PD-12 | AC-12: one process-wide audit hook added once and gated by a module flag (audit hooks cannot be removed); a module-scoped autouse fixture turns it on and patches `socket.socket.connect`/`connect_ex`; a function-scoped autouse fixture fails any test that added a held-out open or a connect; the named test proves both guards are live | `sys.addaudithook` semantics; xdist splits a module across workers |
@@ -385,7 +412,7 @@ journeys read.
    meridian.agent.context, meridian.agent.signals, meridian.agent.nodes.compose, meridian.agent.nodes.plan, \
    meridian.agent.nodes.act, meridian.agent.nodes.reply, meridian.agent.prompts.routing, meridian.agent.prompts.reply, \
    meridian.agent.prompts.specialists, meridian.agent.specialists.specs, meridian.agent.specialists.runner, \
-   meridian.agent.tools.account, meridian.agent.tools.scheduling; \
+   meridian.agent.tools.account, meridian.agent.tools.scheduling, meridian.services.handoff; \
    from meridian.agent.nodes.plan import planner, danger_classifier, plan_join, join_plan; \
    from meridian.agent.nodes.act import run_specialist, escalation; \
    from meridian.agent.nodes.reply import responder, brief, checks; \
@@ -393,7 +420,7 @@ journeys read.
    ```
    Expect `['account', 'knowledge', 'scheduling']`. Any `ImportError` or `NotImplementedError` stub → stop and report
    `BLOCKED-ON <owning ticket>` (map: adapters 17/18; context/signals/compose 21; plan 37; act 39; reply 38;
-   specs/runner/prompts.specialists 35; tools.account 27; tools.scheduling 28). On `bb9a471` exactly AEA-35's, 37's and
+   specs/runner/prompts.specialists 35; tools.account 27; tools.scheduling 28). On `c9b17ea` exactly AEA-35's, 37's and
    39's names fail; every other module imports.
 3. Open and read (do not edit) the §4.3 modules on `main`; note every name that differs from §4.3 for your report.
 
@@ -502,16 +529,18 @@ class CasesDouble:            # GraphDeps.cases (AEA-29 CaseService): the two me
     def open_case_for_thread(self, thread_id: ThreadId) -> CaseSummary | None: return self.case
     def attach_brief(self, case_ref: CaseRef, brief: Brief) -> None: self.attached.append(brief)
 
-class BriefDouble:            # GraphDeps.brief (AEA-29 BriefAssembler, DO-4 §7)
-    def __init__(self) -> None: self.attach_calls: list[tuple[Brief, BriefExtraction | None, CheckResult | None]] = []
-    def assemble(self, case: CaseSummary, state: ConversationState, lookups: Sequence[LookupRow]) -> Brief:
-        # 8 headings i=0..7: BriefHeading(number=i+1, key=BRIEF_KEYS[i], title=BRIEF_TITLES[i], origin=BRIEF_ORIGINS[i],
-        #   checked=(i != 3), items=(), trimmed=False, trim_note=None, not_generated=False); Brief(case_ref=case.case_ref,
-        #   thread_id=THREAD, assembled_at=state.turn_input.received_at, status="being_written", headings=…)
-    def attach_extraction(self, brief: Brief, extraction: BriefExtraction | None, check: CheckResult | None) -> Brief:
-        # record the call; return brief.model_copy(update={"status": "ready", "headings": tuple(h.model_copy(update=
-        #   {"not_generated": extraction is None and h.origin == "extraction"}) for h in brief.headings)})
-        # (DO-4 §7: None → headings 2, 4, 7 "not generated")
+class RecordingBriefAssembler(BriefAssembler):   # GraphDeps.brief: the REAL AEA-29 assembler (refresh 2, PD-9)
+    """The real BriefAssembler; records each attach_extraction call and adds no behaviour."""
+    def __init__(self) -> None:
+        super().__init__(None)
+        self.attach_calls: list[tuple[Brief, BriefExtraction | None, CheckResult | None]] = []
+    def attach_extraction(self, brief: Brief, extraction: BriefExtraction | None, check: CheckResult | None, *,
+                          customer_messages: Mapping[int, str] | None = None) -> Brief:
+        self.attach_calls.append((brief, extraction, check))
+        return super().attach_extraction(brief, extraction, check, customer_messages=customer_messages)
+    # assemble(...) is inherited unchanged. Imports: BriefAssembler from meridian.services.handoff; CheckResult from
+    # meridian.domain.turn; Brief, BriefExtraction from meridian.domain.handoff. The override signature is copied from
+    # main; keep it identical so mypy accepts the override.
 
 class SchedulingDouble:       # GraphDeps.scheduling + scheduling_tools(...) argument (AEA-28, cases.md §4)
     def slice_inputs(self, customer_id: CustomerId) -> SchedulingSliceInputs:
@@ -526,7 +555,7 @@ def build_registry(index: FakeIndex, store: TempStore) -> ToolRegistry:
     return ToolRegistry((*knowledge_tools(index), *account_tools(store.uow), *scheduling_tools(SchedulingDouble())))
 
 def build_deps(*, gateway: ModelGateway, index: FakeIndex, store: TempStore, sink: InMemoryTraceSink,
-               runner: SpecialistRunner, cases: CasesDouble, brief: BriefDouble, ledger: RecordingLedger,
+               runner: SpecialistRunner, cases: CasesDouble, brief: RecordingBriefAssembler, ledger: RecordingLedger,
                limits: Limits) -> GraphDeps:
     # GraphDeps(gateway=gateway, retrieval=index, uow=store.uow, identity=Unused("identity"), scheduling=SchedulingDouble(),
     #   handoff=Unused("handoff"), brief=brief, demo=Unused("demo"), limits=limits, trace=sink, specialists=runner,
@@ -750,7 +779,7 @@ def render_turn(n: int) -> Rendered:
    `RENDER_LIMITS = Limits(brakes=Brakes(sonnet_calls=12))` (PD-3) and `default_specs` from `_gateway_doubles`.
 4. `index = FakeIndex(WP1_PASSAGES)`; `registry = build_registry(index, store)`; `dispatcher = ToolDispatcher(registry,
    store.uow)`; `runner = SpecialistRunner(gateway=gw, transcript=tool_fake, dispatcher=dispatcher, specs=SPECS,
-   brakes=RENDER_LIMITS.brakes, trace=sink)`; `cases = CasesDouble(refund_case(n))`; `brief_double = BriefDouble()`;
+   brakes=RENDER_LIMITS.brakes, trace=sink)`; `cases = CasesDouble(refund_case(n))`; `brief_double = RecordingBriefAssembler()`;
    `deps = build_deps(...)` with `limits=RENDER_LIMITS`.
 5. Spy: `shown_seen: list[dict[int, str]] = []`; `real = reply_nodes.check_quotes`;
    `mp.setattr(reply_nodes, "check_quotes", lambda ext, shown: (shown_seen.append(dict(shown)), real(ext, shown))[1])`
@@ -924,7 +953,7 @@ class Case:
 @dataclass
 class RawRun:
     case: Case; seeded: Seeded; adapters: Adapters; ledger: RecordingLedger; sink: InMemoryTraceSink
-    index: FakeIndex; cases: CasesDouble; brief: BriefDouble; ctx: TurnContext
+    index: FakeIndex; cases: CasesDouble; brief: RecordingBriefAssembler; ctx: TurnContext
     updates: dict[str, Mapping[str, Any]]          # node name → its returned update
     logs: list[logging.LogRecord]; lookups: tuple[LookupRow, ...]; db_dump: str
     quote_calls: list[tuple[dict[int, str], QuoteCheck]]
@@ -942,7 +971,7 @@ def run_case(case: Case) -> RawRun:
    FakeIndex(WP1_PASSAGES)`; `registry = build_registry(index, store)`; `dispatcher = ToolDispatcher(registry, store.uow)`;
    `runner = SpecialistRunner(gateway=gw, transcript=adapters.sonnet["specialist"], dispatcher=dispatcher, specs=SPECS,
    brakes=limits.brakes, trace=sink)`; `cases = CasesDouble(refund_case(n) if case.brief_turn else None)`; `bd =
-   BriefDouble()`; `deps = build_deps(...)`.
+   RecordingBriefAssembler()`; `deps = build_deps(...)`.
 4. Spy `check_quotes` as in Step 4 step 5 but recording `(dict(shown), result)` into `quote_calls`.
 5. `with open_turn(sink, n) as ctx:` `rt = runtime(ctx)`; `updates = {}`;
    - **routing:** `state = make_state((case.text,), seeded, 1)`; `updates["planner"] = planner(state, rt, deps=deps)`;
@@ -1058,7 +1087,8 @@ Helpers in the test file: `calls(run) = [c for c, _ in run.ledger.records]`; `si
     - `brief_zero_needs`, `brief_three_needs`, `brief_six_claims`, `brief_long_decision`:
       `run.updates["brief"]["brief_extraction"] is None`; `"halt" not in run.updates["brief"]`; one `brief_failed`
       signal cause `"invalid_output"`; `run.brief.attach_calls[-1][1] is None`; `stored = run.cases.attached[-1]`:
-      `[h.not_generated for h in stored.headings] == [False, True, False, True, False, False, True, False]`;
+      `[h.not_generated for h in stored.headings] == [False, True, False, True, False, False, True, False]` and
+      `stored.status == "failed"` *(real `BriefAssembler`, PD-9)*;
       `len(run.cases.attached) == 2` (draft brief, then final); `run.updates["checks"]["checked"]` exists *(turn not
       failed)*; no `brief_quote` event.
     - `quote_ai_message`, `quote_staff_message`, `quote_paraphrase`: `shown, q = run.quote_calls[-1]`; `q.removals[0].reason
@@ -1164,7 +1194,8 @@ rules standing; NODANGER books normally. API level through CON-2 with AEA-57's s
   is Role.RESPONDER][0].request`) has `output_model is ResponderDraft` and both labels in `system_prefix +
   system_dynamic + user` *(prompt ↔ consumer at the integrated level)*.
 
-Until AEA-40 and AEA-51 bind `turn_service`/`run_graph`, each step reports `blocked-on AEA-40, AEA-51` and skips (the
+Until AEA-30, AEA-40 and AEA-51 bind `demo_clock`/`demo_service`, `session_service`/`turn_service` and
+`run_graph`/`reply_composer`, each step reports `blocked-on AEA-30, AEA-40, AEA-51: …` (the harness's own wording) and skips (the
 harness does this; never mark it passed). Run `uv run pytest -m journey tests/journeys/j5/test_aea_60.py
 tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
 
@@ -1176,11 +1207,11 @@ tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
    module; for the journeys `integrated with a scripted model` only if every step passed, else `mock-tested` with the
    blocked steps listed; **Tested revision** the commit adding the record (code commit SHA); **Environment** VPS,
    Python 3.12, real adapters on `httpx`/`httpx2` `MockTransport`, real `ModelGateway`, real nodes, temp SQLite copy of
-   the issued DB, `FakeIndex`, `InMemoryTraceSink`, doubles for AEA-29 `CaseService`/`BriefAssembler` and AEA-28
+   the issued DB, `FakeIndex`, `InMemoryTraceSink`, the real AEA-29 `BriefAssembler`, doubles for AEA-29 `CaseService` and AEA-28
    `SchedulingService`; journeys on AEA-57's harness; **Command** every command of §7; **Result** pass counts per
    command (from the run, not targets); **Evidence location** GitLab issue #60 comment; this file; **Remaining
-   limitations** real `BriefAssembler` not exercised (AEA-29/51); live compatibility is AEA-61; F-1 (§8);
-   **Blocked by** AEA-40, AEA-51 for the integrated journey level (or "none" if they have landed); **Journeys** J-5, J-9.
+   limitations** real `CaseService` storage not exercised (AEA-51); live compatibility is AEA-61; F-1 (§8);
+   **Blocked by** AEA-30, AEA-40, AEA-51 (as the harness prints them) for the integrated journey level (or "none" if they have landed); **Journeys** J-5, J-9.
 2. `docs/design/code-design.md` §9: on the `├── contract/` line (and its continuation line) append
    `; test_prompts_vs_consumers.py + prompts_{compare,world,render,wire,cases}.py (AEA-60, built <code sha>)` — keep the
    tree's alignment; on the `**Built on `main`:**` line add `` `tests/contract/test_prompts_vs_consumers.py` and its
@@ -1188,7 +1219,7 @@ tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
 3. `.claude/state/icm-progress.md`: add **one** row directly after the last `Routes verified against code and tests`
    row: `| Routes verified against code and tests | provisional | <run-date>: AEA-60 prompt ↔ consumer checks
    tests/contract/test_prompts_vs_consumers.py (<code sha>; <N> passed); record docs/testing/journeys/<run-date>-AEA-60.md
-   | Integrated level when AEA-40 and AEA-51 land |` (≤ 400 characters).
+   | Integrated level when AEA-30, AEA-40 and AEA-51 land |` (≤ 400 characters).
 4. `.claude/reference/area-map.md`: unchanged (say so in the report: no area row owns `tests/contract/`).
 
 ### 5.11 Step 10 — commit
@@ -1237,11 +1268,11 @@ more than `-n 2`; the module-scoped `rendered` fixture is per worker, so serial 
 | G-4 | Contract module | `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` | all pass, 0 skipped, 0 xfail; record the count |
 | G-5 | Collection of the folder (nothing else broke) | `uv run pytest tests/contract -q --co` | collects with no error |
 | G-6 | Journey convention + harness | `uv run pytest tests/journeys/support/test_support.py -q -k "convention"` | pass |
-| G-7 | This ticket's journeys | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` | pass, or skipped with `blocked-on AEA-40` / `AEA-51` reasons (never failed) |
+| G-7 | This ticket's journeys | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` | pass, or skipped with `blocked-on AEA-30` / `AEA-40` / `AEA-51` reasons (never failed) |
 | G-8 | Affected journeys (AEA addition; `tests/journeys/` is an always-input, so this runs all journeys) | `uv run python -m tests.journeys.affected --base main` | no failure (skips allowed with blocked reasons) |
 | G-9 | No product code touched | `git diff --name-only main...HEAD` | only the 11 owned paths of §2.1 |
 | G-10 | No sensitive literal | `grep -nE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|[0-9]{4}[ -][0-9]{4}[ -][0-9]{4}\|sk-ant\|\b[0-9]{6}\b" tests/contract/prompts_*.py tests/contract/test_prompts_vs_consumers.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py` | no output (if a 6-digit literal is a harmless number such as a token count, write it as an expression, e.g. `300`) |
-| G-11 | Context check | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no **new** FAIL. On 2026-10-21 `.claude/state/icm-progress.md` already FAILs its size budget (14,555 B > 8,192 B on `bb9a471`); that is pre-existing, not this ticket's to fix. Keep the AEA-60 row as short as possible (≤ 250 characters) and report the before/after byte count; do not trim other tickets' rows |
+| G-11 | Context check | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no **new** FAIL. On 2026-10-21 `.claude/state/icm-progress.md` already FAILs its size budget (15,697 B > 8,192 B on `c9b17ea`); that is pre-existing, not this ticket's to fix. Keep the AEA-60 row as short as possible (≤ 250 characters) and report the before/after byte count; do not trim other tickets' rows |
 
 **Full suite:** not required (test-only change; no `conftest.py`, settings, dependency or shared module changes —
 `build-loop-test-scope.md`). **Existing tests that must stay green:** everything under `tests/contract/` (G-5 collection)
@@ -1273,7 +1304,7 @@ git add docs/testing/journeys/<run-date>-AEA-60.md docs/design/code-design.md .c
 | R-3 | Drift found = red | The test is meant to fail when a prompt and consumer disagree. If it fails against merged product code, the defect belongs to the owner (35/37/38 prompts, 17/18 adapters, 22/27/28/33 tools) | Report with the exact PromptDrift message; never weaken a check |
 | R-4 | AC-10 reading (PD-7) | AC-10 lists "InMemoryTraceSink span"; DO-6 line 113 requires the model_call span to keep the masked raw output, which for the 301-char tool call contains the query | Plan asserts that one presence explicitly. Orchestrator: post the PD-7 note on issue #60 so the AC text and DO-6 read the same |
 | R-5 | AC-4 overlap (PD-6) | "No routing option equals … danger, burning_unclear" literally hits the classifier's labels, which AC-2 requires | Plan scopes AC-4 to planner/fallback; post on #60 |
-| R-6 | Brief double (PD-9) | Headings 2/4/7 `not_generated` asserted at the seam with an AEA-29 double | Real assembler covered by AEA-29's ACs and AEA-51 |
+| R-6 | Case double (PD-9, refresh 2) | `BriefAssembler` is now real; `CaseService` stays a double (it only stores the brief) | Real case storage is AEA-51's integration; J-9a asserts the stored case row |
 | F-1 | **Finding (other tickets)** | `account="appointments"` with `scheduling="none"` makes `join_plan` (AEA-37 step 5–6) emit `READ_APPOINTMENTS` on the **account** specialist, but the account tool set (graph-tools §4: `read_invoices`, `read_membership`, `read_warranty`) has no appointment read, so the model cannot do the task. AC-3 still passes (the specialist is a `SPECS` key) | Orchestrator: raise on #37 and #27 before AEA-51. Options: (a) join maps `appointments` with no scheduling to a scheduling `CONFIRM` task (the scheduling slice already holds appointments) — recommended, no new tool; (b) AEA-27 adds a `read_appointments` account tool (changes graph-tools §4). Not asserted here. Re-checked on AEA-37's branch `36dc321`: still present (`join_plan` clears `appointments` only when `scheduling != "none"`) |
 | R-7 | Runtime | Each malformed case builds a temp DB; ~30 cases × (AC-7/8/9 + AC-14) + 4 (AC-10) ≈ 64 runs | Expected well under a minute; if slower, keep correctness, report the time |
 | R-9 | Context budget | `icm-progress.md` is already over its 8 KB budget; the one-row AEA-60 addition makes it slightly worse | Orchestrator: schedule a `lane::direct` compaction of `icm-progress.md` (replace per-ticket rows with one rolling row); not in AEA-60's ownership |
@@ -1289,7 +1320,7 @@ No shared primitive is requested from the integrator. No signed contract changes
 **READY** — every decision is made (PD-1…PD-14); no product decision and no signed-contract change is needed for this
 ticket.
 
-**Blocked-on (true imports not yet on `main` at `bb9a471`; the implementer starts only when all three are merged):**
+**Blocked-on (true imports not yet on `main` at `c9b17ea`; the implementer starts only when all three are merged):**
 
 | Ticket | What this test imports from it | State on 2026-10-21 |
 |---|---|---|
@@ -1302,8 +1333,9 @@ wave; these three are wave 2, earlier than AEA-60's wave 3. And the ticket's poi
 builders" and feed answers to the real nodes: a double of the builder or node would check the double against itself.
 
 **Now on `main` (no longer blockers):** AEA-17 (`0a85270`), AEA-18 (`900a1d8`), AEA-21 (`5531664`), AEA-27 (`13adc86`),
-AEA-28 (`2c2e8c5`), AEA-38 (`042ad35`); and, as before, AEA-20, 22, 33, 57. **Not blockers:** AEA-29 (doubles, PD-9).
-**Journey level** (`integrated with a scripted model`) waits on AEA-40 (CON-2 route, `session_service`, `turn_service`;
+AEA-28 (`2c2e8c5`), AEA-38 (`042ad35`), AEA-29 (`ef561fc`; the real `BriefAssembler`, PD-9); and, as before, AEA-20, 22, 33, 57.
+**Journey level** (`integrated with a scripted model`) waits on AEA-30 (`demo_clock`, `demo_service`; ledger
+`blocked`), AEA-40 (CON-2 route, `session_service`, `turn_service`;
 branch `aea-40-aea-40-sessions-turns`, not merged) and AEA-51 (`run_graph`, `reply_composer`); until then the steps skip
 with their blocked reasons and the record says `mock-tested`.
 

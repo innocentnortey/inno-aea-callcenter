@@ -1,12 +1,43 @@
 # Plan — [AEA-52] integration B: staff and demo end to end
 
-**Status:** READY as a plan, **BLOCKED-ON** before the implementer starts: pass 1 waits on AEA-29, AEA-30, AEA-43,
-AEA-45 merging to `main`; pass 2 also waits on AEA-40 and AEA-51; one AC-6 sub-check waits on AEA-53 (§9).
+**Status:** READY as a plan, **BLOCKED-ON** before the implementer starts: pass 1 waits on AEA-30 and AEA-45 merging
+to `main` (AEA-29 and AEA-43 merged since the second pass); pass 2 also waits on AEA-40 and AEA-51; one AC-6 sub-check
+waits on AEA-53 (§9).
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/52 (spec copy:
-`docs/plans/tickets/AEA-52.md`) · **Base revision:** `main` at `68b1412` (refreshed; first written against `cf74674`)
+`docs/plans/tickets/AEA-52.md`) · **Base revision:** `main` at `c9b17ea` (third pass; earlier passes against `cf74674` and `68b1412`)
 · **Wave:** 3 · **Lane:** `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement code + named tests →
 test → `code-review-agent`; no test-writer, no frozen tests, no security agent) · **Planner model:** claude-opus-5-5 ·
 **Implementer:** Sonnet (`fanout-implementer`)
+
+**Refresh log (2026-10-21, third planner pass, against `main` `c9b17ea`).** What still holds: everything below this
+log. `git diff --stat 68b1412 main` touches, among the surfaces this plan reads, only AEA-29's service files
+(`services/cases.py`, `handoff.py`, `_case_actions.py`, `_case_views.py`, `_case_rules.py`) and `web/container.py`;
+`tests/journeys/support/`, `tests/api/openapi_check.py`, `tests/conftest.py`, `web/deps.py`, `web/logging.py` and
+`services/{live_chat,reset,reset_gate,staff,health}.py` are unchanged. What changed:
+1. **Merged since the second pass:** AEA-29 (`ef561fc`) and AEA-43 (`03f5334`), plus AEA-24, AEA-50, AEA-54 (not read
+   here). AEA-29's names are now **confirmed on main**: `kind=f"action:{name}"` (`_case_actions.py` line 152);
+   `source_id, log_id = f"src-{r.id}", f"ll-{r.id}"` (`_case_views.py` line 228); `f"invoices/{ident}"` (line 179);
+   "No change since the snapshot" / "Changed since the AI saw it" (lines 245, 275); `CaseService(uow, clock, *,
+   handoff_block=None, settled_view=None)`; `register_cases` provides `deps.CASE_SERVICE`, `deps.HANDOFF_SERVICE` and
+   `Key("brief_assembler")`, reading `Key("demo_clock")`, `deps.DEMO_SERVICE` and `deps.REPLY_COMPOSER` through
+   forwarders that raise `RuntimeError("not bound: <key>")` until their owners bind them.
+2. **Still not on main:** AEA-30 (branch `aea-30-aea-30-demo-clock-sched` still at `e5c4ce4`, unchanged since the
+   second pass; ledger `blocked`, its send-back unfinished): `register_demo` is still a no-op, so `Key("demo_clock")`
+   is unbound and a real login answers 500 on the assembled app. AEA-45: now **built** on `aea-45-staff-cases-api` at
+   `ea00827` (`web/routes/staff_cases.py` with operationIds `getQueue`, `getCase`, `applyCaseAction`,
+   `recordContactActivity`, `createFlag`, `listFlags`, `reviewFlag`, `getOversight`; `register_staff_cases` includes
+   the router and provides nothing; the routes read the demo clock through `DemoService`, so they also need AEA-30);
+   ledger `blocked`. AEA-40 (branch at `8fc2d33`, ledger NEEDS-DECISION). AEA-51 not started (`register_graph` still a
+   no-op). AEA-53 ledger NEEDS-DECISION, not started.
+3. **Journey files on main corrected** in §7's must-stay-green list to what exists at `c9b17ea`; AEA-30's branch adds
+   `j6/test_aea_30.py` and `j7/test_aea_30.py`, AEA-45's adds `j6/test_aea_45.py`.
+4. **Imports:** `CaseService` and `HandoffService` now import from main; only `meridian.services.demo` and
+   `meridian.services.scheduler` remain branch-only (Step 0.4). `DEMO_START` is defined in
+   `adapters/sqlite/repos_cases_state.py` and re-exported through `repos_cases.__all__`, so §4's import line stands
+   under mypy strict.
+5. **Context rows:** the area map still has the duplicate A6 rows (lines 31 and 32); AEA-30 and AEA-45 also edit the
+   area map, `icm-progress.md` and `code-design.md` on their branches, so Step 1.13 matches rows by name, never by line.
+6. No decision changed: AC-25's failure seam (R-5), AC-17's speaker name and D-12 in AC-19 stand.
 
 **Refresh log (2026-10-21, second planner pass, against `main` `68b1412`).** What still holds: the whole structure,
 every owned file, the harness signatures (`tests/journeys/support/` is byte-identical to `cf74674`), the reset, staff,
@@ -71,6 +102,26 @@ and exactly one `reset_events` and one `seed_events` row were written.
 
 **Entry points (all registered in DO-6):** WF-4 (staff console), WF-5 (demo controls), WF-7 (scheduler job), WF-15
 (CON-9 entry point only). AEA-52 adds none; it proves them.
+
+**Context (template *Context*).** Wave 2 built the staff console API (AEA-44…47) and the demo services (AEA-29…32,
+AEA-43) each against DO-4 signatures with doubles. Nothing yet proves that the real objects are bound behind the
+routes and work together. AEA-52 is that proof for the staff side, as AEA-51 is for the customer side. The plan stays
+relevant while those signatures and the harness (`tests/journeys/support/`) are unchanged; Step 0 re-checks both.
+
+**Entry-point registration (template).**
+
+| Entry point | Workflow | Registered in contract | Inherits |
+|---|---|---|---|
+| Staff console routes CON-10…CON-17, CON-21 | WF-4 | DO-6 `docs/design/observability-contract.md` WF-4 row; CAP-4 | Evaluation: none scored (DO-5 WF-4 note: flags never enter the eval set unreviewed, AC-11); metrics M-13, M-27, M-3 flag input |
+| Demo controls CON-7, CON-8 | WF-5 | DO-6 WF-5 row; CAP-5 | No suite of its own (measured through WF-1, WF-6) |
+| Scheduler job (`SchedulerJob.tick`, 60 s runner) | WF-7 | DO-6 WF-7 row; CAP-5 | M-18 (abandoned), M-27 (overdue, `job_runs`), M-13 (missed) |
+| CON-9 reset | WF-15 (entry point only) | DO-6 WF-15 row | `reset_event`, `seed_event` |
+
+AEA-52 adds no entry point and changes none; every row above already exists in DO-6.
+
+**Gates (template).** None: no human, paid, live or external gate. No test calls a model provider (the scripted
+adapter only), and nothing binds 4019 or 5184 (the harness binds port 0). The wave-3 merge runs `seam-audit-agent`
+with all journeys (integrated-journeys §5). No `risk::security` label, so no test-writer and no security agent.
 
 ---
 
@@ -272,16 +323,17 @@ from meridian.web.container import Container, ContainerError, Key
 from meridian.web.deps import (CASE_SERVICE, DEMO_SERVICE, FLAG_SERVICE, HANDOFF_SERVICE, LIVE_CHAT, LOGIN_SESSIONS,
                                RESET_GATE, RESET_SERVICE, STAFF_ACCESS, UOW_FACTORY)
 from meridian.web.logging import ALLOWED_FIELDS, RECORD_ATTR, AllowListFormatter
-# after AEA-29 / AEA-30 merge (pass 1 starts only then):
-from meridian.services.cases import CaseService
-from meridian.services.handoff import HandoffService
+from meridian.services.cases import CaseService                 # on main since ef561fc (AEA-29)
+from meridian.services.handoff import HandoffService            # on main since ef561fc (AEA-29)
+# after AEA-30 merges (pass 1 starts only then):
 from meridian.services.demo import DemoClock, DemoService
 from meridian.services.scheduler import ERROR_KINDS, PROMISE_MISSED_KIND, SchedulerJob, SchedulerThread
 ```
 
 ### Sibling code read on the unmerged branches (confirm on `main` at Step 0.4; do not import from a branch)
 
-Read 2026-10-21 from `aea-30-aea-30-demo-clock-sched` `e5c4ce4` and `aea-29-aea-29-cases-handoff` `b54fed9`:
+Read 2026-10-21 from `aea-30-aea-30-demo-clock-sched` `e5c4ce4` (unchanged at the third pass) and
+`aea-29-aea-29-cases-handoff` `b54fed9` (the AEA-29 lines below are now confirmed on main `c9b17ea`):
 
 ```python
 # services/scheduler.py (AEA-30)
@@ -391,7 +443,12 @@ The slice stays in the test tree. Interfaces consumed: the HTTP API (CON-1…CON
 0.2 **Pass 1 is buildable** only when all exist on main: `src/meridian/services/cases.py`, `services/handoff.py`,
    `services/demo.py`, `services/scheduler.py`, `web/routes/staff_cases.py`, `web/routes/demo.py`. Check with
    `ls` on each path. Missing → report `blocked-on` the owner (29, 29, 30, 30, 45, 43) and stop. (At `68b1412` all six
-   are missing: 29, 30 and 43 are built on branches, 45 is not started.)
+   are missing: 29, 30 and 43 are built on branches, 45 is not started. At `c9b17ea` three are missing:
+   `services/demo.py` and `services/scheduler.py` (AEA-30, branch `e5c4ce4`) and `web/routes/staff_cases.py` (AEA-45,
+   branch `ea00827`).) Also confirm both registrations are live, not stubs:
+   `sed -n '/^def register_demo(/,/^def register_reset(/p' src/meridian/web/container.py | grep -c 'container.provide('`
+   ≥ 1 (0 at `c9b17ea`: AEA-30's no-op) and `grep -c 'staff_cases_routes_included' src/meridian/web/container.py` ≥ 1
+   (0 at `c9b17ea`). Either 0 → stop: blocked-on AEA-30 / AEA-45.
 
 0.3 **Pass 2 is buildable** only when additionally: `src/meridian/services/session.py` exists (AEA-40 CON-1), and the
    body of `register_graph` in `src/meridian/web/container.py` contains `container.provide(` for the keys
@@ -404,7 +461,8 @@ The slice stays in the test tree. Interfaces consumed: the HTTP API (CON-1…CON
    `grep -n 'Key\[SchedulerJob\]("scheduler_job")\|Key\[SchedulerThread\]("scheduler_thread")' src/meridian/web/container.py`
    (2 hits); `grep -n 'PROMISE_MISSED_KIND\|ERROR_KINDS\|name: str = "meridian-scheduler"' src/meridian/services/scheduler.py`
    (3+ hits); `grep -n 'kind=f"action:{name}"' src/meridian/services/_case_actions.py` (1 hit);
-   `grep -n 'f"ll-{r.id}"\|"Changed since the AI saw it"' src/meridian/services/_case_views.py` (2+ hits).
+   `grep -n 'f"ll-{r.id}"\|"Changed since the AI saw it"' src/meridian/services/_case_views.py` (2+ hits). (The two
+   AEA-29 greps already pass at `c9b17ea`; the AEA-30 greps are the ones that matter.)
    A miss means the owner changed the name before merging: use main's name, say so in the report, and keep the
    assertion's meaning. If `register_demo` provides **no** key for `SchedulerJob` or `SchedulerThread`, stop:
    blocked-on AEA-30. If `SchedulerJob.tick()` re-raises step failures instead of returning `status="failed"`, wrap the
@@ -806,8 +864,8 @@ limitations* append "J-7 and the J-6 WP-7/WP-8 escalation leg not built in pass 
 AEA-40 and AEA-51)"; *Blocked by* append "AEA-40, AEA-51 (pass 2)".
 
 **1.13 Context rows (AC-28).** Only these lines:
-- `.claude/reference/area-map.md` the first `**A6 Cases and handoff**` row (line 31 at `68b1412`; match by name, the
-  line moves when AEA-29/30 merge; leave a duplicate A6 row alone, §8): append to the
+- `.claude/reference/area-map.md` the first `**A6 Cases and handoff**` row (line 31 at `c9b17ea`; match by name, the
+  line moves when AEA-30/45 merge; leave a duplicate A6 row alone, §8): append to the
   status cell "; integrated (AEA-52, `<commit>`): CON-7…9 and the scheduler proven in `tests/integration/`,
   `tests/capture/test_cap5_clock_and_scheduler.py`". The `**A9 Staff console**` row: append "; integrated (AEA-52, `<commit>`)".
 - `.claude/state/icm-progress.md`: add one row after the last "Routes verified against code and tests" row, same
@@ -970,8 +1028,9 @@ pairs: **WP-7** (`test_staff_actions_recorded[wp7]`, `test_contact_attempt_recor
 (`test_fee_bearing_request_reaches_staff_at_once`, `test_clock_past_due_and_scheduler[wp4]`, `test_wf7_ticks[wp4]`,
 `test_case_view_snapshot_vs_current[wp4_appointment]`), all pass 2. The single `[journey]` criterion is **AC-15** at
 level `integrated with a scripted model`. Existing tests that must stay green: `tests/journeys/support/test_support.py`, every other file under
-`tests/journeys/j6`, `j7`, `j8` (on `68b1412`: `j6/test_aea_{30,47}.py`, `j7/test_aea_{30,41,42,46}.py`,
-`j8/test_aea_{31,44}.py`; after the blockers merge also `j6/test_aea_29.py`, `j7/test_aea_29.py`, `j8/test_aea_43.py`),
+`tests/journeys/j6`, `j7`, `j8` (on `c9b17ea`: `j6/test_aea_{29,47}.py`, `j7/test_aea_{29,41,42,46}.py`,
+`j8/test_aea_{31,43,44}.py`; after the blockers merge also `j6/test_aea_30.py`, `j7/test_aea_30.py` (AEA-30) and
+`j6/test_aea_45.py` (AEA-45)),
 `tests/unit/test_affected_journeys.py` (its `test_no_journey_yet_prints_zero_and_exits_0` is red on main since AEA-57,
 ledger rows AEA-06/44/47/57: not this slice's to fix; report it, do not edit it).
 
@@ -1002,7 +1061,7 @@ a paid model; bind 4019 or 5184 (the harness uses port 0); `git add -A`; push; f
   go through objects only AEA-51's `register_graph` binds (and AEA-21 builds). So every live-chat criterion (AC-2, 3,
   4, 7, 17, 18, 19, 22, 23, the J-7 journey, the open-chat halves of AC-6/AC-8, and the WP variants) is pass 2. The
   AC-6 CON-19 tile also needs **AEA-53**. AEA-59 is **not** needed (`assert_response_matches` is AEA-23's, merged).
-  Recommendation: dispatch pass 1 as soon as AEA-29, AEA-30, AEA-43, AEA-45 merge (it proves seams S-7, S-8, S-11,
+  Recommendation: dispatch pass 1 as soon as AEA-30 and AEA-45 merge (AEA-29 and AEA-43 are merged) (it proves seams S-7, S-8, S-11,
   S-18, S-19, S-20 early), keep the ticket open, dispatch pass 2 after AEA-40 and AEA-51.
 - **R-5 (to the orchestrator, ticket wording):** AC-25 names "a tick whose `CaseService` call is patched to raise". There
   is no such call under the signed contract, so this plan proves the same obligation through `prune_checkpoints`. No
@@ -1019,7 +1078,11 @@ a paid model; bind 4019 or 5184 (the harness uses port 0); `git add -A`; push; f
 - **Timing:** each test starts its own uvicorn app (~1–3 s); SSE reads wait `idle_s` (3 s). Expect pass 1 at a few
   minutes serial.
 - **Collisions:** `tests/integration/` is shared with AEA-53 (`test_reads_composition.py`) and `tests/capture/` with
-  51, 53, 24, 50; all AEA-52 files have distinct names. Context files: AEA-52 edits only its own rows.
+  51, 53, 24, 50; all AEA-52 files have distinct names (`tests/capture/conftest.py` is AEA-50's: never edit it; it only
+  registers the `deploy` marker). AEA-45's branch adds `tests/api/staff_cases_support.py`: a different helper in a
+  different folder; do not import it (AEA-52 tests run on the harness, AEA-45's on its own fixtures). Context files:
+  AEA-29 (merged), AEA-30 and AEA-45 (branches) also append to the A6/A9 area-map rows, `icm-progress.md` and DO-3 §6;
+  AEA-52 appends to its own cells after theirs and never rewrites their text.
 
 ---
 
@@ -1027,11 +1090,12 @@ a paid model; bind 4019 or 5184 (the harness uses port 0); `git add -A`; push; f
 
 **READY as a plan; BLOCKED-ON before implementation** (no product decision needed; no signed contract change; no
 D-4…D-15 answer differs from its recommendation; D-12 is followed in AC-19).
-- Pass 1 waits on **AEA-29** (CaseService, HandoffService), **AEA-30** (DemoService, DemoClock, SchedulerJob,
-  SchedulerThread), **AEA-43** (CON-6…CON-9 routes), **AEA-45** (CON-11…13, 15…17 routes) reaching `main`. At
-  `68b1412` 29, 30 and 43 are built on branches, 45 is not started. Already merged: AEA-57 (harness), 23, 31, 32, 41,
-  44, 46, 47, 48, 59. AEA-52 is an integration ticket: its criteria require the real objects through the real app
+- Pass 1 waits on **AEA-30** (DemoService, DemoClock, SchedulerJob, SchedulerThread; it also binds `demo_clock`,
+  without which a real login answers 500) and **AEA-45** (CON-11…13, 15…17 routes) reaching `main`. At `c9b17ea` both
+  are built on branches (`e5c4ce4`, ledger `blocked`, send-back unfinished; `ea00827`, ledger `blocked`). Already
+  merged: AEA-29 (CaseService, HandoffService), AEA-43 (CON-6…CON-9 routes), AEA-57 (harness), 23, 31, 32, 41, 44, 46,
+  47, 48, 59. AEA-52 is an integration ticket: its criteria require the real objects through the real app
   (slice plan Amendment 1: "on the harness, not on fakes"), so a double cannot stand in for these four.
-- Pass 2 also waits on **AEA-40** (CON-1, CON-2, `getChatThread`; built on its branch) and **AEA-51** (binds
-  `reply_composer` and `run_graph` in `register_graph`, still a no-op on main; WP scripts, R-3); the CON-19 tile check
-  waits on **AEA-53**. AEA-51 is not in the ticket's *Blocked by* (R-4).
+- Pass 2 also waits on **AEA-40** (CON-1, CON-2, `getChatThread`; built on its branch at `8fc2d33`, ledger
+  NEEDS-DECISION) and **AEA-51** (binds `reply_composer` and `run_graph` in `register_graph`, still a no-op on main;
+  not started; WP scripts, R-3); the CON-19 tile check waits on **AEA-53** (ledger NEEDS-DECISION, not started). AEA-51 is not in the ticket's *Blocked by* (R-4).
