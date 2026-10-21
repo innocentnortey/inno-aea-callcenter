@@ -1,11 +1,11 @@
 # Area map — inno-aea-callcenter
 
-> Extracted from: [`docs/design/code-design.md`](../../docs/design/code-design.md) (DO-3, revision 2) and
+> Extracted from: [`docs/design/code-design.md`](../../docs/design/code-design.md) (DO-3, revision 3) and
 > [`docs/design/contracts/`](../../docs/design/contracts/README.md) (DO-4).
-> As of: 2026-10-21 (Stage 6, System track; DO-3 revised after the metz review and reconciled with the UX-3 contracts, awaiting Innocent).
+> As of: 2026-10-21, reconciled with the slice plan (AEA-08): DO-3 revision 3 (Stage 7 addenda and the three slice-plan deviations applied); every row below is still planned.
 > Authority: **DO-3 wins.** This file only routes; when it disagrees with DO-3, fix this file.
 
-**Every code path below is planned.** No product code exists yet; the parked `src/meridian/` is read for shapes only
+**Every code path below is planned unless its row marks it actual.** No product code exists yet; the parked `src/meridian/` is read for shapes only
 and is replaced by the planned tree (DO-3 §2.4). When a slice lands, change its row from *planned* to *actual* with
 the commit, in the same change (`rules/context-maintenance.md`).
 
@@ -20,30 +20,34 @@ is the only place that wires concretes. Detail: DO-3 §2.
 **Rule:** an area depends only on files it owns or on earlier waves; the area that writes a table owns its repository
 and DDL file; a table with several writers lives in A0 (DO-3 §8).
 
-| Wave | Area | Responsibility | Owns (all planned) | Status |
-|---|---|---|---|---|
-| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`), `policy/{texts,limits}.py`, `privacy/redact.py` (**actual**, AEA-04 `9145044`), `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core}.py`, empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,cases,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/sqlite/schema/00_core.sql`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/` | planned |
-| 1 | **A1 Gates** | Decide the turns that never reach a model | `gates/{rules,gate}.py` | planned |
-| 1 | **A2 Models** | One adapter per provider; the role-typed gateway; the cost ledger | `adapters/models/{anthropic,openrouter_jev}.py`, `agent/gateway.py`, `services/ledger.py`, `adapters/sqlite/repos_spend.py`, `schema/20_spend.sql` | planned |
-| 1 | **A3 Retrieval** | Build the KB index at image build; answer passage searches | `retrieval/{manifest,ingest}.py`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | planned |
-| 1 | **A4 Identity** | One-time code; account reads | `services/identity.py`, `adapters/sqlite/repos_identity.py`, `schema/40_identity.sql`, `agent/tools/account.py` | planned |
-| 1 | **A5 Scheduling** | Valid bookings, fee-free changes, fee-bearing change requests | `policy/booking.py`, `services/scheduling.py`, `adapters/sqlite/repos_booking.py`, `schema/50_booking.sql`, `agent/tools/scheduling.py` | planned |
-| 1 | **A6 Cases and handoff** | Cases, promises, brief assembly, demo clock and staffing, scheduler job, reset | `policy/handoff.py`, `services/{cases,handoff,demo,scheduler,reset}.py`, `adapters/sqlite/repos_cases.py`, `schema/60_cases.sql` | planned |
-| 1 | **A10a Ops** | Traces, health and watchdog, ops records | `adapters/tracing_langfuse.py`, `services/health.py`, `adapters/sqlite/repos_ops.py`, `schema/95_ops.sql` | planned |
-| 1 | **A11 Eval harness** | Score the agent through its HTTP API; frozen per scored run | `eval/harness/`, `eval/cases/{dev,heldout,retrieval}/`, `eval/reports/` | planned |
-| 2 | **A7a Graph spine** | Graph skeleton, routers, context, load and compose; stubs of the node groups | `agent/{graph,routers,context}.py`, `agent/nodes/{load_context,compose}.py`, stubs of `agent/nodes/{front,plan,act,reply}.py` | planned |
-| 2 | **A8 Customer API** | Customer and demo routes (CON-1…CON-7, CON-8 read, CON-9), turn and session services, CON-3 SSE (polls `events`); serves `apps/web/dist` with fallback to `index.html` (planned) | `web/{app,middleware}.py`, `web/schemas/customer.py`, `web/routes/{chat,events,demo}.py`, `services/{turn,session}.py` | planned |
-| 2 | **A9 Staff console** | Staff routes (CON-8 advance, CON-10…CON-17, CON-21 staff SSE), live takeover, staff sessions with `require_staff`, flags | `web/routes/staff.py`, `web/schemas/staff.py`, `services/{live_chat,staff}.py`, `adapters/sqlite/repos_staff.py`, `schema/90_staff.sql` | planned |
-| 2 | **A12 Deploy** | Image build (index built here; Node build stage for `apps/web` with `docs/ux/03-structure/ui-contracts.openapi.yaml` in the build context), Railway config, reset command | `Dockerfile`, `railway.json`, `scripts/` | planned |
-| 3 | **A7b Act** | Specialists, tool dispatch, escalation, handoff nodes | `agent/nodes/act.py`, `agent/specialists/{specs,runner}.py`, `agent/tools/dispatch.py`, `policy/escalation.py`, `agent/prompts/specialists.py` | planned |
-| 3 | **A7c Reply** | Turn facts, responder, brief extraction, R-46 checks | `agent/nodes/reply.py`, `checks.py`, `agent/prompts/reply.py` | planned |
-| 3 | **A7d Front** | Gate, safety, identity, planner and classifier nodes | `agent/nodes/{front,plan}.py`, `agent/prompts/routing.py` | planned |
-| 3 | **A10b Reads** | Owner metrics, monitoring and eval pages (CON-18…CON-20); wave 3 because CON-18 needs A9's `require_staff` | `services/metrics_reader.py`, `web/routes/reads.py` | planned |
+| Wave | Area | Responsibility | Owns (all planned) | Tickets | Status |
+|---|---|---|---|---|---|
+| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core and every DDL file, shared case storage, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`, `staff.py`, `identity.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core,repos_cases}.py`, **every `adapters/sqlite/schema/*.sql`** (written by A0, AEA-10, from the owning area's field list), empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-01, 02, 03, 04, 10, 11 | planned; `policy/texts.py` actual (AEA-03, `2689582`); `privacy/redact.py` actual (AEA-04, `9145044`) |
+| 1 | **A1 Gates** | Decide the turns that never reach a model | `gates/{rules,gate}.py` | AEA-05, 12 | planned |
+| 1 | **A2 Models** | One adapter per provider; the role-typed gateway; the cost ledger | `adapters/models/{anthropic,openrouter_jev}.py`, `agent/gateway.py`, `services/ledger.py`, `adapters/sqlite/repos_spend.py` (body) | AEA-17, 18, 20, 26 | planned |
+| 1 | **A3 Retrieval** | Build the KB index at image build; answer passage searches | `retrieval/{settings,manifest,ingest}.py`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | AEA-16, 33 | planned |
+| 1 | **A4 Identity** | One-time code; account reads | `services/identity.py`, `adapters/sqlite/repos_identity.py` (body), `agent/tools/account.py` | AEA-27 | planned |
+| 1 | **A5 Scheduling** | Valid bookings, fee-free changes, fee-bearing change requests | `policy/booking.py`, `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` | AEA-13, 28 | planned |
+| 1 | **A6 Cases and handoff** | Cases, promises, brief assembly, demo clock and staffing, scheduler job, reset (storage is A0's `repos_cases.py`) | `policy/handoff.py`, `services/{cases,handoff,demo,scheduler,reset}.py` | AEA-14, 29, 30, 31 | planned |
+| 1 | **A10a Ops** | Traces, health and watchdog, ops records | `adapters/tracing_langfuse.py`, `services/health.py`, `adapters/sqlite/repos_ops.py` (body) | AEA-19, 32 | planned |
+| 1 | **A11 Eval harness** | Score the agent through its HTTP API; frozen per scored run | `eval/harness/`, `eval/cases/{dev,heldout,retrieval}/`, `eval/reports/` | AEA-06, 24 | planned |
+| 2 | **A7a Graph spine** | Graph skeleton, routers, context, failure signals, load and compose; stubs of the node groups | `agent/{graph,routers,context,signals}.py`, `agent/nodes/{load_context,compose}.py`, stubs of `agent/nodes/{front,plan,act,reply}.py` | AEA-21, 34 | planned |
+| 2 | **A8 Customer API** | The web shell (app, middleware, dependency providers, errors, logging, frontend serving), the login, and the customer and demo routes (CON-1…CON-7, CON-8 read, CON-9, CON-22), turn, session, reset-gate and person-request services, CON-3 SSE (polls `events`); AEA-49 serves `apps/web/dist` with fallback to `index.html` (planned) | `web/{app,middleware,deps,errors,logging,frontend}.py`; `web/routes/{auth,chat,events,handoff,demo}.py` each with its own `web/schemas/<name>.py`; `services/{turn,session,reset_gate,person_request}.py` | AEA-23, 40, 41, 42, 43, 49 | planned |
+| 2 | **A9 Staff console** | Staff routes (CON-8 advance, CON-10…CON-17, CON-21 staff SSE), live takeover, staff sessions and the role check (`require_staff`, declared in `web/deps.py`), flags | `web/routes/staff_{session,cases,live,clock}.py` each with its own `web/schemas/<name>.py`; `services/{live_chat,staff}.py`; `adapters/sqlite/repos_staff.py` (body) | AEA-44, 45, 46, 47 | planned |
+| 2 | **A12 Deploy** | Image build (index built here; Node build stage for `apps/web` with `docs/ux/03-structure/ui-contracts.openapi.yaml` in the build context), Railway config, agent version stamp, reset command | `Dockerfile`, `railway.json`, `scripts/{agent_version,reset}.py` | AEA-50 | planned |
+| 3 | **A7b Act** | Specialists, tool dispatch, escalation, handoff nodes | `agent/nodes/act.py`, `agent/specialists/{specs,runner}.py`, `agent/tools/dispatch.py`, `policy/escalation.py`, `agent/prompts/specialists.py` | AEA-14 (`policy/escalation.py`), 22, 35, 39 | planned |
+| 3 | **A7c Reply** | Turn facts, responder, brief extraction, R-46 checks | `agent/nodes/reply.py`, `checks.py`, `agent/prompts/reply.py` | AEA-15, 38 | planned |
+| 3 | **A7d Front** | Gate, safety, identity, planner and classifier nodes | `agent/nodes/{front,plan}.py`, `agent/prompts/routing.py` | AEA-36, 37 | planned |
+| 3 | **A10b Reads** | Owner metrics, monitoring and eval pages (CON-18…CON-20); the route is built in ticket wave 2 (AEA-48) because `require_staff` is declared in `web/deps.py` by AEA-23, the reader in ticket wave 3 (AEA-53) | `web/routes/reads.py` with `web/schemas/reads.py`, `services/metrics_reader.py` | AEA-48, 53 | planned |
+| 3+ | **Integration and journeys** | Wire the real services and prove the paths end to end; journey harness, contract and prompt checks, browser journeys, live smoke, UI integration. No file of their own beyond tests | `tests/journeys/`, `tests/contract/`, `tests/capture/`, `tests/live/` (slice plan §3) | AEA-51, 52, 55, 57, 58, 59, 60, 61, 62 | planned |
+
+Docs and human tickets (AEA-07, 08, 09, 25, 54, 56) own no code. Ticket numbers and waves are the [slice plan](../../docs/plans/slice-plan.md) §1; DO-3 keeps the area waves as the dependency rule.
 
 **Critical path:** A0 → A7a → A7b / A7c / A7d (A10b also in wave 3). **Shared files** and how collisions are avoided: DO-3 §8 collision map.
-**Repo stubs:** each `repos_<area>.py` is an A0 stub after wave 0, then its body belongs to the owning area in the table
-above (spend A2, identity A4, booking A5, cases A6, staff A9, ops A10a); `db.py` and `ports/runtime.py` stay frozen.
-**Screens** are the React 19 + Vite + TypeScript + Tailwind + shadcn/ui app `apps/web/` (UX-4 prototype, **built 2026-10-21; UX-4 gate not yet signed**; it replaces the earlier server-rendered `web/templates` + `web/static` plan). A8 and A9 are API only (no templates, static files or Jinja pages); `jinja2` is therefore no longer needed and is **droppable** from `pyproject.toml` (not edited here). A8/A12 (AEA-49) serve the built `apps/web/dist` with a fallback to `index.html` (**planned**); A12's image needs a Node build stage with `docs/ux/03-structure/ui-contracts.openapi.yaml` in the build context (**planned**). Route files are split one per ticket (`routes/{chat,handoff,events,demo,auth}.py`, `routes/staff_{session,cases,live,clock}.py`), per [slice plan](../../docs/plans/slice-plan.md) §0 (AEA-08, 2026-10-21).
+**Repo stubs:** `repos_cases.py` is A0's whole (AEA-10, slice plan §0). The other five `repos_<area>.py` are A0 stubs after wave 0, then
+its body belongs to the owning area in the table above (spend A2, identity A4, booking A5, staff A9, ops A10a). Every `schema/*.sql` is
+written by A0 (AEA-10). `db.py` and `ports/runtime.py` stay frozen.
+**Screens** are the React 19 + Vite + TypeScript + Tailwind + shadcn/ui app `apps/web/` (UX-4 prototype, **built 2026-10-21; UX-4 gate not yet signed**; it replaces the earlier server-rendered `web/templates` + `web/static` plan). A8 and A9 are API only (no templates, static files or Jinja pages); `jinja2` is therefore no longer needed and is **droppable** from `pyproject.toml` (not edited here). AEA-49 (`web/frontend.py`, A8) serves the built `apps/web/dist` with a fallback to `index.html` (**planned**); A12's image needs a Node build stage with `docs/ux/03-structure/ui-contracts.openapi.yaml` in the build context (**planned**). Route files are split one per ticket, each with its own schema file: ten in all, `routes/{auth,chat,events,handoff,demo,reads}.py` and `routes/staff_{session,cases,live,clock}.py` (AEA-23, 40, 41, 42, 43, 48 and 44, 45, 46, 47), per [slice plan](../../docs/plans/slice-plan.md) §0 and §3 (AEA-08, 2026-10-21).
 
 ## Where to look
 
