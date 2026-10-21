@@ -262,7 +262,7 @@ src/meridian/                                    planned                        
 │   ├── session.py                               open a conversation (CON-1)                                 A8    2
 │   ├── reset_gate.py                            reset-in-progress gate, injected into ResetService          A8    2
                                                  (AEA-23; stage7/web.md §7)
-│   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2
+│   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2   built AEA-42 55b5e7c
                                                  (AEA-42; stage7/web.md §8)
 │   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2
 │   ├── staff.py                                 StaffSessionStore (login sessions, role check, role switch) A9    2
@@ -304,7 +304,7 @@ src/meridian/                                    planned                        
 │   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout, getSession (AEA-23)                   A8    2
 │   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
 │   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
-│   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2
+│   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2   built AEA-42 55b5e7c
 │   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
 │   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 role switch (AEA-44)                                 A9    2
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
