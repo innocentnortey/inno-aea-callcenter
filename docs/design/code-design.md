@@ -190,7 +190,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/identity.py`, `adapters/sqlite/repos_identity.py` body, `agent/tools/account.py` (AEA-27, `93dfca4`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 **Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
-**Built:** `agent/nodes/load_context.py` (AEA-34, `9c13400`).
+**Built:** `agent/nodes/load_context.py` (AEA-34, `8d6be78`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
