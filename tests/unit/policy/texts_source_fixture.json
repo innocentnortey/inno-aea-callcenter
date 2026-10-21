@@ -403,6 +403,22 @@
       }
     },
     {
+      "id": "followup.saved_email_general",
+      "template": "Follow-up saved: email, {window}.",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/testing/journeys/2026-10-21-FU-saveFollowUp-text.md",
+        "line": 5,
+        "where": "FU-saveFollowUp-text provisional wording pending the UX session: SCR-1 saved-line shape with no destination (R-27), as AEA-42's CaseService double returns"
+      },
+      "example": {
+        "values": {
+          "window": "any time"
+        },
+        "rendered": "Follow-up saved: email, any time."
+      }
+    },
+    {
       "id": "followup.recorded_not_sent",
       "template": "Demo: recorded, not sent",
       "source": {

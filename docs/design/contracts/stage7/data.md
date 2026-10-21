@@ -9,6 +9,7 @@ client-side turn timings file (§6, DAT-31); `FixedClock` (§8a, DAT-32).
 **Residual pass (2026-10-21):** §2 gains the `amount` placeholder, `format_usd` and `TextId.PERSON_REQUEST_LABEL`
 (R-W-6, R-W-7 in [`residuals-web.md`](../../../plans/7b-decisions/residuals-web.md)).
 **AEA-03b (2026-10-21):** §2 gains `TextId.HISTORY_CODE_ENTERED` and `TextId.HISTORY_DETAILS_SENT` (new `history` group, 77 texts).
+**FU-saveFollowUp-text (2026-10-21):** §2 gains `TextId.FOLLOWUP_SAVED_EMAIL_GENERAL` (provisional wording, 78 texts).
 **Status:** planned, nothing built. Written by the Stage 7b data resolver (Claude, Opus 5.5).
 
 These follow the sketch rules of [internal-components.md](../internal-components.md) (DO-4) §0: field names, types and
@@ -116,6 +117,8 @@ Texts added by AEA-03b for AEA-40 R-4 (history entries for non-text actions; wor
 Step 6): `TextId.HISTORY_CODE_ENTERED = "history.code_entered"`, "Code entered", and `TextId.HISTORY_DETAILS_SENT =
 "history.details_sent"`, "Details sent". They are the customer-side row text a reloaded thread shows after the visitor
 entered a verification code or sent their details; no placeholders, and the row never holds the code or the details.
+
+Text added by FU-saveFollowUp-text (wave fix, AEA-51 finding; Innocent 2026-10-21): `TextId.FOLLOWUP_SAVED_EMAIL_GENERAL = "followup.saved_email_general"`, "Follow-up saved: email, {window}.", the saved line for an email follow-up to a general destination (CON-5 EMAIL_GENERAL). Provisional wording pending the UX session. Its destination label is "a general contact"; the branch reads no contact value.
 
 Texts other topics asked for (merge, 2026-10-21; DAT-29):
 

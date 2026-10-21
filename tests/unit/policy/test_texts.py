@@ -42,7 +42,7 @@ EXPECTED_COUNTS = {
     "identity": 7,
     "promise": 7,
     "fee_change": 4,
-    "followup": 3,
+    "followup": 4,
     "booking": 16,
     "limits": 7,
     "live": 6,
@@ -355,3 +355,21 @@ def test_history_row_texts_take_no_values(text_id: TextId) -> None:
         render(text_id, digits="x")
     assert err.value.placeholder == "digits"
     assert err.value.text_id == text_id.value
+
+
+def test_followup_saved_email_general_text() -> None:
+    """FU-saveFollowUp-text: the email/general saved line (provisional wording), one placeholder, no send claim."""
+    assert TextId.FOLLOWUP_SAVED_EMAIL_GENERAL.value == "followup.saved_email_general"
+    assert TEXTS[TextId.FOLLOWUP_SAVED_EMAIL_GENERAL] == "Follow-up saved: email, {window}."
+    assert (
+        render(TextId.FOLLOWUP_SAVED_EMAIL_GENERAL, window="any time") == "Follow-up saved: email, any time."
+    )
+    assert (
+        render(TextId.FOLLOWUP_SAVED_EMAIL_GENERAL, window="mornings") == "Follow-up saved: email, mornings."
+    )
+    with pytest.raises(TextRenderError) as extra:
+        render(TextId.FOLLOWUP_SAVED_EMAIL_GENERAL, window="any time", digits="02")
+    assert extra.value.placeholder == "digits"
+    assert render(TextId.FOLLOWUP_SAVED_PHONE, digits="02", window="mornings") == (
+        "Follow-up saved: phone call, the number ending in 02, mornings."
+    )
