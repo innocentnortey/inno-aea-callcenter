@@ -309,8 +309,7 @@ def _recursion_outcome(
     elapsed_ms = max(0, int((time.monotonic() - ctx.budget.started) * 1000))
     halt = Halt(reason=HaltReason.RECURSION_LIMIT, node="run_graph", elapsed_ms=elapsed_ms)
     with deps.uow() as tx:  # read-only; no model call inside (DO-3 section 2.3 rule 1)
-        # TEMPORARY until AEA-10 puts `settled_for` on CoreRepos: drop the cast then.
-        settled: Settled = cast(Any, tx.core).settled_for(ctx.ids.thread_id, ctx.now)
+        settled: Settled = tx.core.settled_for(ctx.ids.thread_id, ctx.now)
     reply = composer.halt_reply(halt, settled, ctx)
     events = (_turn_events(last, ctx.ids.turn_id) if last else ()) + (
         CheckEvent.from_halt(ctx.ids.turn_id, halt),

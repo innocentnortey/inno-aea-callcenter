@@ -103,12 +103,12 @@ def test_handoff_card_only_from_handoff_result() -> None:
 
 
 def test_card_ids_use_prefixes() -> None:
-    from meridian.agent.nodes.compose import _burning_card_id
+    from meridian.gates.gate import burning_card_id
 
     turn = str(fx.TURN4)
     ask = COMPOSER.compose(fx.state(gate=fx.gate(GateKind.BURNING_ASK)), fx.make_ctx())
     burning = typing.cast(b.BurningCheckBlock, ask.blocks[0])
-    assert burning.card_id == _burning_card_id(fx.TURN4) == f"burn-{turn}"
+    assert burning.card_id == burning_card_id(fx.TURN4) == f"burn-{turn}"
     step = CodeSent(
         masked_hint="text ending 0142", expires_at=fx.DEMO_NOW + dt.timedelta(minutes=10), sends_left=2
     )

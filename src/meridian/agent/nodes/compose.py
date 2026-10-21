@@ -20,12 +20,13 @@ from meridian.domain import blocks as b
 from meridian.domain import identity as idn
 from meridian.domain import turn as tn
 from meridian.domain.actions import ActionKind, CompletedAction, OpenCase, Settled
-from meridian.domain.common import Halt, HaltReason
+from meridian.domain.common import Halt, HaltReason, TurnId
 from meridian.domain.handoff import CaseSummary, HandoffResult, Priority
 from meridian.domain.records import Passage
 from meridian.domain.specialists import SchedulingResult
 from meridian.domain.staff import STAFF_PERSONAS, StaffRole
 from meridian.domain.state import ComposeUpdate, Controller, ConversationState
+from meridian.gates.gate import burning_card_id
 from meridian.policy.texts import TEXTS, TextId, render
 
 __all__ = ["ReplyComposer", "compose", "turn_trace"]
@@ -98,11 +99,6 @@ _ErrCode = Literal[
 ]
 _NoticeCode = Literal["AI_PAUSED", "BOOKING_CAP", "SPEND_CAP_REACHED", "TURN_TIMEOUT"]
 IdentityViewStatus = Literal["not_checked", "code_sent", "verified", "not_verified", "locked"]
-
-
-def _burning_card_id(turn_id: str) -> str:
-    # TEMPORARY until AEA-12 is on main: replace with `from meridian.gates.gate import burning_card_id`.
-    return f"burn-{turn_id}"
 
 
 def _window_label(window: str) -> str:
@@ -417,7 +413,7 @@ class ReplyComposer:
             return [
                 b.BurningCheckBlock(
                     **ids.kw(),
-                    card_id=_burning_card_id(ids.turn_id),
+                    card_id=burning_card_id(TurnId(ids.turn_id)),
                     options=_BURNING_OPTIONS,
                     answered=None,
                     question=TEXTS[TextId.BURNING_QUESTION],

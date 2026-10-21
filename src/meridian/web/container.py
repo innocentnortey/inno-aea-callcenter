@@ -127,36 +127,248 @@ class Container:
 def register_storage(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-10 storage: SQLite unit of work, migrations and first boot, checkpointer (cases.md §1).
 
-    No-op until AEA-10 fills it.
+    Provides Key("uow_factory") (SqliteUnitOfWorkFactory; building it migrates the working copy, WF-16),
+    Key("checkpointer") (Checkpointer over checkpoints.sqlite, closed with the container) and
+    Key("restore_working_copy") (restore_working_copy bound to settings.issued_db_path; cases.md §1.4).
     """
+    import functools
+    from pathlib import Path
+
+    from meridian.adapters.checkpointer import CHECKPOINTS_DB_NAME, Checkpointer
+    from meridian.adapters.sqlite.db import SqliteUnitOfWorkFactory
+    from meridian.adapters.sqlite.migrate import WORKING_DB_NAME, migrate, restore_working_copy
+
+    data_dir = Path(settings.data_dir)
+    issued_path = Path(settings.issued_db_path)
+    db_path = data_dir / WORKING_DB_NAME
+
+    def make_uow_factory(_c: Container) -> SqliteUnitOfWorkFactory:
+        migrate(db_path, issued_path=issued_path)  # first boot copies the issued file; DDL every boot
+        return SqliteUnitOfWorkFactory(db_path)
+
+    def make_checkpointer(c: Container) -> Checkpointer:
+        checkpointer = Checkpointer(data_dir / CHECKPOINTS_DB_NAME)
+        c.on_close(checkpointer.close)
+        return checkpointer
+
+    container.provide(Key[SqliteUnitOfWorkFactory]("uow_factory"), make_uow_factory)
+    container.provide(Key[Checkpointer]("checkpointer"), make_checkpointer)
+    container.provide(
+        Key[Callable[..., None]]("restore_working_copy"),
+        lambda _c: functools.partial(restore_working_copy, issued_path=issued_path),
+    )
 
 
 def register_web(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-23 web shell: login routes, reset gate, rate limiter, public paths, web/deps.py bindings (web.md §1–§7).
 
-    No-op until AEA-23 fills it.
+    Binds the reset gate, the rate limiter, the one stream CapacityLimiter(4) and the wall clock create_app chose,
+    and registers the two public paths. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import anyio
+
+    from meridian.services.reset_gate import ResetGate
+    from meridian.web.deps import (
+        RATE_LIMITER,
+        RESET_GATE,
+        STREAM_POLL_LIMITER,
+        STREAM_POLL_THREADS,
+        WALL_CLOCK,
+    )
+    from meridian.web.middleware import RateLimiter, WebShellState
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    container.provide(RESET_GATE, lambda _c: ResetGate())
+    container.provide(RATE_LIMITER, lambda _c: RateLimiter(limits.web))
+    container.provide(STREAM_POLL_LIMITER, lambda _c: anyio.CapacityLimiter(STREAM_POLL_THREADS))
+    container.provide(WALL_CLOCK, lambda _c: shell.wall_clock)
+    shell.public_paths.add_exact("POST", "/api/login")
+    shell.public_paths.add_exact("GET", "/healthz")
 
 
 def register_ops(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-32 ops: health events, heartbeat, watchdog, alerts (cases.md §8).
 
-    No-op until AEA-32 fills it.
+    Provides deps.HEARTBEAT (the Heartbeat /healthz reads), Key[AlertWriter]("alert_writer") (AEA-19 binds the trace
+    sink's on_alert to it) and Key[AlertSettings]("alert_settings") (AEA-53). Its starter runs the heartbeat task on the
+    lifespan's event loop and the watchdog thread; it reads Key("uow_factory") (AEA-10), Key("wall_clock") (AEA-23) and
+    Key("ledger") (AEA-26). An app that create_app did not build has no /healthz to probe, so this does nothing.
     """
+    import asyncio
+    import os
+    import threading
+    import time
+
+    import httpx
+
+    from meridian.services.health import (
+        AlertEvaluator,
+        AlertSettings,
+        AlertWriter,
+        Heartbeat,
+        SpendReader,
+        Watchdog,
+        run_beats,
+    )
+    from meridian.web import deps
+    from meridian.web.middleware import HEALTHZ_PATH, WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    alert_settings = AlertSettings()
+    agent_version = str(settings.agent_version)
+    heartbeat = Heartbeat(alert_settings, started_mono=time.monotonic())
+    running: dict[str, Any] = {}
+
+    container.provide(Key[AlertSettings]("alert_settings"), lambda _c: alert_settings)
+    container.provide(deps.HEARTBEAT, lambda _c: heartbeat)
+    container.provide(
+        Key[AlertWriter]("alert_writer"),
+        lambda c: AlertWriter(c.get(deps.UOW_FACTORY), c.get(deps.WALL_CLOCK), agent_version),
+    )
+
+    def hard_exit(code: int) -> None:
+        os._exit(code)  # sys.exit in a thread would end only the thread; Railway restarts on a non-zero exit
+
+    def start() -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            raise RuntimeError("register_ops: start needs the app lifespan's running event loop") from None
+        uow = container.get(deps.UOW_FACTORY)
+        wall_clock = container.get(deps.WALL_CLOCK)
+        evaluator = AlertEvaluator(
+            uow,
+            container.get(Key[SpendReader]("ledger")),
+            alert_settings,
+            wall_clock,
+            limits.spend.daily_cap_usd,
+            agent_version=agent_version,
+        )
+
+        async def healthz_ok() -> bool:
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://watchdog.local") as client:
+                response = await client.get(HEALTHZ_PATH)
+            return response.status_code == 200
+
+        def probe() -> bool:
+            future = asyncio.run_coroutine_threadsafe(healthz_ok(), loop)
+            try:
+                return future.result(timeout=alert_settings.probe_timeout_s)
+            except Exception:
+                future.cancel()
+                return False
+
+        watchdog = Watchdog(
+            uow, probe, hard_exit, evaluator, alert_settings, wall_clock, agent_version=agent_version
+        )
+        stop = threading.Event()
+        thread = threading.Thread(
+            target=watchdog.run_until, args=(stop,), name="meridian-watchdog", daemon=True
+        )
+        running.update(
+            loop=loop,
+            stop=stop,
+            thread=thread,
+            task=loop.create_task(run_beats(heartbeat, alert_settings), name="meridian-heartbeat"),
+        )
+        thread.start()
+
+    def close() -> None:
+        stop = running.get("stop")
+        if stop is not None:
+            stop.set()
+            running["thread"].join(timeout=1.0)
+        task, loop = running.get("task"), running.get("loop")
+        if task is not None and loop is not None:
+            with contextlib.suppress(RuntimeError):
+                loop.call_soon_threadsafe(task.cancel)
+
+    container.on_start(start)
+    container.on_close(close)
 
 
 def register_tracing(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-19 tracing: Langfuse or null trace sink and the project-key check (models.md §4, §7).
 
-    No-op until AEA-19 fills it.
+    Provides Key[TraceSink]("trace"). LangfuseTraceSink only when all four LANGFUSE_* settings are set
+    (Settings.langfuse_complete()); otherwise NullTraceSink and no alert (MOD-6 step 5, MC-24). The sink's on_alert
+    calls the container's "alert_writer".fire("trace_export_failed", reason) (AEA-32, cases.md §8); until that key
+    exists it logs a fixed line. One LangfuseTraceSink per Langfuse public key per process.
     """
+    import logging
+
+    from meridian.adapters.tracing_langfuse import (
+        LangfuseExportSettings,
+        LangfuseTraceSink,
+        NullTraceSink,
+        TraceAlertReason,
+    )
+    from meridian.config import Settings
+    from meridian.ports.runtime import TraceSink
+    from meridian.privacy.redact import redact
+
+    log = logging.getLogger("meridian.tracing")
+    trace_key = Key[TraceSink]("trace")
+    typed = cast(Settings, settings)
+    pk, sk = typed.langfuse_public_key, typed.langfuse_secret_key
+    base_url, project_id = typed.langfuse_base_url, typed.langfuse_project_id
+    if not typed.langfuse_complete() or pk is None or sk is None or base_url is None or project_id is None:
+        null_sink = NullTraceSink()
+        container.provide(trace_key, lambda _c: null_sink)
+        return
+
+    def on_alert(reason: TraceAlertReason) -> None:
+        try:
+            writer = container.get(Key[Any]("alert_writer"))
+        except ContainerError:
+            log.warning("trace_alert_unbound reason=%s", reason)
+            return
+        writer.fire("trace_export_failed", reason)
+
+    export_settings = LangfuseExportSettings(
+        public_key=pk, secret_key=sk, base_url=base_url, project_id=project_id
+    )
+    try:
+        sink = LangfuseTraceSink(export_settings, redact, on_alert)
+    except Exception as exc:
+        log.warning("trace_sink_error op=build error=%s", type(exc).__name__)
+        fallback = NullTraceSink()
+        container.provide(trace_key, lambda _c: fallback)
+        return
+    container.provide(trace_key, lambda _c: sink)
+    container.on_start(sink.start)
+    container.on_close(sink.close)
 
 
 def register_spend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-26 spend: LedgerService and the spend guard (models.md §6).
 
-    No-op until AEA-26 fills it.
+    Provides Key[LedgerService]("ledger"), the one LedgerService, built from the "uow_factory" key (AEA-10), the
+    "wall_clock" key (AEA-23, create_app's choice; MC-20, D-13) and limits.spend.daily_cap_usd (MC-22). The gateway
+    (AEA-20), the turn service (AEA-40, typed as SpendGuard), the alert evaluator (AEA-32), the metrics reader (AEA-53)
+    and GraphDeps.ledger (AEA-51) all get it with container.get(Key[LedgerService]("ledger")).
     """
+    import datetime as dt
+
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.ledger import LedgerService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+    wall_key: Key[Callable[[], dt.datetime]] = Key("wall_clock")  # = web.deps.WALL_CLOCK
+
+    def build(c: Container) -> LedgerService:
+        return LedgerService(
+            c.get(uow_key),
+            wall_clock=c.get(wall_key),
+            daily_cap_usd=limits.spend.daily_cap_usd,
+            probe_lost_after_s=float(limits.turn.deadline_s),
+        )
+
+    container.provide(Key[LedgerService]("ledger"), build)
 
 
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -225,15 +437,115 @@ def register_demo(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_reset(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-31 reset: ResetService and the demo seed (cases.md §7).
 
-    No-op until AEA-31 fills it.
+    Binds the reset service (restore and checkpoint clear from storage, the reset gate, the seed with AEA-29's
+    BriefAssembler, AEA-30's format_clock) and loads the demo seed once at first boot. An app create_app did not build
+    has no web shell, so this does nothing.
     """
+    import functools
+    import importlib
+
+    from meridian.services.reset import ResetService, seed_demo, seed_first_boot
+    from meridian.web.deps import RESET_GATE, RESET_SERVICE, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+
+    def sibling(module: str, name: str) -> Any:
+        # Same-wave siblings (AEA-29, AEA-30), resolved when the container builds, not at import.
+        return getattr(importlib.import_module(module), name)
+
+    def seed() -> Callable[[Any], int]:
+        return functools.partial(
+            seed_demo, assembler=sibling("meridian.services.handoff", "BriefAssembler")()
+        )
+
+    def lazy_seed(tx: Any) -> int:
+        # Resolved on first call, so the container builds before AEA-29 lands.
+        return seed()(tx)
+
+    def lazy_format_clock(*args: Any, **kwargs: Any) -> Any:
+        return sibling("meridian.services.demo", "format_clock")(*args, **kwargs)
+
+    def sibling_present(module: str) -> bool:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            return False
+        return True
+
+    def build(c: Container) -> ResetService:
+        checkpointer = c.get(Key[Any]("checkpointer"))
+        return ResetService(
+            c.get(UOW_FACTORY),
+            c.get(RESET_GATE),
+            c.get(Key[Any]("restore_working_copy")),
+            checkpointer.clearing,
+            lazy_seed,
+            format_clock=lazy_format_clock,
+        )
+
+    def first_boot() -> None:
+        if not sibling_present("meridian.services.handoff"):
+            return  # AEA-29 not merged yet: nothing to assemble briefs with, so no first-boot seed
+        seed_first_boot(container.get(UOW_FACTORY), seed(), container.get(WALL_CLOCK)())
+
+    container.provide(RESET_SERVICE, build)
+    container.on_start(first_boot)
 
 
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-44 staff: StaffSessionStore, FlagService, CON-10 routes (staff.md §2).
 
-    No-op until AEA-44 fills it.
+    Provides deps.LOGIN_SESSIONS and deps.STAFF_ACCESS (one StaffSessionStore built from deps.UOW_FACTORY,
+    settings.session_secret, Key("demo_clock") and limits.web.login_session_lifetime_s) and deps.FLAG_SERVICE
+    (FlagService), and includes the CON-10 router once. Key("demo_clock") is AEA-30's and is read only when a clock
+    reading is needed; until it is provided that reading raises RuntimeError("not bound: demo_clock"), so the app
+    still builds. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import datetime as dt
+
+    from meridian.config import Settings
+    from meridian.ports.runtime import Clock
+    from meridian.services.staff import FlagService, StaffSessionStore
+    from meridian.web.deps import FLAG_SERVICE, LOGIN_SESSIONS, STAFF_ACCESS, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_session import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    typed = cast(Settings, settings)
+    demo_key: Key[Clock] = Key("demo_clock")
+    store_key: Key[StaffSessionStore] = Key("staff_session_store")
+
+    class _DemoClock:
+        def now(self) -> dt.datetime:
+            try:
+                clock = container.get(demo_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_key.name}":
+                    raise RuntimeError(f"not bound: {demo_key.name}") from None
+                raise
+            return clock.now()
+
+    demo_clock = _DemoClock()
+    container.provide(
+        store_key,
+        lambda c: StaffSessionStore(
+            c.get(UOW_FACTORY),
+            typed.session_secret,
+            demo_clock,
+            lifetime_s=limits.web.login_session_lifetime_s,
+        ),
+    )
+    container.provide(LOGIN_SESSIONS, lambda c: c.get(store_key))
+    container.provide(STAFF_ACCESS, lambda c: c.get(store_key))
+    container.provide(FLAG_SERVICE, lambda c: FlagService(c.get(UOW_FACTORY), demo_clock))
+    if not getattr(app.state, "staff_session_routes_included", False):
+        app.include_router(build_router())
+        app.state.staff_session_routes_included = True
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -246,15 +558,69 @@ def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_events(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-41 customer API: the CON-3 event stream route (web.md §11).
 
-    No-op until AEA-41 fills it.
+    Includes routes/events.py's router once per app. Provides nothing: the route reads AEA-10's unit of work and
+    AEA-23's stream limiter and reset gate through web/deps.py.
     """
+    from meridian.web.routes.events import build_router
+
+    if getattr(app.state, "events_router_included", False):
+        return
+    app.include_router(build_router())
+    app.state.events_router_included = True
 
 
 def register_person_request(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-42 customer API: PersonRequestService, CON-4 and CON-5 routes (web.md §8).
 
-    No-op until AEA-42 fills it.
+    Provides deps.PERSON_REQUESTS ("person_requests") built from "uow_factory", "handoff_service", "reply_composer",
+    "trace", "demo_clock" and "wall_clock"; while any of those is not provided, the object it provides raises
+    RuntimeError("not bound: ...") when called, so the app still starts. Includes the CON-4/CON-5 router once. An app
+    without a web shell gets nothing.
     """
+    from typing import NoReturn
+
+    from meridian.services.person_request import PersonRequestService
+    from meridian.web.deps import HANDOFF_SERVICE, PERSON_REQUESTS, REPLY_COMPOSER, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.handoff import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    needed: tuple[tuple[str, Key[Any]], ...] = (
+        ("uow", UOW_FACTORY),
+        ("handoff", HANDOFF_SERVICE),
+        ("composer", REPLY_COMPOSER),
+        ("trace", Key[Any]("trace")),
+        ("demo_clock", Key[Any]("demo_clock")),
+        ("wall_clock", WALL_CLOCK),
+    )
+
+    class _NotBound:
+        def __init__(self, missing: tuple[str, ...]) -> None:
+            self.missing = missing
+
+        def request(self, cmd: object) -> NoReturn:
+            raise RuntimeError("not bound: " + ", ".join(self.missing))
+
+    def make(c: Container) -> Any:
+        found: dict[str, Any] = {}
+        missing: list[str] = []
+        for arg, key in needed:
+            try:
+                found[arg] = c.get(key)
+            except ContainerError as exc:
+                if str(exc) != f"not provided: {key.name}":
+                    raise
+                missing.append(key.name)
+        if missing:
+            return _NotBound(tuple(missing))
+        return PersonRequestService(**found)
+
+    container.provide(PERSON_REQUESTS, make)
+    if not getattr(app.state, "handoff_routes_included", False):
+        app.include_router(build_router())
+        app.state.handoff_routes_included = True
 
 
 def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -274,15 +640,64 @@ def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-46 staff API: LiveChatService, CON-14 and CON-21 routes (staff.md §5, §7).
 
-    No-op until AEA-46 fills it.
+    Provides deps.LIVE_CHAT ("live_chat"): a LiveChatService over Key("uow_factory") (AEA-10), the demo clock
+    Key("demo_clock") (AEA-30, read through a forwarder only when an action writes, so the app builds before AEA-30
+    binds it; until then a write raises RuntimeError("not bound: demo_clock")) and the STORE redactor (data.md §1,
+    MC-23). Includes the staff_live router once per app. An app that create_app did not build has no web shell, so
+    this does nothing.
     """
+    from datetime import datetime
+
+    from meridian.privacy.redact import RedactionProfile, redact
+    from meridian.services.live_chat import LiveChatService
+    from meridian.web.deps import LIVE_CHAT, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_live import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+
+    class _DemoClock:
+        """Resolves AEA-30's clock at call time (AEA-40 and AEA-42 use the same forwarder)."""
+
+        def now(self) -> datetime:
+            try:
+                clock = container.get(demo_clock_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_clock_key.name}":
+                    raise RuntimeError(f"not bound: {demo_clock_key.name}") from None
+                raise
+            moment: datetime = clock.now()
+            return moment
+
+    container.provide(
+        LIVE_CHAT,
+        lambda c: LiveChatService(
+            c.get(UOW_FACTORY), _DemoClock(), lambda t: redact(t, RedactionProfile.STORE).text
+        ),
+    )
+    if not getattr(app.state, "staff_live_router_included", False):
+        app.include_router(build_router())
+        app.state.staff_live_router_included = True
 
 
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-47 staff API: the CON-8 clock-advance route (staff.md §8).
 
-    No-op until AEA-47 fills it.
+    Includes routes/staff_clock.py's router (advanceDemoClock: POST /api/demo/clock only; the GET on the same path is
+    AEA-43's) once per app. Provides nothing: DemoService is bound by AEA-30's register_demo hunk. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_clock import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_clock_routes_included", False):
+        return  # a second lifespan on the same app must not add the route again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_clock_routes_included = True
 
 
 def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -311,8 +726,15 @@ def register_graph(
 def register_frontend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-49 frontend: serves apps/web/dist; runs last so its SPA fallback never shadows an API route (web.md §12).
 
-    No-op until AEA-49 fills it.
+    Delegates to web/frontend.py's register_frontend(container, app): registers the public paths GET /login, /assets/
+    and /fonts/ (WEB-1 option A), then mounts Settings.web_dist_dir read-only (/assets/{file}, /fonts/{file},
+    spa_fallback). A missing build raises FrontendMissingError when Settings.require_frontend is true, else logs
+    frontend_dist_missing once and mounts nothing (WEB-30). An app create_app did not build has no web shell, so this
+    does nothing.
     """
+    from meridian.web.frontend import register_frontend as mount_frontend
+
+    mount_frontend(container, app)
 
 
 def build_container(app: FastAPI, settings: Any, *, overrides: Any = None) -> Container:
