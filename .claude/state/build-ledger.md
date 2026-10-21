@@ -57,7 +57,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-52 | #52 | B | ready |  |  |  | AEA-29,AEA-30,AEA-40,AEA-41,AEA-44,AEA-45,AEA-46,AEA-47,AEA-31,AEA-32,AEA-43,AEA-57,AEA-59 |
 | AEA-53 | #53 | B | ready |  |  |  | AEA-26,AEA-29,AEA-32,AEA-48,AEA-44 |
 | AEA-54 | #54 | D | ready |  |  |  | AEA-50 |
-| AEA-57 | #57 | B | ready |  |  |  | AEA-02,AEA-10,AEA-11,AEA-23 |
+| AEA-57 | #57 | B | merged | aea-57-aea-57-journey-harness | bd79a29 (merge of c37ef04) | ruff check/format clean; mypy clean (89 files); tests/journeys + skeleton + import direction + affected-journeys 47 passed, 12 skipped, 1 failed (stale test_no_journey_yet_prints_zero, pre-existing since the first journey landed); journeys 11 passed, 9 skipped; no shared fixture/config touched, no full suite; J-1 steps 3-7 blocked on AEA-30/AEA-40/AEA-51 | AEA-02,AEA-10,AEA-11,AEA-23 |
 | AEA-58 | #58 | B | ready |  |  |  | AEA-40,AEA-49,AEA-57 |
 | AEA-59 | #59 | B | ready |  |  |  | AEA-02,AEA-23 |
 | AEA-60 | #60 | B | ready |  |  |  | AEA-20,AEA-22,AEA-35,AEA-37,AEA-38,AEA-39,AEA-17,AEA-18,AEA-27,AEA-28,AEA-33,AEA-57 |
