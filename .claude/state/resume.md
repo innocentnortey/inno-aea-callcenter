@@ -258,3 +258,47 @@ confirmation). Wave-0 finding 5 (stale `test_affected_journeys.py`) needs its ti
 **Next action:** wave 3. Land AEA-30 first (the demo clock unblocks login, the strict contract run and the j1 steps); then AEA-29, 40, 43, 45, 51 and 53 as
 planned. Cut the tickets for findings 1 to 3, 8 and 9; carry 4 to 7 into AEA-56 and AEA-53. Wave-3 merge gate adds `CONTRACT_STRICT=1` for the registered
 operations. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to the planners of the unmerged tickets; do not sweep them in.
+
+## Stage 8: second wave 2 batch context upkeep (2026-10-21, VPS)
+
+**Merged in this batch:** AEA-29, AEA-34, AEA-38, AEA-43 (rows and commits in `build-ledger.md`; AEA-50 and AEA-24 merged on `main` after them). Audited at `ef561fc`
+(integrated main after the four merges) in a detached worktree (since removed); scripted model only, no paid calls, no ports bound.
+
+**Security audit: PASS for AEA-29 and AEA-43.** No blocker, high or medium findings. The auditor read the services, routes, schemas, container hunks, deps and the middleware
+gate; it did not open the test files, journey records or docs rows, and ran no tests (no shell). Auth: every AEA-43 route sits behind the gate; only POST /api/login,
+GET /healthz and the SPA login page and assets are public; the session comes from the gate, never from a query, header or body; the inbox is scoped to the caller's own
+session id; reset and staffing are open to any signed-in role (the signed R-48 rule), with a per-IP limit on reset. Secrets and codes: inbox code and body are `SecretStr`,
+revealed only by the JSON serializer; when the process no longer holds the digits the wire shows dots and `INBOX_CODE_GONE` and an `active` status is shown as `expired`; no code
+is stored on these paths. Redaction and logging: customer-derived strings in staff views pass `mask()` (SONNET profile) on read; staff free text is masked before storage; the case
+and handoff modules have no logging or print and `CaseWriteFailed` carries no value. Injection: all case writes go through repository calls on the unit of work; `record_kind()`
+uses `fullmatch`; action, assignee and priority are schema-typed; `StaffingRequest` and `ResetRequest` hide input in validation errors. Neither ticket touches held-out answer keys
+or model calls.
+
+**Seams audit: PASS, two low findings.** No broken seam on `ef561fc`. `uv run --with pytest-xdist pytest tests/journeys tests/contract -n 2`: 538 passed, 108 skipped, 1 xfailed;
+ruff and mypy clean (116 source files); every `meridian` module imports. Cross-ticket paths checked: (1) AEA-29 `CaseService` callbacks against AEA-38 `ReplyComposer`
+(`handoff_block`, `settled_view` match `HandoffBlockFn`, `SettledViewFn` and the `HandoffComposer` protocol); (2) AEA-38 reply nodes against AEA-29 storage (`reply.brief` calls
+`deps.cases.attach_brief`, `services/cases.py:314`; `graph.py` wires all four reply nodes); (3) container wiring (`register_cases` provides `case_service`, `handoff_service`,
+`brief_assembler`; `register_demo_routes` includes the router; unbound siblings `demo_clock`, `demo_service`, `reply_composer` fail with `RuntimeError 'not bound: <key>'`, not at
+import); (4) anonymous GET `/api/demo/inbox`, `/staffing`, `/clock` and POST `/api/demo/reset`, `/api/handoff/request` all return 401 `UNAUTHENTICATED`; a bad login returns 401
+`LOGIN_FAILED`; `/healthz` is 200. Journeys that exist: j1 (49, 57, 59), j2 (38), j3 (27, 28, 34, 43), j4 (28), j6 (29, 47), j7 (29, 41, 42, 46), j8 (44), j10 (32, 48);
+j5 and j9 hold only a skeleton. Many steps skip as blocked on AEA-30, 40, 45, 51, 52 and 53. The contract suite skips 69 cases on `not bound: demo_clock` and about 20 on
+`route not registered` (getChatThread, getOversight, applyCaseAction, getQueue, createFlag, getCase, reviewFlag, listFlags, startChatSession, recordContactActivity, submitTurn).
+These figures are the auditor's report (second-hand), not re-run here.
+
+**Open findings (all low):**
+1. `BriefAssembler.attach_extraction` keeps every model quote when `customer_messages` is None, so the exact-substring check fails open
+   (`src/meridian/services/handoff.py:207-228`). Deliberate default (AEA-29 plan O-8, so AEA-31's seed call compiles); AEA-38's `check_quotes` runs upstream; no production caller
+   yet; `brief_view` masks on read. **When AEA-38 or AEA-51 wires the real brief node it must pass `customer_messages`, and a test must assert that.**
+2. The stored Brief holds unmasked KB and staff-note text from `assemble()`; masking happens only in `brief_view` and `case_sources` (`handoff.py:169-199`, `_case_views.py:295-341`).
+   Safe while the brief is read only through those views; any new reader of `tx.cases.briefs.get()` must go through `brief_view`.
+3. Known by-design gap, flagged once: `resetDemo` and `setStaffing` are open to every signed-in demo role (R-48) and reset is global and destructive; the only brakes are the per-IP
+   `RESET_IP` limiter and the reset gate (`web/routes/demo.py:138-164`). Acceptable for a public demo; not an authorization boundary.
+4. Demo clock unbound: a real login returns 500 on the assembled app (`RuntimeError`, `/api/login`, status 500); the bad-credentials case returns 401. Expected until AEA-30
+   (`web/container.py` `register_demo` is a no-op). Same as wave-2 finding 1 above; not new.
+5. **Context drift (proposed `lane::direct` ticket, not yet cut):** `.claude/reference/area-map.md` has the A6 row twice (the second copy is stale and says "planned"), and the A7a row
+   lists `reply.py` as a stub though the A7c row and the code show it actual (385 lines). Acceptance: `grep -n 'A6 Cases and handoff' .claude/reference/area-map.md` returns one row, and
+   no "stub" for `reply.py`. (This is the same A6 duplicate as wave-2 finding 9.)
+
+**Next action:** land AEA-30 (unblocks login, the strict contract run and the j1 steps), then AEA-40, 45, 51, 52 and 53 as planned (worktrees for 30, 36, 37, 40 and 45 are open).
+Cut the `lane::direct` area-map ticket (finding 5). Carry finding 1 into AEA-38/AEA-51 and finding 2 into any reader ticket. Wave-0 findings 1 and 3 still wait on Innocent.
+The wave-3 merge gate still adds `CONTRACT_STRICT=1`. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to planners of unmerged tickets; do not sweep them in.
