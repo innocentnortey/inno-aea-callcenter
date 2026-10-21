@@ -22,7 +22,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
 | AEA-18 | #18 | B sec | planned | aea-18-aea-18-jev-adapter |  |  | AEA-02 |
 | AEA-19 | #19 | B sec | frozen-tests | aea-19-aea-19-langfuse-sink |  |  | AEA-02,AEA-04 |
-| AEA-20 | #20 | B sec | sent-back | aea-20-aea-20-model-gateway | 9ff964e |  | AEA-01,AEA-02,AEA-04 |
+| AEA-20 | #20 | B sec | merged | main | e79b660 (merge of 9ff964e) | ruff check/format clean; mypy clean (52 files); 108 affected tests passed (agent gateway, import direction, skeleton, checks); no shared fixture/config touched, no full suite; journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-21 | #21 | B | planned | aea-21-graph-spine |  |  | AEA-02,AEA-03 |
 | AEA-22 | #22 | B sec | frozen-tests | aea-22-aea-22-tool-dispatch |  |  | AEA-02,AEA-04 |
 | AEA-23 | #23 | B sec | planned | aea-23-aea-23-web-shell |  |  | AEA-01,AEA-02,AEA-04 |
