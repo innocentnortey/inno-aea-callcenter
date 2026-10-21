@@ -188,6 +188,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `services/demo.py`, `services/scheduler.py` (AEA-30, `5f4e879`; signatures stage7/cases.md §6; the four demo view types are local until AEA-02b).
 
 ```
 src/meridian/                                    planned                                                     area  wave
