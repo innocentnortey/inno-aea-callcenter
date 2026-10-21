@@ -1,0 +1,27 @@
+{
+  "case_id": "DANGER",
+  "category": "SCH-HVAC",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "synthetic",
+  "seeded_customer": null,
+  "source_ref": "docs/analysis/spikes/SP-1-two-layer-turn-latency-cost.md §2 (DANGER)",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "yes",
+  "synthetic_assumption": "0 of 420 calls mention a vulnerable occupant (HP-2); the comfort case is written by hand and labelled by R-8's rule.",
+  "synthetic_source_case": "NODANGER",
+  "template": "my ac isnt cooling",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "My AC's out and my mother is 88 and it's 95 degrees in here."
+    }
+  ],
+  "varied_dimension": "danger comfort: a person at risk from the heat is stated (mother aged 88, 95 degrees indoors)"
+}

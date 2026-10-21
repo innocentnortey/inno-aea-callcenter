@@ -1,0 +1,48 @@
+{
+  "case_id": "WP-8",
+  "category": "MEM-CANCEL",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F5 Comfort Club membership",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "worked-pair",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "docs/data/worked-pairs.md WP-8",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Needs a system the issued materials lack",
+  "synthetic": "partly",
+  "synthetic_assumption": "The customer becomes MHC-10001 (Standard; renewal 2026-11-03).",
+  "synthetic_source_case": null,
+  "template": "i want to cancel my comfort club membership",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I want to cancel my Comfort Club membership."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Just make sure it doesn't renew."
+    }
+  ],
+  "varied_dimension": null
+}

@@ -186,6 +186,8 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/staff.py`, `adapters/sqlite/repos_staff.py` body, `web/routes/staff_session.py`, `web/schemas/staff_session.py` (AEA-44, `1a8fa94`).
 **Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
+**Built:** `policy/booking.py` (AEA-13, `cab183b`).
+**Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -302,7 +304,7 @@ src/meridian/                                    planned                        
 │   ├── errors.py                                one ApiProblem and its handler (AEA-23; stage7/web.md §1)   A8    2
 │   ├── logging.py                               LOG-profile allow-list formatter (AEA-23; web.md §10)       A8    2
 │   ├── frontend.py                              static mount of apps/web/dist, SPA fallback, public paths   A8    2
-                                                 (AEA-49; stage7/web.md §12)
+                                                 (AEA-49; stage7/web.md §12)   built AEA-49 49ba7ff
 │   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout (AEA-23)                             A8    2
 │   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
 │   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
@@ -312,9 +314,9 @@ src/meridian/                                    planned                        
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
 │   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2   built AEA-46 0d152ee
 │   ├── routes/staff_clock.py · schemas/staff_clock.py  CON-8 advance, supervisor only (AEA-47)                     A9    2   built AEA-47 0d75351
-│   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3
+│   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3   built AEA-48 cb7df88
                                                  `web/templates/` · `static/` are NOT PLANNED: the screens are the React app apps/web/ (UX-4 built 2026-10-21, gate unsigned);
-                                                 AEA-49 serves its dist/ with fallback to index.html (planned)
+                                                 AEA-49 serves its dist/ with fallback to index.html (built: web/frontend.py, register_frontend hunk)
 
 eval/harness/{runner,scoring,judge,report,load}.py   frozen per scored run (DO-5); HTTP only                 A11  1
 eval/cases/{dev,heldout,retrieval}/ · eval/reports/                                                           A11  1
@@ -667,7 +669,7 @@ ticket).
 | `adapters/sqlite/repos_core.py` (`events`, `actions`, `lookup_log`, `messages`, `conversations`, the cross-ticket reads) | written by A4, A5, A6, A7, A8, A9 | Owned by A0 (AEA-10); frozen after wave 0. A new method is its own small A0 ticket |
 | `domain/*` | read by all | Frozen after wave 0; a shared-type change is its own ticket, merged before dependants |
 | `agent/nodes/{front,plan,act,reply}.py` | A7a (stub), then A7d / A7d / A7b / A7c | Sequential by wave; after A7a each file has exactly one owner |
-| `web/templates/`, `web/static/` | none (reconciled 2026-10-21, slice plan AEA-08) | Directories dropped. `apps/web/` (React) exists, built 2026-10-21, UX-4 gate unsigned; A8/A9 are API only; AEA-49 (A8/A12) serves `apps/web/dist` with fallback to `index.html` (planned); `jinja2` droppable |
+| `web/templates/`, `web/static/` | none (reconciled 2026-10-21, slice plan AEA-08) | Directories dropped. `apps/web/` (React) exists, built 2026-10-21, UX-4 gate unsigned; A8/A9 are API only; AEA-49 (A8) serves `apps/web/dist` with fallback to `index.html` from `web/frontend.py` through its own `register_frontend()` hunk in `web/container.py` (built); `jinja2` droppable |
 | `web/routes/*.py`, `web/schemas/*.py` | A8, A9, A10b: one route file and its schema file per ticket (slice plan §3) | `auth` AEA-23, `chat` AEA-40, `events` AEA-41, `handoff` AEA-42, `demo` AEA-43, `staff_session` AEA-44, `staff_cases` AEA-45, `staff_live` AEA-46, `staff_clock` AEA-47, `reads` AEA-48; no ticket edits another's route or schema file |
 | `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-11 (`fakes/`, incl. `clock.py`), AEA-10 (`fixtures/sqlite.py`) | Two folders, so the two tickets never share one. Areas put their own fixtures in their own test folders |
 
@@ -697,10 +699,13 @@ tests/                                       planned
 │                     brakes; recursion limit; deadline halts; restart between write and checkpoint
 ├── api/              FastAPI TestClient per CON group: schemas, named errors, cookies, idempotent turn_id, SSE replay
 ├── capture/          CAP-1…CAP-9 (DO-6): drive the real entry point; seeded values absent from body, log, trace
+├── journeys/         integrated journeys (rule integrated-journeys): support/ = AEA-57's harness (real app under uvicorn
+│                     on a disposable DB copy, scripted model at the provider boundary, client, DB reader, record writer);
+│                     j<N>/test_aea_<NN>.py, one file per ticket per journey; browser/ (AEA-58)
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.

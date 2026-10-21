@@ -1,0 +1,54 @@
+{
+  "case_id": "WP-3",
+  "category": "SCH-HVAC",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "worked-pair",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "docs/data/worked-pairs.md WP-3",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "The transcript caller isn't in the DB, so they become seeded MHC-10001 (Round Rock, north zone, Standard member).",
+  "synthetic_source_case": null,
+  "template": "my ac isnt cooling",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I need to schedule a service call. My AC isn't cooling."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "This Saturday if possible, 4 to 7, after work."
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Monday 8 to 12 with Marta works."
+    }
+  ],
+  "varied_dimension": null
+}

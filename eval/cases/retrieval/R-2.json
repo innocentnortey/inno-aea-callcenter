@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "faq/customer_faq.md",
+  "query": "Is the diagnostic fee credited toward the repair if I go ahead with it?",
+  "query_id": "R-2",
+  "source": "PRD §4.3a row: Billing questions",
+  "synthetic": true,
+  "trap": null
+}

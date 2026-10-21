@@ -1,0 +1,42 @@
+{
+  "case_id": "T-CALL-20260707-0096",
+  "category": "MEM-RENEW",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F5 Comfort Club membership",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "CALL-20260707-0096",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "DB read + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10001 substituted.",
+  "synthetic_source_case": null,
+  "template": "i got an email saying my membership is renewing when does it actually charge",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I got an email saying my membership is renewing. When does it actually charge?"
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    }
+  ],
+  "varied_dimension": null
+}

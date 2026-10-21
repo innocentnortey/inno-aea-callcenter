@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "faq/customer_faq.md",
+  "query": "What are your phone support hours on Saturday?",
+  "query_id": "R-9",
+  "source": "PRD R-12; R-10 stale twin: faq/faq_old_copy.md",
+  "synthetic": true,
+  "trap": "faq/faq_old_copy.md"
+}

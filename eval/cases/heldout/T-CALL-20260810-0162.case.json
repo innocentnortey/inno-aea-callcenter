@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260810-0162",
+  "category": "BILL-DISPUTE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F4 Billing disputes and refunds",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260810-0162",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "the tech quoted me # and the invoice says # thats not what i agreed to",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "The tech quoted me $89 and the invoice says $149. That's not what I agreed to."
+    }
+  ],
+  "varied_dimension": null
+}

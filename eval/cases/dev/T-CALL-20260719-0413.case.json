@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260719-0413",
+  "category": "MEM-INCLUDE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F5 Comfort Club membership",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260719-0413",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "KB-only",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "what does the comfort club membership actually include",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "What does the Comfort Club membership actually include?"
+    }
+  ],
+  "varied_dimension": null
+}

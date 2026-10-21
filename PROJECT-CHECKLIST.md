@@ -121,7 +121,7 @@ requests contract changes rather than editing them. Whoever reaches §7 first wa
 - [ ] Each ticket's WP-N written as its first failing test before implementation
 - [ ] Each slice reconciles `.claude/` in the same change: area map (planned → actual), router rows, rule `paths:`, and ICM rows (scaffold, routes verified) with dated evidence
 - [ ] Review gates per ticket; seam audit per wave
-- [ ] Journey harness exists and runs in the merge gate: affected journeys at ticket merge, all at wave merge and before deploy (AEA-57; rules `integrated-journeys.md`, `build-loop-test-scope.md` *AEA addition*) — evidence: `docs/testing/journeys/YYYY-MM-DD-AEA-57.md`
+- [x] Journey harness exists and runs in the merge gate: affected journeys at ticket merge, all at wave merge and before deploy (AEA-57; rules `integrated-journeys.md`, `build-loop-test-scope.md` *AEA addition*) — evidence: [`docs/testing/journeys/2026-10-21-AEA-57.md`](docs/testing/journeys/2026-10-21-AEA-57.md)
 - [ ] Per-wave browser walkthrough recorded on the integrated branch, production build, normal login (from AEA-58) — evidence: `docs/testing/journeys/YYYY-MM-DD-wave-N-walkthrough.md`, one per wave
 - [ ] Live smoke run recorded through the real app: dev cases only, inside $30/day, failures, versions, traces and cost (AEA-60; compatibility only, not a quality number) — evidence: `docs/testing/journeys/YYYY-MM-DD-live-smoke-N.md`
 - [ ] UI verify again: the UX-5 suite reruns against the real backend (Prism in proxy mode) — Innocent ✓ ____

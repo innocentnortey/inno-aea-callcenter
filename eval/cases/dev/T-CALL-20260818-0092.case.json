@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260818-0092",
+  "category": "BILL-REFUND",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F4 Billing disputes and refunds",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260818-0092",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i want a full refund on the repair it didnt fix anything and i had to call another company",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I want a full refund on the repair. It didn't fix anything and I had to call another company."
+    }
+  ],
+  "varied_dimension": null
+}

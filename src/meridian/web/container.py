@@ -708,10 +708,22 @@ def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any
 
 
 def register_reads(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-48 reads API: CON-18 to CON-20 routes (staff.md §9).
+    """AEA-48 reads API: the CON-18 to CON-20 routes (staff.md §9).
 
-    No-op until AEA-48 fills it.
+    Includes routes/reads.py's router (getOwnerMetrics, getMonitoring, getLatestEval) once per app. Provides nothing:
+    the routes reach the reader through web/deps.py's get_metrics_reads(), which AEA-53's register_metrics_reader hunk
+    binds; until then an allowed read answers 500 ("not bound: get_metrics_reads") after the role check. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.reads import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "reads_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.reads_routes_included = True
 
 
 def register_graph(
@@ -726,8 +738,15 @@ def register_graph(
 def register_frontend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-49 frontend: serves apps/web/dist; runs last so its SPA fallback never shadows an API route (web.md §12).
 
-    No-op until AEA-49 fills it.
+    Delegates to web/frontend.py's register_frontend(container, app): registers the public paths GET /login, /assets/
+    and /fonts/ (WEB-1 option A), then mounts Settings.web_dist_dir read-only (/assets/{file}, /fonts/{file},
+    spa_fallback). A missing build raises FrontendMissingError when Settings.require_frontend is true, else logs
+    frontend_dist_missing once and mounts nothing (WEB-30). An app create_app did not build has no web shell, so this
+    does nothing.
     """
+    from meridian.web.frontend import register_frontend as mount_frontend
+
+    mount_frontend(container, app)
 
 
 def build_container(app: FastAPI, settings: Any, *, overrides: Any = None) -> Container:

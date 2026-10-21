@@ -1,0 +1,48 @@
+{
+  "case_id": "T-CALL-20260911-0256",
+  "category": "EST-REPLACE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F7 System-replacement estimate",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10004",
+  "source_ref": "CALL-20260911-0256",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10004 substituted. Closing line 'The earliest window works for me.' scripted: the call's own slot talk refers to its July–September calendar.",
+  "synthetic_source_case": null,
+  "template": "my system is # years old and im thinking about replacing it what would that cost",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "My system is 18 years old and I'm thinking about replacing it. What would that cost?"
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "The earliest window works for me."
+    }
+  ],
+  "varied_dimension": null
+}
