@@ -158,3 +158,12 @@ pending Stage 9*. **Next action for its owners:** AEA-16 replaces the chunk-coun
 the `pending: Stage 9` lines in sections 1, 5, 8 and 10; AEA-25 (README) and AEA-54 (deployment guide) link to it; whoever
 records Innocent's answers on DAT-1, DAT-2, DAT-3, DAT-4, WEB-1, CAS-16 and GRC-3 updates section 12 and the section each names.
 Progress per ticket is in `.claude/state/build-ledger.md`.
+
+## Stage 8: AEA-08 landed (2026-10-21)
+
+DO-3 (`docs/design/code-design.md`) is at **revision 3**: it carries the slice plan's three deviations (AEA-10 writes every DDL
+file and owns `repos_cases.py`; cross-ticket reads and reset clearing live in `repos_core`; one route file and one schema file per
+ticket), the modules the Stage 7 addenda added, and a recounted module total (103). The area map (with a *Tickets* column),
+`api-con-mapping.md`, DO-4 and `system-design.md` follow it; every area-map row is still *planned*. **Next action for
+the build tickets:** each changes only its own area-map row (planned → actual + commit). The stale lines in the UX-owned
+documents are listed on issue #8 for the UX session; Innocent's two open items from the UX join (decisions 5 and 6) are still his.
