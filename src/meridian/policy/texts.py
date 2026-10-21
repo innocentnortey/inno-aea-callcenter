@@ -123,19 +123,12 @@ _TEXTS: Final[dict[TextId, str]] = {
         "at any point, tap Talk to a person."
     ),
     TextId.ARE_YOU_A_PERSON: (
-        "No. I'm Meridian's automated assistant. If you'd like a person, tap "
-        "Talk to a person."
+        "No. I'm Meridian's automated assistant. If you'd like a person, tap Talk to a person."
     ),
     # --- safety ---
-    TextId.SAFETY_LEAVE_NOW: (
-        "Leave the home immediately and call 911 or your gas utility from outside."
-    ),
-    TextId.SAFETY_DONT_TOUCH: (
-        "Don't flip switches, open windows near the furnace, or restart equipment."
-    ),
-    TextId.SAFETY_CONTACT_LINE: (
-        "Once you're outside and safe, you can leave a number here if you'd like."
-    ),
+    TextId.SAFETY_LEAVE_NOW: ("Leave the home immediately and call 911 or your gas utility from outside."),
+    TextId.SAFETY_DONT_TOUCH: ("Don't flip switches, open windows near the furnace, or restart equipment."),
+    TextId.SAFETY_CONTACT_LINE: ("Once you're outside and safe, you can leave a number here if you'd like."),
     TextId.BURNING_QUESTION: (
         "Do you already know whether a breaker has tripped? Please don't go to "
         "the panel to check. Do you see any smoke, sparks or flames?"
@@ -153,9 +146,7 @@ _TEXTS: Final[dict[TextId, str]] = {
     ),
     TextId.URGENCY_HOT_COLD: "Is it very hot or very cold in your home right now?",
     TextId.URGENCY_WATER: "Is water still running?",
-    TextId.URGENCY_AT_RISK: (
-        "Is anyone at higher risk, like an older person, a baby or someone unwell?"
-    ),
+    TextId.URGENCY_AT_RISK: ("Is anyone at higher risk, like an older person, a baby or someone unwell?"),
     TextId.REGULAR_BOOKING_NOTE: "This is a regular booking, not emergency service.",
     # --- identity ---
     TextId.CODE_PROMPT: (
@@ -167,21 +158,16 @@ _TEXTS: Final[dict[TextId, str]] = {
     TextId.CODE_EXPIRED: "That code has expired. Codes last 10 minutes.",
     TextId.NOT_VERIFIED: "I can't confirm your account here. A representative will help.",
     TextId.INBOX_CODE_BODY: (
-        "Your Meridian Home Comfort verification code is {digits}. It expires "
-        "in 10 minutes."
+        "Your Meridian Home Comfort verification code is {digits}. It expires in 10 minutes."
     ),
-    TextId.INBOX_CODE_GONE: (
-        "This code is no longer shown. Ask the chat for a new code if you need one."
-    ),
+    TextId.INBOX_CODE_GONE: ("This code is no longer shown. Ask the chat for a new code if you need one."),
     # --- promise ---
     TextId.PROMISE_UNSTAFFED: (
         "No representative is online right now. A representative will get back "
         "to you within 1 business day, by {due_label}. Your reference is "
         "{case_ref}."
     ),
-    TextId.PROMISE_REFUND: (
-        "A representative will get to your refund request within 2 business days."
-    ),
+    TextId.PROMISE_REFUND: ("A representative will get to your refund request within 2 business days."),
     TextId.PROMISE_REFUND_NO_OUTCOME: "I can't promise an outcome.",
     TextId.PROMISE_STAFFED: (
         "A representative will join this chat when available. You can keep "
@@ -211,12 +197,9 @@ _TEXTS: Final[dict[TextId, str]] = {
     TextId.BOOKED: "You're booked. Here are the details.",
     TextId.SLOT_TAKEN: "Sorry, that window just went. Here are the next open ones.",
     TextId.OUT_OF_AREA: (
-        "Sorry, that address is outside Meridian's service area, so I can't "
-        "book a visit there."
+        "Sorry, that address is outside Meridian's service area, so I can't book a visit there."
     ),
-    TextId.NO_WINDOW_FITS: (
-        "That's the earliest I can book. I can't add you to a waitlist from here."
-    ),
+    TextId.NO_WINDOW_FITS: ("That's the earliest I can book. I can't add you to a waitlist from here."),
     TextId.IDENTITY_NEEDED: (
         "Booking changes your account, so I need to confirm it's you before I write it."
     ),
@@ -224,18 +207,13 @@ _TEXTS: Final[dict[TextId, str]] = {
     TextId.FEE_STANDARD_DIAGNOSTIC: "Standard diagnostic fee: {amount}",
     TextId.SLOTS_NOT_HELD: "Windows are shown, not held.",
     TextId.MEMBERS_NOTE: "Members' fees and member-only windows appear after the code.",
-    TextId.FREE_CHANGE_NOTE: (
-        "You can change this visit free of charge until 24 hours before the window."
-    ),
+    TextId.FREE_CHANGE_NOTE: ("You can change this visit free of charge until 24 hours before the window."),
     TextId.URGENT_NOTE: "Urgent",
-    TextId.QUICK_CHECKS_OFFER: (
-        "Before I book, there are a few quick things you can try. They're optional."
-    ),
+    TextId.QUICK_CHECKS_OFFER: ("Before I book, there are a few quick things you can try. They're optional."),
     # --- limits ---
     TextId.TURN_TIMEOUT: "This is taking longer than it should.",
     TextId.BUSY: (
-        "A lot of people are chatting right now, so I can't take this message. "
-        "A person can pick it up."
+        "A lot of people are chatting right now, so I can't take this message. A person can pick it up."
     ),
     TextId.RATE_LIMITED: "I can't take more messages in this chat right now.",
     TextId.BOOKING_CAP: "I can't make more bookings in this chat.",
@@ -248,8 +226,7 @@ _TEXTS: Final[dict[TextId, str]] = {
     TextId.AI_RESUMED: "{rep_name} handed the chat back to the automated assistant.",
     TextId.CHAT_CLOSED: "{rep_name} closed this chat.",
     TextId.AI_PAUSED_NOTICE: (
-        "{rep_name} is in this chat, so the assistant is paused. Your message "
-        "went to {rep_name}."
+        "{rep_name} is in this chat, so the assistant is paused. Your message went to {rep_name}."
     ),
     TextId.PERSON_REQUEST_LABEL: "Talk to a person",
     # --- demo ---
@@ -259,22 +236,17 @@ _TEXTS: Final[dict[TextId, str]] = {
     TextId.DEMO_RESET: "The demo was reset, so this chat has ended. Nothing from it was kept.",
     TextId.OVERSIGHT_OVERDUE: "{case_ref} is past its due time. Assign it or pick it up.",
     TextId.OVERSIGHT_SHIFT_ENDED_ONE_WAITING: (
-        "Simulated shift ended with 1 customer waiting. Their case now has the "
-        "1-business-day promise."
+        "Simulated shift ended with 1 customer waiting. Their case now has the 1-business-day promise."
     ),
     TextId.MONITOR_SPEND_CAP: (
-        "Spend reached the {amount} daily cap: new chats hand off and no model "
-        "calls run until tomorrow."
+        "Spend reached the {amount} daily cap: new chats hand off and no model calls run until tomorrow."
     ),
     TextId.MONITOR_LATENCY: "p95 latency is over 12.5 s per turn: check the model route.",
     TextId.MONITOR_RESTART: "The health check restarted the service: check the logs.",
-    TextId.MONITOR_ZERO_TRAFFIC: (
-        "No new live chat for 4 hours: check the public URL and the health check."
-    ),
+    TextId.MONITOR_ZERO_TRAFFIC: ("No new live chat for 4 hours: check the public URL and the health check."),
     TextId.MONITOR_FAILURE_RATE: "More than 2% of turns failed: check the model route and the logs.",
     TextId.MONITOR_TRACE_EXPORT: (
-        "Trace export is failing and traces are being dropped: check the "
-        "Langfuse server on the VPS."
+        "Trace export is failing and traces are being dropped: check the Langfuse server on the VPS."
     ),
 }
 
@@ -289,9 +261,7 @@ def _fields_of(text_id: TextId, template: str) -> frozenset[str]:
         if not field or field.isdigit() or spec or conversion:
             raise RuntimeError(f"policy/texts.py: bad field in {text_id.value}")
         if field not in PLACEHOLDERS:
-            raise RuntimeError(
-                f"policy/texts.py: unknown placeholder {field!r} in {text_id.value}"
-            )
+            raise RuntimeError(f"policy/texts.py: unknown placeholder {field!r} in {text_id.value}")
         names.add(field)
     return frozenset(names)
 
@@ -324,27 +294,17 @@ class TextRenderError(KeyError):
 def render(text_id: TextId, /, **values: str) -> str:
     """Fill a fixed sentence's named placeholders; refuse anything else."""
     if not isinstance(text_id, TextId):
-        name = (
-            text_id
-            if isinstance(text_id, str) and _ID_SHAPE.match(text_id)
-            else "<not a text id>"
-        )
+        name = text_id if isinstance(text_id, str) and _ID_SHAPE.match(text_id) else "<not a text id>"
         raise TextRenderError(name, None, "unknown text id") from None
     required = _FIELDS[text_id]
     supplied = set(values)
     if required - supplied:
-        raise TextRenderError(
-            text_id.value, min(required - supplied), "missing placeholder"
-        ) from None
+        raise TextRenderError(text_id.value, min(required - supplied), "missing placeholder") from None
     if supplied - required:
-        raise TextRenderError(
-            text_id.value, min(supplied - required), "unexpected placeholder"
-        ) from None
+        raise TextRenderError(text_id.value, min(supplied - required), "unexpected placeholder") from None
     for name in sorted(required):
         if not isinstance(values[name], str):
-            raise TextRenderError(
-                text_id.value, name, "placeholder value must be a str"
-            ) from None
+            raise TextRenderError(text_id.value, name, "placeholder value must be a str") from None
     return _TEXTS[text_id].format(**values)
 
 

@@ -9,3 +9,6 @@ docs/evidence/raw-*/
 __pycache__/
 *.pyc
 var/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/

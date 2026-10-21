@@ -4,7 +4,7 @@
 **Status:** DRAFT, **revision 3**. Revision 3, 2026-10-21: reconciled with the slice plan and the Stage 7 addenda (AEA-08);
 it records their decisions and makes none. Revision 2 followed the `metz-code-design-agent` review
 ([`reviews/2026-10-21-code-design-review.md`](reviews/2026-10-21-code-design-review.md), verdict FAIL; response in §11).
-Awaiting Innocent's review. **Nothing here is built: every path below is planned.** The component contracts (DO-4) are
+Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; every other path below is planned.** The component contracts (DO-4) are
 in [`contracts/`](contracts/README.md).
 
 **What this file owns:** the module map under `src/meridian/`, each module's responsibility, interface, dependencies
@@ -203,7 +203,7 @@ src/meridian/                                    planned                        
 │   ├── booking.py                               city/ZIP → zone; 24-hour rule; fee notes by tier            A5    1
 │   ├── handoff.py                               R-26 promise table + due rule; reason → P0–P4; D4 rows      A6    1
 │   └── escalation.py                            decide_escalation(inputs) (pure; OD-6, D4, R-21)            A7b   3
-├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0
+├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0   built AEA-04 9145044
 ├── ports/
 │   ├── models.py                                ChoiceModel, StructuredModel, ToolCallingModel; attempts    A0    0
 │   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink       A0    0
