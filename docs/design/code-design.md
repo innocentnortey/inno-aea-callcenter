@@ -3,7 +3,7 @@
 **Date:** 2026-10-21, America/Chicago. **Stage:** zero-to-hero §6, System track, light mode. **Writer:** Claude (Opus 5.5).
 **Status:** DRAFT, **revision 2** after the `metz-code-design-agent` review
 ([`reviews/2026-10-21-code-design-review.md`](reviews/2026-10-21-code-design-review.md), verdict FAIL; response in §11).
-Awaiting Innocent's review. **Nothing here is built: every path below is planned.** The component contracts (DO-4) are
+Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; every other path below is planned.** The component contracts (DO-4) are
 in [`contracts/`](contracts/README.md).
 
 **What this file owns:** the module map under `src/meridian/`, each module's responsibility, interface, dependencies
