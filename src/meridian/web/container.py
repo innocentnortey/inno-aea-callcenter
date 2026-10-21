@@ -488,8 +488,82 @@ def register_scheduling(container: Container, app: FastAPI, *, settings: Any, li
 def register_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-29 cases and handoff: CaseService, HandoffService, BriefAssembler (cases.md §5).
 
-    No-op until AEA-29 fills it.
+    Provides deps.CASE_SERVICE ("case_service"), deps.HANDOFF_SERVICE ("handoff_service") and Key("brief_assembler") over
+    Key("uow_factory") (AEA-10). Siblings are read through forwarders only when a method needs them, so the app builds
+    before they are bound: Key("demo_clock") and deps.DEMO_SERVICE (AEA-30), deps.REPLY_COMPOSER (AEA-51); until then the
+    call raises RuntimeError("not bound: <key>"). Staff guidance: STAFF_GUIDANCE_FOR's prefixes are resolved against
+    load_staff_guidance(settings.index_dir) when the container builds; with no staff_notes.json there is no guidance (one
+    warning, no values), and a prefix that matches no passage fails start-up. An app that create_app did not build has no
+    web shell, so this does nothing.
     """
+    import logging
+    from collections.abc import Mapping
+    from pathlib import Path
+    from types import MappingProxyType
+
+    from meridian.domain.handoff import HandoffReason
+    from meridian.policy.handoff import STAFF_GUIDANCE_FOR
+    from meridian.services.cases import CaseService
+    from meridian.services.handoff import BriefAssembler, HandoffService, resolve_staff_guidance
+    from meridian.web.deps import CASE_SERVICE, DEMO_SERVICE, HANDOFF_SERVICE, REPLY_COMPOSER, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+
+    def _bound(key: Key[Any]) -> Any:
+        try:
+            return container.get(key)
+        except ContainerError as exc:
+            if str(exc) == f"not provided: {key.name}":
+                raise RuntimeError(f"not bound: {key.name}") from None
+            raise
+
+    class _DemoClock:
+        def now(self) -> Any:
+            return _bound(Key[Any]("demo_clock")).now()
+
+    class _Presence:
+        def presence(self, tx: Any = None) -> Any:
+            return _bound(DEMO_SERVICE).presence(tx)
+
+    def _handoff_block(result: Any) -> Any:
+        return _bound(REPLY_COMPOSER).handoff_block(result)
+
+    def _settled_view(settled: Any, identity: Any, controller: Any) -> Any:
+        return _bound(REPLY_COMPOSER).settled_view(settled, identity, controller)
+
+    cache: dict[str, Any] = {}
+
+    def _guidance() -> tuple[Mapping[HandoffReason, Any], dict[Any, Any]]:
+        if "value" not in cache:
+            index_dir = getattr(settings, "index_dir", None)
+            if index_dir is None or not (Path(index_dir) / "staff_notes.json").is_file():
+                logging.getLogger(__name__).warning("staff_guidance_unavailable")
+                passages: tuple[Any, ...] = ()
+            else:
+                from meridian.retrieval.ingest import load_staff_guidance
+
+                passages = tuple(load_staff_guidance(Path(index_dir)))
+            by_reason = (
+                resolve_staff_guidance(STAFF_GUIDANCE_FOR, passages) if passages else MappingProxyType({})
+            )
+            cache["value"] = (by_reason, {g.passage_id: g for g in passages})
+        return cache["value"]  # type: ignore[no-any-return]
+
+    container.provide(
+        CASE_SERVICE,
+        lambda c: CaseService(
+            c.get(UOW_FACTORY), _DemoClock(), handoff_block=_handoff_block, settled_view=_settled_view
+        ),
+    )
+    container.provide(Key[Any]("brief_assembler"), lambda c: BriefAssembler(staff_guidance=_guidance()[1]))
+    container.provide(
+        HANDOFF_SERVICE,
+        lambda c: HandoffService(
+            c.get(UOW_FACTORY), c.get(CASE_SERVICE), _Presence(), _DemoClock(), staff_guidance=_guidance()[0]
+        ),
+    )
 
 
 def register_demo(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
