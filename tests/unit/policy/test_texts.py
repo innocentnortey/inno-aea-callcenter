@@ -20,9 +20,7 @@ from meridian.policy.texts import (
 )
 
 REPO = Path(__file__).resolve().parents[3]
-FIXTURE = json.loads(
-    Path(__file__).with_name("texts_source_fixture.json").read_text("utf-8")
-)
+FIXTURE = json.loads(Path(__file__).with_name("texts_source_fixture.json").read_text("utf-8"))
 ENTRIES: list[dict[str, Any]] = FIXTURE["entries"]
 
 GROUPS = (
@@ -97,13 +95,8 @@ def test_text_id_shape_and_named_ids() -> None:
     assert render(TextId.PERSON_REQUEST_LABEL) == "Talk to a person"
     rep = {"rep_name": "Riley"}
     assert render(TextId.REP_JOINED, **rep) == "Riley (demo representative) has joined."
-    assert (
-        render(TextId.AI_PAUSED, **rep)
-        == "The assistant is paused while Riley is here."
-    )
-    assert render(TextId.AI_RESUMED, **rep) == (
-        "Riley handed the chat back to the automated assistant."
-    )
+    assert render(TextId.AI_PAUSED, **rep) == "The assistant is paused while Riley is here."
+    assert render(TextId.AI_RESUMED, **rep) == ("Riley handed the chat back to the automated assistant.")
     assert render(TextId.CHAT_CLOSED, **rep) == "Riley closed this chat."
 
 
@@ -161,14 +154,10 @@ def test_promise_texts_word_for_word() -> None:
 
 def test_safety_lines() -> None:
     kb = (
-        REPO
-        / "docs/data/issued/meridian_dataset/knowledge_base/policies"
-        / "escalation_and_safety.md"
+        REPO / "docs/data/issued/meridian_dataset/knowledge_base/policies" / "escalation_and_safety.md"
     ).read_text("utf-8")
     kb = re.sub(r"\s+", " ", kb)
-    kb_phrase = (
-        "leave the home immediately and call 911 or their gas utility from outside"
-    )
+    kb_phrase = "leave the home immediately and call 911 or their gas utility from outside"
     assert kb_phrase in kb
     your = kb_phrase.replace("their", "your")
     assert TEXTS[TextId.SAFETY_LEAVE_NOW] == your[0].upper() + your[1:] + "."
@@ -205,8 +194,7 @@ def test_timeout_and_busy_sentences() -> None:
     by_id = {e["id"]: e["template"] for e in ENTRIES}
     assert render(TextId.TURN_TIMEOUT) == "This is taking longer than it should."
     assert render(TextId.BUSY) == (
-        "A lot of people are chatting right now, so I can't take this message. "
-        "A person can pick it up."
+        "A lot of people are chatting right now, so I can't take this message. A person can pick it up."
     )
     assert render(TextId.TURN_TIMEOUT) == by_id["limits.turn_timeout"]
     assert render(TextId.BUSY) == by_id["limits.busy"]
@@ -227,17 +215,13 @@ def test_forbidden_phrases_absent() -> None:
     # "charged in any form" is read as any sentence using "charged"; "free of charge"
     # is not a charge claim (reported to UX, plan 8b U-10).
     sentences: list[tuple[str, str]] = [(t.value, v) for t, v in TEXTS.items()]
-    sentences += [
-        (e["id"], e["example"]["rendered"]) for e in ENTRIES if e["example"] is not None
-    ]
+    sentences += [(e["id"], e["example"]["rendered"]) for e in ENTRIES if e["example"] is not None]
     hits: list[str] = []
     for ident, text in sentences:
         for label, pattern in patterns.items():
             if re.search(pattern, text, re.IGNORECASE):
                 hits.append(f"{ident}: {label}")
-        if ident.startswith("followup.") and re.search(
-            r"(?<!not )\bsent\b", text, re.IGNORECASE
-        ):
+        if ident.startswith("followup.") and re.search(r"(?<!not )\bsent\b", text, re.IGNORECASE):
             hits.append(f"{ident}: sent")
     assert hits == []
 
