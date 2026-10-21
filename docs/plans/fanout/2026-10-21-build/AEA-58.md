@@ -1182,3 +1182,26 @@ routes, AEA-40-1 greeting), AEA-51 (`run_graph`, `reply_composer`), and the UX s
 **Gates.** `gate::ux4`: met (UX-4 signed, Innocent ✓ 2026-10-21). No paid, live or human gate: the suite uses the
 scripted model only (AEA-61 owns live smoke). The full suite runs at this ticket's merge because a dev dependency and a
 session-wide pytest plugin are added (§7 *Full suite*).
+
+---
+
+## Deviations (implementer, 2026-10-21)
+
+- **Playwright lifetime.** `journey_chrome` is module-scoped and starts `sync_playwright()` itself instead of using
+  pytest-playwright's session `playwright` fixture. A started sync Playwright leaves a running event loop in the main
+  thread, which broke `asyncio.run` in the journeys that sort after `browser/` in the affected-journeys run
+  (`j7/test_aea_41`, `j7/test_aea_46`, `j9/test_aea_41` failed with `RuntimeError`). The channel self-check starts
+  and stops its own Playwright inside the test. `browser_type_launch_args` is still pytest-playwright's.
+- **Test name.** `test_no_heldout_paths_in_browser_files` is `test_no_held_out_paths_in_browser_files`, so that the
+  AC-10 `grep -rn heldout` prints nothing; the `key_dir` needle is also split in the source.
+- **Helpers moved to `browser/steps.py`** (`sign_in_to_scr1`, `script_turn`, `send_turn`, `thread_id_of`,
+  `SIGN_IN_SCR1`, `ROOT_REDIRECT`) and `sample_record_values` to `browser/record.py`, to keep
+  `j1/test_aea_58.py` under the 500-line cap.
+- **Body capture.** `NetworkLog` reads the response body inside the `response` handler (not only on
+  `requestfinished`), and `BrowserRun.close` waits 200 ms per page first; without both, in-flight `getSession`
+  responses were counted as unfinished. `open_browser_journey` gained an optional `environ_overrides` argument for
+  `serve.py` (the walker's own demo pair).
+- **Skipped tests.** A test whose first on-screen step is blocked is reported by pytest as skipped (as designed); its
+  earlier steps still pass and are in the record. Result today: 17 passed, 14 skipped.
+- **Pre-existing red, not this ticket's:** `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case`
+  fails on `main` too (`startChatSession` 500, `reply_composer` unbound).

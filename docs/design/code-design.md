@@ -713,11 +713,12 @@ tests/                                       planned
 ├── capture/          CAP-1…CAP-9 (DO-6): drive the real entry point; seeded values absent from body, log, trace
 ├── journeys/         integrated journeys (rule integrated-journeys): support/ = AEA-57's harness (real app under uvicorn
 │                     on a disposable DB copy, scripted model at the provider boundary, client, DB reader, record writer);
-│                     j<N>/test_aea_<NN>.py, one file per ticket per journey; browser/ (AEA-58)
+│                     j<N>/test_aea_<NN>.py, one file per ticket per journey;
+│                     browser/ = AEA-58's browser fixtures (system Chrome via pytest-playwright, the production build served by the real app, the one selector module, the response check, the walkthrough recipe)
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); `tests/journeys/browser/`, `j1/test_aea_58.py`, `j9/test_aea_58.py` (AEA-58, `821e134`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
