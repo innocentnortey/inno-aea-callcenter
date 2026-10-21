@@ -212,3 +212,49 @@ so those paths are unverified, not broken. Run with the main checkout's `.venv` 
 
 **Next action:** cut the finding-5 ticket; put finding 1 to Innocent as a decision; confirm finding 3; then continue wave 1 and the blocked
 tickets (AEA-13 awaits decision AEA-13-fees; AEA-17, 18, 21 and 29 need their issue follow-ups; AEA-27 and 35 wait on their blockers).
+
+## Stage 8: wave 2 context upkeep (2026-10-21, VPS)
+
+**Merged in wave 2:** AEA-26, AEA-31, AEA-32, AEA-33, AEA-41, AEA-42, AEA-44, AEA-46, AEA-47, AEA-48, AEA-49, AEA-57, AEA-59
+(rows and commits in `build-ledger.md`). Audited at `cf74674` in a detached worktree (since removed); scripted model only, no paid calls.
+
+**Security audit: PASS.** No blocker, high or medium findings. The auditor read AEA-31, 41, 42, 44, 46, 47, 48 and 49 plus the seams they touch, had no
+shell, and ran no tests. Checked: auth guards (only POST /api/login, GET /healthz, GET /login, /assets/ and /fonts/ are public; role guards present;
+other sessions' threads give an identical 404); secrets (SecretStr, HMAC-hashed session token, `compare_digest`, allow-list log formatter, error
+renderers never echo input); redaction (staff live-chat text goes through the STORE redactor; no new model call; reset seed keeps two phone digits);
+injection and traversal (all SQL parameterized, static files resolved and checked); idempotency (`turns.begin` refuses another thread's stored reply);
+no held-out answer keys logged.
+
+**Seams audit: FAIL (medium and low only).** `uv run pytest tests/journeys tests/contract` (serial): 349 passed, 93 skipped, 1 xfailed. Every skip is
+"blocked" or "route not registered"; the xfail is `test_failure_messages_carry_no_values` (AEA-59 AC-14, waits on an AEA-23 follow-up). Journeys on main:
+j1 (49, 57, 59), j6 (47), j7 (41, 42, 46), j8 (31, 44), j9 (26, 41), j10 (32, 48); j2 to j5 are empty. mypy and ruff clean. 14 of the 30 OpenAPI
+operations are registered; the 16 missing belong to AEA-40, 43 and 45 (not merged). Second-hand reports, not re-run here.
+
+**Open findings (wave 2):**
+1. **Medium:** login returns a bare 500 on the integrated app. `StaffSessionStore.login` reads `Key('demo_clock')`; nothing binds it until AEA-30 lands
+   (`register_demo` is a stub), and `/healthz` stays 200. **Proposed:** AC on AEA-30, `POST /api/login` on `build_container` answers 200, sets `mhc_session`,
+   writes one `staff_sessions` row; plus a readiness check that fails while a key the login path needs is unbound.
+2. **Medium:** contract coverage of the wave-2 routes is vacuous on main. `CONTRACT_STRICT=1 uv run pytest tests/contract/test_openapi_server.py -q` gives
+   80 failed, 34 passed; default mode skips them. **Proposed:** after AEA-30, require 0 `not bound: demo_clock` skips under strict for the 14 registered
+   operations; make the strict run part of the wave-3 merge gate.
+3. **Medium:** `tests/journeys/j1/test_aea_59.py::test_j1_every_response_matches_contract` is skipped with a stale reason (AEA-57 is merged and
+   `tests/journeys/support/` exists). AEA-59 AC-16 never runs. **Proposed:** follow-up on AEA-59 (also blocked on AEA-30) replacing the skip with the real steps.
+4. **Low:** both SSE routes (`events.py chat_event_frames`, `staff_live.py case_event_frames`) check auth only at connect; a stream outlives logout or a
+   role switch. No cross-user leak. Deploy hardening (AEA-56 or later): re-resolve the session on each heartbeat.
+5. **Low:** SSE routes are not in `RATE_LIMITED_READ_OPERATIONS` (`middleware.py`); many streams starve `CapacityLimiter(4)`. Authenticated-only.
+6. **Low (AEA-53 reader obligation):** `EvalRun.dev_failures` exists on the held_out split and `getLatestEval` is open to customers. AEA-53 must return
+   `[]` for held_out and add a test. The contract is signed; this is not a contract change.
+7. **Low (AEA-56 checklist):** `Settings.cookie_secure`, `trust_proxy_headers` and `require_frontend` default to False; set all three on Railway.
+8. **Low:** unbound keys by design until their tickets merge: `demo_service`, `demo_clock` (AEA-30); `handoff_service`, `case_service`, `reply_composer`
+   (AEA-29, AEA-51); `session_service`, `turn_service` (AEA-40); `metrics_reads` (AEA-53); the knowledge tool (`register_graph`). `register_reset` skips
+   the first-boot seed while `meridian.services.handoff` is missing. **Proposed:** a test asserting every `PROVIDER_KEYS` entry in `web/deps.py` resolves,
+   once AEA-30, 29, 40, 51 and 53 are merged. Re-verify at the wave-3 audit.
+9. **Low (context drift):** `area-map.md` has the A6 row twice (the older copy reads "planned" while the newer records AEA-31 built); the A9 row mixes
+   AEA-44, 46, 47; the A8 row cites branches, not merge commits. **Proposed:** `lane::direct` ticket, one A6 row, each wave-2 ticket row cites its merge commit.
+
+**Carried from wave 0, still open:** the wave-0 findings 1 (spaced or dashed codes and cards escape redaction; Innocent's decision) and 3 (DO-6 AC-12
+confirmation). Wave-0 finding 5 (stale `test_affected_journeys.py`) needs its ticket if not yet cut.
+
+**Next action:** wave 3. Land AEA-30 first (the demo clock unblocks login, the strict contract run and the j1 steps); then AEA-29, 40, 43, 45, 51 and 53 as
+planned. Cut the tickets for findings 1 to 3, 8 and 9; carry 4 to 7 into AEA-56 and AEA-53. Wave-3 merge gate adds `CONTRACT_STRICT=1` for the registered
+operations. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to the planners of the unmerged tickets; do not sweep them in.
