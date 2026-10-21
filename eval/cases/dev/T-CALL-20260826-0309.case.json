@@ -1,0 +1,48 @@
+{
+  "case_id": "T-CALL-20260826-0309",
+  "category": "SCH-RESCHED",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F2 Existing-appointment management",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-57204",
+  "source_ref": "CALL-20260826-0309",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-57204 substituted. Closing line 'Yes, go ahead and move it.' scripted: the call's own slot talk refers to its July–September calendar.",
+  "synthetic_source_case": null,
+  "template": "i have a tech coming tomorrow but something came up can i move it",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Um, i have a tech coming tomorrow but something came up. Can I move it?"
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Yes, go ahead and move it."
+    }
+  ],
+  "varied_dimension": null
+}

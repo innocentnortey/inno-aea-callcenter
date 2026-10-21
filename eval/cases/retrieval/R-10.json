@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "warranty/warranty_policy.md",
+  "query": "How long is the installation labor warranty on a new system?",
+  "query_id": "R-10",
+  "source": "PRD R-12; R-10 stale twin: archive/warranty_terms_2023.txt",
+  "synthetic": true,
+  "trap": "archive/warranty_terms_2023.txt"
+}

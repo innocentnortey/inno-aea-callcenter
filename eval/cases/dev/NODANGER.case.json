@@ -1,0 +1,27 @@
+{
+  "case_id": "NODANGER",
+  "category": "SCH-HVAC",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "synthetic",
+  "seeded_customer": null,
+  "source_ref": "docs/analysis/spikes/SP-1-two-layer-turn-latency-cost.md §2 (NODANGER)",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "yes",
+  "synthetic_assumption": "0 of 420 calls mention a vulnerable occupant (HP-2); the comfort case is written by hand and labelled by R-8's rule.",
+  "synthetic_source_case": "WP-3",
+  "template": "my ac isnt cooling",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "My AC isn't cooling."
+    }
+  ],
+  "varied_dimension": "no-danger comfort: only WP-3's opening complaint, nobody is said to be at risk"
+}

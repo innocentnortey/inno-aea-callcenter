@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": true,
+  "expected_file": null,
+  "query": "How long have you been in business?",
+  "query_id": "R-12",
+  "source": "DAT-17; PRD §4.3a Questions the files can't answer",
+  "synthetic": true,
+  "trap": null
+}

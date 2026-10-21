@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260718-0062",
+  "category": "COMPLAINT-CONDUCT",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F8 Service complaints",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260718-0062",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i want to talk to a manager the tech who came out yesterday was rude tracked mud through my house and left without explaining anything",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I want to talk to a manager. The tech who came out yesterday was rude, tracked mud through my house, and left without explaining anything."
+    }
+  ],
+  "varied_dimension": null
+}
