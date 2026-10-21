@@ -148,8 +148,54 @@ def register_ops(container: Container, app: FastAPI, *, settings: Any, limits: L
 def register_tracing(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-19 tracing: Langfuse or null trace sink and the project-key check (models.md §4, §7).
 
-    No-op until AEA-19 fills it.
+    Provides Key[TraceSink]("trace"). LangfuseTraceSink only when all four LANGFUSE_* settings are set
+    (Settings.langfuse_complete()); otherwise NullTraceSink and no alert (MOD-6 step 5, MC-24). The sink's on_alert
+    calls the container's "alert_writer".fire("trace_export_failed", reason) (AEA-32, cases.md §8); until that key
+    exists it logs a fixed line. One LangfuseTraceSink per Langfuse public key per process.
     """
+    import logging
+
+    from meridian.adapters.tracing_langfuse import (
+        LangfuseExportSettings,
+        LangfuseTraceSink,
+        NullTraceSink,
+        TraceAlertReason,
+    )
+    from meridian.config import Settings
+    from meridian.ports.runtime import TraceSink
+    from meridian.privacy.redact import redact
+
+    log = logging.getLogger("meridian.tracing")
+    trace_key = Key[TraceSink]("trace")
+    typed = cast(Settings, settings)
+    pk, sk = typed.langfuse_public_key, typed.langfuse_secret_key
+    base_url, project_id = typed.langfuse_base_url, typed.langfuse_project_id
+    if not typed.langfuse_complete() or pk is None or sk is None or base_url is None or project_id is None:
+        null_sink = NullTraceSink()
+        container.provide(trace_key, lambda _c: null_sink)
+        return
+
+    def on_alert(reason: TraceAlertReason) -> None:
+        try:
+            writer = container.get(Key[Any]("alert_writer"))
+        except ContainerError:
+            log.warning("trace_alert_unbound reason=%s", reason)
+            return
+        writer.fire("trace_export_failed", reason)
+
+    export_settings = LangfuseExportSettings(
+        public_key=pk, secret_key=sk, base_url=base_url, project_id=project_id
+    )
+    try:
+        sink = LangfuseTraceSink(export_settings, redact, on_alert)
+    except Exception as exc:
+        log.warning("trace_sink_error op=build error=%s", type(exc).__name__)
+        fallback = NullTraceSink()
+        container.provide(trace_key, lambda _c: fallback)
+        return
+    container.provide(trace_key, lambda _c: sink)
+    container.on_start(sink.start)
+    container.on_close(sink.close)
 
 
 def register_spend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
