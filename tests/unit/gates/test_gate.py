@@ -14,7 +14,7 @@ import secrets
 import uuid
 from pathlib import Path
 from types import ModuleType
-from typing import Any
+from typing import Any, Literal
 
 import pytest
 from pydantic import SecretStr, ValidationError
@@ -101,7 +101,7 @@ def _decide(g: ModuleType, payload: Any, flags: GateFlags | None = None) -> tupl
 
 def _state(
     *,
-    controller_kind: str = "ai",
+    controller_kind: Literal["ai", "human"] = "ai",
     burning: str | None = None,
     identity_status: str = "not_checked",
     tasks: tuple[tuple[str, str], ...] | list[tuple[str, str]] = (),
