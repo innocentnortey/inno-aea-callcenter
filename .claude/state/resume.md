@@ -149,3 +149,12 @@ Started before UX-5 by Innocent's decision (checklist *Skips*). **7a draft:** `d
 `docs/parked/2026-10-21-first-attempt/`. **Next:** Stage 8, waves 0–1 (AEA-01…25) with the prompt in
 `docs/plans/BUILD-PROMPT-waves-0-1.md`. Open decisions D-4…D-15 are in `docs/plans/stage7-signoff.md` (tickets are built on the
 recommended option). The UX session takes `docs/plans/ux-join/FOR-UX-SESSION.md`.
+
+## Stage 8: AEA-07 landed (2026-10-21)
+
+`docs/technical-documentation.md` (D-4) is drafted: 13 sections, every number either measured on the issued data or `pending`
+(chunk count: AEA-16; eval numbers and test-results link: Stage 9; URL: AEA-56). `SUBMISSION.md` D-4 reads *drafted, numbers
+pending Stage 9*. **Next action for its owners:** AEA-16 replaces the chunk-count line in section 5; AEA-24 and Stage 9 replace
+the `pending: Stage 9` lines in sections 1, 5, 8 and 10; AEA-25 (README) and AEA-54 (deployment guide) link to it; whoever
+records Innocent's answers on DAT-1, DAT-2, DAT-3, DAT-4, WEB-1, CAS-16 and GRC-3 updates section 12 and the section each names.
+Progress per ticket is in `.claude/state/build-ledger.md`.
