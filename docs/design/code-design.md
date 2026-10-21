@@ -179,6 +179,7 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
 **Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`).
+**Built:** `retrieval/{settings,manifest,ingest}.py` (AEA-16, `fe12657`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -210,7 +211,7 @@ src/meridian/                                    planned                        
 ├── gates/
 │   ├── rules.py                                 typo-tolerant rules: safety, burning, danger, person, policy A1    1
 │   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate       A1    1   built AEA-12 40dd865
-├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3
+├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3   built AEA-15 57883e6
 ├── adapters/
 │   ├── sqlite/db.py                             connections, WAL, busy_timeout, SqliteUnitOfWork            A0    0
 │   ├── sqlite/migrate.py                        first-boot copy of the issued DB; applies schema/*.sql;     A0    0
@@ -264,7 +265,7 @@ src/meridian/                                    planned                        
                                                  and FlagService (AEA-44; stage7/staff.md §2)
 │   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
 ├── agent/
-│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1
+│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1   built AEA-20 2bcb8fb
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1
 │   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
@@ -690,6 +691,8 @@ tests/                                       planned
 ├── capture/          CAP-1…CAP-9 (DO-6): drive the real entry point; seeded values absent from body, log, trace
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
+
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
