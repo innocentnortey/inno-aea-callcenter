@@ -79,7 +79,8 @@ def j(model: Any) -> Any:
 
 
 def jtext(model: Any) -> str:
-    return model.model_dump_json()
+    text: str = model.model_dump_json()
+    return text
 
 
 def is_rejected(result: Any) -> bool:
@@ -531,7 +532,10 @@ def _seed_case(
 
 def seed_shaped(tx: UnitOfWork) -> dict[int, CaseRef]:
     """The four cases of cases.md section 7, inserted directly (refs MHC-C-0005 to 0008)."""
-    day = lambda d, h, m: dt.datetime(2026, 10, d, h, m, tzinfo=CHI)  # noqa: E731
+
+    def day(d: int, h: int, m: int) -> dt.datetime:
+        return dt.datetime(2026, 10, d, h, m, tzinfo=CHI)
+
     return {
         5: _seed_case(
             tx,

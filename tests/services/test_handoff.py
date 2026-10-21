@@ -49,7 +49,7 @@ def _guidance_map(*reasons: HandoffReason) -> dict[HandoffReason, tuple[object, 
     return {r: (guidance(r),) for r in reasons}
 
 
-def _req(tx, reason: HandoffReason, *, text: str | None = "I need help with this.", **kw):  # type: ignore[no-untyped-def]
+def _req(tx, reason: HandoffReason, *, text: str | None = "I need help with this.", **kw):
     thread, _ = new_thread(tx, customer_text=text)
     cr = window_change() if reason in WINDOWED else None
     sk = SafetyKind.GAS if reason is HandoffReason.SAFETY else None
@@ -132,7 +132,7 @@ def test_repeat_turn_is_idempotent() -> None:
         again = handoff.open(req, ctx(thread, req.turn_id))
         with s.uow() as tx:
             after = rows_for_thread(tx, thread)
-            version = tx.cases.cases.get(first.case.case_ref).version  # type: ignore[union-attr]
+            version = tx.cases.cases.get(first.case.case_ref).version
         assert after == before
         assert again.case.case_ref == first.case.case_ref and version == first.case.version
 
@@ -211,7 +211,7 @@ def test_promise_matches_table(reason: HandoffReason, presence: str) -> None:
         with s.uow() as tx:
             stored = tx.cases.promises.current(result.case.case_ref)
             row = tx.cases.cases.get(result.case.case_ref)
-            live_state = tx.core.conversations.lookup(str(thread)).live_state  # type: ignore[union-attr]
+            live_state = tx.core.conversations.lookup(str(thread)).live_state
         assert stored is not None and stored.promise == expected
         assert row is not None
         if expected.live_queued:
