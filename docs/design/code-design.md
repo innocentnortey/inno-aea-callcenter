@@ -572,11 +572,11 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 | S-4 | `RetrievalIndex` | **Cut** | External ONNX model; a hybrid index is the named possible second; tests need a fake that loads nothing |
 | S-5 | Embedder as its own port | **Deferred** | One embedding model per index (retrieval rule 6). Trigger: a second index type sharing one embedder |
 | S-6 | Storage | **Cut at the transaction boundary only** | `UnitOfWork` stays a port; repositories are concrete with no Protocols (one implementation; temp-SQLite tests). Trigger to cut repository Protocols: DO-1 §7 step 5 (Postgres) starts |
-| S-7 | Case store | **One concrete `CaseService`** | One implementation; three role Protocols weren't even split by caller (review S-8). "Staff routes never call `open_case`" is enforced by a `code-review-agent` grep, not by interfaces. Trigger: a second case store |
+| S-7 | Case store | **One concrete `CaseService`** | One implementation; three role Protocols weren't even split by caller (review S-8). "Staff routes never call `open_case`" is enforced by a `code-review-agent` grep, not by interfaces. Trigger: a second case store Proven: `tests/integration/test_staff_composition.py::test_real_objects_bound` (AEA-52). |
 | S-8 | `Clock` | **Cut** | R-3; the demo clock and the fixed test/eval clock are two real implementations |
 | S-9 | Our own checkpointer interface | **Deferred** | LangGraph's `BaseCheckpointSaver` is already the seam; `AsyncPostgresSaver` drops in at 10× step 5 |
 | S-10 | `TraceSink` | **Cut** | Off, Langfuse and in-memory all exist now |
-| S-11 | Event delivery | **No interface; polling** [orchestrator decision] | Writers append to `events` inside their own transaction; the SSE endpoints poll `events WHERE id > last` about once a second [A] and replay by `Last-Event-ID`. One path for live and replay; no thread-to-loop crossing, no after-commit hook. Cost: up to ~1 s delay on a staff-join event. Trigger to revisit: a second replica (10× step 7) |
+| S-11 | Event delivery | **No interface; polling** [orchestrator decision] | Writers append to `events` inside their own transaction; the SSE endpoints poll `events WHERE id > last` about once a second [A] and replay by `Last-Event-ID`. One path for live and replay; no thread-to-loop crossing, no after-commit hook. Cost: up to ~1 s delay on a staff-join event. Trigger to revisit: a second replica (10× step 7) Proven: `tests/integration/test_staff_streams.py::test_case_stream_after_reset` (AEA-52). |
 | S-12 | Specialists as data, one runner | **Cut** | Three real specialists share one braked loop (open/closed limits in §4.5) |
 | S-13 | Tool definitions in `domain/tools.py`, one dispatcher | **Cut** | `agent-tools.md` rules 3 and 6; the types sit in A0 so the wave-1 executor areas never wait on A7 (review B-1) |
 | S-14 | Prompts in their own modules | **Cut** | `pydantic-ai-agents.md` §3 |
@@ -584,8 +584,8 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 | S-16 | Code delivery port (real SMS / email) | **Deferred** | Out of scope (PRD §7) |
 | S-17 | Rate limiter port | **Deferred** | One in-memory limiter, one process; moves at 10× step 6 |
 | S-18 | Staff authentication | **Deferred** | Demo label, not security (N-15) |
-| S-19 | Scheduler runner port | **Deferred** | One in-process thread; singleton lock only at 10× step 7 |
-| S-20 | Protocols in front of our own services | **Deferred** | Services run over temp SQLite in tests; a fake would be a second thing to keep honest. Callers that need a service before it exists get an **injected callable** (`TurnService`'s `run_graph`, `ResetService`'s restore/clear) |
+| S-19 | Scheduler runner port | **Deferred** | One in-process thread; singleton lock only at 10× step 7 Proven: `tests/capture/test_cap5_clock_and_scheduler.py::test_wf7_ticks` (AEA-52). |
+| S-20 | Protocols in front of our own services | **Deferred** | Services run over temp SQLite in tests; a fake would be a second thing to keep honest. Callers that need a service before it exists get an **injected callable** (`TurnService`'s `run_graph`, `ResetService`'s restore/clear) Proven: `tests/integration/test_demo_reset.py::test_reset_all_or_nothing` (AEA-52). |
 | S-21 | Async model clients and graph | **Deferred** | DO-1 §11 decision 1; 10× step 6 |
 | S-22 | GPT-5.6 Terra / Gemini Flash adapters | **Deferred** | Not chosen after SP-1 |
 | S-23 | Brief extraction as its own class | **Deferred** | One structured call with its own prompt |
