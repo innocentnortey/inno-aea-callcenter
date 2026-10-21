@@ -726,8 +726,15 @@ def register_graph(
 def register_frontend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-49 frontend: serves apps/web/dist; runs last so its SPA fallback never shadows an API route (web.md §12).
 
-    No-op until AEA-49 fills it.
+    Delegates to web/frontend.py's register_frontend(container, app): registers the public paths GET /login, /assets/
+    and /fonts/ (WEB-1 option A), then mounts Settings.web_dist_dir read-only (/assets/{file}, /fonts/{file},
+    spa_fallback). A missing build raises FrontendMissingError when Settings.require_frontend is true, else logs
+    frontend_dist_missing once and mounts nothing (WEB-30). An app create_app did not build has no web shell, so this
+    does nothing.
     """
+    from meridian.web.frontend import register_frontend as mount_frontend
+
+    mount_frontend(container, app)
 
 
 def build_container(app: FastAPI, settings: Any, *, overrides: Any = None) -> Container:
