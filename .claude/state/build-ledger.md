@@ -71,7 +71,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | FIX-W1 | #101 | B | merged | aea-fix-w1-fix-w1-driver-j7 | 38d3884 | ruff/format clean; mypy 0 errors before and after; contract+journeys 699 passed, 70 skipped, 1 xfailed; J-7 blocked on AEA-51, 0 failed | - |
 | AEA-21b | #203 | B | ready |  |  |  | - |
 | AEA-19-F1 | #204 | B | merged | aea-19-f1-aea-19-f1-trace-override | dc8d8d0 (code 6faeaac) | ruff/format clean; mypy 0 errors (548 files); web/api/capture/policy tests 652 passed, 1 failed (test_wf15_reset_script, fails identically on the pre-merge commit); affected journeys 46 passed, 38 skipped | - |
-| AEA-40-F1 | #205 | B | planned | aea-40-f1-aea-40-f1-safety-at-cap |  |  | - |
+| AEA-40-F1 | #205 | B | merged | aea-40-f1-aea-40-f1-safety-at-cap | 47da7520b1fdc9e4aacdc447efebcbaf4588db8e | merge of 1599659; ruff/format clean; mypy 0 errors (550 files); affected tests 453 passed, 9 skipped; J-5 journey skipped, blocked by AEA-51 (mock-tested) | - |
 | FU-saveFollowUp-text | #206 | B | planned | aea-fu-savefollowup-text-fu-savefollowup-text |  |  | - |
 | FU-j1-demo-state | #207 | B | merged | aea-fu-j1-demo-state-fu-j1-demo-state | dbcd8b7 (merge of f870fc0) | test-only fix to J-1 step 4; ruff/format clean; mypy 0 errors (547 files); demo/reset tests 41 passed; affected journey test_aea_57 2 passed, 4 skipped (blocked-on AEA-51) | - |
 | AEA-56 | #56 | gated | gated |  |  | human: deploy and smoke (Innocent) |  |

@@ -2,17 +2,62 @@
 
 **Status:** planned — **READY in three parts.** **Part A** (smoke driver, custody/spend/record guards, the paid test file
 that skips by default) imports nothing that is not on `main` and **can be built now**. **Part B** (four scripted journey
-files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51** (its test helpers and the wired graph).
-**Part C** (the paid run and its record) is **blocked-on AEA-51 and AEA-60**, and waits on **`gate::paid`**: Innocent's
+files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51 pass 2** (its test helpers and the wired graph).
+**Part C** (the paid run and its record) is **blocked-on AEA-51** (pass 2; AEA-60 merged at `0e37fad`), and waits on **`gate::paid`**: Innocent's
 go with the day's spend statement (sign-off D-15, "a statement, not a choice").
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `b68df7e` (refresh 4, 2026-10-21; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `dc8d8d0` (refresh 5, 2026-10-21; refresh 4 at `b68df7e`; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
 
-**Refresh 4 (2026-10-21, `main` at `b68df7e`).** Read this box first; refreshes 3, 2 and 1 below are kept as history.
+**Refresh 5 (2026-10-21, `main` at `dc8d8d0`).** Read this box first; refreshes 4, 3, 2 and 1 below are kept as
+history. Where this box and anything later differ, this box wins.
+
+1. **Merged since refresh 4** (first-parent `main`, `b68df7e..dc8d8d0`):
+   - **AEA-39** at `12e46ee` (`agent/nodes/act.py`: `run_specialist`, `escalation`, `handoff` are real; no
+     `NotImplementedError` left).
+   - **AEA-60** at `0e37fad` (`tests/contract/test_prompts_vs_consumers.py` and its `_prompts_*.py` helpers;
+     `tests/journeys/j5/test_aea_60.py`, `tests/journeys/j9/test_aea_60.py`). **AEA-60 is no longer a blocker**: check
+     P1 runs on `main` today.
+   - **FU-j1-demo-state** at `dbcd8b7` (test-only change to `tests/journeys/j1/test_aea_57.py`).
+   - **AEA-19-F1** at `dc8d8d0` (`register_tracing` returns `Key("trace_override")` when `register_graph` provides it
+     from `ContainerOverrides.trace`). The live run passes no overrides, so `Key("trace")` is still the Langfuse sink
+     when all four `LANGFUSE_*` values are set and `NullTraceSink` otherwise. Nothing in this plan changes.
+2. **Unchanged since `b68df7e`**, checked by `git diff --stat b68df7e dc8d8d0` (empty) over: `tests/journeys/support/`,
+   `eval/cases/`, `scripts/`, `tests/fixtures/`, `tests/api/openapi_check.py`, `tests/conftest.py`, `tests/live/`,
+   `tests/unit/adapters/test_retrieval_fastembed.py`, `pyproject.toml`, `src/meridian/{config.py,web/app.py,
+   agent/signals.py}`, `src/meridian/{policy,privacy,retrieval,domain}/`, `src/meridian/adapters/sqlite/schema/`.
+   `src/` changed only in `agent/nodes/act.py` and the `register_tracing` hunk of `web/container.py`. Every §4.1 name
+   still holds. The first dev warranty key by `case_id` is still `T-CALL-20260723-0276` (the other in-scope warranty
+   key is `T-CALL-20260823-0142`).
+3. **AEA-51 is still not on `main`** (ledger `blocked`). Its branch `aea-51-aea-51-customer-path` at `e9d07f3` holds
+   **pass 1 only**:
+   - `register_graph` binds `reply_composer` but **not** `Key("run_graph")` (its own *Deviations* note 2). A live turn
+     on `main` or on that branch still fails at turn 1, so parts B and C both wait for AEA-51 **pass 2**.
+   - `tests/integration/customer_support.py` exists on the branch and matches §4.3:
+     `open_customer_run(request, options: RunOptions = DEFAULT_OPTIONS, *, monkeypatch=None)` (the default is the module
+     constant `DEFAULT_OPTIONS = RunOptions()`, ruff B008; same behaviour), `RunOptions(index="built", eval_key=False,
+     trace=None, with_clock=False, deadline_s=None)`, `CustomerRun(JourneyRun)` with `.eval_key` and `.steps`,
+     `StepScript.set_step(...)`, `INDEX_SKIP`.
+   - `tests/graph/worked_pair_scenarios.py` (the building blocks and drivers B1 copies) is **not** on the branch yet; it
+     is pass 2.
+   - AEA-51's pass 2 now waits on **AEA-21b** (`compose.py` builds no slot, account or appointment blocks; no ticket
+     file, ledger row or branch exists for it on `dc8d8d0`) and **AEA-40-F1** (plan and worktree exist; one AEA-51
+     test). See R-14.
+4. **Part B's start condition is tightened** (A0 step 1): part B starts only when `main` has
+   `tests/graph/worked_pair_scenarios.py` **and** `register_graph` provides `Key("run_graph")`. A merge of AEA-51
+   pass 1 alone is not enough.
+5. **DO-3 §9's `└── live/` line is now line 723** (was 715). A8 finds it by its text.
+6. **Sibling journeys in the folders this ticket adds to** (check 6 must keep them green): `j2/test_aea_35.py`,
+   `j2/test_aea_38.py`; `j3/test_aea_27.py`, `test_aea_28.py`, `test_aea_34.py`, `test_aea_39.py`, `test_aea_43.py`;
+   `j4/test_aea_28.py`, `test_aea_39.py`; `j5/test_aea_36.py`, `test_aea_37.py`, `test_aea_60.py`.
+7. **Blockers recorded for the orchestrator:** part A none (buildable on `dc8d8d0`; nothing of it has been built:
+   `tests/live/` holds only `__init__.py` and no AEA-61 branch exists); part B AEA-51 pass 2; part C AEA-51 pass 2 and
+   `gate::paid`.
+
+**Refresh 4 (2026-10-21, `main` at `b68df7e`).** History; superseded by refresh 5 above.
 Nothing in §1–§9 changes except the base revision, R-1, the DANGER path rule in A6 (item 4 below) and §9's revision.
 
 1. **Merged since refresh 3** (first-parent `main`, `76f14f4..b68df7e`):
@@ -208,7 +253,7 @@ the same assertion the live run uses.
 | Metrics (DO-7) | M-23 (`turn.server_ms`), M-24 (`failure_kind`, `http_status`, `degrade_reason`), M-25 (cost per conversation; SP-1 B max $0.039 [M]), M-26 ($30/day, Chicago day), M-29 (`trace_export`) | Copied into the record, never compared with a line |
 | Case files | `eval/cases/FORMAT.md` §2 (schema validation recipe), §3 (`clock` is always the demo start; `$seed:` tokens; `code_from_inbox` holds no digits), §6 (held-out keys at `/home/linuxuser/.meridian-sealed/heldout/`); `eval/cases/models.py`, `eval/cases/checks.py` | Loader and custody |
 | Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`; refresh 3 re-checked at `76f14f4`, adding `domain/specialists.py` report models and `web/schemas/chat.py`; refresh 4 re-checked at `b68df7e`, adding `agent/nodes/plan.py` (planner fallback, classifier fallback) and `domain/turn.py` `CheckEvent.from_danger`; refresh 2 added `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
-| Sibling plans (not on `main`) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §5 C1 (support module API, re-read at its refresh 2), D1/D2 (scenario building blocks, `TOOLS`); `AEA-60.md` (test path) | Part B names in §4.3; re-checked at part B's step B0 |
+| Sibling plans (not on `main`) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §5 C1 (support module API, re-read at its refresh 2 and against branch `aea-51-aea-51-customer-path` at `e9d07f3` in refresh 5), D1/D2 (scenario building blocks, `TOOLS`); AEA-60's test file is on `main` since `0e37fad` | Part B names in §4.3; re-checked at part B's step B0 |
 
 ### Source-contract reconciliation
 
@@ -269,7 +314,7 @@ the same assertion the live run uses.
 | `docs/testing/journeys/<date>-live-smoke-1.md` | C | create (written by the paid run) | The first live record | generated |
 | `.claude/reference/area-map.md` | A, B, C | append to the last cell of row `3+` only | AC-18 | — |
 | `.claude/state/icm-progress.md` | A, B, C | add one *Routes verified against code and tests* row (A); replace its evidence (B, C) | AC-18 | ≤ 400 chars per row |
-| `docs/design/code-design.md` | A | modify the one `└── live/` line in §9 (line 715) | AC-18 | — |
+| `docs/design/code-design.md` | A | modify the one `└── live/` line in §9 (line 723 at `dc8d8d0`; find it by its text) | AC-18 | — |
 
 - `tests/live/__init__.py` exists (AEA-01) and stays unchanged.
 - The ticket lists `conftest.py`, `smoke.py`, `test_smoke_guards.py` and `test_live_smoke.py`. The six helper modules sit
@@ -357,7 +402,7 @@ level is `mock-tested` and the part A record line says `blocked by AEA-51`.
 
 ---
 
-## 4. Shared code to use (copied from the current code at `cf8fd78`, re-checked unchanged at `76f14f4` and `b68df7e`; the addenda; or the sibling plan named)
+## 4. Shared code to use (copied from the current code at `cf8fd78`, re-checked unchanged at `76f14f4`, `b68df7e` and `dc8d8d0`; the addenda; or the sibling plan named)
 
 ### 4.1 On `main` now (import exactly these)
 
@@ -549,13 +594,17 @@ Tables read (columns copied from `schema/*.sql`):
   due_label, extra_lines, …, produced_by_code: true}`
 - `handoff{…}`, `account_card`, `appointment`, `confirmation`
 
-### 4.3 Names from AEA-51's plan (part B only; not on `main`; verify at step B0 after AEA-51 merges)
+### 4.3 Names from AEA-51's plan (part B only; not on `main`; verify at step B0 after AEA-51 pass 2 merges)
+
+Refresh 5: the first row was checked against the pass-1 file on branch `aea-51-aea-51-customer-path` at `e9d07f3`
+and holds (the `options` default is the module constant `DEFAULT_OPTIONS = RunOptions()`). The second row's file
+does not exist yet (pass 2). The third row's file is on `main` since `0e37fad`.
 
 | Name | Where | Used for |
 |---|---|---|
 | `open_customer_run(request: pytest.FixtureRequest, options: RunOptions = RunOptions(), *, monkeypatch: pytest.MonkeyPatch \| None = None) -> ContextManager[CustomerRun]`; `RunOptions(index="built", eval_key=False, trace=None, with_clock=False, deadline_s=None)`; `CustomerRun(JourneyRun)` with `.steps: StepScript`; `StepScript.set_step(default: Mapping[Role, StepEntry], *, by_marker=None)` (a single entry answers every call of its role in the step; a tuple is consumed in call order, indexed by tool round for `Role.SPECIALIST`); `INDEX_SKIP` | `tests/integration/customer_support.py` (AEA-51 plan §5 C1) | Scripted runs (PD-3) |
 | `planner(**choices) -> str`, `classifier(label) -> str`, `NORMAL`, `responder(text) -> str`, `brief(**fields) -> str`, `tool(name, args, call_id="call-1") -> RawToolCall`, `report(model, **fields) -> RawToolCall`, `step(*calls, text="") -> RawToolStep`, `TOOLS: Mapping[str, str]` (keys `"kb_search"`, `"invoice"`, `"warranty"`, `"find_windows"`, `"move"`, `"change_request"`, `"book"`, `"cancel"`); arg models such as `MoveVisitArgs(appointment_id=…, new_slot_id=…)`, `ReadInvoicesArgs(invoice_number=…)`, `FindWindowsArgs(service_type=…)`; drivers `wp1`, `wp2`, `wp4`, `wp4f`, `danger`, `warranty` | `tests/graph/worked_pair_scenarios.py` (AEA-51 plan §5 D1, D2) | The encoding of every scripted model output; the reference for argument names and report models |
-| `tests/contract/test_prompts_vs_consumers.py` | AEA-60 | Pre-paid-run check P1 (part C) |
+| `tests/contract/test_prompts_vs_consumers.py` (**on `main`** since `0e37fad`) | AEA-60 | Pre-paid-run check P1 (part C) |
 | `KnowledgeReport`, `AccountReport`, `SchedulingReport` (**on `main`**, `meridian.domain.specialists`, AEA-35) | AEA-35 | The `model` argument of `report(...)` in B1 |
 
 ---
@@ -568,7 +617,7 @@ Tables read (columns copied from `schema/*.sql`):
   A5 checks → A6 record and audit → A7 facade, live index, launcher and paid tests → A8 free tests, context, commit.
 - **Part B** (after AEA-51 merges): B0 verify → B1 scripted tables → B2 journey files → B3 AC-16 dry run → B4
   scripted record, context, commit.
-- **Part C** (after AEA-51 and AEA-60 merge, and only on Innocent's `gate::paid` go): C1 pre-paid checks → C2 paid run,
+- **Part C** (after AEA-51 pass 2 merges; AEA-60 is merged; and only on Innocent's `gate::paid` go): C1 pre-paid checks → C2 paid run,
   record, context, commit.
 
 Each step ends with its tests green. The slice **consumes** AEA-57's harness API, AEA-51's test helpers (part B) and the
@@ -583,8 +632,10 @@ It stops and reports at the first part it cannot do, naming the blocker.
 
 ### A0. Verify (no code)
 
-1. `git log --oneline main | grep -E "Merge (AEA-51|aea-51)"` and the same for AEA-60. Record the result in the
-   report. Part A does not need either.
+1. `git log --oneline main | grep -E "Merge (AEA-51|aea-51)"`, `test -f tests/graph/worked_pair_scenarios.py` and
+   `grep -n '"run_graph"' src/meridian/web/container.py` (a `provide(` of `Key("run_graph")` inside
+   `register_graph`). Record the three results in the report. Part A needs none of them. **Part B and part C need
+   all three** (AEA-51 pass 2); a pass-1-only merge is not enough. AEA-60 is on `main` (`0e37fad`).
 2. Re-open `tests/journeys/support/{run,env,server,client,db,logtap,record}.py` and confirm the §4.1 names. A renamed
    name: use the merged name and list it in the report.
 3. `uv run python -m scripts.agent_version` prints one non-empty line. The value is not secret, but print it only in
@@ -1201,12 +1252,12 @@ Tests, with exact names. Each prints its evidence line.
 
 **Context (AC-18), in the part A commit:**
 - Area map row `3+`, last cell: append `; AEA-61 part A: tests/live/ (smoke driver, custody/spend/record guards, paid
-  tests skipped by default) actual (<sha>); scripted journeys j2–j5 await AEA-51; paid run awaits AEA-60 and gate::paid`.
+  tests skipped by default) actual (<sha>); scripted journeys j2–j5 await AEA-51; paid run awaits AEA-51 and gate::paid`.
 - ICM: add one row after the last *Routes verified against code and tests* row: `| Routes verified against code and
   tests | provisional | <date>: live smoke AEA-61 part A (<sha>): tests/live free run (7 passed, 10 skipped); journeys
   await AEA-51; paid run awaits gate::paid | Re-run on any prompt, schema, model, tool or orchestration change
   (integrated-journeys rule 4) |`. Keep it ≤ 400 chars.
-- DO-3 §9 line 715 becomes: `└── live/             marked `live`: paid calls, never in the default run (recordings
+- DO-3 §9's `└── live/` line (line 723 at `dc8d8d0`; find it by its text) becomes: `└── live/             marked `live`: paid calls, never in the default run (recordings
   feed contract/); AEA-61: conftest, smoke*.py, scripted_cases, test_smoke_guards, test_live_smoke; records
   docs/testing/journeys/*-live-smoke-<N>.md`.
 - `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` reports no FAIL in an owned row.
@@ -1216,8 +1267,8 @@ Tests, with exact names. Each prints its evidence line.
 1. `test(AEA-61): live smoke driver, custody and spend guards` — the `tests/live/*.py` files of part A.
 2. `docs(AEA-61): context rows for the live smoke driver` — area map, ICM, DO-3.
 
-**If AEA-51 is not on `main`: stop and report** "part A built (<sha>); part B blocked-on AEA-51; part C blocked-on
-AEA-51, AEA-60 and gate::paid". The journey record level for this ticket stays `mock-tested`.
+**If AEA-51 pass 2 is not on `main` (A0 step 1): stop and report** "part A built (<sha>); part B blocked-on AEA-51
+pass 2; part C blocked-on AEA-51 pass 2 and gate::paid". The journey record level for this ticket stays `mock-tested`.
 
 ### B0. Verify part B's prerequisites (after AEA-51 merges)
 
@@ -1338,12 +1389,12 @@ test function, so part A's file never imports an unmerged module.
   1. `test(AEA-61): scripted smoke journeys J-2..J-5 and the not-an-E-run check` — `scripted_cases.py`,
      `test_smoke_guards.py` and the four journey files.
   2. `docs(AEA-61): scripted journey record and context rows`.
-- **Then stop and report:** "build done; paid run awaits AEA-60 and gate::paid (D-15)".
+- **Then stop and report:** "build done; paid run awaits gate::paid (D-15)".
 
 ### C1–C2. Part C: the paid run (only after Innocent's explicit go with the spend figure)
 
-- **C1** runs on the same revision, cheapest first, stopping at the first red: §7 checks 1–6, then P1 (needs AEA-60 on
-  `main`).
+- **C1** runs on the same revision, cheapest first, stopping at the first red: §7 checks 1–6, then P1 (AEA-60's file, on
+  `main` since `0e37fad`).
 - **C2.** Innocent (or the session at his explicit instruction) puts `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY` and, for
   trace IDs, the four `LANGFUSE_*` values of this app's project into the environment. The implementer never reads,
   prints or copies `.env` and never echoes a key.
@@ -1351,7 +1402,7 @@ test function, so part A's file never imports an unmerged module.
 - Commit `docs(AEA-61): live smoke record <N>` with:
   - the record;
   - the ICM row's evidence replaced by the record link and result (`<k>/6 pass, run total $<x>`);
-  - the area-map sentence `paid run awaits AEA-60 and gate::paid` replaced by `live record
+  - the area-map sentence `paid run awaits AEA-51 and gate::paid` replaced by `live record
     docs/testing/journeys/<date>-live-smoke-<N>.md`.
 - **A failing case:** keep the record and do not fix anything here. Report the failing assertion and its owner ticket
   (rule 5); the re-run is a new record.
@@ -1436,8 +1487,8 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`; AEA-37 merged at `8d025b7`). AEA-51's only unmerged blocker is now AEA-39 (ledger `blocked`, to re-run) | Part A now; B0 verifies the names after AEA-51 merges |
-| R-2 | Blocker (part C) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) | P1 waits |
+| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`; AEA-37 merged at `8d025b7`; AEA-39 merged at `12e46ee`; AEA-19-F1 merged at `dc8d8d0`). Refresh 5: AEA-51 pass 1 sits on branch `e9d07f3` without `Key("run_graph")`; pass 2 waits on AEA-21b and AEA-40-F1 (R-14) | Part A now; parts B and C start only on A0 step 1's three checks; B0 verifies the names |
+| R-2 | Resolved (refresh 5) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) merged at `0e37fad` | P1 runs on the paid run's revision as §7 says |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
 | R-5 | Collision / ownership | Six helper modules inside `tests/live/` beyond the four files the ticket names | The folder is AEA-61's in the collision map; split only for the 500-line cap. Orchestrator: confirm |
@@ -1449,6 +1500,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 | R-11 | Request to AEA-57 (follow-up, not blocking) | `LogTap.structured(kind)` cannot see `signal` records, because `emit_signal` logs them with `extra={"signal": …}` while LogTap reads `meridian_record`. Any journey asserting on signals through LogTap passes vacuously | AEA-61 works around it in owned code (`SignalTap`). Orchestrator: open a follow-up on AEA-57 to read `record.__dict__["signal"]` too |
 | R-12 | Collision (shared context files) | `.claude/reference/area-map.md` row `3+` (also edited by 51, 52, 55, 57–60, 62), `.claude/state/icm-progress.md` (append-style rows; AEA-02b hit a conflict there) and `docs/design/code-design.md` §9 | Append-only edits to one cell, one new row and one line; resolve a merge conflict by keeping both sides |
 | R-13 | Workflow | If the orchestrator merges part A before AEA-51, the issue stays open and the ledger row must not read `merged` for the whole ticket | Orchestrator: record "part A merged; B/C blocked-on AEA-51" |
+| R-14 | Transitive blocker (parts B, C) | AEA-51 pass 2 waits on AEA-21b (`compose.py` slot, account and appointment blocks), which has no ticket file, ledger row or branch on `dc8d8d0`, and on AEA-40-F1 (planned, worktree exists). WP-4F and WP-4 need the slot card for `first_shown_slot` (B1) and the live customer sees it | Orchestrator: cut AEA-21b (AEA-51 plan §8 R-13) so AEA-51 pass 2 can run; nothing in this plan works around it |
 
 ---
 
@@ -1458,9 +1510,9 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `b68df7e` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
-| B | **Blocked-on AEA-51** (test helpers, wired graph) |
-| C | **Blocked-on AEA-51 and AEA-60**, plus `gate::paid` (D-15 spend statement) |
+| A | Buildable on `main` `dc8d8d0` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| B | **Blocked-on AEA-51 pass 2** (`tests/graph/worked_pair_scenarios.py`, `Key("run_graph")`; it waits on AEA-21b and AEA-40-F1, R-14) |
+| C | **Blocked-on AEA-51 pass 2** (AEA-60 merged at `0e37fad`), plus `gate::paid` (D-15 spend statement) |
 
 ## Gates
 
