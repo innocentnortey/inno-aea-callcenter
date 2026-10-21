@@ -408,7 +408,7 @@ gets a code-built reply with the named error **`TURN_TIMEOUT`** (N-26). The reco
 | **Retrieval index** | In memory, read-only | Fails to load at boot → readiness fails and the deploy does not go live; if lost later, knowledge answers become "I don't have that information" + person | — | `index_unavailable` |
 | **Langfuse on the VPS** | Bounded export queue; spans dropped when full | Unreachable → spans dropped and counted; turns unaffected | exporter's own, bounded | `trace_export_dropped` |
 | **Scheduler job** (due-soon, overdue, stuck) | Runs every 60 s [A] | A missed run is caught up by the next one (idempotent) | — | `scheduler_last_run` |
-| **Staff actions (CON-13)** | — | Two staff change the same case → `CONFLICT_STALE` with who changed it (version check, N-18) | — | — |
+| **Staff actions (CON-13)** | — | Two staff change the same case → `VERSION_CONFLICT` with who changed it (version check, N-18) | — | — |
 | **Demo reset (CON-9)** | Takes an exclusive lock; turns in flight wait up to 5 s [A] | All-or-nothing; open chats ended with `SESSION_ENDED`; staff sessions invalidated (N-14) | — | `demo_reset` |
 | **Process hang** | — | **Proposal:** an in-process watchdog probes `/healthz` every 15 s [A]; three failures → the process exits, and Railway's restart policy starts it again (decided Q-045 = A). Railway's deploy health check gates new deploys only [A, check Railway's docs at deploy] | — | `watchdog_restart` (shown on the monitoring page, CON-19) |
 
@@ -473,7 +473,7 @@ product; the demo resets instead.
 |---|---|---|
 | **Demo login (whole app)** | One username and password from Railway variables gate every route except the login and `/healthz`; a signed session cookie follows. After sign-in, a visible switch moves between the customer view and the staff roles (representative, supervisor, owner) with no second password; demo reset and the staffing toggle sit behind the same login (Innocent, 2026-10-21) | R-48 |
 | **Identity code** | Locate (name + phone, customer ID or invoice number) is not proof. A 6-digit code is generated server-side, stored **hashed** with an expiry of 10 minutes, delivered only to the demo inbox scoped to that browser's demo session (N-11), never shown in chat. 3 wrong tries lock the attempt; **at most 3 codes sent per conversation [A]** (UX input). Verification is per session and per customer ID. The code-entry turn is checked by code with **no model call**, and the stored chat keeps "[code entered]", never the digits | R-15, R-16; consolidated §8 |
-| **No account fishing** | No match, ambiguous match, no contact and failed code all return the same `NOT_VERIFIED` (N-7); rate limits per session and IP | R-16, R-41 |
+| **No account fishing** | No match, ambiguous match and no contact all return the same `NOT_VERIFIED` (N-7); rate limits per session and IP | R-16, R-41 |
 | **Redaction (R-36)** | One redaction function, applied **before** anything leaves the process: card-like numbers (Luhn-shaped digit runs) and codes always; for Jev, also names, phones, emails, addresses and customer and invoice IDs, replaced by placeholders; for traces, the same set as Jev. Applied again at export (`mask_otel_spans`). A test drives real flows with seeded values and asserts their absence in the HTTP body, the log and the exported trace (`safe-validation-errors.md` rule 5, rule 19 of `verification-evals-observability.md`) | R-36; audit G-9 |
 | **What each vendor sees** | Anthropic: the redacted chat window, task fields and passages; never codes, card numbers or full contact details. Jev via OpenRouter: redacted text and typed flags only, `data_collection: deny` on every request. Langfuse: redacted spans on Innocent's own server | §3.2; PRD §6.2 |
 | **Cards** | The agent never asks for or accepts a card number; one typed is masked before storage and before any model, and the reply says cards aren't taken in chat | R-13; audit K-17, L-4 |
@@ -711,10 +711,10 @@ Sonnet decisions use `output_config.format` or `auto` + strict tools, never forc
 | CON-7 | Staffing | Presence state | Shift end converts live-queued cases (N-12) |
 | CON-8 | Demo clock | Clock | One clock, forward only |
 | CON-9 | Reset | Reset service | Exclusive lock; all-or-nothing |
-| CON-10 | Staff sign-in | Staff session | Demo label, not security (N-15) |
+| CON-10 | Role switch for the signed-in session (R-48, CON-22) | Staff session | Demo label, not security (N-15) |
 | CON-11 | Queue | Case store | P0/P1 first, then due time |
 | CON-12 | Case view | Case store + lookup log | Snapshot vs current per source (N-17) |
-| CON-13 | Case actions | Case store | Version check, `CONFLICT_STALE` |
+| CON-13 | Case actions | Case store | Version check, `VERSION_CONFLICT` |
 | CON-14 | Live chat | Turn endpoint (staff side) + event log | Writes the representative's message into the same thread; sets `controller` |
 | CON-15 | Activities | Case store | "Demo: recorded, not sent" (R-34) |
 | CON-16 | Flags | Case store | Review list (R-37) |

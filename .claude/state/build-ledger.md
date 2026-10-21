@@ -4,15 +4,15 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 
 | ticket | issue | lane | state | branch | commit | evidence | blockers |
 |---|---|---|---|---|---|---|---|
-| AEA-01 | #1 | B | ready | | | | - |
+| AEA-01 | #1 | B | planned | aea-01-aea-01-foundation | | | - |
 | AEA-02 | #2 | B sec | ready | | | | AEA-04 |
-| AEA-03 | #3 | B | ready | | | | - |
-| AEA-04 | #4 | B sec | ready | | | | - |
-| AEA-05 | #5 | B | ready | | | | AEA-02 |
+| AEA-03 | #3 | B | reviewed | aea-03-fixed-customer-texts | 44730d2 | | - |
+| AEA-04 | #4 | B sec | frozen-tests | aea-04-aea-04-redaction | | | - |
+| AEA-05 | #5 | B | planned | | | | AEA-02 |
 | AEA-06 | #6 | B | ready | | | | - |
-| AEA-07 | #7 | D | ready | | | | - |
-| AEA-08 | #8 | D | ready | | | | - |
-| AEA-10 | #10 | B | ready | | | | AEA-01,AEA-02 |
+| AEA-07 | #7 | D | merged | main | 5073dd0 | docs/technical-documentation.md: 13 sections, links resolve, figures sourced or pending, 6+1 open decisions labelled proposed; diff touches docs, SUBMISSION.md and .claude/state only | - |
+| AEA-08 | #8 | D | merged | main | c0621de | DO-3 at revision 3 (103 modules recounted); area map has a Tickets column (01-62 except the six direct/human tickets, AEA-14 twice); stale-name greps leave only history, Superseded notes and retired-name sentences; check_context no FAIL; diff touches docs and .claude/state only | - |
+| AEA-10 | #10 | B | planned | | | | AEA-01,AEA-02 |
 | AEA-11 | #11 | B | ready | | | | AEA-01,AEA-02 |
 | AEA-12 | #12 | B sec | ready | | | | AEA-01,AEA-02,AEA-04,AEA-05 |
 | AEA-13 | #13 | B | ready | | | | AEA-02,AEA-03 |

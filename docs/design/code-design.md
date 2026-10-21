@@ -1,14 +1,17 @@
 # Code design: Meridian AI service agent (DO-3)
 
 **Date:** 2026-10-21, America/Chicago. **Stage:** zero-to-hero §6, System track, light mode. **Writer:** Claude (Opus 5.5).
-**Status:** DRAFT, **revision 2** after the `metz-code-design-agent` review
+**Status:** DRAFT, **revision 3**. Revision 3, 2026-10-21: reconciled with the slice plan and the Stage 7 addenda (AEA-08);
+it records their decisions and makes none. Revision 2 followed the `metz-code-design-agent` review
 ([`reviews/2026-10-21-code-design-review.md`](reviews/2026-10-21-code-design-review.md), verdict FAIL; response in §11).
 Awaiting Innocent's review. **Nothing here is built: every path below is planned.** The component contracts (DO-4) are
 in [`contracts/`](contracts/README.md).
 
 **What this file owns:** the module map under `src/meridian/`, each module's responsibility, interface, dependencies
 and owner area, the seams list (cut or deferred), the typed conversation state for R-45, where each requirement lives,
-the build areas and waves for §7 with their collision map, and the test layout. It is mirrored, without detail, in
+the build areas and waves for §7 with their collision map, and the test layout. Which ticket builds which file is the
+[slice plan](../plans/slice-plan.md) (§1 tickets, §3 collision map); the files below carry their ticket where it
+differs from the area. It is mirrored, without detail, in
 [`.claude/reference/area-map.md`](../../.claude/reference/area-map.md).
 
 **What it follows and does not repeat:**
@@ -39,7 +42,7 @@ writes "Yes, please." The browser posts CON-2 with a fresh `turn_id`.
 
 **Process, module by module.**
 
-1. `web/routes/chat.py` validates the body against `web/schemas/customer.py` and calls `services/turn.py`
+1. `web/routes/chat.py` validates the body against `web/schemas/chat.py` and calls `services/turn.py`
    `TurnService.run_turn(...)`. The route does no logic itself.
 2. `TurnService` checks admission (30 in flight [Decided SDQ-9]), the spend guard (`services/ledger.py`), and that this
    `turn_id` is new (the `turns` row). It starts a `TurnBudget` with the 60 s deadline [Decided SDQ-1], redacts the
@@ -164,7 +167,7 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 | `policy.py` | One `REASONS` dict mixing priority and draft promise texts | Split by consumer: `policy/booking.py` (zones, fees; A5), `policy/handoff.py` (R-26 promises word for word, priorities; A6), `policy/escalation.py` (A7b). The parked draft promise texts are not R-26's and are not carried over |
 | `tools.py` | Functions keyed on `thread_id` that open the DB themselves | Tool definitions in `domain/tools.py`, executors per area, one guard and dispatcher (`agent/tools/dispatch.py`), services underneath |
 | `identity.py` | Unsalted SHA-256 of a 6-digit code; string compare of ISO times | HMAC-SHA256 with the session secret (a plain hash of a 6-digit code is reversible by trying a million values), `datetime` comparison on the injected clock, the per-conversation code cap, demo-session scoping (N-11) |
-| `db.py` | Global lock, `settings` table, `log_metric` | `adapters/sqlite/` with a unit of work and one DDL file per owning area; DO-6's records replace `log_metric` |
+| `db.py` | Global lock, `settings` table, `log_metric` | `adapters/sqlite/` with a unit of work and one DDL file per area, all written by A0 (AEA-10); DO-6's records replace `log_metric` |
 | `cases.py` | Brief built by heuristics from the log | `services/cases.py` + `services/handoff.py` (typed eight-heading `Brief`; five headings from state) |
 | `kb/` | Index under `var/`, built at runtime | `retrieval/` builds the index at image build from the manifest (DO-1 §11 decision 10); the parked `MANIFEST` data seeds `retrieval/manifest.py` |
 | `web/app.py` | `async def api_chat`; password staff login | Thin `def` routes per CON group; app-wide demo login (CON-22) and a role switch for the signed-in session (CON-10), per R-48 |
@@ -178,116 +181,147 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `policy/texts.py` (AEA-03, `2689582`).
 
 ```
-src/meridian/                                    planned                                                    area  wave
-├── config.py                                    Settings; typed per-role model maps, validated at start    A0    0
+src/meridian/                                    planned                                                     area  wave
+├── config.py                                    Settings; typed per-role model maps, validated at start     A0    0
 ├── domain/                                      pure types, no I/O
-│   ├── common.py                                MeridianModel base, validated IDs, every stable error code A0    0
-│   ├── records.py                               Customer, Technician, Slot, Appointment, Invoice, Passage  A0    0
-│   ├── actions.py                               ActionKind, CompletedAction, Settled (R-45)                A0    0
-│   ├── state.py                                 ConversationState and its parts (§5)                       A0    0
-│   ├── turn.py                                  gate, plan, danger, facts, responder, R-46 check types     A0    0
-│   ├── specialists.py                           SpecialistTask, Knowledge/Account/SchedulingResult         A0    0
-│   ├── tools.py                                 ToolDef, ToolCallScope, ToolResult, ToolError, LookupEntry A0    0
-│   ├── handoff.py                               HandoffReason, Priority, Promise, CaseSummary, Brief       A0    0
-│   └── blocks.py                                ReplyBlock union (N-6), SettledView (N-4)                  A0    0
+│   ├── common.py                                MeridianModel base, validated IDs, every stable error code  A0    0
+│   ├── records.py                               Customer, Technician, Slot, Appointment, Invoice, Passage   A0    0
+│   ├── actions.py                               ActionKind, CompletedAction, Settled (R-45)                 A0    0
+│   ├── state.py                                 ConversationState and its parts (§5)                        A0    0
+│   ├── turn.py                                  gate, plan, danger, facts, responder, R-46 check types      A0    0
+│   ├── specialists.py                           SpecialistTask, Knowledge/Account/SchedulingResult          A0    0
+│   ├── tools.py                                 ToolDef, ToolCallScope, ToolResult, ToolError, LookupEntry  A0    0
+│   ├── handoff.py                               HandoffReason, Priority, Promise, CaseSummary, Brief        A0    0
+│   ├── blocks.py                                ReplyBlock union (N-6), SettledView (N-4)                   A0    0
+│   ├── staff.py                                 StaffRole, StaffActor, personas, login-session types        A0    0
+                                                 (AEA-02; stage7/staff.md §1, MC-2)
+│   └── identity.py                              Locator, Located, NotVerified, CodeSent, InboxMessage       A0    0
+                                                 (AEA-02; stage7/graph-tools.md §5, GRT-5)
 ├── policy/
-│   ├── texts.py                                 every fixed customer sentence, word for word               A0    0
-│   ├── limits.py                                deadline 60 s, admission 30; role caps, brakes, caps       A0    0
-│   ├── booking.py                               city/ZIP → zone; 24-hour rule; fee notes by tier           A5    1
+│   ├── texts.py                                 every fixed customer sentence, word for word                A0    0
+│   ├── limits.py                                deadline 60 s, admission 30; role caps, brakes, caps        A0    0
+│   ├── booking.py                               city/ZIP → zone; 24-hour rule; fee notes by tier            A5    1
 │   ├── handoff.py                               R-26 promise table + due rule; reason → P0–P4; D4 rows      A6    1
-│   └── escalation.py                            decide_escalation(inputs) (pure; OD-6, D4, R-21)           A7b   3
+│   └── escalation.py                            decide_escalation(inputs) (pure; OD-6, D4, R-21)            A7b   3
 ├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0
 ├── ports/
-│   ├── models.py                                ChoiceModel, StructuredModel, ToolCallingModel; attempts   A0    0
-│   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink      A0    0
+│   ├── models.py                                ChoiceModel, StructuredModel, ToolCallingModel; attempts    A0    0
+│   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink       A0    0
 ├── gates/
-│   ├── rules.py                                 typo-tolerant rules: safety, burning, danger, person, policy A1   1
-│   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate      A1    1
-├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts   A7c   3
+│   ├── rules.py                                 typo-tolerant rules: safety, burning, danger, person, policy A1    1
+│   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate       A1    1
+├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3
 ├── adapters/
-│   ├── sqlite/db.py                             connections, WAL, busy_timeout, SqliteUnitOfWork           A0    0
-│   ├── sqlite/migrate.py                        first-boot copy of the issued DB; applies schema/*.sql;    A0    0
-│   │                                            restore_working_copy()
-│   ├── sqlite/schema/00_core.sql                conversations, messages, turns, actions, lookup_log,       A0    0
-│   │                                            check_events, events, (customers: issued)
-│   ├── sqlite/repos_core.py                     the repositories for 00_core + customers (read)            A0    0
-│   ├── sqlite/schema/{20_spend,40_identity,     one DDL file per owning area                               A2…A10 1–2
-│   │     50_booking,60_cases,90_staff,95_ops}.sql
-│   ├── sqlite/repos_spend.py                    spend_ledger                                               A2    1
-│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                A4    1
-│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians               A5    1
-│   ├── sqlite/repos_cases.py                    cases, case_events, promises, followups, activities,       A6    1
-│   │                                            demo_state, job_runs, reset/seed records
+│   ├── sqlite/db.py                             connections, WAL, busy_timeout, SqliteUnitOfWork            A0    0
+│   ├── sqlite/migrate.py                        first-boot copy of the issued DB; applies schema/*.sql;     A0    0
+                                                 restore_working_copy()
+│   ├── sqlite/schema/00_core.sql                conversations, messages, turns, actions, lookup_log,        A0    0
+                                                 check_events, events, (customers: issued)
+                                                 written by A0 (AEA-10) from the owning area's field list
+│   ├── sqlite/schema/{20_spend,40_identity,50_booking,90_staff,95_ops}.sql  one file per area, applied by number;                       A0    0
+                                                 each written by A0 (AEA-10) from the owning area's field list
+│   ├── sqlite/schema/60_cases.sql               cases, case_events, promises, followups, activities,        A0    0
+                                                 demo_state, job_runs, reset/seed records; written by A0
+                                                 (AEA-10) from the owning area's field list
+│   ├── sqlite/repos_core.py                     the repositories for 00_core + customers (read); the        A0    0
+                                                 cross-ticket reads and reset clearing (§4.3, AEA-10)
+│   ├── sqlite/repos_cases.py                    cases, case_events, promises, followups, activities,        A0    0
+                                                 demo_state, job_runs, reset/seed records; A0 (AEA-10)
+│   ├── sqlite/repos_spend.py                    spend_ledger                                                A2    1
+│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1
+│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1
 │   ├── sqlite/repos_staff.py                    staff_sessions, flags                                       A9    2
 │   ├── sqlite/repos_ops.py                      health_events, deploy_records, eval results (read)          A10a  1
-│   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0   0
-│   ├── models/anthropic.py                      AnthropicAdapter: all three model ports; own failure mapping A2  1
-│   ├── models/openrouter_jev.py                 JevAdapter: ChoiceModel only; own failure mapping            A2   1
-│   ├── retrieval_fastembed.py                   FastembedIndex + relevance floor + readiness info           A3   1
+│   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
+│   ├── models/anthropic.py                      AnthropicAdapter: all three model ports; own failure mapping A2    1
+│   ├── models/openrouter_jev.py                 JevAdapter: ChoiceModel only; own failure mapping           A2    1
+│   ├── retrieval_fastembed.py                   FastembedIndex + relevance floor + readiness info           A3    1
 │   └── tracing_langfuse.py                      LangfuseTraceSink (mask hook, bounded queue), NullTraceSink A10a  1
 ├── retrieval/
-│   ├── manifest.py                              the 17 files: status, version, parse method, exclusions     A3   1
-│   └── ingest.py                                chunk every format; embed; write index + index record      A3   1
+│   ├── settings.py                              embedder, chunker and floor constants, one place            A3    1
+                                                 (AEA-16; stage7/data.md §3, DAT-11)
+│   ├── manifest.py                              the 17 files: status, version, parse method, exclusions     A3    1
+│   └── ingest.py                                chunk every format; embed; write index + index record       A3    1
 ├── services/
-│   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2   1
-│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx  A4   1
-│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5   1
-│   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6   1
-│   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6   1
-│   │                                            BriefAssembler
-│   ├── demo.py                                  DemoClock (Clock port), staffing, clock advance             A6   1
-│   ├── scheduler.py                             60 s tick: due-soon, overdue, stuck, unowned; daily prune   A6   1
-│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6   1
-│   ├── health.py                                health events, heartbeat, watchdog                          A10a 1
-│   ├── turn.py                                  run one turn: admission, idempotency, deadline, persist     A8   2
-│   ├── session.py                               open a conversation (CON-1)                                 A8   2
-│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9   2
-│   ├── staff.py                                 staff sessions + require_staff(roles) (CON-10); flags      A9   2
-│   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b 3
+│   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
+│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1
+│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1
+│   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
+│   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
+                                                 BriefAssembler
+│   ├── demo.py                                  DemoClock (Clock port), staffing, clock advance             A6    1
+│   ├── scheduler.py                             60 s tick: due-soon, overdue, stuck, unowned; daily prune   A6    1
+│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1
+│   ├── health.py                                health events, heartbeat, watchdog                          A10a  1
+│   ├── turn.py                                  run one turn: admission, idempotency, deadline, persist     A8    2
+│   ├── session.py                               open a conversation (CON-1)                                 A8    2
+│   ├── reset_gate.py                            reset-in-progress gate, injected into ResetService          A8    2
+                                                 (AEA-23; stage7/web.md §7)
+│   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2
+                                                 (AEA-42; stage7/web.md §8)
+│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2
+│   ├── staff.py                                 StaffSessionStore (login sessions, role check, role switch) A9    2
+                                                 and FlagService (AEA-44; stage7/staff.md §2)
+│   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
 ├── agent/
-│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2  1
-│   ├── tools/knowledge.py                       kb_search executor                                          A3   1
-│   ├── tools/account.py                         invoice / membership / warranty read executors              A4   1
-│   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5   1
-│   │                                            request_change executors
-│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a  2
-│   ├── routers.py                               pure conditional-edge functions                             A7a  2
-│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a  2
-│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a  2
-│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a  2
-│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d  3
-│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d  3
-│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b  3
-│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)   A7c  3
-│   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b  3
-│   ├── specialists/runner.py                    the braked tool loop                                        A7b  3
-│   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b  3
-│   ├── prompts/specialists.py                   specialist wording                                          A7b  3
-│   ├── prompts/routing.py                       planner and classifier wording, choice fields              A7d  3
-│   └── prompts/reply.py                         responder and brief wording; trimmed schemas                A7c  3
-└── web/
-    ├── container.py                             composition root; one register_<area>() stub per area       A0   0
-    ├── app.py                                   create_app; lifespan; one 422 handler; async /healthz       A8   2
-    ├── middleware.py                            request_id; per-session/IP rate limits; eval-key tag        A8   2
-    ├── schemas/customer.py                      CON-1…CON-9 models (OpenAPI UX-3 is the field authority)    A8   2
-    ├── schemas/staff.py                         CON-8 advance, CON-10…CON-17, CON-21 models                 A9   2
-    ├── routes/chat.py                           CON-1 (start, getChatThread), CON-2, CON-4, CON-5 (JSON)  A8   2
-    ├── routes/events.py                         CON-3: async SSE polling `events`                           A8   2
-    ├── routes/demo.py                           CON-6, CON-7, CON-8 read, CON-9 (JSON; pages are apps/web)A8   2
-    ├── routes/staff.py                          CON-8 advance, CON-10…CON-17, CON-21 (async SSE), JSON    A9   2
-    ├── routes/reads.py                          CON-18…CON-20 (+ response models), JSON              A10b 3
-    └── templates/ · static/                     NOT PLANNED: screens are the React app apps/web/ (built 2026-10-21, UX-4 gate unsigned);
-                                                 AEA-49 serves its dist/ with fallback to index.html (planned)   A8/A12
+│   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1
+│   ├── tools/knowledge.py                       kb_search executor                                          A3    1
+│   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
+│   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
+                                                 request_change executors
+│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2
+│   ├── routers.py                               pure conditional-edge functions                             A7a   2
+│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2
+│   ├── signals.py                               the `signal` log record for the eight failure signals       A7a   2
+                                                 (AEA-21; stage7/graph-core.md §4, graph-nodes.md §4)
+│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2
+│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2
+│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3
+│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3
+│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3
+│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3
+│   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3
+│   ├── specialists/runner.py                    the braked tool loop                                        A7b   3
+│   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3
+│   ├── prompts/specialists.py                   specialist wording                                          A7b   3
+│   ├── prompts/routing.py                       planner and classifier wording, choice fields               A7d   3
+│   └── prompts/reply.py                         responder and brief wording; trimmed schemas                A7c   3
+├── web/
+│   ├── container.py                             composition root; one register_<area>() stub per area       A0    0
+│   ├── app.py                                   create_app; lifespan; async /healthz (AEA-23; web.md §15)   A8    2
+│   ├── middleware.py                            request_id; rate limits; login gate; eval-key tag (AEA-23)  A8    2
+│   ├── deps.py                                  every service provider incl. require_staff(*roles)          A8    2
+                                                 (AEA-23, sole owner; stage7/web.md §3–§4)
+│   ├── errors.py                                one ApiProblem and its handler (AEA-23; stage7/web.md §1)   A8    2
+│   ├── logging.py                               LOG-profile allow-list formatter (AEA-23; web.md §10)       A8    2
+│   ├── frontend.py                              static mount of apps/web/dist, SPA fallback, public paths   A8    2
+                                                 (AEA-49; stage7/web.md §12)
+│   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout, getSession (AEA-23)                   A8    2
+│   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
+│   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
+│   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2
+│   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
+│   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 role switch (AEA-44)                                 A9    2
+│   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
+│   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2
+│   ├── routes/staff_clock.py · schemas/staff_clock.py  CON-8 advance, supervisor only (AEA-47)                     A9    2
+│   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3
+                                                 `web/templates/` · `static/` are NOT PLANNED: the screens are the React app apps/web/ (UX-4 built 2026-10-21, gate unsigned);
+                                                 AEA-49 serves its dist/ with fallback to index.html (planned)
 
 eval/harness/{runner,scoring,judge,report,load}.py   frozen per scored run (DO-5); HTTP only                 A11  1
 eval/cases/{dev,heldout,retrieval}/ · eval/reports/                                                           A11  1
-Dockerfile · railway.json · scripts/                image build (index built here), reset command           A12  2
+Dockerfile · railway.json · scripts/{agent_version,reset}.py    image build (index built here), agent version stamp, reset command   A12  2
+                                                 (AEA-50; stage7/data.md §7, DAT-22; scripts/ is top level, not under src/meridian/)
 tests/                                              §9
 ```
 
-**Count.** **80** planned Python modules under `src/meridian/` (down from 113; no `__init__.py` counted), plus 5 in
-`eval/harness/`. The review estimated about 70; the extra ten are mostly the per-owner repository and DDL splits B-1
-requires (a merged file would put two areas in one file again).
+**Count.** **103** planned Python modules under `src/meridian/`, recounted from the tree above (one per module path,
+brace groups expanded, no `__init__.py` counted), plus 5 in `eval/harness/`. The first draft had 113 and revision 2 had 80.
+Revision 3 adds 23: `domain/staff.py` and `domain/identity.py` (so `domain/` has 11 files, not 9),
+`retrieval/settings.py`, `services/reset_gate.py`, `services/person_request.py`, `agent/signals.py`, and the web shell's
+split from 10 files to 27 (`deps.py`, `errors.py`, `logging.py`, `frontend.py`, and one route file plus one schema file per
+ticket, slice plan §0 deviation 3). `scripts/` and the test files are outside this count.
 
 ---
 
@@ -305,6 +339,8 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `domain/state.py` | Declare the typed per-thread state (R-45). | `ConversationState` (§5) | the other domain files |
 | `domain/turn.py` | Declare the hand-offs inside a turn. | DO-4 §3, §4, §6, §8–§10 | common, records, actions |
 | `domain/specialists.py` · `tools.py` · `handoff.py` · `blocks.py` | Declare specialist results, tool definitions, handoff types and reply blocks. | DO-4 §5, §7, CON-2 blocks | common, records, actions |
+| `domain/staff.py` | Describe the demo roles, the acting identity and the login-session types. | `DemoRole`, `StaffRole`, `StaffPersona`, `StaffActor`, `actor_for`, `LoginSessionId`, `LoginSession`, `IssuedSession`, `SessionMissing`, `SessionExpired`, `RoleRefusal`, `SessionInfoData` (stage7/staff.md §1, MC-2; AEA-02) | common |
+| `domain/identity.py` | Describe what the identity service takes and returns. | `Locator`, `Located`, `NotVerified`, `CodeSent`, `CodeCapReached`, `Verified`, `CodeWrong`, `CodeExpired`, `CodeLocked`, `InboxMessage` (stage7/graph-tools.md §5, GRT-5; AEA-02) | common |
 | `policy/texts.py` | Hold every fixed customer sentence word for word. | constants, `render(text_id, **values)` | none |
 | `policy/limits.py` | Hold every shared numeric limit in one place. | `TurnLimits` (60 s [Decided SDQ-1], role caps), `Admission` (30 [Decided SDQ-9]), `Brakes` (3 tasks, 2 tool rounds, 6 Sonnet calls), `IdentityLimits` (10 min, 3 tries, 3 codes), booking cap 3; the last four are proposals | none |
 | `privacy/redact.py` | Replace private values before anything stores them or leaves the process. | `redact(text, profile) -> Redacted` | none |
@@ -333,6 +369,7 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 |---|---|---|
 | `adapters/models/anthropic.py` | Make one Sonnet 5.5 request and report it as a typed attempt. | `max_retries=0`; `output_config.format`; `tool_choice` `auto` only; effort per role; checks `stop_reason` (`refusal`, `max_tokens`) first; cache-control on the system prefix; maps SDK exceptions to `ProviderFailureKind` itself (429 without `retry-after` → `provider_spend_cap`, research §2b); never raises |
 | `adapters/models/openrouter_jev.py` | Make one Jev decision request and report it as a typed attempt. | `ChoiceModel` only; `provider.data_collection: "deny"` on every request; **checks the body for `error` even on HTTP 200** (readiness SD-6.3); 402 → `provider_spend_cap`; validates each choice against its options |
+| `adapters/sqlite/repos_core.py` | Hold the repositories for the shared tables, and the reads and the reset clearing that other tickets need (A0, AEA-10; slice plan §0 deviation 2). | Beside its tables it carries `reads.invoice`, `reads.appointment`, `reads.identity_state`, `reset.clear_demo_tables(tx)` and `settled_for(thread_id, read_at)`; signatures are in [stage7/cases.md](contracts/stage7/cases.md) §1.2–§1.3 (and `settled_for` in [stage7/graph-core.md](contracts/stage7/graph-core.md) §6), not copied here |
 | `adapters/sqlite/*` | Store and read rows; one transaction per unit of work. | WAL, `busy_timeout` 5 s [A]; the issued file opened read-only, only by `migrate.restore_working_copy` |
 | `adapters/checkpointer.py` | Build the LangGraph checkpointer; prune and clear it. | `checkpoints.sqlite`, its own file and lock (DO-1 §4); `prune(keep=2)` [Decided SDQ-10] and `clear()` are handed to A6's services as callables |
 | `adapters/retrieval_fastembed.py` | Load the built index and answer a query with a relevance floor. | Readiness: index present, dimension matches `bge-small-en-v1.5`, 17 manifest files (retrieval rule 7) |
@@ -357,7 +394,7 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `services/reset.py` | Restore the demo all-or-nothing. | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
 | `services/ledger.py` | Record every model call's cost and stop model use at a cap. | `record`, `SpendGuard.allow_turn`, `trip_provider_cap`, `models_disabled` | UoW (`repos_spend`), limits |
 | `services/live_chat.py` | Let a claimed representative join, write, hand back or close a chat. | `join`, `send`, `hand_back`, `close` | UoW (`conversations.controller`, `messages`, `events`), `CaseService` |
-| `services/staff.py` | Issue demo staff sessions and record flags. | `sign_in`, `current`, `sign_out`, `flag`, `review`, `list_flags` | UoW (`repos_staff`) |
+| `services/staff.py` | Hold the login sessions, check and switch the role, and record flags. | `StaffSessionStore`: `start`, `resolve`, `end`, `actor_for`, `switch_role`, `session_info`; `FlagService`: `flag`, `review`, `list_flags` (stage7/staff.md §2, STF-26). AEA-44 flips the row to built; it does not rename | UoW (`repos_staff`) |
 | `services/metrics_reader.py` | Serve stored measures without recomputing outcomes. | `owner_metrics`, `monitoring`, `latest_eval` | UoW |
 | `services/health.py` | Keep the heartbeat, record health events, exit after repeated failures. | `Heartbeat`, `Watchdog` | UoW (`repos_ops`) |
 
@@ -537,7 +574,7 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 | R | What | Modules (planned) |
 |---|---|---|
 | R-1 | Greeting says automated | `policy/texts.py`, `services/session.py`, `agent/prompts/reply.py` |
-| R-2 | Person on the first ask | `gates/rules.py`, `gates/gate.py`, `web/routes/chat.py` (CON-4), `services/handoff.py` |
+| R-2 | Person on the first ask | `gates/rules.py`, `gates/gate.py`, `web/routes/handoff.py` (CON-4, CON-5), `services/person_request.py`, `services/handoff.py` |
 | R-3 | Demo "today" from a clock | `ports/runtime.py` `Clock`, `services/demo.py` |
 | R-4 | Plain replies; exact numbers; sources | `agent/prompts/reply.py`, `agent/nodes/compose.py`, `checks.py` |
 | R-5 | Safety instruction first, by code | `gates/rules.py`, `agent/nodes/front.py`, `policy/texts.py` |
@@ -557,12 +594,12 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 | R-21, R-22 | Fee-bearing change never written; P2 | `policy/booking.py`, `services/scheduling.py` `request_change`, `policy/escalation.py`, `services/handoff.py` |
 | R-24 | Triggers | `gates/rules.py`, `policy/escalation.py`, `policy/handoff.py` |
 | R-25, R-26 | Case P0–P4; promise from the table | `services/cases.py`, `services/handoff.py`, `policy/handoff.py`, `agent/nodes/compose.py` |
-| R-27 | Follow-up preference | `services/cases.py`, `web/routes/chat.py` (CON-5) |
+| R-27 | Follow-up preference | `services/cases.py`, `web/routes/handoff.py` (CON-4, CON-5) |
 | R-28 | Eight-heading brief | `services/handoff.py` `BriefAssembler`, `agent/nodes/reply.py`, `agent/prompts/reply.py`, `checks.py` |
 | R-29 | Lookup log; snapshot vs current | `agent/tools/dispatch.py`, `services/scheduling.py` (write rows), `adapters/sqlite/repos_core.py`, `services/cases.py` |
 | R-30 | Presence | `services/demo.py` |
 | R-31 | Takeover; AI pauses | `services/live_chat.py`, `gates/gate.py` (`ai_paused`) |
-| R-32 | Staff views | `web/routes/staff.py`, `services/cases.py`, `services/metrics_reader.py` |
+| R-32 | Staff views | `web/routes/staff_cases.py` (CON-11…CON-13, CON-15…CON-17), `services/cases.py`, `services/metrics_reader.py` |
 | R-33 | Lifecycle; simulated time; seeds | `services/cases.py`, `services/scheduler.py`, `services/demo.py`, `services/reset.py` |
 | R-34 | Recorded, never sent | `services/cases.py`, `policy/texts.py` |
 | R-35 | Monitoring; restart | `services/metrics_reader.py`, `services/health.py` |
@@ -571,7 +608,7 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 | R-38, R-39 | Test set; eval report | `eval/cases/`, `eval/harness/report.py`, `services/metrics_reader.py` (CON-20) |
 | R-40 | Railway | `Dockerfile`, `railway.json`, `config.py` |
 | R-41 | Rate limits, booking cap, spend cap, brakes | `web/middleware.py`, `policy/limits.py`, `services/ledger.py`, `agent/specialists/runner.py`, `agent/graph.py` |
-| R-48 | One demo login gates every route; role switch for a signed-in session (Innocent, 2026-10-21) | `web/middleware.py` (session check on every route except login and `/healthz`), `web/routes/auth.py` [planned, A8], role switch in the staff-session service (A9); credentials from `config.py` (`MERIDIAN_DEMO_USERNAME`, `MERIDIAN_DEMO_PASSWORD`) |
+| R-48 | One demo login gates every route; role switch for a signed-in session (Innocent, 2026-10-21) | `web/middleware.py` (session check on every route except login and `/healthz`), `web/routes/auth.py` (login; AEA-23), `web/routes/staff_session.py` (role switch; AEA-44) over `services/staff.py`; credentials from `config.py` (`MERIDIAN_DEMO_USERNAME`, `MERIDIAN_DEMO_PASSWORD`) |
 | R-42, R-43 | Public repo; deliverables | no module |
 | R-44 | Quick checks | `agent/specialists/specs.py`, `agent/nodes/compose.py`, `policy/texts.py` |
 | R-45 | Typed state; slices; no tool output in chat | `domain/state.py`, `agent/nodes/load_context.py`, `agent/nodes/reply.py`, `adapters/sqlite/repos_core.py` |
@@ -583,44 +620,53 @@ checks; `run_graph` catches `GraphRecursionError` and returns compose's halt rep
 ## 8. Build areas, waves and the collision map (input to §7)
 
 **The rule (review B-1): an area depends only on files it owns or on earlier waves.** The area that writes a table owns
-its repository file and its DDL file. A table written by several areas lives in A0. Storage has no fakes, so this is
-what lets an area build against the real thing.
+its repository file. A table written by several areas lives in A0. Storage has no fakes, so this is what lets an area
+build against the real thing.
+
+Deviation (slice plan §0, 2026-10-21): the cases tables are written by cases/handoff, demo/scheduler, reset, live chat and seed, so by this section's own rule they live in A0; the other DDL files land with them so no wave-2 ticket waits for a sibling's schema.
+So A0 (AEA-10) writes every `schema/*.sql` from the owning area's field list (still one file per area, applied by
+number) and owns `repos_cases.py` whole; the owning areas write only their repository bodies. The other two deviations
+are in §4.3 (cross-ticket reads and reset clearing live in `repos_core`) and §3 (one route file and one schema file per
+ticket).
 
 | Wave | Area | Owns | Depends on (all earlier) |
 |---|---|---|---|
-| **0** | **A0 Foundation** | `config.py`, `domain/*`, `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/*`, `adapters/sqlite/{db,migrate,repos_core}.py`, **empty class stubs of `repos_{spend,identity,booking,cases,staff,ops}.py`** (constructor only, all wired into `SqliteUnitOfWork`), `schema/00_core.sql`, `adapters/checkpointer.py`, `web/container.py` (every `register_<area>()` stub created now), `tests/fakes/` | — |
+| **0** | **A0 Foundation** | `config.py`, `domain/*` (incl. `tools.py`, `staff.py`, `identity.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/*`, `adapters/sqlite/{db,migrate,repos_core,repos_cases}.py`, **every `adapters/sqlite/schema/*.sql`** (AEA-10, from the owning area's field list), **empty class stubs of `repos_{spend,identity,booking,staff,ops}.py`** (constructor only, all wired into `SqliteUnitOfWork`), `adapters/checkpointer.py`, `web/container.py` (every `register_<area>()` stub created now), `tests/fakes/` (AEA-11), `tests/fixtures/sqlite.py` (AEA-10) | — |
 | **1** | **A1 Gates** | `gates/*` | A0 |
-| 1 | **A2 Models** | `adapters/models/*`, `agent/gateway.py`, `services/ledger.py`, `repos_spend.py`, `schema/20_spend.sql` | A0 |
-| 1 | **A3 Retrieval** | `retrieval/*`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | A0 (`domain/tools.py`, `RetrievalIndex`) |
-| 1 | **A4 Identity** | `services/identity.py`, `repos_identity.py` (+ invoices read), `schema/40_identity.sql`, `agent/tools/account.py` | A0 (customers, actions in `repos_core`) |
-| 1 | **A5 Scheduling** | `policy/booking.py`, `services/scheduling.py`, `repos_booking.py`, `schema/50_booking.sql`, `agent/tools/scheduling.py` | A0 |
-| 1 | **A6 Cases and handoff** | `policy/handoff.py`, `services/{cases,handoff,demo,scheduler,reset}.py`, `repos_cases.py`, `schema/60_cases.sql` | A0 (`events`, `actions`, checkpointer callables, `migrate.restore_working_copy`) |
-| 1 | **A10a Ops** | `adapters/tracing_langfuse.py`, `services/health.py`, `repos_ops.py`, `schema/95_ops.sql` | A0 |
+| 1 | **A2 Models** | `adapters/models/*`, `agent/gateway.py`, `services/ledger.py`, `repos_spend.py` (body) | A0 |
+| 1 | **A3 Retrieval** | `retrieval/{settings,manifest,ingest}.py`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | A0 (`domain/tools.py`, `RetrievalIndex`) |
+| 1 | **A4 Identity** | `services/identity.py`, `repos_identity.py` (body, + invoices read), `agent/tools/account.py` | A0 (customers, actions in `repos_core`) |
+| 1 | **A5 Scheduling** | `policy/booking.py`, `services/scheduling.py`, `repos_booking.py` (body), `agent/tools/scheduling.py` | A0 |
+| 1 | **A6 Cases and handoff** | `policy/handoff.py`, `services/{cases,handoff,demo,scheduler,reset}.py` | A0 (`events`, `actions`, `repos_cases`, checkpointer callables, `migrate.restore_working_copy`) |
+| 1 | **A10a Ops** | `adapters/tracing_langfuse.py`, `services/health.py`, `repos_ops.py` (body) | A0 |
 | 1 | **A11 Eval harness** | `eval/**` | the HTTP contracts only (DO-4); frozen before scored runs |
-| **2** | **A7a Graph spine** | `agent/{graph,routers,context}.py`, `agent/nodes/{load_context,compose}.py`, stubs of `nodes/{front,plan,act,reply}.py` | A0 |
-| 2 | **A8 Customer API** | `web/{app,middleware}.py`, `web/schemas/customer.py`, `web/routes/{chat,events,demo}.py`, `services/{turn,session}.py`; serves CON-1…CON-7, CON-8 read, CON-9 (incl. the `form` payload and `getChatThread`) | A0, A1 (`parse_intake`), A2 (SpendGuard), A4 (inbox), A6 (demo, reset); the graph as an injected `run_graph` callable |
-| 2 | **A9 Staff console** | `web/routes/staff.py`, `web/schemas/staff.py`, `services/{live_chat,staff}.py`, `repos_staff.py`, `schema/90_staff.sql`; serves CON-8 advance (supervisor only), CON-10…CON-17 and **CON-21** (staff SSE per case); provides `require_staff(roles)` | A0, A6 (`CaseService`, `DemoService`) |
-| 2 | **A12 Deploy** | `Dockerfile`, `railway.json`, `scripts/` | A0 (migrate), A3 (index build) |
+| **2** | **A7a Graph spine** | `agent/{graph,routers,context,signals}.py`, `agent/nodes/{load_context,compose}.py`, stubs of `nodes/{front,plan,act,reply}.py` | A0 |
+| 2 | **A8 Customer API** | `web/{app,middleware,deps,errors,logging,frontend}.py`; `web/routes/{auth,chat,events,handoff,demo}.py`, each with its own `web/schemas/<name>.py`; `services/{turn,session,reset_gate,person_request}.py`; serves CON-1…CON-7, CON-8 read, CON-9 (incl. the `form` payload and `getChatThread`) and CON-22 (login) | A0, A1 (`parse_intake`), A2 (SpendGuard), A4 (inbox), A6 (demo, reset); the graph as an injected `run_graph` callable |
+| 2 | **A9 Staff console** | `web/routes/staff_{session,cases,live,clock}.py`, each with its own `web/schemas/<name>.py`; `services/{live_chat,staff}.py`, `repos_staff.py` (body); serves CON-8 advance (supervisor only), CON-10…CON-17 and **CON-21** (staff SSE per case); `services/staff.py` implements `require_staff(*roles)`, which `web/deps.py` (AEA-23, A8) declares | A0, A6 (`CaseService`, `DemoService`), AEA-23's `web/deps.py` |
+| 2 | **A12 Deploy** | `Dockerfile`, `railway.json`, `scripts/{agent_version,reset}.py` | A0 (migrate), A3 (index build) |
 | **3** | **A7b Act** | `nodes/act.py`, `agent/specialists/*`, `agent/tools/dispatch.py`, `policy/escalation.py`, `prompts/specialists.py` | A2, A3, A4, A5, A6, A7a |
 | 3 | **A7c Reply** | `nodes/reply.py`, `checks.py`, `prompts/reply.py` | A2, A6 (`BriefAssembler`), A7a |
 | 3 | **A7d Front** | `nodes/{front,plan}.py`, `prompts/routing.py` | A1, A2, A4, A6, A7a |
-| 3 | **A10b Reads** | `services/metrics_reader.py`, `web/routes/reads.py` (CON-18…CON-20) | A0, A2, A6, A9 (`require_staff` for CON-18), A10a; moved from wave 2 because CON-18 needs the staff session check |
+| 3 | **A10b Reads** | `web/routes/reads.py` with `web/schemas/reads.py`, `services/metrics_reader.py` (CON-18…CON-20). The route is built in ticket wave 2 (AEA-48), because `require_staff` is declared in `web/deps.py` by AEA-23; the reader in ticket wave 3 (AEA-53) | A0, A2, A6, A9 (`require_staff` for CON-18), A10a |
 
 **Collision map (files more than one area touches).**
 
 | File | Touched by | How collisions are avoided |
 |---|---|---|
 | `web/container.py` | every area that adds an adapter or service | A0 writes one `register_<area>()` stub per area in wave 0; each area edits only its own function's hunk (review C-3) |
-| `adapters/sqlite/repos_{spend,identity,booking,cases,staff,ops}.py` | A0 (stub), then A2 / A4 / A5 / A6 / A9 / A10a | A0 creates each as an empty class with its constructor and wires all seven into `SqliteUnitOfWork` in wave 0; after that each file's body has one owner (spend A2, identity A4, booking A5, cases A6, staff A9, ops A10a). `db.py` and `ports/runtime.py` stay frozen (review RB-1) |
-| `adapters/sqlite/schema/*.sql` | one file per owning area | `migrate.py` applies them in numeric order; no shared DDL file |
-| `adapters/sqlite/repos_core.py` (`events`, `actions`, `lookup_log`, `messages`, `conversations`) | written by A4, A5, A6, A7, A8, A9 | Owned by A0; frozen after wave 0. A new method is its own small A0 ticket |
+| `web/deps.py` | AEA-23 (A8) only; every route ticket imports from it | Declares every service provider including `require_staff(*roles)`; a new provider is a follow-up on AEA-23 |
+| `adapters/sqlite/repos_{spend,identity,booking,staff,ops}.py` | A0 (stub), then A2 / A4 / A5 / A9 / A10a | A0 creates each as an empty class with its constructor and wires all seven repositories (these five, `repos_core`, `repos_cases`) into `SqliteUnitOfWork` in wave 0; after that each file's body has one owner (spend A2, identity A4, booking A5, staff A9, ops A10a). `repos_cases.py` is A0's (AEA-10), whole. `db.py` and `ports/runtime.py` stay frozen (review RB-1) |
+| `adapters/sqlite/schema/*.sql` | AEA-10 (A0) only | Every file is written by A0 from the owning area's field list; `migrate.py` applies them in numeric order. A missing column is a small follow-up on AEA-10, merged first |
+| `adapters/sqlite/repos_core.py` (`events`, `actions`, `lookup_log`, `messages`, `conversations`, the cross-ticket reads) | written by A4, A5, A6, A7, A8, A9 | Owned by A0 (AEA-10); frozen after wave 0. A new method is its own small A0 ticket |
 | `domain/*` | read by all | Frozen after wave 0; a shared-type change is its own ticket, merged before dependants |
 | `agent/nodes/{front,plan,act,reply}.py` | A7a (stub), then A7d / A7d / A7b / A7c | Sequential by wave; after A7a each file has exactly one owner |
 | `web/templates/`, `web/static/` | none (reconciled 2026-10-21, slice plan AEA-08) | Directories dropped. `apps/web/` (React) exists, built 2026-10-21, UX-4 gate unsigned; A8/A9 are API only; AEA-49 (A8/A12) serves `apps/web/dist` with fallback to `index.html` (planned); `jinja2` droppable |
-| `web/routes/{chat,staff}.py`, `web/schemas/{customer,staff}.py` | A8, A9 (reconciled 2026-10-21, AEA-08) | Split so one ticket owns one file: `routes/chat.py` (CON-1, 2) + `routes/handoff.py` (CON-4, 5) + `routes/{events,demo,auth}.py`; `routes/staff_{session,cases,live,clock}.py`; one `schemas/<route>.py` per route file |
-| `tests/fakes/` | A0 | Areas put their own fixtures in their own test folders |
+| `web/routes/*.py`, `web/schemas/*.py` | A8, A9, A10b: one route file and its schema file per ticket (slice plan §3) | `auth` AEA-23, `chat` AEA-40, `events` AEA-41, `handoff` AEA-42, `demo` AEA-43, `staff_session` AEA-44, `staff_cases` AEA-45, `staff_live` AEA-46, `staff_clock` AEA-47, `reads` AEA-48; no ticket edits another's route or schema file |
+| `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-11 (`fakes/`, incl. `clock.py`), AEA-10 (`fixtures/sqlite.py`) | Two folders, so the two tickets never share one. Areas put their own fixtures in their own test folders |
 
 **Critical path:** A0 → A7a → A7b/A7c/A7d → integration. Wave 1 runs eight areas in parallel against A0 alone.
+
+**Build order and ticket waves are the slice plan's ([§1](../plans/slice-plan.md) tickets, §2 parallelism audit); the area waves above stay as the dependency rule.** The ticket table is not copied into this file.
 
 ---
 
@@ -628,9 +674,10 @@ what lets an area build against the real thing.
 
 ```
 tests/                                       planned
-├── fakes/            FakeChoiceModel, FakeStructuredModel, FakeToolModel (scripted), FixedClock, FakeIndex,
-│                     InMemoryTraceSink, temp_sqlite() fixture (applies every schema/*.sql to a temp working copy)
-│                     (Stage 7, 2026-10-21, CAS-4: temp_sqlite() moves to tests/fixtures/sqlite.py, owned by AEA-10)
+├── fakes/            FakeChoiceModel, FakeStructuredModel, FakeToolModel (scripted), FakeIndex,
+│                     InMemoryTraceSink (AEA-11); fakes/clock.py: FixedClock (AEA-11; stage7/data.md §8a, DAT-32)
+├── fixtures/         sqlite.py: temp_sqlite() applies every schema/*.sql to a temp working copy (AEA-10; DAT-10,
+│                     stage7/cases.md §1.5, CAS-4). Moved here from fakes/ so AEA-10 and AEA-11 never share a folder
 ├── unit/             mirrors src/meridian/: unit/gates/test_rules.py, unit/test_checks.py,
 │                     unit/policy/test_handoff.py, unit/privacy/test_redact.py, unit/agent/test_routers.py, …
 ├── contract/         test_model_ports_contract.py (JevAdapter + AnthropicAdapter, recorded fixtures: same failure
@@ -675,10 +722,10 @@ tests/                                       planned
 
 | Finding | Status | What changed |
 |---|---|---|
-| **B-1** wave-1 areas depend on later or sibling areas | **Fixed** | Tool types moved to `domain/tools.py` (A0). Repositories split by writer: `repos_spend` (A2), `repos_identity` with invoices (A4), `repos_booking` (A5), `repos_cases` with `demo_state` and job/reset/seed records (A6), `repos_staff` (A9), `repos_ops` (A10a); multi-writer tables (`events`, `actions`, `lookup_log`, `messages`, `conversations`, `customers`) in A0's `repos_core`. Checkpointer prune and clear in A0, handed to A6 as callables. §8 rechecked: every area's dependencies are earlier waves |
+| **B-1** wave-1 areas depend on later or sibling areas | **Fixed** | Tool types moved to `domain/tools.py` (A0). Repositories split by writer: `repos_spend` (A2), `repos_identity` with invoices (A4), `repos_booking` (A5), `repos_cases` with `demo_state` and job/reset/seed records (A6) (file split per ticket since 2026-10-21, §8), `repos_staff` (A9), `repos_ops` (A10a); multi-writer tables (`events`, `actions`, `lookup_log`, `messages`, `conversations`, `customers`) in A0's `repos_core`. Checkpointer prune and clear in A0, handed to A6 as callables. §8 rechecked: every area's dependencies are earlier waves |
 | **RB-1** (re-review) `SqliteUnitOfWork` constructs repo classes later waves create | **Fixed** | A0 creates all six per-area `repos_*.py` as empty class stubs in wave 0, wires all seven into `SqliteUnitOfWork`, and types the port's attributes against them under `TYPE_CHECKING`; each owning area fills only its own file; collision-map row added (§8) |
 | **B-2** A0 is a ~30-module critical path | **Fixed** | Repository Protocols dropped (UoW kept as the boundary). Policy moved to consumers: zones + fees → `policy/booking.py` (A5); promises + priorities → `policy/handoff.py` (A6); escalation → A7b whole; claim lexicon inline in `checks.py`. A0 is now 20 modules + one DDL file, holding only what two or more areas read (`privacy/redact.py` stays in A0 because A1, A2, A8 and A10a all use it) |
-| S-1 ~40 files hide nothing | **Fixed (113 → 80)** | The review's merges applied: `domain/common.py`; `ports/` to two files; `checks.py`; nodes grouped into `front`, `plan`, `act`, `reply`; `classify.py` removed; `services/staff.py`; `schemas/customer.py`; page routes inside their CON route files; repo Protocols and the UoW contract test deleted. Also merged: `presence` + `clock_control` + demo clock → `services/demo.py`; `brief` into `services/handoff.py`; prompts to three files; `ingest` + `build_index` |
+| S-1 ~40 files hide nothing | **Fixed (113 → 80)** | The review's merges applied: `domain/common.py`; `ports/` to two files; `checks.py`; nodes grouped into `front`, `plan`, `act`, `reply`; `classify.py` removed; `services/staff.py`; `schemas/customer.py` (file split per ticket since 2026-10-21, §8); page routes inside their CON route files; repo Protocols and the UoW contract test deleted. Also merged: `presence` + `clock_control` + demo clock → `services/demo.py`; `brief` into `services/handoff.py`; prompts to three files; `ingest` + `build_index` |
 | S-2 shared `classify.py` | **Fixed** | Each adapter maps its own failures; `tests/contract/test_model_ports_contract.py` holds the shared promise |
 | S-3 services import adapters | **Fixed** | `ResetService` and `SchedulerJob` receive `restore_working_copy`, `clear_checkpoints`, `prune_checkpoints`, `seed_demo` as callables from the container |
 | S-4 gateway configurable into a Liskov break | **Fixed** | Gateway built with typed `choice` / `structured` / `tools` maps; `Settings` rejects a role-provider mismatch at start-up (DO-4 §12) |
@@ -697,7 +744,7 @@ tests/                                       planned
 ### UX-3 reconciliation (2026-10-21)
 
 The UX-3 contracts (`UI_CONTRACTS.md`, `ui-contracts.openapi.yaml`, proposals) moved four things here: CON-21 (staff
-SSE per case) and the supervisor-only clock advance are served by A9's `routes/staff.py`; the `form` payload is parsed
+SSE per case) and the supervisor-only clock advance are served by A9's `routes/staff.py` (file split per ticket since 2026-10-21, §8); the `form` payload is parsed
 by A1's `gates/gate.py` and served by A8; A10b moved to wave 3 because CON-18 needs A9's `require_staff`. Field-level
 agreement and the requests UXR-21…UXR-26 are in [contracts/api-con-mapping.md](contracts/api-con-mapping.md); the count
 is unchanged at 80 modules.

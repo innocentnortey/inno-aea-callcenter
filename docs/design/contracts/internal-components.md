@@ -296,10 +296,12 @@ read or a single write through the scheduling service (DO-2 §A.1). Danger routi
 
 ## 5. Specialist contracts
 
+> Superseded at Stage 7: the SONNET profile also masks contact details: emails, street addresses, and phones down to their last two digits (system design §3.2 and §10 *What each vendor sees*; [stage7/data.md](stage7/data.md) §1, DAT-5). The comments on `customer_text`, `task_messages` and `wanted_text` below read that way; no field or type changes.
+
 ```python
 class SpecialistTask(MeridianModel):
     task: PlannedTask
-    customer_text: str                                # SONNET profile: card-like numbers and codes masked
+    customer_text: str                                # SONNET profile: card-like numbers and codes masked, emails, street addresses; phones to their last two digits
     task_messages: tuple[str, ...]                    # the customer's messages for this open task, same profile
     slice: KnowledgeSlice | AccountSlice | SchedulingSlice   # only what the specialist needs (R-45)
 
@@ -392,7 +394,7 @@ class WriteResult(MeridianModel):
 class ChangeRequestDraft(MeridianModel):              # R-21, R-22: recorded, appointment untouched
     appointment_id: int
     change: Literal["move", "cancel"]
-    wanted_text: str                                  # the customer's words (SONNET profile)
+    wanted_text: str                                  # the customer's words (SONNET profile: emails, street addresses; phones to their last two digits)
     windows_shown: tuple[int, ...]                    # shown, not held
     hours_before: float                               # on the demo clock
     window_start: datetime                            # → internal due time (DO-1 §5.2 step 7)
@@ -876,6 +878,8 @@ the attempt count stays at 2 (DO-1 §11 decision 5 is not an SDQ and is unchange
 
 ## 13. Other ports, storage and the case service
 
+> Superseded at Stage 7: `UnitOfWork.cases` (`CaseRepos`) belongs to A0 (AEA-10), not A6: AEA-10 owns `repos_cases.py` whole and writes every `schema/*.sql`, because five tickets write the cases tables (slice plan §0 deviation 1; [code-design.md](../code-design.md) §8). The `# A6` comments and the "owned by the area that writes its tables" sentence below are read that way.
+
 > Superseded at Stage 7: AEA-02 creates all seven `adapters/sqlite/repos_*.py` as empty shells; AEA-10 writes every `schema/*.sql` and fills `repos_core` and `repos_cases`, and AEA-26, 27, 28, 44, 32 fill spend, identity, booking, staff, ops (slice plan §0 deviation 1, rows AEA-02 and AEA-10; merge-clashes MC-10); added repository methods: [stage7/cases.md](stage7/cases.md) §1.2.
 
 > Superseded at Stage 7: `TraceSink.export_status` takes the turn's handle, `export_status(turn: SpanHandle)` ([stage7/models.md](stage7/models.md) §4, MOD-9; MC-28).
@@ -918,7 +922,7 @@ class UnitOfWork(Protocol):                           # the transaction boundary
     spend: SpendRepo           # A2
     identity: IdentityRepos    # A4: identity_codes, demo_inbox, invoices (read)
     booking: BookingRepos      # A5: appointment_slots, appointments, technicians
-    cases: CaseRepos           # A6: cases, case_events, promises, followups, activities, demo_state, job_runs, reset/seed
+    cases: CaseRepos           # A0 (AEA-10): cases, case_events, promises, followups, activities, demo_state, job_runs, reset/seed
     staff: StaffRepos          # A9: staff_sessions, flags
     ops: OpsRepos              # A10a: health_events, deploy_records, eval results (read)
     def commit(self) -> None: ...
@@ -953,6 +957,8 @@ class CaseService:                                    # services/cases.py (A6): 
 
 ## 14. Service signatures used across areas
 
+> Superseded at Stage 7: `NotVerified` no longer covers "cap reached": the fourth send returns `CodeCapReached` (`CODE_CAP_REACHED`), and a failed code is `CodeWrong`, `CodeExpired` or `CodeLocked` ([stage7/graph-tools.md](stage7/graph-tools.md) §5, GRT-3; graph-tools ledger C-12). The `NotVerified` comment in `IdentityService` below is corrected to match.
+
 > Superseded at Stage 7: `ResetService` takes web's `ResetGate` and `reset(now, *, request_id, session_id, role) -> ResetDone | ResetFailed` (`None, None` for the operator script), and `SchedulerJob` gains a UTC `wall_clock`: [stage7/cases.md](stage7/cases.md) §6–§7, merge-clashes MC-19, MC-20.
 
 ```python
@@ -977,7 +983,7 @@ class IdentityService:                               # each method opens and com
                                                       # Verified writes actions(verified) in the same transaction
     def inbox(self, demo_session: str, now: datetime) -> tuple[InboxMessage, ...]: ...       # CON-6, scoped (N-11)
     # Codes: 6 digits, HMAC-SHA256(session secret), 10-minute expiry, 3 tries, ≤ 3 sends per conversation [A].
-    # NotVerified is identical for no match, ambiguous, no contact and cap reached (R-16).
+    # NotVerified is identical for no match, ambiguous and no contact (R-16).
 
 class SchedulingService:                             # each method opens and commits its own transaction
     def find_windows(self, query: WindowQuery, now: datetime) -> WindowsFound | OutOfArea: ...
