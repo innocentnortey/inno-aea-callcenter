@@ -296,6 +296,8 @@ read or a single write through the scheduling service (DO-2 §A.1). Danger routi
 
 ## 5. Specialist contracts
 
+> Stage 7: the dispatcher's public API and executor registration (`ToolRegistry`, `ToolDispatcher.schemas` / `dispatch`, `DispatchedCall`, `ToolCallRecord`) are defined in [stage7/graph-tools.md](stage7/graph-tools.md) §1 (GRT-1); built by AEA-22 in `agent/tools/dispatch.py`.
+
 > Superseded at Stage 7: the SONNET profile also masks contact details: emails, street addresses, and phones down to their last two digits (system design §3.2 and §10 *What each vendor sees*; [stage7/data.md](stage7/data.md) §1, DAT-5). The comments on `customer_text`, `task_messages` and `wanted_text` below read that way; no field or type changes.
 
 ```python
@@ -870,6 +872,8 @@ second only for a retryable failure whose wait (`retry_after_s`, or backoff 0.5�
 attempt writes a `spend_ledger` row and a masked span; `PROVIDER_SPEND_CAP` trips the circuit (`services/ledger.py`);
 the per-turn Sonnet-call brake (6, proposal) is counted here.
 
+> Built (AEA-20, `src/meridian/agent/gateway.py`, 2bcb8fb) to the rules as restated in [stage7/models.md](stage7/models.md) §5: provider admission through `ledger.admit_call` replaces "refuse at once if models are disabled (our cap …)"; our $30 cap is checked before the turn (MOD-11).
+
 **Role caps under the 60 s deadline [Decided SDQ-1].** The deadline bounds the turn; the role caps (proposal) bound
 each call, so one stalled call cannot use the whole minute. With 60 s, the one retry DO-1 allows almost always fits;
 the attempt count stays at 2 (DO-1 §11 decision 5 is not an SDQ and is unchanged).
@@ -883,6 +887,16 @@ the attempt count stays at 2 (DO-1 §11 decision 5 is not an SDQ and is unchange
 > Superseded at Stage 7: AEA-02 creates all seven `adapters/sqlite/repos_*.py` as empty shells; AEA-10 writes every `schema/*.sql` and fills `repos_core` and `repos_cases`, and AEA-26, 27, 28, 44, 32 fill spend, identity, booking, staff, ops (slice plan §0 deviation 1, rows AEA-02 and AEA-10; merge-clashes MC-10); added repository methods: [stage7/cases.md](stage7/cases.md) §1.2.
 
 > Superseded at Stage 7: `TraceSink.export_status` takes the turn's handle, `export_status(turn: SpanHandle)` ([stage7/models.md](stage7/models.md) §4, MOD-9; MC-28).
+
+> Built (AEA-16, `fe12657`): the index directory `retrieval/ingest.py` writes. `manifest.json` (17 `ManifestRow`s
+> sorted by `path`); `passages.jsonl` (one `Passage` per line without `score`, plus `embed_text` = `section + "\n" + text`;
+> row order = vector order); `vectors.npy` (float32 `[chunks, dimension]`, L2-normalised); `index_record.json` (the five
+> `IndexInfo` fields at the top level plus `settings`, every `retrieval/settings.py` constant by its Python name; read it as
+> `IndexInfo.model_validate({k: record[k] for k in IndexInfo.model_fields})`); `ingest_run.json` (`IngestRun`);
+> `staff_notes.json` (`StaffGuidance` list, one per bullet, never embedded). `manifest_hash` = SHA-256 of the canonical
+> JSON (sorted keys, separators `(",", ":")`, UTF-8) of the 17 rows' `model_dump(mode="json")` in `path` order, including
+> `source_sha256` (for the PNG: the image bytes followed by the transcription bytes) and `chunks`. Shapes:
+> [stage7/data.md](stage7/data.md) §3.
 
 ```python
 class RetrievalResult(MeridianModel):
