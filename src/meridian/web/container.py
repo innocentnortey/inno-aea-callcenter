@@ -191,8 +191,104 @@ def register_web(container: Container, app: FastAPI, *, settings: Any, limits: L
 def register_ops(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-32 ops: health events, heartbeat, watchdog, alerts (cases.md §8).
 
-    No-op until AEA-32 fills it.
+    Provides deps.HEARTBEAT (the Heartbeat /healthz reads), Key[AlertWriter]("alert_writer") (AEA-19 binds the trace
+    sink's on_alert to it) and Key[AlertSettings]("alert_settings") (AEA-53). Its starter runs the heartbeat task on the
+    lifespan's event loop and the watchdog thread; it reads Key("uow_factory") (AEA-10), Key("wall_clock") (AEA-23) and
+    Key("ledger") (AEA-26). An app that create_app did not build has no /healthz to probe, so this does nothing.
     """
+    import asyncio
+    import os
+    import threading
+    import time
+
+    import httpx
+
+    from meridian.services.health import (
+        AlertEvaluator,
+        AlertSettings,
+        AlertWriter,
+        Heartbeat,
+        SpendReader,
+        Watchdog,
+        run_beats,
+    )
+    from meridian.web import deps
+    from meridian.web.middleware import HEALTHZ_PATH, WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    alert_settings = AlertSettings()
+    agent_version = str(settings.agent_version)
+    heartbeat = Heartbeat(alert_settings, started_mono=time.monotonic())
+    running: dict[str, Any] = {}
+
+    container.provide(Key[AlertSettings]("alert_settings"), lambda _c: alert_settings)
+    container.provide(deps.HEARTBEAT, lambda _c: heartbeat)
+    container.provide(
+        Key[AlertWriter]("alert_writer"),
+        lambda c: AlertWriter(c.get(deps.UOW_FACTORY), c.get(deps.WALL_CLOCK), agent_version),
+    )
+
+    def hard_exit(code: int) -> None:
+        os._exit(code)  # sys.exit in a thread would end only the thread; Railway restarts on a non-zero exit
+
+    def start() -> None:
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            raise RuntimeError("register_ops: start needs the app lifespan's running event loop") from None
+        uow = container.get(deps.UOW_FACTORY)
+        wall_clock = container.get(deps.WALL_CLOCK)
+        evaluator = AlertEvaluator(
+            uow,
+            container.get(Key[SpendReader]("ledger")),
+            alert_settings,
+            wall_clock,
+            limits.spend.daily_cap_usd,
+            agent_version=agent_version,
+        )
+
+        async def healthz_ok() -> bool:
+            transport = httpx.ASGITransport(app=app)
+            async with httpx.AsyncClient(transport=transport, base_url="http://watchdog.local") as client:
+                response = await client.get(HEALTHZ_PATH)
+            return response.status_code == 200
+
+        def probe() -> bool:
+            future = asyncio.run_coroutine_threadsafe(healthz_ok(), loop)
+            try:
+                return future.result(timeout=alert_settings.probe_timeout_s)
+            except Exception:
+                future.cancel()
+                return False
+
+        watchdog = Watchdog(
+            uow, probe, hard_exit, evaluator, alert_settings, wall_clock, agent_version=agent_version
+        )
+        stop = threading.Event()
+        thread = threading.Thread(
+            target=watchdog.run_until, args=(stop,), name="meridian-watchdog", daemon=True
+        )
+        running.update(
+            loop=loop,
+            stop=stop,
+            thread=thread,
+            task=loop.create_task(run_beats(heartbeat, alert_settings), name="meridian-heartbeat"),
+        )
+        thread.start()
+
+    def close() -> None:
+        stop = running.get("stop")
+        if stop is not None:
+            stop.set()
+            running["thread"].join(timeout=1.0)
+        task, loop = running.get("task"), running.get("loop")
+        if task is not None and loop is not None:
+            with contextlib.suppress(RuntimeError):
+                loop.call_soon_threadsafe(task.cancel)
+
+    container.on_start(start)
+    container.on_close(close)
 
 
 def register_tracing(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -365,6 +461,20 @@ def register_reset(container: Container, app: FastAPI, *, settings: Any, limits:
             seed_demo, assembler=sibling("meridian.services.handoff", "BriefAssembler")()
         )
 
+    def lazy_seed(tx: Any) -> int:
+        # Resolved on first call, so the container builds before AEA-29 lands.
+        return seed()(tx)
+
+    def lazy_format_clock(*args: Any, **kwargs: Any) -> Any:
+        return sibling("meridian.services.demo", "format_clock")(*args, **kwargs)
+
+    def sibling_present(module: str) -> bool:
+        try:
+            importlib.import_module(module)
+        except ImportError:
+            return False
+        return True
+
     def build(c: Container) -> ResetService:
         checkpointer = c.get(Key[Any]("checkpointer"))
         return ResetService(
@@ -372,11 +482,13 @@ def register_reset(container: Container, app: FastAPI, *, settings: Any, limits:
             c.get(RESET_GATE),
             c.get(Key[Any]("restore_working_copy")),
             checkpointer.clearing,
-            seed(),
-            format_clock=sibling("meridian.services.demo", "format_clock"),
+            lazy_seed,
+            format_clock=lazy_format_clock,
         )
 
     def first_boot() -> None:
+        if not sibling_present("meridian.services.handoff"):
+            return  # AEA-29 not merged yet: nothing to assemble briefs with, so no first-boot seed
         seed_first_boot(container.get(UOW_FACTORY), seed(), container.get(WALL_CLOCK)())
 
     container.provide(RESET_SERVICE, build)
