@@ -10,7 +10,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-04 | #4 | B sec | ready | | | | - |
 | AEA-05 | #5 | B | ready | | | | AEA-02 |
 | AEA-06 | #6 | B | ready | | | | - |
-| AEA-07 | #7 | D | ready | | | | - |
+| AEA-07 | #7 | D | merged | main | 5073dd0 | docs/technical-documentation.md: 13 sections, links resolve, figures sourced or pending, 6+1 open decisions labelled proposed; diff touches docs, SUBMISSION.md and .claude/state only | - |
 | AEA-08 | #8 | D | ready | | | | - |
 | AEA-10 | #10 | B | ready | | | | AEA-01,AEA-02 |
 | AEA-11 | #11 | B | ready | | | | AEA-01,AEA-02 |
