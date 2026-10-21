@@ -33,6 +33,7 @@ GROUPS = (
     "booking",
     "limits",
     "live",
+    "history",
     "demo",
 )
 EXPECTED_COUNTS = {
@@ -45,6 +46,7 @@ EXPECTED_COUNTS = {
     "booking": 16,
     "limits": 7,
     "live": 6,
+    "history": 2,
     "demo": 12,
 }
 
