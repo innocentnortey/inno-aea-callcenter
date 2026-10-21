@@ -27,6 +27,7 @@ dev = [
   "pyyaml>=6.0",
   "types-pyyaml>=6.0",
   "types-jsonschema>=4.18",
+  "pytest-playwright>=0.10",
 ]
 
 [build-system]
