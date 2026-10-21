@@ -1716,3 +1716,22 @@ Recorded by the implementer (pass 1, base `main` at `6659403`, 2026-10-21).
 3. **`open_customer_run`'s default is a module constant** (`DEFAULT_OPTIONS = RunOptions()`), because ruff B008 forbids a call
    in an argument default. Same behaviour, same signature otherwise.
 4. **Check 6 (strict contract mode)** is not run in pass 1, as §5 *Two passes* says.
+
+Recorded by the implementer (pass 2, merged with pass 1; main at `7d05619`, 2026-10-21).
+
+2. **Pass 2 built as one pass (2a and 2b together).** AEA-21b (cards) and AEA-19-F1 (trace override) had merged by the relaunch, so
+   `Key("run_graph")`, the trace override, the WP drivers, composition, failures, relayed turn, CAP-1..3 and J-2..J-5, J-9 are all built.
+3. **Seam defects found and kept as strict xfails** (expectations unchanged, never weakened): F-1 identity-resume loses an unverified
+   customer's burning `no` plan and the three-wrong-codes `identity_unverified` P3 (3 tests in `test_worked_pairs_api.py`); F-2 the
+   WP-6 `no` P2 is not moved to the booked window start (CAS-16 A); F-4 `PersonRequestService.request()` opens its first write
+   transaction outside the `try` so a held lock gives 500 not 503; F-5 `PersonRequestService` emits no child span (both in
+   `test_cap3_handoff.py`). Each needs a follow-up owned by the named area.
+4. **Sibling test now red: `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`** (R-23). It expects the
+   limiter to refuse exactly the 21st turn; with real graph turns taking time the token bucket refills, so the notice comes a few
+   turns later. Not edited. AEA-51's own J-9 step 5 loops up to 60 turns and passes. Request: AEA-40's owner loosens it to "refused within
+   the first N turns, with N > 20".
+5. **Known reds on `main`, unchanged:** `test_no_journey_yet_prints_zero_and_exits_0`, `test_wf15_reset_script`; a timing flake
+   `test_wf13_wrong_project_keys_turn_export_off[right]` under `-n 2` (green alone). `CONTRACT_STRICT=1` has one red,
+   `test_openapi_fixtures.py` "ux fixture dump missing: docs/plans/ux-join/selectors.md" (the file is absent on main too; UX's).
+6. **Journey record's Claim field** from AEA-57's recorder said "browser level"; the AEA-51 journeys are API level, so the Claim and
+   Remaining limitations were corrected by hand in `docs/testing/journeys/2026-10-21-AEA-51.md`.
