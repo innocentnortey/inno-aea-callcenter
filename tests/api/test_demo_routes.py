@@ -223,7 +223,7 @@ def test_clock_is_demo_clock_and_get_only(monkeypatch: pytest.MonkeyPatch, tmp_p
         m
         for route in build_router().routes
         if isinstance(route, APIRoute) and route.path == CLOCK
-        for m in route.methods
+        for m in (route.methods or set())
     }
     assert methods == {"GET"}
     app_methods: set[str] = set()
