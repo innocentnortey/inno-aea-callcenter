@@ -447,8 +447,65 @@ def register_cases(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_demo(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-30 demo: DemoClock, staffing, the scheduler job thread (cases.md §6).
 
-    No-op until AEA-30 fills it.
+    Provides Key("demo_clock") (the one Clock every service and node receives), deps.DEMO_SERVICE ("demo_service",
+    behind get_demo_service), Key("scheduler_job") and Key("scheduler_thread"). Reads deps.UOW_FACTORY and
+    Key("checkpointer") (AEA-10) and deps.WALL_CLOCK (AEA-23); reaches deps.CASE_SERVICE (AEA-29 / AEA-51) only when a
+    shift ends, and until it is bound that shift end raises RuntimeError("not bound: case_service") and rolls back. The
+    thread starts after every object is built and stops before storage closes. An app that create_app did not build has
+    no web shell, so this does nothing.
     """
+    from meridian.adapters.checkpointer import Checkpointer
+    from meridian.services.demo import DeferredCases, DemoClock, DemoService, LiveQueueConverter
+    from meridian.services.scheduler import SchedulerJob, SchedulerThread
+    from meridian.web import deps
+    from meridian.web.middleware import WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+
+    clock_key = Key[DemoClock]("demo_clock")
+    job_key = Key[SchedulerJob]("scheduler_job")
+    thread_key = Key[SchedulerThread]("scheduler_thread")
+
+    def resolve_cases() -> LiveQueueConverter:
+        try:
+            found: LiveQueueConverter = container.get(deps.CASE_SERVICE)
+        except ContainerError as exc:
+            if str(exc) == f"not provided: {deps.CASE_SERVICE.name}":
+                raise RuntimeError(f"not bound: {deps.CASE_SERVICE.name}") from None
+            raise
+        return found
+
+    cases = DeferredCases(resolve_cases)  # PA-7: resolved at a shift end, never at build
+
+    def build_demo(c: Container) -> DemoService:
+        return DemoService(
+            c.get(deps.UOW_FACTORY), c.get(clock_key), cases, wall_clock=c.get(deps.WALL_CLOCK)
+        )
+
+    def build_job(c: Container) -> SchedulerJob:
+        checkpointer = c.get(Key[Checkpointer]("checkpointer"))
+        return SchedulerJob(
+            c.get(deps.UOW_FACTORY),
+            cases,  # the cases §6 slot; the tick never calls it
+            c.get(clock_key),
+            lambda: checkpointer.prune(keep=2),  # SDQ-10: keep 2
+            c.get(deps.WALL_CLOCK),
+        )
+
+    container.provide(clock_key, lambda c: DemoClock(c.get(deps.UOW_FACTORY)))
+    container.provide(deps.DEMO_SERVICE, build_demo)
+    container.provide(job_key, build_job)
+    container.provide(thread_key, lambda c: SchedulerThread(c.get(job_key).tick))
+
+    def start_thread() -> None:
+        thread = container.get(thread_key)
+        container.on_close(
+            thread.stop
+        )  # registered after build -> runs before checkpointer.close (newest first)
+        thread.start()
+
+    container.on_start(start_thread)
 
 
 def register_reset(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
