@@ -19,37 +19,37 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-14 | #14 | B | merged | main | 551b13c (merge of 37ee4d9) | ruff check/format clean; mypy clean (47 files); 225 affected tests passed (policy, gates, import direction, affected journeys, skeleton, web container); journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
 | AEA-15 | #15 | B | merged | aea-15-checks-completion-facts | e9a8740 (merge of fef0897) | ruff check/format clean; mypy clean (118 files); unit suite 575 passed (src/meridian/checks.py and tests/unit/test_checks.py new; no shared fixture/config touched); journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-16 | #16 | B | merged | aea-16-aea-16-retrieval-ingest | 576a4bf | ruff check/format clean; mypy clean (50 files); affected tests 25 passed (retrieval, skeleton, import direction) plus 17 affected-journey tests; journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
-| AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
-| AEA-18 | #18 | B sec | planned | aea-18-aea-18-jev-adapter |  |  | AEA-02 |
+| AEA-17 | #17 | B sec | blocked | aea-17-aea-17-anthropic-adapter | 0d005a4 | NEEDS-DECISION: 2 of 3 Medium findings fixed, stale journey record fixed; the other 2 Mediums need edits outside the ticket (see issue #17) | AEA-02 |
+| AEA-18 | #18 | B sec | blocked | aea-18-aea-18-jev-adapter | 642c774 | NEEDS-DECISION: 2 of 3 review findings fixed; High finding (mypy red) not fixed (see issue #18) | AEA-02 |
 | AEA-19 | #19 | B sec | merged | main | b766d72 (merge of c8b149c) | ruff check/format clean; mypy clean (61 files); 181 affected tests passed (web, adapters, contract, policy, import direction, skeleton); no shared fixture/config touched, no full suite; journey record docs/testing/journeys/2026-10-21-AEA-19.md | - |
 | AEA-20 | #20 | B sec | merged | main | e79b660 (merge of 9ff964e) | ruff check/format clean; mypy clean (52 files); 108 affected tests passed (agent gateway, import direction, skeleton, checks); no shared fixture/config touched, no full suite; journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
-| AEA-21 | #21 | B | planned | aea-21-graph-spine |  |  | AEA-02,AEA-03 |
+| AEA-21 | #21 | B | blocked | aea-21-graph-spine | 6df4f4c (context 0a5b703) | BLOCKED: built and committed on branch, not merged (see issue #21) | AEA-02,AEA-03 |
 | AEA-22 | #22 | B sec | merged | aea-22-aea-22-tool-dispatch | d76092f (merge of 8397546) | ruff check/format clean; mypy clean (54 files); 136 affected tests passed (agent, skeleton, import direction, affected journeys); no shared fixture/config touched, no full suite; journeys 0 affected, record mock-tested, blocked by AEA-57 | AEA-02,AEA-04 |
 | AEA-23 | #23 | B sec | merged | aea-23-aea-23-web-shell | 1e6889a (code 912193f) | ruff check/format clean; mypy clean (70 files); affected tests 192 passed (tests/api, unit/web, contract, skeleton, import direction, dispatch, gates); journeys 0 affected, record mock-tested, blocked by AEA-57; 1 unrelated red on main: test_affected_journeys no-journey test vs AEA-26 j9 | AEA-01,AEA-02,AEA-04 |
 | AEA-24 | #24 | B sec | ready |  |  |  | AEA-01 |
 | AEA-25 | #25 | D | merged | main | 0ad71f9 (README, SUBMISSION D-3, resume); ledger row in the next commit | README.md has the 8 sections in order; ruff, format, mypy, pytest (121 passed) exit 0; env names, percentages, secret words and links checked by grep; diff touches README.md, SUBMISSION.md and .claude/state only | - |
 | AEA-26 | #26 | B | merged | aea-26-aea-26-spend-ledger | 96096be (code 8465a1f) | ruff check/format clean; mypy clean (160 files); 238 affected tests passed (no shared fixture/config touched, no full suite); journey J-9 extension 1 affected, 1 passed, record mock-tested, blocked by AEA-57 and AEA-51 | - |
-| AEA-27 | #27 | B sec | planned |  |  |  | AEA-04,AEA-10,AEA-13 |
-| AEA-28 | #28 | B | planned |  |  |  | AEA-10,AEA-13 |
-| AEA-29 | #29 | B sec | planned |  |  |  | AEA-10,AEA-11,AEA-14,AEA-16 |
-| AEA-30 | #30 | B | planned |  |  |  | AEA-10,AEA-11,AEA-14 |
+| AEA-27 | #27 | B sec | blocked |  |  | a blocker is not merged | AEA-04,AEA-10,AEA-13 |
+| AEA-28 | #28 | B | blocked |  |  | a blocker is not merged | AEA-10,AEA-13 |
+| AEA-29 | #29 | B sec | blocked | aea-29-aea-29-cases-handoff |  | BLOCKED at plan Step 0.2, no code: waits on AEA-02b case view types | AEA-10,AEA-11,AEA-14,AEA-16 |
+| AEA-30 | #30 | B | blocked | aea-30-aea-30-demo-clock-sched |  | BLOCKED: nothing built, no commit | AEA-10,AEA-11,AEA-14 |
 | AEA-31 | #31 | B sec | merged | aea-31-aea-31-reset-demo-seed | 7ddc7f7 (merge of d0ab4cb) | ruff check/format clean; mypy clean (74 files); 163 affected tests passed (services, web, api, adapters, import direction); J-8 AEA-31, J-9, J-10 journeys 3 passed; no paid calls | AEA-10,AEA-14,AEA-23 |
 | AEA-32 | #32 | B | merged | aea-32-aea-32-ops-health | edf53a5 (code 20abaad) | ruff check/format clean; mypy clean (196 files); 227 affected tests passed (1 timing-flaky tracing test passed on rerun); 2 affected journeys passed (J-10, J-9); full suite not run; journey record at mock-tested, blocked by AEA-57, AEA-53 | - |
 | AEA-33 | #33 | B | merged | aea-33-aea-33-retrieval-index | a45e3c2 (code 206f802) | ruff check/format clean; mypy clean (72 files); 235 affected tests passed (adapters, agent, contract, retrieval, skeleton, import direction, container); journeys 0 affected; pre-existing red test_affected_journeys (AEA-26 journey) unrelated | AEA-16 |
-| AEA-34 | #34 | B | ready |  |  |  | AEA-10,AEA-21 |
-| AEA-35 | #35 | B | ready |  |  |  | AEA-11,AEA-20,AEA-22 |
-| AEA-36 | #36 | B sec | ready |  |  |  | AEA-11,AEA-12,AEA-14,AEA-21 |
-| AEA-37 | #37 | B | ready |  |  |  | AEA-11,AEA-12,AEA-21 |
-| AEA-38 | #38 | B | ready |  |  |  | AEA-10,AEA-11,AEA-15,AEA-21 |
-| AEA-39 | #39 | B | ready |  |  |  | AEA-11,AEA-14,AEA-21 |
-| AEA-40 | #40 | B sec | ready |  |  |  | AEA-03,AEA-10,AEA-11,AEA-12,AEA-23 |
-| AEA-41 | #41 | B | ready |  |  |  | AEA-10,AEA-11,AEA-23 |
-| AEA-42 | #42 | B | ready |  |  |  | AEA-23 |
-| AEA-43 | #43 | B sec | ready |  |  |  | AEA-23 |
-| AEA-44 | #44 | B sec | ready |  |  |  | AEA-10,AEA-23 |
+| AEA-34 | #34 | B | blocked |  |  | a blocker is not merged | AEA-10,AEA-21 |
+| AEA-35 | #35 | B | blocked | aea-35-aea-35-specialists |  | BLOCKED on AEA-02b: stopped before any work | AEA-11,AEA-20,AEA-22 |
+| AEA-36 | #36 | B sec | blocked |  |  | a blocker is not merged | AEA-11,AEA-12,AEA-14,AEA-21 |
+| AEA-37 | #37 | B | blocked |  |  | a blocker is not merged | AEA-11,AEA-12,AEA-21 |
+| AEA-38 | #38 | B | blocked |  |  | a blocker is not merged | AEA-10,AEA-11,AEA-15,AEA-21 |
+| AEA-39 | #39 | B | blocked |  |  | a blocker is not merged | AEA-11,AEA-14,AEA-21 |
+| AEA-40 | #40 | B sec | planned | aea-40-aea-40-sessions-turns |  |  | AEA-03,AEA-10,AEA-11,AEA-12,AEA-23 |
+| AEA-41 | #41 | B sec | sent-back | aea-41-aea-41-chat-event-stream | fc5314b | conflict: .claude/state/icm-progress.md; implementer merges main into the branch | AEA-10,AEA-11,AEA-23 |
+| AEA-42 | #42 | B sec | merged | aea-42-aea-42-person-request | a581a71 (merge of 5bcddbd) | ruff check/format clean; mypy clean (77 files); 209 affected tests passed, 1 skipped (reload step, AEA-40); journeys 0 affected, record mock-tested, blocked by AEA-57; container.py changed but not a shared fixture/config, no full suite | AEA-23 |
+| AEA-43 | #43 | B sec | frozen-tests | aea-43-aea-43-demo-routes |  |  | AEA-23 |
+| AEA-44 | #44 | B sec | planned | aea-44-aea-44-staff-sessions |  |  | AEA-10,AEA-23 |
 | AEA-45 | #45 | B | ready |  |  |  | AEA-23 |
 | AEA-46 | #46 | B | ready |  |  |  | AEA-10,AEA-23 |
-| AEA-47 | #47 | B | ready |  |  |  | AEA-23 |
+| AEA-47 | #47 | B | planned | aea-47-staff-clock-advance |  |  | AEA-23 |
 | AEA-48 | #48 | B | ready |  |  |  | AEA-23 |
 | AEA-49 | #49 | B | ready |  |  |  | AEA-23 |
 | AEA-50 | #50 | B sec | ready |  |  |  | AEA-16,AEA-31,AEA-32,AEA-33,AEA-19,AEA-23 |
