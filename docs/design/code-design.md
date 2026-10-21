@@ -188,6 +188,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `eval/harness/{__main__,cli,deps,records,cases,freeze,scrub,runlog,client,runner,invariants,scoring,judge,ledger,dbcheck,report,load,retrieval,dryrun}.py`, `eval/run_retrieval.py` (AEA-24, branch `aea-24-eval-harness`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
