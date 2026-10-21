@@ -1244,3 +1244,5 @@ merged) are injected (`deps.identity`, `deps.handoff`) and replaced by doubles. 
   - **Commit:** _(implementer appends the SHA here)_.
 - **D-2 · AC-5 wording vs routing** (unchanged from R-3). `BURNING_ASK` does reach the safety node (DO-3 §5.4,
   `route_after_gates`). The node returns `{}` there: no case, no signal (PA-3). AC-5's evidence holds.
+
+- **D-1 applied:** rows removed in commit `a3874c8` on `aea-36-aea-36-front-node` (standing permission, Innocent 2026-10-21). Deviation: merging main (beyond 8a205b2) also conflicted in `.claude/state/icm-progress.md` (the "Last reconciled" line); resolved by keeping main's line and prepending the AEA-36 entry.
