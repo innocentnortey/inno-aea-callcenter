@@ -314,8 +314,14 @@ def test_wf13_wrong_project_keys_turn_export_off(
         assert counts["spans"] == 0
 
 
-@BLOCKED_AEA_19_FU
-@pytest.mark.parametrize(("case", "expected"), [("right", 1), ("wrong", 0), ("missing_project_id", 0)])
+@pytest.mark.parametrize(
+    ("case", "expected"),
+    [
+        pytest.param("right", 1, marks=BLOCKED_AEA_19_FU),
+        pytest.param("wrong", 0, marks=BLOCKED_AEA_19_FU),
+        ("missing_project_id", 0),
+    ],
+)
 def test_wf13_deploy_record_reads_export_state(
     case: str, expected: int, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
