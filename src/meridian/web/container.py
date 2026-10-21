@@ -169,8 +169,33 @@ def register_anthropic(container: Container, app: FastAPI, *, settings: Any, lim
 def register_jev(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-18 models: the Jev adapter via OpenRouter (models.md §3, §7).
 
-    No-op until AEA-18 fills it.
+    Provides Key[httpx.Client]("jev_http_client"): the one HTTP client every JevAdapter shares, redirects off, closed
+    on shutdown. Provides Key[Callable[[str], JevAdapter]]("jev_adapter_factory"): a model ID gives a JevAdapter bound
+    to that client and settings.openrouter_api_key (ValueError for a model with no JEV_PRICES row). AEA-51's
+    adapter_for calls the factory once per distinct Jev model and memoises the result. Makes no request.
     """
+    import httpx
+
+    from meridian.adapters.models.openrouter_jev import JevAdapter
+
+    http_key = Key[httpx.Client]("jev_http_client")
+
+    def _http(c: Container) -> httpx.Client:
+        client = httpx.Client(follow_redirects=False, timeout=5.0)
+        c.on_close(client.close)
+        return client
+
+    def _factory(c: Container) -> Callable[[str], JevAdapter]:
+        http = c.get(http_key)
+        api_key = settings.openrouter_api_key
+
+        def make(model: str) -> JevAdapter:
+            return JevAdapter(http, api_key=api_key, model=model)
+
+        return make
+
+    container.provide(http_key, _http)
+    container.provide(Key[Callable[[str], JevAdapter]]("jev_adapter_factory"), _factory)
 
 
 def register_gateway(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
