@@ -498,8 +498,54 @@ def register_reset(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-44 staff: StaffSessionStore, FlagService, CON-10 routes (staff.md §2).
 
-    No-op until AEA-44 fills it.
+    Provides deps.LOGIN_SESSIONS and deps.STAFF_ACCESS (one StaffSessionStore built from deps.UOW_FACTORY,
+    settings.session_secret, Key("demo_clock") and limits.web.login_session_lifetime_s) and deps.FLAG_SERVICE
+    (FlagService), and includes the CON-10 router once. Key("demo_clock") is AEA-30's and is read only when a clock
+    reading is needed; until it is provided that reading raises RuntimeError("not bound: demo_clock"), so the app
+    still builds. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import datetime as dt
+
+    from meridian.config import Settings
+    from meridian.ports.runtime import Clock
+    from meridian.services.staff import FlagService, StaffSessionStore
+    from meridian.web.deps import FLAG_SERVICE, LOGIN_SESSIONS, STAFF_ACCESS, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_session import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    typed = cast(Settings, settings)
+    demo_key: Key[Clock] = Key("demo_clock")
+    store_key: Key[StaffSessionStore] = Key("staff_session_store")
+
+    class _DemoClock:
+        def now(self) -> dt.datetime:
+            try:
+                clock = container.get(demo_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_key.name}":
+                    raise RuntimeError(f"not bound: {demo_key.name}") from None
+                raise
+            return clock.now()
+
+    demo_clock = _DemoClock()
+    container.provide(
+        store_key,
+        lambda c: StaffSessionStore(
+            c.get(UOW_FACTORY),
+            typed.session_secret,
+            demo_clock,
+            lifetime_s=limits.web.login_session_lifetime_s,
+        ),
+    )
+    container.provide(LOGIN_SESSIONS, lambda c: c.get(store_key))
+    container.provide(STAFF_ACCESS, lambda c: c.get(store_key))
+    container.provide(FLAG_SERVICE, lambda c: FlagService(c.get(UOW_FACTORY), demo_clock))
+    if not getattr(app.state, "staff_session_routes_included", False):
+        app.include_router(build_router())
+        app.state.staff_session_routes_included = True
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -594,8 +640,46 @@ def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-46 staff API: LiveChatService, CON-14 and CON-21 routes (staff.md §5, §7).
 
-    No-op until AEA-46 fills it.
+    Provides deps.LIVE_CHAT ("live_chat"): a LiveChatService over Key("uow_factory") (AEA-10), the demo clock
+    Key("demo_clock") (AEA-30, read through a forwarder only when an action writes, so the app builds before AEA-30
+    binds it; until then a write raises RuntimeError("not bound: demo_clock")) and the STORE redactor (data.md §1,
+    MC-23). Includes the staff_live router once per app. An app that create_app did not build has no web shell, so
+    this does nothing.
     """
+    from datetime import datetime
+
+    from meridian.privacy.redact import RedactionProfile, redact
+    from meridian.services.live_chat import LiveChatService
+    from meridian.web.deps import LIVE_CHAT, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_live import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+
+    class _DemoClock:
+        """Resolves AEA-30's clock at call time (AEA-40 and AEA-42 use the same forwarder)."""
+
+        def now(self) -> datetime:
+            try:
+                clock = container.get(demo_clock_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_clock_key.name}":
+                    raise RuntimeError(f"not bound: {demo_clock_key.name}") from None
+                raise
+            moment: datetime = clock.now()
+            return moment
+
+    container.provide(
+        LIVE_CHAT,
+        lambda c: LiveChatService(
+            c.get(UOW_FACTORY), _DemoClock(), lambda t: redact(t, RedactionProfile.STORE).text
+        ),
+    )
+    if not getattr(app.state, "staff_live_router_included", False):
+        app.include_router(build_router())
+        app.state.staff_live_router_included = True
 
 
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
