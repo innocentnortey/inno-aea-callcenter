@@ -286,7 +286,7 @@ src/meridian/                                    planned                        
                                                  (AEA-21; stage7/graph-core.md §4, graph-nodes.md §4)
 │   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2   stub AEA-21 6df4f4c
 │   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2   built AEA-21 6df4f4c
-│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   built AEA-36 712b9e9
 │   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   stub AEA-21 6df4f4c
 │   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
 │   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   stub AEA-21 6df4f4c
