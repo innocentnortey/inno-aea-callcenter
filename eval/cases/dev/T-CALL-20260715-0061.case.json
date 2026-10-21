@@ -1,0 +1,48 @@
+{
+  "case_id": "T-CALL-20260715-0061",
+  "category": "SCH-HVAC",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10004",
+  "source_ref": "CALL-20260715-0061",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10004 substituted. Closing line 'The earliest window works for me.' scripted: the call's own slot talk refers to its July–September calendar.",
+  "synthetic_source_case": null,
+  "template": "theres water pooling around the indoor unit",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Yeah, I need to schedule a service call. There's water pooling around the indoor unit."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "The earliest window works for me."
+    }
+  ],
+  "varied_dimension": null
+}

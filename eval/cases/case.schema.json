@@ -1,0 +1,575 @@
+{
+  "$defs": {
+    "CaseKey": {
+      "additionalProperties": false,
+      "properties": {
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "guards": {
+          "items": {
+            "enum": [
+              "boundary",
+              "invariant",
+              "regression"
+            ],
+            "type": "string"
+          },
+          "title": "Guards",
+          "type": "array"
+        },
+        "in_scope": {
+          "title": "In Scope",
+          "type": "boolean"
+        },
+        "judge_items": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/ChecklistItem"
+          },
+          "title": "Judge Items",
+          "type": "array"
+        },
+        "must_do": {
+          "items": {
+            "$ref": "#/$defs/ChecklistItem"
+          },
+          "title": "Must Do",
+          "type": "array"
+        },
+        "must_not_say": {
+          "items": {
+            "$ref": "#/$defs/ChecklistItem"
+          },
+          "title": "Must Not Say",
+          "type": "array"
+        },
+        "must_say": {
+          "items": {
+            "$ref": "#/$defs/ChecklistItem"
+          },
+          "title": "Must Say",
+          "type": "array"
+        },
+        "topic": {
+          "anyOf": [
+            {
+              "enum": [
+                "booking",
+                "membership",
+                "billing",
+                "warranty"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Topic"
+        },
+        "unscored": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Unscored"
+        }
+      },
+      "required": [
+        "case_id",
+        "in_scope",
+        "topic",
+        "guards",
+        "must_do",
+        "must_say",
+        "must_not_say"
+      ],
+      "title": "CaseKey",
+      "type": "object"
+    },
+    "CaseScript": {
+      "additionalProperties": false,
+      "properties": {
+        "case_id": {
+          "title": "Case Id",
+          "type": "string"
+        },
+        "category": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Category"
+        },
+        "clock": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Clock"
+        },
+        "family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Family"
+        },
+        "labelled_by": {
+          "title": "Labelled By",
+          "type": "string"
+        },
+        "labelled_on": {
+          "format": "date",
+          "title": "Labelled On",
+          "type": "string"
+        },
+        "provenance": {
+          "enum": [
+            "worked-pair",
+            "issued-transcript",
+            "synthetic",
+            "promoted-trace"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "seeded_customer": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Seeded Customer"
+        },
+        "source_ref": {
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "split": {
+          "enum": [
+            "dev",
+            "held-out"
+          ],
+          "title": "Split",
+          "type": "string"
+        },
+        "staffing": {
+          "default": "nobody",
+          "enum": [
+            "nobody",
+            "staffed"
+          ],
+          "title": "Staffing",
+          "type": "string"
+        },
+        "support_level": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Support Level"
+        },
+        "synthetic": {
+          "enum": [
+            "no",
+            "partly",
+            "yes"
+          ],
+          "title": "Synthetic",
+          "type": "string"
+        },
+        "synthetic_assumption": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Synthetic Assumption"
+        },
+        "synthetic_source_case": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Synthetic Source Case"
+        },
+        "template": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Template"
+        },
+        "turns": {
+          "items": {
+            "$ref": "#/$defs/ScriptedTurn"
+          },
+          "title": "Turns",
+          "type": "array"
+        },
+        "varied_dimension": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Varied Dimension"
+        }
+      },
+      "required": [
+        "case_id",
+        "provenance",
+        "source_ref",
+        "template",
+        "category",
+        "family",
+        "support_level",
+        "split",
+        "seeded_customer",
+        "clock",
+        "turns",
+        "synthetic",
+        "synthetic_assumption",
+        "varied_dimension",
+        "synthetic_source_case",
+        "labelled_by",
+        "labelled_on"
+      ],
+      "title": "CaseScript",
+      "type": "object"
+    },
+    "ChecklistItem": {
+      "additionalProperties": false,
+      "properties": {
+        "hard": {
+          "default": false,
+          "title": "Hard",
+          "type": "boolean"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "text": {
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "text",
+        "source"
+      ],
+      "title": "ChecklistItem",
+      "type": "object"
+    },
+    "MixRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "splits": {
+          "additionalProperties": {
+            "$ref": "#/$defs/SplitMix"
+          },
+          "propertyNames": {
+            "enum": [
+              "dev",
+              "held-out"
+            ]
+          },
+          "title": "Splits",
+          "type": "object"
+        }
+      },
+      "required": [
+        "splits"
+      ],
+      "title": "MixRecord",
+      "type": "object"
+    },
+    "MixRow": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "title": "Category",
+          "type": "string"
+        },
+        "count": {
+          "title": "Count",
+          "type": "integer"
+        },
+        "origin": {
+          "enum": [
+            "transcript",
+            "synthetic"
+          ],
+          "title": "Origin",
+          "type": "string"
+        },
+        "tests": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Tests"
+        }
+      },
+      "required": [
+        "category",
+        "count",
+        "origin",
+        "tests"
+      ],
+      "title": "MixRow",
+      "type": "object"
+    },
+    "RetrievalQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "expect_below_floor": {
+          "default": false,
+          "title": "Expect Below Floor",
+          "type": "boolean"
+        },
+        "expected_file": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected File"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "query_id": {
+          "title": "Query Id",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "boolean"
+        },
+        "trap": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Trap"
+        }
+      },
+      "required": [
+        "query_id",
+        "query",
+        "expected_file",
+        "trap",
+        "source",
+        "synthetic"
+      ],
+      "title": "RetrievalQuery",
+      "type": "object"
+    },
+    "ScriptedTurn": {
+      "additionalProperties": false,
+      "properties": {
+        "choice": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Choice"
+        },
+        "form": {
+          "anyOf": [
+            {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Form"
+        },
+        "kind": {
+          "enum": [
+            "text",
+            "choice",
+            "form",
+            "code_from_inbox",
+            "person_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Text"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "ScriptedTurn",
+      "type": "object"
+    },
+    "SplitMix": {
+      "additionalProperties": false,
+      "properties": {
+        "categories": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Categories",
+          "type": "array"
+        },
+        "rows": {
+          "items": {
+            "$ref": "#/$defs/MixRow"
+          },
+          "title": "Rows",
+          "type": "array"
+        },
+        "size": {
+          "title": "Size",
+          "type": "integer"
+        },
+        "synthetic": {
+          "title": "Synthetic",
+          "type": "integer"
+        },
+        "transcript_derived": {
+          "title": "Transcript Derived",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "size",
+        "transcript_derived",
+        "synthetic",
+        "categories",
+        "rows"
+      ],
+      "title": "SplitMix",
+      "type": "object"
+    },
+    "SplitRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "assignment": {
+          "additionalProperties": {
+            "enum": [
+              "dev",
+              "held-out"
+            ],
+            "type": "string"
+          },
+          "title": "Assignment",
+          "type": "object"
+        },
+        "heldout_key_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Heldout Key Sha256"
+        },
+        "method": {
+          "const": "template-whole, stratified by family and support level",
+          "title": "Method",
+          "type": "string"
+        },
+        "seed": {
+          "title": "Seed",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "seed",
+        "method",
+        "assignment",
+        "heldout_key_sha256"
+      ],
+      "title": "SplitRecord",
+      "type": "object"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Meridian eval case files (stage7/data.md §5, DAT-27)"
+}

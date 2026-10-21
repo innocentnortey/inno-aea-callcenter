@@ -79,6 +79,10 @@ class TextId(StrEnum):
     IDENTITY_NEEDED = "booking.identity_needed"
     CANCELLED_NO_FEE = "booking.cancelled_no_fee"
     FEE_STANDARD_DIAGNOSTIC = "booking.fee_standard_diagnostic"
+    FEE_DIAGNOSTIC_WAIVED = "booking.fee_diagnostic_waived"
+    FEE_TUNE_UP = "booking.fee_tune_up"
+    FEE_TUNE_UP_INCLUDED = "booking.fee_tune_up_included"
+    FEE_ESTIMATE_FREE = "booking.fee_estimate_free"
     SLOTS_NOT_HELD = "booking.slots_not_held"
     MEMBERS_NOTE = "booking.members_note"
     FREE_CHANGE_NOTE = "booking.free_change_note"
@@ -99,6 +103,9 @@ class TextId(StrEnum):
     CHAT_CLOSED = "live.chat_closed"
     AI_PAUSED_NOTICE = "live.ai_paused_notice"
     PERSON_REQUEST_LABEL = "live.person_request_label"
+    # --- history (customer rows for non-text actions; AEA-03b, needed by AEA-40) ---
+    HISTORY_CODE_ENTERED = "history.code_entered"
+    HISTORY_DETAILS_SENT = "history.details_sent"
     # --- demo ---
     SHIFT_ENDED = "demo.shift_ended"
     STAFFING_CHANGED_ON_SHIFT = "demo.staffing_changed_on_shift"
@@ -205,6 +212,13 @@ _TEXTS: Final[dict[TextId, str]] = {
     ),
     TextId.CANCELLED_NO_FEE: "There's no fee.",
     TextId.FEE_STANDARD_DIAGNOSTIC: "Standard diagnostic fee: {amount}",
+    # The next four are proposal wording (AEA-13 plan section 9, option A; provisional pending the UX session).
+    TextId.FEE_DIAGNOSTIC_WAIVED: "Diagnostic fee: waived for Comfort Club members (normally {amount})",
+    TextId.FEE_TUNE_UP: "Seasonal tune-up fee: {amount} per system",
+    TextId.FEE_TUNE_UP_INCLUDED: (
+        "Seasonal tune-up: included with Comfort Club, two per year (normally {amount})"
+    ),
+    TextId.FEE_ESTIMATE_FREE: "Free in-home estimate with a Comfort Advisor",
     TextId.SLOTS_NOT_HELD: "Windows are shown, not held.",
     TextId.MEMBERS_NOTE: "Members' fees and member-only windows appear after the code.",
     TextId.FREE_CHANGE_NOTE: ("You can change this visit free of charge until 24 hours before the window."),
@@ -229,6 +243,8 @@ _TEXTS: Final[dict[TextId, str]] = {
         "{rep_name} is in this chat, so the assistant is paused. Your message went to {rep_name}."
     ),
     TextId.PERSON_REQUEST_LABEL: "Talk to a person",
+    TextId.HISTORY_CODE_ENTERED: "Code entered",
+    TextId.HISTORY_DETAILS_SENT: "Details sent",
     # --- demo ---
     TextId.SHIFT_ENDED: "The simulated shift ended before a representative joined.",
     TextId.STAFFING_CHANGED_ON_SHIFT: "Staffing changed: simulated staff on shift (demo).",

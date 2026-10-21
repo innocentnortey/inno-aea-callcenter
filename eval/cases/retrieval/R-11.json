@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "faq/customer_faq.md",
+  "query": "How much notice do I need to give to cancel an appointment without a fee?",
+  "query_id": "R-11",
+  "source": "PRD R-12; R-10 stale twin: services/scheduling_guide.md",
+  "synthetic": true,
+  "trap": "services/scheduling_guide.md"
+}

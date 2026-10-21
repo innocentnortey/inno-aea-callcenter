@@ -1,0 +1,48 @@
+{
+  "case_id": "T-CALL-20260909-0416",
+  "category": "SCH-CANCEL",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F2 Existing-appointment management",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "CALL-20260909-0416",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10001 substituted. Closing line 'Yes, please cancel it.' scripted: the call's own slot talk refers to its July–September calendar.",
+  "synthetic_source_case": null,
+  "template": "i need to cancel my appointment my brotherinlaw ended up fixing it",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I need to cancel my appointment. My brother-in-law ended up fixing it."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Yes, please cancel it."
+    }
+  ],
+  "varied_dimension": null
+}

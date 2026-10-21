@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "policies/service_area.md",
+  "query": "Which cities and ZIP codes do you serve?",
+  "query_id": "R-6",
+  "source": "PRD §4.3a row: Where and when",
+  "synthetic": true,
+  "trap": null
+}

@@ -4,7 +4,7 @@
 **Status:** DRAFT, **revision 3**. Revision 3, 2026-10-21: reconciled with the slice plan and the Stage 7 addenda (AEA-08);
 it records their decisions and makes none. Revision 2 followed the `metz-code-design-agent` review
 ([`reviews/2026-10-21-code-design-review.md`](reviews/2026-10-21-code-design-review.md), verdict FAIL; response in §11).
-Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; every other path below is planned.** The component contracts (DO-4) are
+Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; AEA-21 (`6df4f4c`): `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py`, node stubs; every other path below is planned.** The component contracts (DO-4) are
 in [`contracts/`](contracts/README.md).
 
 **What this file owns:** the module map under `src/meridian/`, each module's responsibility, interface, dependencies
@@ -118,8 +118,8 @@ flowchart TB
 ### 2.2 How a parallel step runs in a sync graph
 
 The planner ∥ classifier and responder ∥ brief pairs are separate branches of one superstep. LangGraph's sync runner
-executes them on its own background executor threads [A: verify on the pinned `langgraph` 1.2.16 with a two-node timing
-test before the A7a ticket merges]. A turn therefore holds one AnyIO pool thread for its life plus up to two short-lived
+executes them on its own background executor threads [M: two 1 s branch nodes in one superstep, invoked from a worker thread, took 1.009 s on langgraph 1.2.16;
+`tests/graph/test_spine.py::test_two_node_parallel_timing`, AEA-21]. A turn therefore holds one AnyIO pool thread for its life plus up to two short-lived
 executor threads during those steps. This refines DO-1 §5.2's "one pool thread" (conflict C-5, §10); it does not change
 the pool arithmetic, because executor threads are not drawn from the 40-thread pool.
 
@@ -178,13 +178,18 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
-**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`).
+**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`); `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py` and the five node stubs (AEA-21, `6df4f4c`) · `adapters/models/anthropic.py` (AEA-17, `79d29fe`); `adapters/models/openrouter_jev.py` (AEA-18, `64884ef`).
 **Built:** `retrieval/{settings,manifest,ingest}.py` (AEA-16, `fe12657`).
 **Built:** `adapters/sqlite/{db,migrate,rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py`, every `adapters/sqlite/schema/*.sql`, `adapters/checkpointer.py`, `tests/fixtures/sqlite.py` (AEA-10, `ff4b9bd`).
 **Built:** `services/ledger.py`, `adapters/sqlite/repos_spend.py` body (AEA-26, `c589914`).
 **Built:** `web/{app,middleware,deps,errors,logging}.py`, `web/routes/auth.py`, `web/schemas/auth.py`, `services/reset_gate.py` (AEA-23, branch `aea-23-aea-23-web-shell`).
+**Built:** `services/staff.py`, `adapters/sqlite/repos_staff.py` body, `web/routes/staff_session.py`, `web/schemas/staff_session.py` (AEA-44, `1a8fa94`).
 **Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
+**Built:** `policy/booking.py` (AEA-13, `cab183b`).
+**Built:** `services/identity.py`, `adapters/sqlite/repos_identity.py` body, `agent/tools/account.py` (AEA-27, `93dfca4`).
+**Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
 **Built:** `services/turn.py`, `web/routes/chat.py` (`submitTurn`), `web/schemas/chat.py` (`TurnRequest`), the `register_chat` hunk (AEA-40 Part A, `d7fb642`); Part B (`services/session.py`, the CON-1 routes) is blocked on AEA-02b and an AEA-03 follow-up.
 
 ```
@@ -235,8 +240,8 @@ src/meridian/                                    planned                        
 │   ├── sqlite/repos_cases.py                    cases, case_events, promises, followups, activities,        A0    0
                                                  demo_state, job_runs, reset/seed records; A0 (AEA-10)
 │   ├── sqlite/repos_spend.py                    spend_ledger                                                A2    1
-│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1
-│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1
+│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1   built AEA-27 93dfca4
+│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1   built AEA-28 a6d8a68
 │   ├── sqlite/repos_staff.py                    staff_sessions, flags                                       A9    2
 │   ├── sqlite/repos_ops.py                      health_events, deploy_records, eval results (read)          A10a  1
 │   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
@@ -251,8 +256,8 @@ src/meridian/                                    planned                        
 │   └── ingest.py                                chunk every format; embed; write index + index record       A3    1
 ├── services/
 │   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
-│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1
-│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1
+│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1   built AEA-27 93dfca4
+│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1   built AEA-28 a6d8a68
 │   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
 │   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
                                                  BriefAssembler
@@ -266,27 +271,27 @@ src/meridian/                                    planned                        
                                                  (AEA-23; stage7/web.md §7)
 │   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2   built AEA-42 55b5e7c
                                                  (AEA-42; stage7/web.md §8)
-│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2
+│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2   built AEA-46 0d152ee
 │   ├── staff.py                                 StaffSessionStore (login sessions, role check, role switch) A9    2
                                                  and FlagService (AEA-44; stage7/staff.md §2)
 │   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
 ├── agent/
 │   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1   built AEA-20 2bcb8fb
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1   built AEA-33 206f802
-│   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
+│   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1   built AEA-27 93dfca4
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
-                                                 request_change executors
-│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2
-│   ├── routers.py                               pure conditional-edge functions                             A7a   2
-│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2
-│   ├── signals.py                               the `signal` log record for the eight failure signals       A7a   2
+                                                 request_change executors   built AEA-28 a6d8a68
+│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2   built AEA-21 6df4f4c
+│   ├── routers.py                               pure conditional-edge functions                             A7a   2   built AEA-21 6df4f4c
+│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2   built AEA-21 6df4f4c
+│   ├── signals.py                               the `signal` log record for the eight failure signals       A7a   2   built AEA-21 6df4f4c
                                                  (AEA-21; stage7/graph-core.md §4, graph-nodes.md §4)
-│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2
-│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2
-│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3
-│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3
-│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3
-│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3
+│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2   stub AEA-21 6df4f4c
+│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2   built AEA-21 6df4f4c
+│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
+│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   stub AEA-21 6df4f4c
 │   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3
 │   ├── specialists/runner.py                    the braked tool loop                                        A7b   3
 │   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3   built AEA-22 5d0a4e4 (ticket wave 1)
@@ -302,19 +307,19 @@ src/meridian/                                    planned                        
 │   ├── errors.py                                one ApiProblem and its handler (AEA-23; stage7/web.md §1)   A8    2
 │   ├── logging.py                               LOG-profile allow-list formatter (AEA-23; web.md §10)       A8    2
 │   ├── frontend.py                              static mount of apps/web/dist, SPA fallback, public paths   A8    2
-                                                 (AEA-49; stage7/web.md §12)
-│   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout, getSession (AEA-23)                   A8    2
+                                                 (AEA-49; stage7/web.md §12)   built AEA-49 49ba7ff
+│   ├── routes/auth.py · schemas/auth.py         CON-22 login, logout (AEA-23)                             A8    2
 │   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
 │   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
 │   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2   built AEA-42 55b5e7c
 │   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
-│   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 role switch (AEA-44)                                 A9    2
+│   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 getSession, listDemoRoles, switchRole (AEA-44)       A9    2
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
-│   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2
-│   ├── routes/staff_clock.py · schemas/staff_clock.py  CON-8 advance, supervisor only (AEA-47)                     A9    2
-│   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3
+│   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2   built AEA-46 0d152ee
+│   ├── routes/staff_clock.py · schemas/staff_clock.py  CON-8 advance, supervisor only (AEA-47)                     A9    2   built AEA-47 0d75351
+│   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3   built AEA-48 cb7df88
                                                  `web/templates/` · `static/` are NOT PLANNED: the screens are the React app apps/web/ (UX-4 built 2026-10-21, gate unsigned);
-                                                 AEA-49 serves its dist/ with fallback to index.html (planned)
+                                                 AEA-49 serves its dist/ with fallback to index.html (built: web/frontend.py, register_frontend hunk)
 
 eval/harness/{runner,scoring,judge,report,load}.py   frozen per scored run (DO-5); HTTP only                 A11  1
 eval/cases/{dev,heldout,retrieval}/ · eval/reports/                                                           A11  1
@@ -401,7 +406,7 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `services/reset.py` | Restore the demo all-or-nothing. Also holds the demo seed loader (`seed_demo`, `seed_first_boot`); the seed list is stage7/cases.md §7. Built (AEA-31, `8192d2b`). | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
 | `services/ledger.py` | Record every model call's cost and stop model use at a cap. | `record`, `SpendGuard.allow_turn`, `trip_provider_cap`, `models_disabled` | UoW (`repos_spend`), limits |
 | `services/live_chat.py` | Let a claimed representative join, write, hand back or close a chat. | `join`, `send`, `hand_back`, `close` | UoW (`conversations.controller`, `messages`, `events`), `CaseService` |
-| `services/staff.py` | Hold the login sessions, check and switch the role, and record flags. | `StaffSessionStore`: `start`, `resolve`, `end`, `actor_for`, `switch_role`, `session_info`; `FlagService`: `flag`, `review`, `list_flags` (stage7/staff.md §2, STF-26). AEA-44 flips the row to built; it does not rename | UoW (`repos_staff`) |
+| `services/staff.py` | Hold the login sessions, check and switch the role, and record flags. | `StaffSessionStore`: `start`, `resolve`, `end`, `actor_for`, `switch_role`, `session_info`; `FlagService`: `flag`, `review`, `list_flags` (stage7/staff.md §2, STF-26). Built (AEA-44, `1a8fa94`) | UoW (`repos_staff`) |
 | `services/metrics_reader.py` | Serve stored measures without recomputing outcomes. | `owner_metrics`, `monitoring`, `latest_eval` | UoW |
 | `services/health.py` | Keep the heartbeat, record health events, exit after repeated failures. | `AlertSettings`, `Heartbeat`, `Watchdog`, `AlertWriter`, `AlertEvaluator`, `load_eval_reports` (stage7/cases.md §8; built AEA-32) | UoW (`repos_ops`) |
 
@@ -541,7 +546,9 @@ Every router sends a state with `halt` set straight to `compose`, which builds t
 once through `escalation` (rule 6, `ai_failure` P3, degraded) → `handoff` → `facts` → `compose`; `DEADLINE`,
 `SPEND_CAP` and `PROVIDER_SPEND_CAP` go straight to `compose` with no case; a halted state skips responder, brief and
 checks; `run_graph` catches `GraphRecursionError` and returns compose's halt reply.
-`recursion_limit` is 25 [A: the longest path is 14 steps; a test runs a 3-task turn under it].
+`recursion_limit` is 25 [M: a 3-task turn finished at step 10; `test_three_task_turn_under_limit`, AEA-21].
+
+**Built (AEA-21):** halt routing as [graph-core §5](contracts/stage7/graph-core.md) and the two added edges as graph-core §11; plus the routing conditions in `docs/plans/fanout/2026-10-21-build/AEA-21.md` §8.1 PD-1…PD-6 (a tasks-less plan with a handoff request or an act plan without tasks; identity failures to escalation; card choices resume the open task; a halted specialist turn; the brake passing escalation → handoff once).
 
 ---
 
@@ -667,7 +674,7 @@ ticket).
 | `adapters/sqlite/repos_core.py` (`events`, `actions`, `lookup_log`, `messages`, `conversations`, the cross-ticket reads) | written by A4, A5, A6, A7, A8, A9 | Owned by A0 (AEA-10); frozen after wave 0. A new method is its own small A0 ticket |
 | `domain/*` | read by all | Frozen after wave 0; a shared-type change is its own ticket, merged before dependants |
 | `agent/nodes/{front,plan,act,reply}.py` | A7a (stub), then A7d / A7d / A7b / A7c | Sequential by wave; after A7a each file has exactly one owner |
-| `web/templates/`, `web/static/` | none (reconciled 2026-10-21, slice plan AEA-08) | Directories dropped. `apps/web/` (React) exists, built 2026-10-21, UX-4 gate unsigned; A8/A9 are API only; AEA-49 (A8/A12) serves `apps/web/dist` with fallback to `index.html` (planned); `jinja2` droppable |
+| `web/templates/`, `web/static/` | none (reconciled 2026-10-21, slice plan AEA-08) | Directories dropped. `apps/web/` (React) exists, built 2026-10-21, UX-4 gate unsigned; A8/A9 are API only; AEA-49 (A8) serves `apps/web/dist` with fallback to `index.html` from `web/frontend.py` through its own `register_frontend()` hunk in `web/container.py` (built); `jinja2` droppable |
 | `web/routes/*.py`, `web/schemas/*.py` | A8, A9, A10b: one route file and its schema file per ticket (slice plan §3) | `auth` AEA-23, `chat` AEA-40, `events` AEA-41, `handoff` AEA-42, `demo` AEA-43, `staff_session` AEA-44, `staff_cases` AEA-45, `staff_live` AEA-46, `staff_clock` AEA-47, `reads` AEA-48; no ticket edits another's route or schema file |
 | `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-11 (`fakes/`, incl. `clock.py`), AEA-10 (`fixtures/sqlite.py`) | Two folders, so the two tickets never share one. Areas put their own fixtures in their own test folders |
 
@@ -688,17 +695,22 @@ tests/                                       planned
 ├── unit/             mirrors src/meridian/: unit/gates/test_rules.py, unit/test_checks.py,
 │                     unit/policy/test_handoff.py, unit/privacy/test_redact.py, unit/agent/test_routers.py, …
 ├── contract/         test_model_ports_contract.py (JevAdapter + AnthropicAdapter, recorded fixtures: same failure
-│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py
+│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py; OpenAPI boundary (AEA-59):
+│                     test_openapi_server.py over cases/<route>.py (one per route ticket), test_openapi_fixtures.py,
+│                     test_types_gen_drift.py
 ├── services/         each service over a temp SQLite working copy: booking rules, one-slot concurrency (E-7),
 │                     idempotent case creation, identity caps, reset all-or-nothing
 ├── graph/            the compiled graph with fake models and a temp DB: WP-1…WP-8, WP-4F, DANGER, NODANGER;
 │                     brakes; recursion limit; deadline halts; restart between write and checkpoint
 ├── api/              FastAPI TestClient per CON group: schemas, named errors, cookies, idempotent turn_id, SSE replay
 ├── capture/          CAP-1…CAP-9 (DO-6): drive the real entry point; seeded values absent from body, log, trace
+├── journeys/         integrated journeys (rule integrated-journeys): support/ = AEA-57's harness (real app under uvicorn
+│                     on a disposable DB copy, scripted model at the provider boundary, client, DB reader, record writer);
+│                     j<N>/test_aea_<NN>.py, one file per ticket per journey; browser/ (AEA-58)
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
@@ -715,7 +727,7 @@ tests/                                       planned
 | C-2 | Readiness SD-6.3 note vs R-47 and DO-1 §8.2 | Readiness: a Jev classifier failure "must fail toward raise or hand off"; R-47 [Decided]: "the rules stand" | Follows R-47; records `classifier_fallback`. Raised for the readiness report's owner |
 | C-3 | DO-1 §9 / DO-2 §A.5 vs DO-6 records | DO-1 names `turns`, `model_calls`; DO-6 names `request`, `conversation`, `turn`, `check_event`, `spend_ledger`, `health_event`, …; DO-1 has no chat-message or conversation table, though SDQ-10 says "the clean chat lives in our own table" | DO-6's names for observability tables; adds `conversations` and `messages` |
 | C-4 | R-3 vs CON-8 | One moving demo clock moves the chat's "today" | `DemoClock` serves one value; a chat-fixed date is a one-line change. Still the UX gate's / Innocent's call (UXR-13) |
-| C-5 | DO-1 §5.2 "one pool thread per turn" | Parallel branches use LangGraph executor threads [A] | §2.2; arithmetic unchanged; verify with the timing test |
+| C-5 | DO-1 §5.2 "one pool thread per turn" | Parallel branches use LangGraph executor threads [A] | §2.2; arithmetic unchanged; measured 1.009 s (AEA-21) |
 | C-6 | DO-6 `turn.gate_result` vs DO-2 §A.1 gate paths | DO-6 lacks `code_entry` and `card_choice` | Both map to `clear` for DO-6; detail kept in `turn.path` [proposal]. Raised for DO-6's owner |
 | C-7 | DO-2 §A.3 (controller in the checkpoint) vs CON-14 | Staff change `controller` outside a graph run | Authority `conversations.controller`, copied into state by `load_context` |
 | C-8 | DO-1 §8.1 vs SP-1 | SP-1 made up to 3 attempts; DO-1 says one retry | Follows DO-1: at most 2 attempts per call |

@@ -1,0 +1,42 @@
+{
+  "case_id": "T-CALL-20260806-0284",
+  "category": "SCH-LATE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F2 Existing-appointment management",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-57204",
+  "source_ref": "CALL-20260806-0284",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-57204 substituted.",
+  "synthetic_source_case": null,
+  "template": "my window was # to # and its ## nobodys here and nobodys called",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "My window was 12 to 4 and it's 4:30. Nobody's here and nobody's called."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    }
+  ],
+  "varied_dimension": null
+}

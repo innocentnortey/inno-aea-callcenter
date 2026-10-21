@@ -374,15 +374,57 @@ def register_spend(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-17 models: the Anthropic adapter (models.md §2, §7).
 
-    No-op until AEA-17 fills it.
+    Provides Key[anthropic.Anthropic]("anthropic_client"): the one SDK client, built from settings.anthropic_api_key
+    with max_retries=0 and the SDK's own spans off, and closed on shutdown. AnthropicAdapter objects (one per model)
+    are built from it by AEA-51's adapter_for. Caps the SDK's "anthropic" logger at WARNING, because its DEBUG lines
+    carry whole request payloads.
     """
+    import logging
+
+    import anthropic
+
+    from meridian.adapters.models.anthropic import build_anthropic_client
+
+    logging.getLogger("anthropic").setLevel(logging.WARNING)
+
+    def _client(c: Container) -> anthropic.Anthropic:
+        client = build_anthropic_client(settings.anthropic_api_key)
+        c.on_close(client.close)
+        return client
+
+    container.provide(Key[anthropic.Anthropic]("anthropic_client"), _client)
 
 
 def register_jev(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-18 models: the Jev adapter via OpenRouter (models.md §3, §7).
 
-    No-op until AEA-18 fills it.
+    Provides Key[httpx.Client]("jev_http_client"): the one HTTP client every JevAdapter shares, redirects off, closed
+    on shutdown. Provides Key[Callable[[str], JevAdapter]]("jev_adapter_factory"): a model ID gives a JevAdapter bound
+    to that client and settings.openrouter_api_key (ValueError for a model with no JEV_PRICES row). AEA-51's
+    adapter_for calls the factory once per distinct Jev model and memoises the result. Makes no request.
     """
+    import httpx
+
+    from meridian.adapters.models.openrouter_jev import JevAdapter
+
+    http_key = Key[httpx.Client]("jev_http_client")
+
+    def _http(c: Container) -> httpx.Client:
+        client = httpx.Client(follow_redirects=False, timeout=5.0)
+        c.on_close(client.close)
+        return client
+
+    def _factory(c: Container) -> Callable[[str], JevAdapter]:
+        http = c.get(http_key)
+        api_key = settings.openrouter_api_key
+
+        def make(model: str) -> JevAdapter:
+            return JevAdapter(http, api_key=api_key, model=model)
+
+        return make
+
+    container.provide(http_key, _http)
+    container.provide(Key[Callable[[str], JevAdapter]]("jev_adapter_factory"), _factory)
 
 
 def register_gateway(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -409,15 +451,38 @@ def register_tool_dispatch(container: Container, app: FastAPI, *, settings: Any,
 def register_identity(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-27 identity: IdentityService and the demo inbox (graph-tools §5).
 
-    No-op until AEA-27 fills it.
+    Provides Key[IdentityService]("identity_service"), the one IdentityService, built from the "uow_factory" key
+    (AEA-10), settings.session_secret (the HMAC key, graph-core §12) and limits.identity (C-9). web/deps.py resolves
+    get_identity_service from that key (AEA-23); the identity node (AEA-36), the CON-6 route (AEA-43) and GraphDeps
+    (AEA-51) all use it.
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.identity import IdentityService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> IdentityService:
+        return IdentityService(c.get(uow_key), session_secret=settings.session_secret, limits=limits.identity)
+
+    container.provide(Key[IdentityService]("identity_service"), build)
 
 
 def register_scheduling(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-28 scheduling: SchedulingService (cases.md §4).
 
-    No-op until AEA-28 fills it.
+    Provides Key[SchedulingService]("scheduling"), the one SchedulingService, built from the "uow_factory" key (AEA-10)
+    and limits.booking (the R-41 cap, MC-22). The graph wiring (AEA-51) passes it to GraphDeps.scheduling and to
+    scheduling_tools(); no tool is registered here (GRT-1).
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.scheduling import SchedulingService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> SchedulingService:
+        return SchedulingService(c.get(uow_key), limits.booking)
+
+    container.provide(Key[SchedulingService]("scheduling"), build)
 
 
 def register_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -498,8 +563,54 @@ def register_reset(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-44 staff: StaffSessionStore, FlagService, CON-10 routes (staff.md §2).
 
-    No-op until AEA-44 fills it.
+    Provides deps.LOGIN_SESSIONS and deps.STAFF_ACCESS (one StaffSessionStore built from deps.UOW_FACTORY,
+    settings.session_secret, Key("demo_clock") and limits.web.login_session_lifetime_s) and deps.FLAG_SERVICE
+    (FlagService), and includes the CON-10 router once. Key("demo_clock") is AEA-30's and is read only when a clock
+    reading is needed; until it is provided that reading raises RuntimeError("not bound: demo_clock"), so the app
+    still builds. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import datetime as dt
+
+    from meridian.config import Settings
+    from meridian.ports.runtime import Clock
+    from meridian.services.staff import FlagService, StaffSessionStore
+    from meridian.web.deps import FLAG_SERVICE, LOGIN_SESSIONS, STAFF_ACCESS, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_session import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    typed = cast(Settings, settings)
+    demo_key: Key[Clock] = Key("demo_clock")
+    store_key: Key[StaffSessionStore] = Key("staff_session_store")
+
+    class _DemoClock:
+        def now(self) -> dt.datetime:
+            try:
+                clock = container.get(demo_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_key.name}":
+                    raise RuntimeError(f"not bound: {demo_key.name}") from None
+                raise
+            return clock.now()
+
+    demo_clock = _DemoClock()
+    container.provide(
+        store_key,
+        lambda c: StaffSessionStore(
+            c.get(UOW_FACTORY),
+            typed.session_secret,
+            demo_clock,
+            lifetime_s=limits.web.login_session_lifetime_s,
+        ),
+    )
+    container.provide(LOGIN_SESSIONS, lambda c: c.get(store_key))
+    container.provide(STAFF_ACCESS, lambda c: c.get(store_key))
+    container.provide(FLAG_SERVICE, lambda c: FlagService(c.get(UOW_FACTORY), demo_clock))
+    if not getattr(app.state, "staff_session_routes_included", False):
+        app.include_router(build_router())
+        app.state.staff_session_routes_included = True
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -655,15 +766,64 @@ def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-46 staff API: LiveChatService, CON-14 and CON-21 routes (staff.md §5, §7).
 
-    No-op until AEA-46 fills it.
+    Provides deps.LIVE_CHAT ("live_chat"): a LiveChatService over Key("uow_factory") (AEA-10), the demo clock
+    Key("demo_clock") (AEA-30, read through a forwarder only when an action writes, so the app builds before AEA-30
+    binds it; until then a write raises RuntimeError("not bound: demo_clock")) and the STORE redactor (data.md §1,
+    MC-23). Includes the staff_live router once per app. An app that create_app did not build has no web shell, so
+    this does nothing.
     """
+    from datetime import datetime
+
+    from meridian.privacy.redact import RedactionProfile, redact
+    from meridian.services.live_chat import LiveChatService
+    from meridian.web.deps import LIVE_CHAT, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_live import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+
+    class _DemoClock:
+        """Resolves AEA-30's clock at call time (AEA-40 and AEA-42 use the same forwarder)."""
+
+        def now(self) -> datetime:
+            try:
+                clock = container.get(demo_clock_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_clock_key.name}":
+                    raise RuntimeError(f"not bound: {demo_clock_key.name}") from None
+                raise
+            moment: datetime = clock.now()
+            return moment
+
+    container.provide(
+        LIVE_CHAT,
+        lambda c: LiveChatService(
+            c.get(UOW_FACTORY), _DemoClock(), lambda t: redact(t, RedactionProfile.STORE).text
+        ),
+    )
+    if not getattr(app.state, "staff_live_router_included", False):
+        app.include_router(build_router())
+        app.state.staff_live_router_included = True
 
 
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-47 staff API: the CON-8 clock-advance route (staff.md §8).
 
-    No-op until AEA-47 fills it.
+    Includes routes/staff_clock.py's router (advanceDemoClock: POST /api/demo/clock only; the GET on the same path is
+    AEA-43's) once per app. Provides nothing: DemoService is bound by AEA-30's register_demo hunk. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_clock import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_clock_routes_included", False):
+        return  # a second lifespan on the same app must not add the route again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_clock_routes_included = True
 
 
 def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -674,10 +834,22 @@ def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any
 
 
 def register_reads(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-48 reads API: CON-18 to CON-20 routes (staff.md §9).
+    """AEA-48 reads API: the CON-18 to CON-20 routes (staff.md §9).
 
-    No-op until AEA-48 fills it.
+    Includes routes/reads.py's router (getOwnerMetrics, getMonitoring, getLatestEval) once per app. Provides nothing:
+    the routes reach the reader through web/deps.py's get_metrics_reads(), which AEA-53's register_metrics_reader hunk
+    binds; until then an allowed read answers 500 ("not bound: get_metrics_reads") after the role check. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.reads import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "reads_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.reads_routes_included = True
 
 
 def register_graph(
@@ -692,8 +864,15 @@ def register_graph(
 def register_frontend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-49 frontend: serves apps/web/dist; runs last so its SPA fallback never shadows an API route (web.md §12).
 
-    No-op until AEA-49 fills it.
+    Delegates to web/frontend.py's register_frontend(container, app): registers the public paths GET /login, /assets/
+    and /fonts/ (WEB-1 option A), then mounts Settings.web_dist_dir read-only (/assets/{file}, /fonts/{file},
+    spa_fallback). A missing build raises FrontendMissingError when Settings.require_frontend is true, else logs
+    frontend_dist_missing once and mounts nothing (WEB-30). An app create_app did not build has no web shell, so this
+    does nothing.
     """
+    from meridian.web.frontend import register_frontend as mount_frontend
+
+    mount_frontend(container, app)
 
 
 def build_container(app: FastAPI, settings: Any, *, overrides: Any = None) -> Container:
