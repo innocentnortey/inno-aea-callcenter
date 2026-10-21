@@ -31,7 +31,7 @@ lists are satisfied.
 |---|---|---|---|---|---|
 | D-1 | Deployed URL: interactive web app | PDF 1 · portal FR-6 | "a live web app the reviewer can interact with directly. They will ask their own questions and try to break it" | — | not started |
 | D-2 | Walkthrough / demo video, 3–4 min voiceover | PDF 2 · portal "Demo Video" | "how you found the call drivers, why you chose your chunking and retrieval approach, how escalation works, and what your eval numbers say. Design reasoning, not a feature tour." | — | not started |
-| D-3 | Source repository: code + eval set + README | PDF 3 · portal "Source Code" | "a README that explains how to run it and what the containment numbers were" | — | not started |
+| D-3 | Source repository: code + eval set + README | PDF 3 · portal "Source Code" | "a README that explains how to run it and what the containment numbers were" | `README.md` | run instructions written; containment pending Stage 9 |
 | D-4 | Technical documentation | Portal | "Technical Documentation" (incl. discovery findings: drivers, method, scope choice — PDF goal 1) | [`docs/technical-documentation.md`](docs/technical-documentation.md) | drafted, numbers pending Stage 9 |
 | D-5 | Deployment guide | Portal | "Deployment Guide" | — | not started |
 | D-6 | Test results | Portal | "Test Results": containment, accuracy on handled drivers, escalation rate, retrieval eval | — | not started |

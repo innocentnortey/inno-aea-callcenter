@@ -167,3 +167,12 @@ ticket), the modules the Stage 7 addenda added, and a recounted module total (10
 `api-con-mapping.md`, DO-4 and `system-design.md` follow it; every area-map row is still *planned*. **Next action for
 the build tickets:** each changes only its own area-map row (planned → actual + commit). The stale lines in the UX-owned
 documents are listed on issue #8 for the UX session; Innocent's two open items from the UX join (decisions 5 and 6) are still his.
+
+## Stage 8: AEA-25 landed (2026-10-21)
+
+The root `README.md` is the reviewer's front door: eight sections (What this is, Try it, Results, How to run it locally, What is in the
+repository, Monitoring and the feedback loop, Documents, History). Every result reads `pending: Stage 9`; the demo login is "provided
+with the submission" (DAT-3 option B); held-out keys are described as kept outside the repository (DAT-2 option B). `SUBMISSION.md` D-3
+reads *run instructions written; containment pending Stage 9*. **Next action for the owners:** each ticket replaces only its own
+`pending:` line: AEA-02 (`.env.example`, the env-names line), AEA-16 (ingest), AEA-23 (start command), AEA-24 (eval commands),
+AEA-49/55 (screens), AEA-50 (Docker), AEA-54 (deployment guide link), AEA-56 (URL), Stage 9 (results, test-results link).
