@@ -43,7 +43,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-38 | #38 | B | blocked |  |  | a blocker is not merged | AEA-10,AEA-11,AEA-15,AEA-21 |
 | AEA-39 | #39 | B | blocked |  |  | a blocker is not merged | AEA-11,AEA-14,AEA-21 |
 | AEA-40 | #40 | B sec | planned | aea-40-aea-40-sessions-turns |  |  | AEA-03,AEA-10,AEA-11,AEA-12,AEA-23 |
-| AEA-41 | #41 | B sec | sent-back | aea-41-aea-41-chat-event-stream | fc5314b | conflict: .claude/state/icm-progress.md; implementer merges main into the branch | AEA-10,AEA-11,AEA-23 |
+| AEA-41 | #41 | B sec | merged | main | 9806170 (merge of fc5314b) | ruff check/format clean; mypy clean (79 files); 245 affected tests passed, 1 skipped (j7 reload step, AEA-40/57); no shared fixture/config touched, no full suite; journeys j7/j9 pass | AEA-10,AEA-11,AEA-23 |
 | AEA-42 | #42 | B sec | merged | aea-42-aea-42-person-request | a581a71 (merge of 5bcddbd) | ruff check/format clean; mypy clean (77 files); 209 affected tests passed, 1 skipped (reload step, AEA-40); journeys 0 affected, record mock-tested, blocked by AEA-57; container.py changed but not a shared fixture/config, no full suite | AEA-23 |
 | AEA-43 | #43 | B sec | frozen-tests | aea-43-aea-43-demo-routes |  |  | AEA-23 |
 | AEA-44 | #44 | B sec | planned | aea-44-aea-44-staff-sessions |  |  | AEA-10,AEA-23 |
