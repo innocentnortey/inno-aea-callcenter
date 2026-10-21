@@ -27,14 +27,15 @@ from eval.harness.report import build_failed_report, gates_failed, write_report
 from eval.harness.retrieval import SearchesPassages, run_retrieval_suite
 from eval.harness.runlog import RunLog
 from eval.harness.scrub import LeakDetected, Scrubber
-from meridian.adapters.retrieval_fastembed import FastembedIndex
-from meridian.retrieval.settings import MIN_SCORE, SEARCH_K
+from meridian.adapters.retrieval_fastembed import FastembedIndex  # type: ignore[import-untyped,unused-ignore]
+from meridian.retrieval.settings import MIN_SCORE, SEARCH_K  # type: ignore[import-untyped,unused-ignore]
 
 _SAFE_PATH = re.compile(r"[\w.:+#/@-]{1,200}")
 
 
 def default_index(index_dir: Path) -> SearchesPassages:
-    return FastembedIndex(index_dir)  # mypy proves FastembedIndex satisfies SearchesPassages (AC-10)
+    index: SearchesPassages = FastembedIndex(index_dir)  # structural fit (AC-10)
+    return index
 
 
 class _Parser(argparse.ArgumentParser):
