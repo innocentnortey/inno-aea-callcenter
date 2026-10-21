@@ -496,6 +496,65 @@
       }
     },
     {
+      "id": "booking.fee_diagnostic_waived",
+      "template": "Diagnostic fee: waived for Comfort Club members (normally {amount})",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/testing/journeys/2026-10-21-AEA-13.md",
+        "line": 20,
+        "where": "AEA-13 plan section 9 option A, member diagnostic (KB comfort_club_overview.md: Diagnostic fee ($89) waived on all service calls)"
+      },
+      "example": {
+        "values": {
+          "amount": "$89"
+        },
+        "rendered": "Diagnostic fee: waived for Comfort Club members (normally $89)"
+      }
+    },
+    {
+      "id": "booking.fee_tune_up",
+      "template": "Seasonal tune-up fee: {amount} per system",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/testing/journeys/2026-10-21-AEA-13.md",
+        "line": 21,
+        "where": "AEA-13 plan section 9 option A, non-member tune-up (fee schedule: Seasonal tune-up per system $129)"
+      },
+      "example": {
+        "values": {
+          "amount": "$129"
+        },
+        "rendered": "Seasonal tune-up fee: $129 per system"
+      }
+    },
+    {
+      "id": "booking.fee_tune_up_included",
+      "template": "Seasonal tune-up: included with Comfort Club, two per year (normally {amount})",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/testing/journeys/2026-10-21-AEA-13.md",
+        "line": 22,
+        "where": "AEA-13 plan section 9 option A, member tune-up (KB service_catalog.md: Included for Comfort Club members; two seasonal tune-ups per year)"
+      },
+      "example": {
+        "values": {
+          "amount": "$129"
+        },
+        "rendered": "Seasonal tune-up: included with Comfort Club, two per year (normally $129)"
+      }
+    },
+    {
+      "id": "booking.fee_estimate_free",
+      "template": "Free in-home estimate with a Comfort Advisor",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/data/issued/meridian_dataset/knowledge_base/services/service_catalog.md",
+        "line": 27,
+        "where": "AEA-13 plan section 9 option A, estimate (KB wording verbatim)"
+      },
+      "example": null
+    },
+    {
       "id": "booking.slots_not_held",
       "template": "Windows are shown, not held.",
       "source": {
@@ -715,6 +774,28 @@
         "file": "docs/ux/03-structure/SCREEN_SPECS.md",
         "line": 142,
         "where": "SCR-1 button label quoted in the greeting"
+      },
+      "example": null
+    },
+    {
+      "id": "history.code_entered",
+      "template": "Code entered",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/plans/fanout/2026-10-21-ux4/g1-chat-core.md",
+        "line": 487,
+        "where": "UX build live-row wording for a customer code or form action (Step 6 customerRowText; never the digits)"
+      },
+      "example": null
+    },
+    {
+      "id": "history.details_sent",
+      "template": "Details sent",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/plans/fanout/2026-10-21-ux4/g1-chat-core.md",
+        "line": 487,
+        "where": "UX build live-row wording for a customer code or form action (Step 6 customerRowText; never the digits)"
       },
       "example": null
     },

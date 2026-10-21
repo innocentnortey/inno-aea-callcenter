@@ -1,0 +1,35 @@
+{
+  "case_id": "S-12",
+  "category": "BILL-EXPLAIN",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F3 Billing information and payments",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "synthetic",
+  "seeded_customer": null,
+  "source_ref": "hand-written variant of WP-2 (AEA-06 plan §6.3)",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB read + KB",
+  "synthetic": "yes",
+  "synthetic_assumption": "Written by hand to cover what the 420 calls lack (DO-5 Case provenance step 3); one dimension of the source case changed; the label follows the cited rule.",
+  "synthetic_source_case": "WP-2",
+  "template": "i got an invoice # for # and im not sure what its for",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Hi, I got an invoice and I'm not sure what it's for."
+    },
+    {
+      "choice": null,
+      "form": {
+        "customer_id": "MHC-99999"
+      },
+      "kind": "form",
+      "text": null
+    }
+  ],
+  "varied_dimension": "identity edge: the locator matches no customer"
+}

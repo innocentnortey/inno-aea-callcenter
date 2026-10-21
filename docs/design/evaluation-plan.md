@@ -112,6 +112,9 @@ If Innocent prefers otherwise, the alternative that keeps per-category stratific
 categories by call, which reintroduces the near-copy leak the audit warns about (D-1). The worked pairs, WP-4F, DANGER
 and NODANGER are dev cases in every option.
 
+**Built (AEA-06, 2026-10-21) [M]:** split seed 20261021 (`python -m eval.cases.build`; method in `eval/cases/FORMAT.md`): the eight worked-pair templates fixed to dev and the four brand variants of the compressor template drawn as one unit, giving 43 template units, 20 dev and 23 held-out.
+**Case counts (AEA-06) [M]:** dev 52 scripts with keys (11 first dev set, 14 labelled synthetic, 27 transcript-derived); held-out 33 transcript-derived scripts, keys not yet written (sealing run per FORMAT.md; the hash line follows sealing); 16 retrieval queries (7 knowledge-map rows, 4 stale-twin traps, 5 off-corpus).
+
 **Who may read what.**
 
 | Set | Read failures and fix against it? | Who reads the answer key |

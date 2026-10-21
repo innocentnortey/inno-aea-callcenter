@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": true,
+  "expected_file": null,
+  "query": "What's the weather going to be like in Austin this weekend?",
+  "query_id": "R-15",
+  "source": "DAT-17; PRD §4.3a Questions the files can't answer",
+  "synthetic": true,
+  "trap": null
+}

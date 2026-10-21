@@ -33,6 +33,7 @@ GROUPS = (
     "booking",
     "limits",
     "live",
+    "history",
     "demo",
 )
 EXPECTED_COUNTS = {
@@ -42,9 +43,10 @@ EXPECTED_COUNTS = {
     "promise": 7,
     "fee_change": 4,
     "followup": 3,
-    "booking": 12,
+    "booking": 16,
     "limits": 7,
     "live": 6,
+    "history": 2,
     "demo": 12,
 }
 
@@ -338,3 +340,18 @@ def test_greeting_says_automated() -> None:
     assert "not a person" in greeting
     assert "Talk to a person" in greeting
     assert "Talk to a person" in render(TextId.ARE_YOU_A_PERSON)
+
+
+def test_history_row_texts() -> None:
+    assert render(TextId.HISTORY_CODE_ENTERED) == "Code entered"
+    assert render(TextId.HISTORY_DETAILS_SENT) == "Details sent"
+    assert TextId.HISTORY_CODE_ENTERED.value == "history.code_entered"
+    assert TextId.HISTORY_DETAILS_SENT.value == "history.details_sent"
+
+
+@pytest.mark.parametrize("text_id", [TextId.HISTORY_CODE_ENTERED, TextId.HISTORY_DETAILS_SENT])
+def test_history_row_texts_take_no_values(text_id: TextId) -> None:
+    with pytest.raises(TextRenderError) as err:
+        render(text_id, digits="x")
+    assert err.value.placeholder == "digits"
+    assert err.value.text_id == text_id.value

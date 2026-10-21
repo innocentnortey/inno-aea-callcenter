@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": true,
+  "expected_file": null,
+  "query": "Do you have a mobile app I can download?",
+  "query_id": "R-16",
+  "source": "DAT-17; PRD §4.3a Questions the files can't answer",
+  "synthetic": true,
+  "trap": null
+}

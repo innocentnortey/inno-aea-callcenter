@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260806-0174",
+  "category": "MEM-UPGRADE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F5 Comfort Club membership",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260806-0174",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "Needs a system the issued materials lack",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "can i upgrade from the regular plan to the plus plan midyear",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Can I upgrade from the, uh, regular plan to the Plus plan mid-year?"
+    }
+  ],
+  "varied_dimension": null
+}

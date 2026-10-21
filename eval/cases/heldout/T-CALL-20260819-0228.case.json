@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260819-0228",
+  "category": "COMMERCIAL",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F10 Out of residential scope",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260819-0228",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i manage a #unit strip center and i need a quote on replacing four rooftop units",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I manage a 12-unit strip center and I need a quote on replacing four rooftop units."
+    }
+  ],
+  "varied_dimension": null
+}

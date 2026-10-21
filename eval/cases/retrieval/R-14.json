@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": true,
+  "expected_file": null,
+  "query": "Can you recommend a good restaurant near downtown Austin?",
+  "query_id": "R-14",
+  "source": "DAT-17; PRD §4.3a Questions the files can't answer",
+  "synthetic": true,
+  "trap": null
+}
