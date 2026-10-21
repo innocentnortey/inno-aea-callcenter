@@ -707,7 +707,9 @@ tests/                                       planned
 ├── contract/         test_model_ports_contract.py (JevAdapter + AnthropicAdapter, recorded fixtures: same failure
 │                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py; OpenAPI boundary (AEA-59):
 │                     test_openapi_server.py over cases/<route>.py (one per route ticket), test_openapi_fixtures.py,
-│                     test_types_gen_drift.py
+│                     test_types_gen_drift.py; prompt ↔ consumer checks (AEA-60): test_prompts_vs_consumers.py
+│                     with private helpers _prompts_render.py, _prompts_checks.py, _prompts_malformed.py,
+│                     _prompts_expect.py, _prompts_drift.py
 ├── services/         each service over a temp SQLite working copy: booking rules, one-slot concurrency (E-7),
 │                     idempotent case creation, identity caps, reset all-or-nothing
 ├── graph/            the compiled graph with fake models and a temp DB: WP-1…WP-8, WP-4F, DANGER, NODANGER;
@@ -721,7 +723,7 @@ tests/                                       planned
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); `tests/journeys/browser/`, `j1/test_aea_58.py`, `j9/test_aea_58.py` (AEA-58, `821e134`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); `tests/journeys/browser/`, `j1/test_aea_58.py`, `j9/test_aea_58.py` (AEA-58, `821e134`); `tests/contract/test_prompts_vs_consumers.py` and `j5/`, `j9/test_aea_60.py` (AEA-60, branch `aea-60-prompt-consumer-checks`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
