@@ -5,7 +5,7 @@
 > As of: 2026-10-21, reconciled with the slice plan (AEA-08): DO-3 revision 3 (Stage 7 addenda and the three slice-plan deviations applied); every row below is still planned.
 > Authority: **DO-3 wins.** This file only routes; when it disagrees with DO-3, fix this file.
 
-**Every code path below is planned unless its row says built.** AEA-01 (`893b825`) built the package skeleton; the parked `src/meridian/` is read for shapes only
+**Every code path below is planned unless its row marks it actual.** AEA-01 (`893b825`) built the package skeleton; the parked `src/meridian/` is read for shapes only
 and is replaced by the planned tree (DO-3 §2.4). When a slice lands, change its row from *planned* to *actual* with
 the commit, in the same change (`rules/context-maintenance.md`).
 
@@ -22,7 +22,7 @@ and DDL file; a table with several writers lives in A0 (DO-3 §8).
 
 | Wave | Area | Responsibility | Owns (all planned) | Tickets | Status |
 |---|---|---|---|---|---|
-| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core and every DDL file, shared case storage, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`, `staff.py`, `identity.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core,repos_cases}.py`, **every `adapters/sqlite/schema/*.sql`** (written by A0, AEA-10, from the owning area's field list), empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-01, 02, 03, 04, 10, 11 | partly built: AEA-01 (`pyproject.toml`, package skeleton, `policy/limits.py`, `web/container.py` with 27 `register_<area>()` stubs, `tests/conftest.py`, `tests/journeys/` skeleton); the rest planned |
+| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core and every DDL file, shared case storage, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`, `staff.py`, `identity.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core,repos_cases}.py`, **every `adapters/sqlite/schema/*.sql`** (written by A0, AEA-10, from the owning area's field list), empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/`, `tests/fixtures/sqlite.py` | AEA-01, 02, 03, 04, 10, 11 | partly built: `policy/texts.py` actual (AEA-03, `2689582`); `privacy/redact.py` actual (AEA-04, `9145044`); AEA-01 (`pyproject.toml`, package skeleton, `policy/limits.py`, `web/container.py` with 27 `register_<area>()` stubs, `tests/conftest.py`, `tests/journeys/` skeleton); the rest planned |
 | 1 | **A1 Gates** | Decide the turns that never reach a model | `gates/{rules,gate}.py` | AEA-05, 12 | planned |
 | 1 | **A2 Models** | One adapter per provider; the role-typed gateway; the cost ledger | `adapters/models/{anthropic,openrouter_jev}.py`, `agent/gateway.py`, `services/ledger.py`, `adapters/sqlite/repos_spend.py` (body) | AEA-17, 18, 20, 26 | planned |
 | 1 | **A3 Retrieval** | Build the KB index at image build; answer passage searches | `retrieval/{settings,manifest,ingest}.py`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | AEA-16, 33 | planned |

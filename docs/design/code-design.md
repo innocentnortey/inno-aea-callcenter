@@ -178,6 +178,8 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
+**Built:** `policy/texts.py` (AEA-03, `2689582`).
+
 ```
 src/meridian/                                    planned                                                     area  wave
 ├── config.py                                    Settings; typed per-role model maps, validated at start     A0    0
@@ -201,7 +203,7 @@ src/meridian/                                    planned                        
 │   ├── booking.py                               city/ZIP → zone; 24-hour rule; fee notes by tier            A5    1
 │   ├── handoff.py                               R-26 promise table + due rule; reason → P0–P4; D4 rows      A6    1
 │   └── escalation.py                            decide_escalation(inputs) (pure; OD-6, D4, R-21)            A7b   3
-├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0
+├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0   built AEA-04 9145044
 ├── ports/
 │   ├── models.py                                ChoiceModel, StructuredModel, ToolCallingModel; attempts    A0    0
 │   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink       A0    0
