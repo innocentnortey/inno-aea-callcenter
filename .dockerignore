@@ -1,0 +1,33 @@
+# AEA-50 (AC-4): local secrets, run artefacts and held-out eval material never enter the build context.
+.env
+.env.*
+**/.env
+**/.env.*
+var/
+.venv/
+**/.venv
+.git/
+**/node_modules
+**/__pycache__
+**/*.pyc
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.claude/
+tests/
+# Eval: only committed reports reach the image (DAT-14); cases and held-out keys never do (DAT-2).
+eval/cases/
+eval/**
+!eval/reports/
+!eval/reports/**
+# Frontend outputs and local tooling: the web stage rebuilds dist from source.
+apps/web/dist/
+apps/web/test-results/
+apps/web/playwright-report/
+apps/web/.tmp/
+apps/web/*.tsbuildinfo
+# Docs: only the issued dataset and the one OpenAPI file the web stage reads (AEA-50-1).
+docs/**
+!docs/data/issued/meridian_dataset/
+!docs/data/issued/meridian_dataset/**
+!docs/ux/03-structure/ui-contracts.openapi.yaml
