@@ -302,3 +302,10 @@ These figures are the auditor's report (second-hand), not re-run here.
 **Next action:** land AEA-30 (unblocks login, the strict contract run and the j1 steps), then AEA-40, 45, 51, 52 and 53 as planned (worktrees for 30, 36, 37, 40 and 45 are open).
 Cut the `lane::direct` area-map ticket (finding 5). Carry finding 1 into AEA-38/AEA-51 and finding 2 into any reader ticket. Wave-0 findings 1 and 3 still wait on Innocent.
 The wave-3 merge gate still adds `CONTRACT_STRICT=1`. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to planners of unmerged tickets; do not sweep them in.
+
+## Stage 8: AEA-54 deployment guide (2026-10-21, VPS)
+
+`docs/deployment-guide.md` (D-5) is merged; `SUBMISSION.md` D-5 reads *written; live URL pending AEA-56* and the README links it. Two gaps found while writing it, for the
+owners (also on issue #54): the start-up turn sweep (`fail_running`) has no caller until AEA-40's `register_chat` lands, and `migrate.py` creates missing tables only, so a release
+that changes an existing table's columns needs a rebuilt volume. **Next action for AEA-56:** run the guide's section 5 smoke list after AEA-30 and AEA-40 are merged and replace
+the `pending: AEA-56` lines (URL, redeploy downtime).
