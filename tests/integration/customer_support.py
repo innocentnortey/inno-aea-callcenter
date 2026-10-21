@@ -442,3 +442,33 @@ def write_probe(db_path: Path, failures: list[str], *, patience_s: float = 0.5) 
                 conn.close()
 
     return probe
+
+
+def table_text(run: Any) -> dict[str, str]:
+    """Every row of every app table as text, table by table (the working copy; the issued data is not in it as rows we
+    wrote). Values are `str()`ed."""
+    tables = [
+        r["name"]
+        for r in run.db.rows(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+        )
+    ]
+    return {t: "\n".join(repr(row) for row in run.db.table_rows(t)) for t in tables}
+
+
+def span_text(spans: list[Any]) -> str:
+    from tests.unit.adapters._tracing_doubles import span_strings
+
+    return "\n".join(s for span in spans for s in span_strings(span))
+
+
+def request_json(run: Any) -> str:
+    """Every request any scripted model received, as JSON text (what a provider would have been sent)."""
+    return "\n".join(
+        json.dumps(c.request.model_dump(mode="json", exclude={"output_model"}), default=str)
+        for c in run.script.calls
+    )
+
+
+def response_text(clients: Any) -> str:
+    return "\n".join(r.text for c in clients for r in c.responses)

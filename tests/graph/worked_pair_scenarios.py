@@ -137,6 +137,7 @@ class ScenarioResult:
     customer_id: str | None
     case_refs: tuple[str, ...]
     extra: Mapping[str, Any] = field(default_factory=dict)
+    codes: tuple[str, ...] = ()  # the codes read from the inbox for this chat (never printed)
 
 
 # -- helpers -------------------------------------------------------------------------------------------------------
@@ -206,6 +207,7 @@ def _result(
         customer_id=customer_id,
         case_refs=case_refs_of(run, chat.thread_id),
         extra=extra,
+        codes=tuple(chat.codes),
     )
 
 

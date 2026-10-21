@@ -5,6 +5,7 @@ printed or written into a test file.
 
 from __future__ import annotations
 
+import time
 import uuid
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
@@ -12,6 +13,7 @@ from typing import Any
 
 import httpx
 
+from tests.api.openapi_check import SseFrame
 from tests.journeys.support.client import JourneyClient
 from tests.journeys.support.run import JourneyRun
 
@@ -23,6 +25,9 @@ class Chat:
     thread_id: str
     opened: dict[str, Any]  # the 201 StartSessionResponse body
     responses: list[httpx.Response] = field(default_factory=list)
+    codes: list[str] = field(
+        default_factory=list
+    )  # every code read from the inbox for this chat (capture tests scan for them)
 
 
 def login(run: JourneyRun) -> JourneyClient:
@@ -101,7 +106,9 @@ def inbox(chat: Chat) -> list[dict[str, Any]]:
 def newest_code(chat: Chat) -> str:
     live = [m for m in inbox(chat) if m["status"] == "active" and m.get("code")]
     assert live, "the inbox holds no active code"
-    return str(max(live, key=lambda m: m["at"])["code"])
+    code = str(max(live, key=lambda m: m["at"])["code"])
+    chat.codes.append(code)
+    return code
 
 
 def customer_row(run: JourneyRun, customer_id: str) -> dict[str, Any]:
@@ -163,3 +170,40 @@ def rows_for_turn(run: JourneyRun, table: str, turn_id: str) -> list[dict[str, A
 
 def turn_row(run: JourneyRun, turn_id: str) -> dict[str, Any]:
     return run.db.one("SELECT * FROM turns WHERE turn_id = ?", (turn_id,))
+
+
+def read_events(
+    client: JourneyClient, path: str, *, last_event_id: str | None = None, seconds: float = 2.0
+) -> list[SseFrame]:
+    """An event stream for a short while: the complete frames received before the time limit (heartbeats skipped)."""
+    frames: list[SseFrame] = []
+    data: list[str] = []
+    event: str | None = None
+    ident: str | None = None
+    headers = {"Last-Event-ID": last_event_id} if last_event_id is not None else {}
+    try:
+        with client._http.stream(
+            "GET",
+            path,
+            headers=headers,
+            timeout=httpx.Timeout(connect=5.0, read=seconds, write=5.0, pool=5.0),
+        ) as response:
+            assert response.status_code == 200, f"{path} answered HTTP {response.status_code}"
+            deadline = time.monotonic() + seconds
+            for raw in response.iter_lines():
+                line = raw.rstrip("\r\n")
+                if line == "":
+                    if data:
+                        frames.append(SseFrame(event=event, id=ident, data="\n".join(data)))
+                    event, ident, data = None, None, []
+                elif line.startswith("id:"):
+                    ident = line[3:].strip()
+                elif line.startswith("event:"):
+                    event = line[6:].strip()
+                elif line.startswith("data:"):
+                    data.append(line[5:].lstrip(" "))
+                if time.monotonic() > deadline:
+                    break
+    except httpx.ReadTimeout:
+        pass
+    return frames
