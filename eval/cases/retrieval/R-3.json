@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "warranty/warranty_policy.md",
+  "query": "How long is the labor warranty on a repair?",
+  "query_id": "R-3",
+  "source": "PRD §4.3a row: Warranty",
+  "synthetic": true,
+  "trap": null
+}

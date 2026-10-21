@@ -187,6 +187,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
+**Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 
 ```
 src/meridian/                                    planned                                                     area  wave

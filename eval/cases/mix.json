@@ -1,0 +1,307 @@
+{
+  "splits": {
+    "dev": {
+      "categories": [
+        "BILL-AUTOPAY",
+        "BILL-EXPLAIN",
+        "BILL-REFUND",
+        "COMPLAINT-CONDUCT",
+        "COMPLAINT-REPEAT",
+        "EST-REPLACE",
+        "MEM-CANCEL",
+        "MEM-INCLUDE",
+        "SAF-CO",
+        "SCH-BURNING",
+        "SCH-HVAC",
+        "SCH-RESCHED",
+        "WAR-PARTS",
+        "WAR-REPEAT",
+        "WAR-TRANSFER",
+        "WRONG-NO"
+      ],
+      "rows": [
+        {
+          "category": "BILL-AUTOPAY",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "BILL-EXPLAIN",
+          "count": 2,
+          "origin": "synthetic",
+          "tests": "identity edge"
+        },
+        {
+          "category": "BILL-EXPLAIN",
+          "count": 1,
+          "origin": "synthetic",
+          "tests": "prompt injection"
+        },
+        {
+          "category": "BILL-EXPLAIN",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "BILL-REFUND",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "COMPLAINT-CONDUCT",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "COMPLAINT-REPEAT",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "EST-REPLACE",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MEM-CANCEL",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MEM-INCLUDE",
+          "count": 1,
+          "origin": "synthetic",
+          "tests": "failure signal"
+        },
+        {
+          "category": "MEM-INCLUDE",
+          "count": 2,
+          "origin": "synthetic",
+          "tests": "person request"
+        },
+        {
+          "category": "MEM-INCLUDE",
+          "count": 1,
+          "origin": "synthetic",
+          "tests": "safety phrasing"
+        },
+        {
+          "category": "MEM-INCLUDE",
+          "count": 3,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SAF-CO",
+          "count": 3,
+          "origin": "synthetic",
+          "tests": "safety phrasing"
+        },
+        {
+          "category": "SAF-CO",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-BURNING",
+          "count": 3,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-HVAC",
+          "count": 3,
+          "origin": "synthetic",
+          "tests": "danger comfort"
+        },
+        {
+          "category": "SCH-HVAC",
+          "count": 3,
+          "origin": "synthetic",
+          "tests": "no-danger comfort"
+        },
+        {
+          "category": "SCH-HVAC",
+          "count": 8,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-RESCHED",
+          "count": 1,
+          "origin": "synthetic",
+          "tests": "appointment timing"
+        },
+        {
+          "category": "SCH-RESCHED",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "WAR-PARTS",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "WAR-REPEAT",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "WAR-TRANSFER",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "WRONG-NO",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        }
+      ],
+      "size": 52,
+      "synthetic": 17,
+      "transcript_derived": 35
+    },
+    "held-out": {
+      "categories": [
+        "BILL-BALANCE",
+        "BILL-DISPUTE",
+        "BILL-DUP",
+        "BILL-PAY",
+        "COMMERCIAL",
+        "HIRING",
+        "MEM-PRICE",
+        "MEM-RENEW",
+        "MEM-UPGRADE",
+        "MULTI-REPAIR-PLAN",
+        "SCH-CANCEL",
+        "SCH-CONFIRM",
+        "SCH-HVAC",
+        "SCH-LATE",
+        "SCH-PLUMB",
+        "SCH-TUNEUP",
+        "WAR-CLAIM"
+      ],
+      "rows": [
+        {
+          "category": "BILL-BALANCE",
+          "count": 3,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "BILL-DISPUTE",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "BILL-DUP",
+          "count": 3,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "BILL-PAY",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "COMMERCIAL",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "HIRING",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MEM-PRICE",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MEM-RENEW",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MEM-UPGRADE",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "MULTI-REPAIR-PLAN",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-CANCEL",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-CONFIRM",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-HVAC",
+          "count": 5,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-LATE",
+          "count": 1,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-PLUMB",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "SCH-TUNEUP",
+          "count": 3,
+          "origin": "transcript",
+          "tests": null
+        },
+        {
+          "category": "WAR-CLAIM",
+          "count": 2,
+          "origin": "transcript",
+          "tests": null
+        }
+      ],
+      "size": 33,
+      "synthetic": 0,
+      "transcript_derived": 33
+    }
+  }
+}

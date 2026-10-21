@@ -1,0 +1,42 @@
+{
+  "case_id": "T-CALL-20260830-0209",
+  "category": "SCH-CONFIRM",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F2 Existing-appointment management",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "CALL-20260830-0209",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "DB read + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10001 substituted.",
+  "synthetic_source_case": null,
+  "template": "just wanted to confirm i still have someone coming thursday",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Just wanted to confirm I still have someone coming Thursday."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    }
+  ],
+  "varied_dimension": null
+}

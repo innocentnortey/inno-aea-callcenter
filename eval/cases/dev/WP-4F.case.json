@@ -1,0 +1,54 @@
+{
+  "case_id": "WP-4F",
+  "category": "SCH-RESCHED",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F2 Existing-appointment management",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "worked-pair",
+  "seeded_customer": "MHC-10001",
+  "source_ref": "docs/data/worked-pairs.md WP-4 (fee-free variant)",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB write (booking) + KB",
+  "synthetic": "yes",
+  "synthetic_assumption": "The same request for a visit more than 24 hours away; MHC-10001's appointment 159 is Thu 2026-10-22 08:00–12:00.",
+  "synthetic_source_case": "WP-4",
+  "template": "i have a tech coming tomorrow but something came up can i move it",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I need to move my appointment next week."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Can I do Monday the 19th, 8 to 12, instead?"
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Yes, please."
+    }
+  ],
+  "varied_dimension": "appointment timing: the visit is more than 24 hours away, so no fee applies"
+}

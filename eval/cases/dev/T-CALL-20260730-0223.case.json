@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260730-0223",
+  "category": "COMPLAINT-REPEAT",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F8 Service complaints",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260730-0223",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Person required by policy",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "ive called three times about the same problem and nobody has called me back im done",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I've called three times about the same problem and nobody has called me back. I'm done."
+    }
+  ],
+  "varied_dimension": null
+}

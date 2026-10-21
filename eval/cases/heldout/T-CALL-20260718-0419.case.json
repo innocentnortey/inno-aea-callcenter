@@ -1,0 +1,42 @@
+{
+  "case_id": "T-CALL-20260718-0419",
+  "category": "BILL-BALANCE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F3 Billing information and payments",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10002",
+  "source_ref": "CALL-20260718-0419",
+  "split": "held-out",
+  "staffing": "nobody",
+  "support_level": "DB read + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10002 substituted. Invoice number and amount replaced by the seeded customer's INV-204411 and $478.",
+  "synthetic_source_case": null,
+  "template": "whats my current balance",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "What's my current balance?"
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    }
+  ],
+  "varied_dimension": null
+}

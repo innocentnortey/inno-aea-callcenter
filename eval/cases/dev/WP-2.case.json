@@ -1,0 +1,54 @@
+{
+  "case_id": "WP-2",
+  "category": "BILL-EXPLAIN",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F3 Billing information and payments",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "worked-pair",
+  "seeded_customer": "MHC-10002",
+  "source_ref": "docs/data/worked-pairs.md WP-2",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "DB read + KB",
+  "synthetic": "partly",
+  "synthetic_assumption": "The transcript's invoice isn't in the DB, so the customer becomes seeded MHC-10002 with INV-204411.",
+  "synthetic_source_case": null,
+  "template": "i got an invoice # for # and im not sure what its for",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Hi, I got an invoice and I'm not sure what it's for."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Can you email me an itemized copy?"
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Actually, I think the $144 after-hours charge is wrong. I want to dispute it."
+    }
+  ],
+  "varied_dimension": null
+}

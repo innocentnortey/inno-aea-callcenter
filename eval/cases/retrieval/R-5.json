@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "services/service_catalog.md",
+  "query": "Do you do duct cleaning?",
+  "query_id": "R-5",
+  "source": "PRD §4.3a row: What Meridian does, and doesn't; DAT-18",
+  "synthetic": true,
+  "trap": null
+}

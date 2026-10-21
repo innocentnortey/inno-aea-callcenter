@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "membership/comfort_club_overview.md",
+  "query": "What does the Comfort Club membership actually include?",
+  "query_id": "R-1",
+  "source": "PRD §4.3a row: Membership; words from CALL-20260707-0148 (WP-1)",
+  "synthetic": false,
+  "trap": null
+}
