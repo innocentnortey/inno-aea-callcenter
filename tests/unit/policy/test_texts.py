@@ -347,3 +347,11 @@ def test_history_row_texts() -> None:
     assert render(TextId.HISTORY_DETAILS_SENT) == "Details sent"
     assert TextId.HISTORY_CODE_ENTERED.value == "history.code_entered"
     assert TextId.HISTORY_DETAILS_SENT.value == "history.details_sent"
+
+
+@pytest.mark.parametrize("text_id", [TextId.HISTORY_CODE_ENTERED, TextId.HISTORY_DETAILS_SENT])
+def test_history_row_texts_take_no_values(text_id: TextId) -> None:
+    with pytest.raises(TextRenderError) as err:
+        render(text_id, digits="x")
+    assert err.value.placeholder == "digits"
+    assert err.value.text_id == text_id.value
