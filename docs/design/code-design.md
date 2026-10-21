@@ -4,7 +4,7 @@
 **Status:** DRAFT, **revision 3**. Revision 3, 2026-10-21: reconciled with the slice plan and the Stage 7 addenda (AEA-08);
 it records their decisions and makes none. Revision 2 followed the `metz-code-design-agent` review
 ([`reviews/2026-10-21-code-design-review.md`](reviews/2026-10-21-code-design-review.md), verdict FAIL; response in §11).
-Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; every other path below is planned.** The component contracts (DO-4) are
+Awaiting Innocent's review. **Built so far (AEA-01, `893b825`): `pyproject.toml`, the §3 and §9 package markers, `policy/limits.py`, `web/container.py` (stubs), `tests/conftest.py`; AEA-21 (`6df4f4c`): `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py`, node stubs; every other path below is planned.** The component contracts (DO-4) are
 in [`contracts/`](contracts/README.md).
 
 **What this file owns:** the module map under `src/meridian/`, each module's responsibility, interface, dependencies
@@ -118,8 +118,8 @@ flowchart TB
 ### 2.2 How a parallel step runs in a sync graph
 
 The planner ∥ classifier and responder ∥ brief pairs are separate branches of one superstep. LangGraph's sync runner
-executes them on its own background executor threads [A: verify on the pinned `langgraph` 1.2.16 with a two-node timing
-test before the A7a ticket merges]. A turn therefore holds one AnyIO pool thread for its life plus up to two short-lived
+executes them on its own background executor threads [M: two 1 s branch nodes in one superstep, invoked from a worker thread, took 1.009 s on langgraph 1.2.16;
+`tests/graph/test_spine.py::test_two_node_parallel_timing`, AEA-21]. A turn therefore holds one AnyIO pool thread for its life plus up to two short-lived
 executor threads during those steps. This refines DO-1 §5.2's "one pool thread" (conflict C-5, §10); it does not change
 the pool arithmetic, because executor threads are not drawn from the 40-thread pool.
 
@@ -178,7 +178,7 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
-**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`).
+**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`); `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py` and the five node stubs (AEA-21, `6df4f4c`) · `adapters/models/anthropic.py` (AEA-17, `79d29fe`); `adapters/models/openrouter_jev.py` (AEA-18, `64884ef`).
 **Built:** `retrieval/{settings,manifest,ingest}.py` (AEA-16, `fe12657`).
 **Built:** `adapters/sqlite/{db,migrate,rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py`, every `adapters/sqlite/schema/*.sql`, `adapters/checkpointer.py`, `tests/fixtures/sqlite.py` (AEA-10, `ff4b9bd`).
 **Built:** `services/ledger.py`, `adapters/sqlite/repos_spend.py` body (AEA-26, `c589914`).
@@ -188,6 +188,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -238,7 +239,7 @@ src/meridian/                                    planned                        
                                                  demo_state, job_runs, reset/seed records; A0 (AEA-10)
 │   ├── sqlite/repos_spend.py                    spend_ledger                                                A2    1
 │   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1
-│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1
+│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1   built AEA-28 a6d8a68
 │   ├── sqlite/repos_staff.py                    staff_sessions, flags                                       A9    2
 │   ├── sqlite/repos_ops.py                      health_events, deploy_records, eval results (read)          A10a  1
 │   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
@@ -254,7 +255,7 @@ src/meridian/                                    planned                        
 ├── services/
 │   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
 │   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1
-│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1
+│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1   built AEA-28 a6d8a68
 │   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
 │   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
                                                  BriefAssembler
@@ -277,18 +278,18 @@ src/meridian/                                    planned                        
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1   built AEA-33 206f802
 │   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
-                                                 request_change executors
-│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2
-│   ├── routers.py                               pure conditional-edge functions                             A7a   2
-│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2
-│   ├── signals.py                               the `signal` log record for the eight failure signals       A7a   2
+                                                 request_change executors   built AEA-28 a6d8a68
+│   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2   built AEA-21 6df4f4c
+│   ├── routers.py                               pure conditional-edge functions                             A7a   2   built AEA-21 6df4f4c
+│   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2   built AEA-21 6df4f4c
+│   ├── signals.py                               the `signal` log record for the eight failure signals       A7a   2   built AEA-21 6df4f4c
                                                  (AEA-21; stage7/graph-core.md §4, graph-nodes.md §4)
-│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2
-│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2
-│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3
-│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3
-│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3
-│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3
+│   ├── nodes/load_context.py                    settled, controller, identity, chat window from the DB      A7a   2   stub AEA-21 6df4f4c
+│   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2   built AEA-21 6df4f4c
+│   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   stub AEA-21 6df4f4c
+│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
+│   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   stub AEA-21 6df4f4c
 │   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3
 │   ├── specialists/runner.py                    the braked tool loop                                        A7b   3
 │   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3   built AEA-22 5d0a4e4 (ticket wave 1)
@@ -543,7 +544,9 @@ Every router sends a state with `halt` set straight to `compose`, which builds t
 once through `escalation` (rule 6, `ai_failure` P3, degraded) → `handoff` → `facts` → `compose`; `DEADLINE`,
 `SPEND_CAP` and `PROVIDER_SPEND_CAP` go straight to `compose` with no case; a halted state skips responder, brief and
 checks; `run_graph` catches `GraphRecursionError` and returns compose's halt reply.
-`recursion_limit` is 25 [A: the longest path is 14 steps; a test runs a 3-task turn under it].
+`recursion_limit` is 25 [M: a 3-task turn finished at step 10; `test_three_task_turn_under_limit`, AEA-21].
+
+**Built (AEA-21):** halt routing as [graph-core §5](contracts/stage7/graph-core.md) and the two added edges as graph-core §11; plus the routing conditions in `docs/plans/fanout/2026-10-21-build/AEA-21.md` §8.1 PD-1…PD-6 (a tasks-less plan with a handoff request or an act plan without tasks; identity failures to escalation; card choices resume the open task; a halted specialist turn; the brake passing escalation → handoff once).
 
 ---
 
@@ -690,7 +693,9 @@ tests/                                       planned
 ├── unit/             mirrors src/meridian/: unit/gates/test_rules.py, unit/test_checks.py,
 │                     unit/policy/test_handoff.py, unit/privacy/test_redact.py, unit/agent/test_routers.py, …
 ├── contract/         test_model_ports_contract.py (JevAdapter + AnthropicAdapter, recorded fixtures: same failure
-│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py
+│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py; OpenAPI boundary (AEA-59):
+│                     test_openapi_server.py over cases/<route>.py (one per route ticket), test_openapi_fixtures.py,
+│                     test_types_gen_drift.py
 ├── services/         each service over a temp SQLite working copy: booking rules, one-slot concurrency (E-7),
 │                     idempotent case creation, identity caps, reset all-or-nothing
 ├── graph/            the compiled graph with fake models and a temp DB: WP-1…WP-8, WP-4F, DANGER, NODANGER;
@@ -703,7 +708,7 @@ tests/                                       planned
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
@@ -720,7 +725,7 @@ tests/                                       planned
 | C-2 | Readiness SD-6.3 note vs R-47 and DO-1 §8.2 | Readiness: a Jev classifier failure "must fail toward raise or hand off"; R-47 [Decided]: "the rules stand" | Follows R-47; records `classifier_fallback`. Raised for the readiness report's owner |
 | C-3 | DO-1 §9 / DO-2 §A.5 vs DO-6 records | DO-1 names `turns`, `model_calls`; DO-6 names `request`, `conversation`, `turn`, `check_event`, `spend_ledger`, `health_event`, …; DO-1 has no chat-message or conversation table, though SDQ-10 says "the clean chat lives in our own table" | DO-6's names for observability tables; adds `conversations` and `messages` |
 | C-4 | R-3 vs CON-8 | One moving demo clock moves the chat's "today" | `DemoClock` serves one value; a chat-fixed date is a one-line change. Still the UX gate's / Innocent's call (UXR-13) |
-| C-5 | DO-1 §5.2 "one pool thread per turn" | Parallel branches use LangGraph executor threads [A] | §2.2; arithmetic unchanged; verify with the timing test |
+| C-5 | DO-1 §5.2 "one pool thread per turn" | Parallel branches use LangGraph executor threads [A] | §2.2; arithmetic unchanged; measured 1.009 s (AEA-21) |
 | C-6 | DO-6 `turn.gate_result` vs DO-2 §A.1 gate paths | DO-6 lacks `code_entry` and `card_choice` | Both map to `clear` for DO-6; detail kept in `turn.path` [proposal]. Raised for DO-6's owner |
 | C-7 | DO-2 §A.3 (controller in the checkpoint) vs CON-14 | Staff change `controller` outside a graph run | Authority `conversations.controller`, copied into state by `load_context` |
 | C-8 | DO-1 §8.1 vs SP-1 | SP-1 made up to 3 attempts; DO-1 says one retry | Follows DO-1: at most 2 attempts per call |
