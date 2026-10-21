@@ -178,6 +178,8 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
+**Built:** `policy/texts.py` (AEA-03, `2689582`).
+
 ```
 src/meridian/                                    planned                                                     area  wave
 ├── config.py                                    Settings; typed per-role model maps, validated at start     A0    0
