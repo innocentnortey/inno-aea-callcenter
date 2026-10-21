@@ -193,6 +193,9 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `agent/nodes/reply.py` (four node bodies), `agent/prompts/reply.py` (AEA-38, `ec94722`).
 **Built:** `agent/nodes/load_context.py` (AEA-34, `8d6be78`).
 **Built:** `web/routes/staff_cases.py`, `web/schemas/staff_cases.py`, the `register_staff_cases` hunk (AEA-45, `c6cdab6`).
+**Built:** `services/cases.py`, `services/handoff.py`, `services/_case_rules.py`, `services/_case_views.py`, `services/_case_actions.py`, the `register_cases` hunk (AEA-29, `d3facfe`).
+**Built:** `eval/harness/{__main__,cli,deps,records,cases,freeze,scrub,runlog,client,runner,invariants,scoring,judge,ledger,dbcheck,report,load,retrieval,dryrun}.py`, `eval/run_retrieval.py` (AEA-24, branch `aea-24-eval-harness`).
+**Built:** `services/demo.py`, `services/scheduler.py` (AEA-30, `f4aa2cb`; signatures stage7/cases.md §6; the four demo view types are imported from `domain/views.py`, AEA-02b).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -260,9 +263,10 @@ src/meridian/                                    planned                        
 │   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
 │   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1   built AEA-27 93dfca4
 │   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1   built AEA-28 a6d8a68
-│   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
-│   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
+│   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1   built AEA-29 d3facfe
+│   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1   built AEA-29 d3facfe
                                                  BriefAssembler
+│   ├── _case_rules.py · _case_views.py · _case_actions.py  private rules, view builders, staff writes of cases.py (AEA-29)  A6    2   built AEA-29 d3facfe
 │   ├── demo.py                                  DemoClock (Clock port), staffing, clock advance             A6    1
 │   ├── scheduler.py                             60 s tick: due-soon, overdue, stuck, unowned; daily prune   A6    1
 │   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1   built AEA-31 8192d2b
@@ -314,7 +318,7 @@ src/meridian/                                    planned                        
 │   ├── routes/chat.py · schemas/chat.py         CON-1, CON-2 (AEA-40)                                       A8    2
 │   ├── routes/events.py · schemas/events.py     CON-3: async SSE polling `events` (AEA-41)                  A8    2
 │   ├── routes/handoff.py · schemas/handoff.py   CON-4, CON-5 (AEA-42)                                       A8    2   built AEA-42 55b5e7c
-│   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
+│   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2   built AEA-43 db9ef50
 │   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 getSession, listDemoRoles, switchRole (AEA-44)       A9    2
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
 │   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2   built AEA-46 0d152ee
@@ -325,8 +329,9 @@ src/meridian/                                    planned                        
 
 eval/harness/{runner,scoring,judge,report,load}.py   frozen per scored run (DO-5); HTTP only                 A11  1
 eval/cases/{dev,heldout,retrieval}/ · eval/reports/                                                           A11  1
-Dockerfile · railway.json · scripts/{agent_version,reset}.py    image build (index built here), agent version stamp, reset command   A12  2
-                                                 (AEA-50; stage7/data.md §7, DAT-22; scripts/ is top level, not under src/meridian/)
+Dockerfile · .dockerignore · railway.json · scripts/{agent_version,serve,reset,image_check}.py · scripts/log_config.json
+                                                 image build (index built here), deploy start-up record, agent version stamp, reset command   A12  2
+                                                 (built AEA-50, 05395df; stage7/data.md §7, DAT-22; scripts/ is top level, not under src/meridian/)
 tests/                                              §9
 ```
 
