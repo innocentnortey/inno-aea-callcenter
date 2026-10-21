@@ -6,11 +6,34 @@ files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51** (
 **Part C** (the paid run and its record) is **blocked-on AEA-51 and AEA-60**, and waits on **`gate::paid`**: Innocent's
 go with the day's spend statement (sign-off D-15, "a statement, not a choice").
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `ef561fc` (refresh 1, 2026-10-21; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `cf8fd78` (refresh 2, 2026-10-21; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
+
+**Refresh 2 (2026-10-21, `main` at `cf8fd78`).** Read this box first; refresh 1 below is kept as history.
+
+1. **Merged since refresh 1:** AEA-24 (eval harness, `7fddbf5`), AEA-50 (`67c5ffe`, ledger now `merged`), AEA-54 (docs),
+   and **AEA-30** (`cf8fd78`: `services/demo.py`, `services/scheduler.py`, the `register_demo` hunk). `src/` had no other
+   change; `tests/journeys/support/`, `eval/cases/dev/`, `pyproject.toml` (markers `journey`, `live`; `--strict-markers`;
+   mypy `files = ["src/meridian", "tests", "eval"]`) and `scripts/agent_version.py` were re-read and match §4.1.
+2. **Still not on `main`:** AEA-51 (ledger `blocked`: "a blocker is not merged"; it waits on AEA-35 and AEA-39
+   NEEDS-DECISION, AEA-36, 37, 40 blocked), AEA-60 (ledger `blocked`, same chain). Parts B and C stay blocked; part A
+   stays buildable now.
+3. **What AEA-30 changes for this slice (and the decisions taken):**
+   - A fresh working copy reads `demo_state` as `DEMO_START`, `nobody_online` without writing
+     (`repos_cases_state.py` line 42), and `DemoClock.now()` reads that row; demo time never moves with wall time. So
+     §A5's WP-4 expectation (`promise_for(…, "nobody_online", DEMO_START, …)`) holds on the live app.
+   - All six dev scripts have `staffing = "nobody"`. **PD-15 (new):** `play_case` refuses a script whose `staffing` is
+     not `"nobody"` as a player error (the smoke never calls the demo controls), so a later staffed case cannot run
+     against the wrong presence silently (step A4.0).
+   - `register_demo` now starts a `SchedulerThread` (60 s tick, daemon) at app start and stops it on close, before
+     storage closes. Nothing to do here: `launch_server` closes the container before §A7 step 5 removes the temp folder.
+     Its SQLite opens land under the temp data dir and count as `<outside repo>` in AC-13's folder counts.
+4. **PD-9 simplified:** `agent_version_cli` takes the SHA from `scripts.agent_version.build_sha_from_git(REPO_ROOT)`
+   (AEA-50, same `rev-parse HEAD` + `-dirty` rule) instead of re-implementing the two git calls.
+5. **Blockers recorded for the orchestrator:** part A none; part B AEA-51; part C AEA-51, AEA-60 and `gate::paid`.
 
 **Refresh 1 (2026-10-21, `main` at `ef561fc`, 79 commits after `e22aebb`).** Read this box first. Everything below it
 was re-checked against `main` and kept where it still holds.
@@ -106,7 +129,7 @@ the same assertion the live run uses.
 | Observability (DO-6) | `docs/design/observability-contract.md` WF-1 (turn, spend, lookup, check, case, promise), WF-3 (inbox), WF-18 (login), *Status values*, `signal` record | Reads only; writes nothing new |
 | Metrics (DO-7) | M-23 (`turn.server_ms`), M-24 (`failure_kind`, `http_status`, `degrade_reason`), M-25 (cost per conversation; SP-1 B max $0.039 [M]), M-26 ($30/day, Chicago day), M-29 (`trace_export`) | Copied into the record, never compared with a line |
 | Case files | `eval/cases/FORMAT.md` §2 (schema validation recipe), §3 (`clock` is always the demo start; `$seed:` tokens; `code_from_inbox` holds no digits), §6 (held-out keys at `/home/linuxuser/.meridian-sealed/heldout/`); `eval/cases/models.py`, `eval/cases/checks.py` | Loader and custody |
-| Current code (re-read at `ef561fc`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
+| Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`, adding `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
 | Sibling plans (not on `main`) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §5 C1 (support module API, re-read at its refresh 2), D1/D2 (scenario building blocks, `TOOLS`); `AEA-60.md` (test path) | Part B names in §4.3; re-checked at part B's step B0 |
 
 ### Source-contract reconciliation
@@ -246,7 +269,8 @@ level is `mock-tested` and the part A record line says `blocked by AEA-51`.
 | PD-6 | "Fallback" means any of: a `signal` record named `planner_fallback` or `classifier_fallback` for the thread (caught by the player's own `SignalTap` on logger `meridian.signal`); a `check_events` row with `check_kind='classifier'`, `result='fallback'`; or `turns.planner_fallback_used = 1` | graph-nodes §4 makes them log records; AEA-57's `LogTap.structured()` cannot see them (refresh box (c)) |
 | PD-7 | WP-2: ≥ 1 post-verification INV-204411 row with a snapshot (count recorded), none in an earlier turn; a row whose `result_seen` starts with `refused:` or equals `failed` is not a read (`agent/tools/account.py` writes `refused:not_verified`) | A live model may read the invoice on two turns, or try once before the code; neither is an incompatibility |
 | PD-8 | The free-run network guard is a **package-scoped** autouse fixture (not session-scoped), so it never outlives `tests/live/` | A session-scoped patch of `socket.connect` would leak into every later test in a full-suite run |
-| PD-9 | `scripts.agent_version` runs as a subprocess with `RAILWAY_GIT_COMMIT_SHA=<git rev-parse HEAD>` (plus `-dirty` when `git status --porcelain --untracked-files=no` is non-empty) in its env | `resolve_git_sha` reads that name, then a `BUILD_SHA` file, else `unknown`; no `BUILD_SHA` file is written into the repo |
+| PD-9 | `scripts.agent_version` runs as a subprocess with `RAILWAY_GIT_COMMIT_SHA=<build_sha_from_git(REPO_ROOT)>` in its env (`scripts.agent_version.build_sha_from_git`: `rev-parse HEAD`, `-dirty` when `git status --porcelain --untracked-files=no` is non-empty) | `resolve_git_sha` reads that name, then a `BUILD_SHA` file, else `unknown`; no `BUILD_SHA` file is written into the repo; one owner of the SHA rule (AEA-50) |
+| PD-15 | `play_case` refuses a script with `staffing != "nobody"` as a player error before logging in | A fresh copy is `nobody_online` at `DEMO_START` (AEA-30); the smoke never calls demo controls, so a staffed script would run against the wrong presence |
 | PD-10 | Visible text = every string inside the response blocks except under the keys `block_id`, `at`, `type`, `speaker`, `card_id`, `passage_id`, `excerpt`, `audience`, `version_date`, `version_label`, `file`, `section`, `option`, `slot_id`, `wanted_text`. Hard `must_say`/`must_not_say` = exact substring after collapsing whitespace and replacing `’` with `'` | DAT-6: items are exact phrases; source excerpts are quoted KB text and `wanted_text` is the customer's words, not the agent's |
 | PD-11 | Hard `must_do` items map by exact text to named invariants (the `HARD_MUST_DO` table, A5); an unmapped hard `must_do` text fails the case with `unmapped hard must_do item` | Nothing passes silently; judge and soft items are not scored (ticket *Evaluation*). The three hard `must_do` texts in today's six keys are all mapped |
 | PD-12 | The live record is written by the module fixture even when cases fail | AC-17 keeps failing records beside later ones |
@@ -255,7 +279,7 @@ level is `mock-tested` and the part A record line says `blocked by AEA-51`.
 
 ---
 
-## 4. Shared code to use (copied from the current code at `ef561fc`, the addenda, or the sibling plan named)
+## 4. Shared code to use (copied from the current code at `cf8fd78`, the addenda, or the sibling plan named)
 
 ### 4.1 On `main` now (import exactly these)
 
@@ -352,6 +376,9 @@ from meridian.config import Settings                 # Settings.from_env(environ
 # env names (config.ENV_NAMES): ANTHROPIC_API_KEY, OPENROUTER_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY,
 #   LANGFUSE_BASE_URL, LANGFUSE_PROJECT_ID, MERIDIAN_EVAL_KEY, MERIDIAN_INDEX_DIR, MERIDIAN_AGENT_VERSION, …
 from meridian.adapters.sqlite.repos_cases_state import DEMO_START   # datetime(2026,10,16,10,0,tzinfo=ZoneInfo("America/Chicago"))
+# AEA-30 (cf8fd78): a fresh copy's demo_state reads (DEMO_START, "nobody_online"); DemoClock.now() reads that row only.
+#   register_demo starts SchedulerThread (60 s tick) on app start and stops it on container close. Read only; never call
+#   the demo control routes from the smoke.
 from meridian.policy.limits import Limits                    # Limits().spend.daily_cap_usd == 30.0
 from meridian.policy.texts import TEXTS, TextId, render      # TextId.EMERGENCY_LINE_LEAD, TextId.PROMISE_UNSTAFFED
 from meridian.policy.handoff import case_due_at, promise_for
@@ -575,7 +602,7 @@ Algorithms (the invariant each step protects):
     dev_dir=dev_dir)`; build `CaseKey.model_validate(json.loads(...))`.
   - Return the first `case_id` with `topic == "warranty" and in_scope`; when there is none, return `None`.
 
-  At `ef561fc` this returns `T-CALL-20260723-0276`. *It never reads another folder.*
+  At `cf8fd78` this returns `T-CALL-20260723-0276`. *It never reads another folder.*
 - **`select_smoke_set`:**
   - Walk `SMOKE_TABLE`. For the warranty row use `first_warranty_case`; `None` gives `NotRunCase(label, journey, None,
     NO_WARRANTY)`.
@@ -658,6 +685,9 @@ def collect_evidence(run: JourneyRun, thread_id: str, case: SmokeCase,
 ```
 `play_case`, numbered. The invariant each step protects is in brackets. The whole body runs inside
 `with signal_tap() as tap:`.
+0. If `case.script.staffing != "nobody"`, add `f"{case.case_id} turn 0: staffing {case.script.staffing} not supported"`
+   to `player_errors` and return at once with empty evidence (no login, no request). [PD-15: a fresh copy is
+   `nobody_online` at `DEMO_START`; the smoke never changes presence]
 1. Log in: `signed = run.login()`; `client = signed.client`. Add `("demo password", run.env.secret_values()[0])` and
    `("session secret", run.env.secret_values()[1])` to the secrets. A login `AssertionError` goes into `mismatches`,
    and the function returns early with empty evidence. [the real login gate runs]
@@ -921,10 +951,8 @@ def forbidden_values(results: Sequence[CaseResult], environ: Mapping[str, str]) 
   - Copy the four `LANGFUSE_NAMES` from `source` only when all four are non-blank.
   - **Never** set `MERIDIAN_EVAL_KEY`: `assert "MERIDIAN_EVAL_KEY" not in environ` before returning.
 - **`agent_version_cli(root)`:**
-  - `sha = subprocess.run(["git", "-C", str(root), "rev-parse", "HEAD"], …).stdout.strip()`.
-  - `dirty = subprocess.run(["git", "-C", str(root), "status", "--porcelain", "--untracked-files=no"],
-    …).stdout.strip() != ""`.
-  - `env = {**os.environ, "RAILWAY_GIT_COMMIT_SHA": sha + ("-dirty" if dirty else "")}`.
+  - `from scripts.agent_version import build_sha_from_git` (module level is fine: `scripts/` is on `main`).
+  - `env = {**os.environ, "RAILWAY_GIT_COMMIT_SHA": build_sha_from_git(root)}`.
   - Return `subprocess.run([sys.executable, "-m", "scripts.agent_version"], cwd=root, env=env, capture_output=True,
     text=True, check=True, timeout=60).stdout.strip()`. An empty result raises `RuntimeError("scripts.agent_version
     printed nothing")` (PD-9).
@@ -1328,7 +1356,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (and through it AEA-40's routes, AEA-30's demo clock, AEA-35/36/37/39's nodes). AEA-51 itself waits on AEA-35 (NEEDS-DECISION) | Part A now; B0 verifies the names after AEA-51 merges |
+| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (and through it AEA-40's routes and AEA-35/36/37/39's nodes; AEA-30's demo clock merged at `cf8fd78`). AEA-51 itself waits on AEA-35 and AEA-39 (NEEDS-DECISION) and AEA-36, 37, 40 (blocked) | Part A now; B0 verifies the names after AEA-51 merges |
 | R-2 | Blocker (part C) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) | P1 waits |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
@@ -1350,7 +1378,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `ef561fc` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| A | Buildable on `main` `cf8fd78` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
 | B | **Blocked-on AEA-51** (test helpers, wired graph) |
 | C | **Blocked-on AEA-51 and AEA-60**, plus `gate::paid` (D-15 spend statement) |
 
