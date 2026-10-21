@@ -512,8 +512,15 @@ def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_events(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-41 customer API: the CON-3 event stream route (web.md §11).
 
-    No-op until AEA-41 fills it.
+    Includes routes/events.py's router once per app. Provides nothing: the route reads AEA-10's unit of work and
+    AEA-23's stream limiter and reset gate through web/deps.py.
     """
+    from meridian.web.routes.events import build_router
+
+    if getattr(app.state, "events_router_included", False):
+        return
+    app.include_router(build_router())
+    app.state.events_router_included = True
 
 
 def register_person_request(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:

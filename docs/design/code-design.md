@@ -183,6 +183,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `adapters/sqlite/{db,migrate,rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py`, every `adapters/sqlite/schema/*.sql`, `adapters/checkpointer.py`, `tests/fixtures/sqlite.py` (AEA-10, `ff4b9bd`).
 **Built:** `services/ledger.py`, `adapters/sqlite/repos_spend.py` body (AEA-26, `c589914`).
 **Built:** `web/{app,middleware,deps,errors,logging}.py`, `web/routes/auth.py`, `web/schemas/auth.py`, `services/reset_gate.py` (AEA-23, branch `aea-23-aea-23-web-shell`).
+**Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 
 ```
