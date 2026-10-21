@@ -183,6 +183,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `adapters/sqlite/{db,migrate,rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py`, every `adapters/sqlite/schema/*.sql`, `adapters/checkpointer.py`, `tests/fixtures/sqlite.py` (AEA-10, `ff4b9bd`).
 **Built:** `services/ledger.py`, `adapters/sqlite/repos_spend.py` body (AEA-26, `c589914`).
 **Built:** `web/{app,middleware,deps,errors,logging}.py`, `web/routes/auth.py`, `web/schemas/auth.py`, `services/reset_gate.py` (AEA-23, branch `aea-23-aea-23-web-shell`).
+**Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -255,7 +256,7 @@ src/meridian/                                    planned                        
                                                  BriefAssembler
 │   ├── demo.py                                  DemoClock (Clock port), staffing, clock advance             A6    1
 │   ├── scheduler.py                             60 s tick: due-soon, overdue, stuck, unowned; daily prune   A6    1
-│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1
+│   ├── reset.py                                 all-or-nothing reset; injected restore/clear callables      A6    1   built AEA-31 8192d2b
 │   ├── health.py                                health events, heartbeat, watchdog                          A10a  1
 │   ├── turn.py                                  run one turn: admission, idempotency, deadline, persist     A8    2
 │   ├── session.py                               open a conversation (CON-1)                                 A8    2
@@ -395,12 +396,12 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `services/handoff.py` | Turn an escalation into a case with the policy promise, idempotently; assemble the brief. | `HandoffService.open`, `BriefAssembler` | `CaseService`, `policy/handoff.py`, `DemoService`, clock |
 | `services/demo.py` | Serve the one demo clock and the staffing state, and advance the clock forward. | `DemoClock`, `DemoService.staffing/set_staffing/advance_clock` | UoW, `CaseService` |
 | `services/scheduler.py` | Raise due-soon, overdue, stuck and unowned alerts on the demo clock, and prune checkpoints daily. | `SchedulerJob.tick()` | `CaseService`, clock, injected `prune_checkpoints: Callable[[], int]` |
-| `services/reset.py` | Restore the demo all-or-nothing. | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
+| `services/reset.py` | Restore the demo all-or-nothing. Also holds the demo seed loader (`seed_demo`, `seed_first_boot`); the seed list is stage7/cases.md §7. Built (AEA-31, `8192d2b`). | `ResetService(uow, restore_working_copy, clear_checkpoints, seed_demo)` | injected callables (review S-3) |
 | `services/ledger.py` | Record every model call's cost and stop model use at a cap. | `record`, `SpendGuard.allow_turn`, `trip_provider_cap`, `models_disabled` | UoW (`repos_spend`), limits |
 | `services/live_chat.py` | Let a claimed representative join, write, hand back or close a chat. | `join`, `send`, `hand_back`, `close` | UoW (`conversations.controller`, `messages`, `events`), `CaseService` |
 | `services/staff.py` | Hold the login sessions, check and switch the role, and record flags. | `StaffSessionStore`: `start`, `resolve`, `end`, `actor_for`, `switch_role`, `session_info`; `FlagService`: `flag`, `review`, `list_flags` (stage7/staff.md §2, STF-26). AEA-44 flips the row to built; it does not rename | UoW (`repos_staff`) |
 | `services/metrics_reader.py` | Serve stored measures without recomputing outcomes. | `owner_metrics`, `monitoring`, `latest_eval` | UoW |
-| `services/health.py` | Keep the heartbeat, record health events, exit after repeated failures. | `Heartbeat`, `Watchdog` | UoW (`repos_ops`) |
+| `services/health.py` | Keep the heartbeat, record health events, exit after repeated failures. | `AlertSettings`, `Heartbeat`, `Watchdog`, `AlertWriter`, `AlertEvaluator`, `load_eval_reports` (stage7/cases.md §8; built AEA-32) | UoW (`repos_ops`) |
 
 ### 4.5 The graph (`agent/`)
 
