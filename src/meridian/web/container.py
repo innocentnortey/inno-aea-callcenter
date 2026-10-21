@@ -512,15 +512,69 @@ def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_events(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-41 customer API: the CON-3 event stream route (web.md §11).
 
-    No-op until AEA-41 fills it.
+    Includes routes/events.py's router once per app. Provides nothing: the route reads AEA-10's unit of work and
+    AEA-23's stream limiter and reset gate through web/deps.py.
     """
+    from meridian.web.routes.events import build_router
+
+    if getattr(app.state, "events_router_included", False):
+        return
+    app.include_router(build_router())
+    app.state.events_router_included = True
 
 
 def register_person_request(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-42 customer API: PersonRequestService, CON-4 and CON-5 routes (web.md §8).
 
-    No-op until AEA-42 fills it.
+    Provides deps.PERSON_REQUESTS ("person_requests") built from "uow_factory", "handoff_service", "reply_composer",
+    "trace", "demo_clock" and "wall_clock"; while any of those is not provided, the object it provides raises
+    RuntimeError("not bound: ...") when called, so the app still starts. Includes the CON-4/CON-5 router once. An app
+    without a web shell gets nothing.
     """
+    from typing import NoReturn
+
+    from meridian.services.person_request import PersonRequestService
+    from meridian.web.deps import HANDOFF_SERVICE, PERSON_REQUESTS, REPLY_COMPOSER, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.handoff import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    needed: tuple[tuple[str, Key[Any]], ...] = (
+        ("uow", UOW_FACTORY),
+        ("handoff", HANDOFF_SERVICE),
+        ("composer", REPLY_COMPOSER),
+        ("trace", Key[Any]("trace")),
+        ("demo_clock", Key[Any]("demo_clock")),
+        ("wall_clock", WALL_CLOCK),
+    )
+
+    class _NotBound:
+        def __init__(self, missing: tuple[str, ...]) -> None:
+            self.missing = missing
+
+        def request(self, cmd: object) -> NoReturn:
+            raise RuntimeError("not bound: " + ", ".join(self.missing))
+
+    def make(c: Container) -> Any:
+        found: dict[str, Any] = {}
+        missing: list[str] = []
+        for arg, key in needed:
+            try:
+                found[arg] = c.get(key)
+            except ContainerError as exc:
+                if str(exc) != f"not provided: {key.name}":
+                    raise
+                missing.append(key.name)
+        if missing:
+            return _NotBound(tuple(missing))
+        return PersonRequestService(**found)
+
+    container.provide(PERSON_REQUESTS, make)
+    if not getattr(app.state, "handoff_routes_included", False):
+        app.include_router(build_router())
+        app.state.handoff_routes_included = True
 
 
 def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
