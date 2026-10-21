@@ -103,6 +103,9 @@ class TextId(StrEnum):
     CHAT_CLOSED = "live.chat_closed"
     AI_PAUSED_NOTICE = "live.ai_paused_notice"
     PERSON_REQUEST_LABEL = "live.person_request_label"
+    # --- history (customer rows for non-text actions; AEA-03b, needed by AEA-40) ---
+    HISTORY_CODE_ENTERED = "history.code_entered"
+    HISTORY_DETAILS_SENT = "history.details_sent"
     # --- demo ---
     SHIFT_ENDED = "demo.shift_ended"
     STAFFING_CHANGED_ON_SHIFT = "demo.staffing_changed_on_shift"
@@ -240,6 +243,8 @@ _TEXTS: Final[dict[TextId, str]] = {
         "{rep_name} is in this chat, so the assistant is paused. Your message went to {rep_name}."
     ),
     TextId.PERSON_REQUEST_LABEL: "Talk to a person",
+    TextId.HISTORY_CODE_ENTERED: "Code entered",
+    TextId.HISTORY_DETAILS_SENT: "Details sent",
     # --- demo ---
     TextId.SHIFT_ENDED: "The simulated shift ended before a representative joined.",
     TextId.STAFFING_CHANGED_ON_SHIFT: "Staffing changed: simulated staff on shift (demo).",

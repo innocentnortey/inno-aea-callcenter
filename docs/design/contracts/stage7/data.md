@@ -8,6 +8,7 @@
 client-side turn timings file (§6, DAT-31); `FixedClock` (§8a, DAT-32).
 **Residual pass (2026-10-21):** §2 gains the `amount` placeholder, `format_usd` and `TextId.PERSON_REQUEST_LABEL`
 (R-W-6, R-W-7 in [`residuals-web.md`](../../../plans/7b-decisions/residuals-web.md)).
+**AEA-03b (2026-10-21):** §2 gains `TextId.HISTORY_CODE_ENTERED` and `TextId.HISTORY_DETAILS_SENT` (new `history` group, 77 texts).
 **Status:** planned, nothing built. Written by the Stage 7b data resolver (Claude, Opus 5.5).
 
 These follow the sketch rules of [internal-components.md](../internal-components.md) (DO-4) §0: field names, types and
@@ -110,6 +111,11 @@ def format_usd(cents: int) -> str: ...                # policy/texts.py (AEA-03)
 Text added at the residual pass for the history rebuild (web.md §14, R-W-6): `TextId.PERSON_REQUEST_LABEL =
 "live.person_request_label"`, "Talk to a person" (SCR-1's button label, as the greeting quotes it), the customer line a
 reloaded thread shows for a CON-4 request.
+
+Texts added by AEA-03b for AEA-40 R-4 (history entries for non-text actions; wording from the UX build g1-chat-core
+Step 6): `TextId.HISTORY_CODE_ENTERED = "history.code_entered"`, "Code entered", and `TextId.HISTORY_DETAILS_SENT =
+"history.details_sent"`, "Details sent". They are the customer-side row text a reloaded thread shows after the visitor
+entered a verification code or sent their details; no placeholders, and the row never holds the code or the details.
 
 Texts other topics asked for (merge, 2026-10-21; DAT-29):
 
