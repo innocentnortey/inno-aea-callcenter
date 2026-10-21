@@ -1,0 +1,864 @@
+{
+  "schema": "aea-03 texts source fixture v1",
+  "copied_at": "9c3e7e7",
+  "entries": [
+    {
+      "id": "greeting.opening",
+      "template": "Hi, I'm Meridian Home Comfort's automated assistant, not a person. I can answer questions about our services, book a visit, and look up your account once you've confirmed it's you. If you'd like a person at any point, tap Talk to a person.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 142,
+        "where": "SCR-1 copy notes, Greeting (R-1)"
+      },
+      "example": null
+    },
+    {
+      "id": "greeting.are_you_a_person",
+      "template": "No. I'm Meridian's automated assistant. If you'd like a person, tap Talk to a person.",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 143,
+        "where": "SCR-1 copy notes, 'Are you a person?' (marked proposal)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.leave_now",
+      "template": "Leave the home immediately and call 911 or your gas utility from outside.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 144,
+        "where": "SCR-1 copy notes, Safety card line 1 (R-5)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.dont_touch",
+      "template": "Don't flip switches, open windows near the furnace, or restart equipment.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 144,
+        "where": "SCR-1 copy notes, Safety card line 2 (R-5)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.contact_line",
+      "template": "Once you're outside and safe, you can leave a number here if you'd like.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 144,
+        "where": "SCR-1 copy notes, quiet line under the safety card"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.burning_question",
+      "template": "Do you already know whether a breaker has tripped? Please don't go to the panel to check. Do you see any smoke, sparks or flames?",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 145,
+        "where": "SCR-1 copy notes, burning-smell question (R-7)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.warning_text",
+      "template": "A burning smell can be serious. If you smell gas, see smoke, sparks or flames, or a breaker has tripped, leave the home immediately and call 911 from outside.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 146,
+        "where": "SCR-1 copy notes, conditional card (R-7)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.emergency_number_line",
+      "template": "Meridian's 24/7 emergency number is (512) 555-0199 (demo number).",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 146,
+        "where": "SCR-1 copy notes, conditional card number line (R-7)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.emergency_line_lead",
+      "template": "Because someone may be in danger, please call Meridian's 24/7 emergency number now: (512) 555-0199 (demo number). I've also logged this for our team as an emergency-priority request.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 147,
+        "where": "SCR-1 copy notes, emergency-line card (R-8)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.urgency_hot_cold",
+      "template": "Is it very hot or very cold in your home right now?",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 148,
+        "where": "SCR-1 copy notes, urgency question 1 (R-8)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.urgency_water",
+      "template": "Is water still running?",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 148,
+        "where": "SCR-1 copy notes, urgency question 2 (R-8)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.urgency_at_risk",
+      "template": "Is anyone at higher risk, like an older person, a baby or someone unwell?",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 148,
+        "where": "SCR-1 copy notes, urgency question 3 (R-8)"
+      },
+      "example": null
+    },
+    {
+      "id": "safety.regular_booking_note",
+      "template": "This is a regular booking, not emergency service.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 98,
+        "where": "SCR-1 flow states, someone in danger, slot label"
+      },
+      "example": null
+    },
+    {
+      "id": "identity.code_prompt",
+      "template": "I've sent a 6-digit code to the phone number on your account, ending in {digits}. Please type it here.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 150,
+        "where": "SCR-1 copy notes, code prompt (R-15)"
+      },
+      "example": {
+        "values": {
+          "digits": "02"
+        },
+        "rendered": "I've sent a 6-digit code to the phone number on your account, ending in 02. Please type it here."
+      }
+    },
+    {
+      "id": "identity.verified",
+      "template": "Thanks, you're verified for this chat.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 108,
+        "where": "SCR-1 flow states, Verified"
+      },
+      "example": null
+    },
+    {
+      "id": "identity.code_wrong",
+      "template": "That code doesn't match. {n} tries left.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 104,
+        "where": "SCR-1 flow states, Code wrong (R-15)"
+      },
+      "example": {
+        "values": {
+          "n": "2"
+        },
+        "rendered": "That code doesn't match. 2 tries left."
+      }
+    },
+    {
+      "id": "identity.code_expired",
+      "template": "That code has expired. Codes last 10 minutes.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 105,
+        "where": "SCR-1 flow states, Code expired"
+      },
+      "example": null
+    },
+    {
+      "id": "identity.not_verified",
+      "template": "I can't confirm your account here. A representative will help.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 151,
+        "where": "SCR-1 copy notes, no match / locked (R-16)"
+      },
+      "example": null
+    },
+    {
+      "id": "identity.inbox_code_body",
+      "template": "Your Meridian Home Comfort verification code is {digits}. It expires in 10 minutes.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 179,
+        "where": "SCR-2 copy notes, R2 Messages"
+      },
+      "example": null
+    },
+    {
+      "id": "identity.inbox_code_gone",
+      "template": "This code is no longer shown. Ask the chat for a new code if you need one.",
+      "source": {
+        "kind": "proposal",
+        "file": "docs/design/contracts/stage7/graph-tools.md",
+        "line": 500,
+        "where": "graph-tools C-5 (proposal wording)"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.unstaffed",
+      "template": "No representative is online right now. A representative will get back to you within 1 business day, by {due_label}. Your reference is {case_ref}.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 152,
+        "where": "SCR-1 copy notes, promise texts (R-26), nobody online"
+      },
+      "example": {
+        "values": {
+          "due_label": "Monday, October 19, 7:00 pm",
+          "case_ref": "MHC-C-0007"
+        },
+        "rendered": "No representative is online right now. A representative will get back to you within 1 business day, by Monday, October 19, 7:00 pm. Your reference is MHC-C-0007."
+      }
+    },
+    {
+      "id": "promise.refund",
+      "template": "A representative will get to your refund request within 2 business days.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 152,
+        "where": "SCR-1 copy notes, promise texts (R-26), refund"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.refund_no_outcome",
+      "template": "I can't promise an outcome.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 152,
+        "where": "SCR-1 copy notes, promise texts (R-26), refund extra line"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.staffed",
+      "template": "A representative will join this chat when available. You can keep chatting with me while you wait, if you like.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 152,
+        "where": "SCR-1 copy notes, promise texts (R-26), staffed"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.danger_review",
+      "template": "No representative is online right now, so someone will review this online request within 1 business day. That is not the wait for emergency help; for that, please use the emergency line.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 147,
+        "where": "SCR-1 copy notes, emergency-line card divider text (OD4.danger_review)"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.safety_none",
+      "template": "",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 144,
+        "where": "SCR-1 copy notes: 'No follow-up time anywhere on or under the card' (R26.safety_none is empty)"
+      },
+      "example": null
+    },
+    {
+      "id": "promise.reference_line",
+      "template": "Your reference is {case_ref}.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 1423,
+        "where": "HandoffBlock extra_lines example"
+      },
+      "example": {
+        "values": {
+          "case_ref": "MHC-C-0007"
+        },
+        "rendered": "Your reference is MHC-C-0007."
+      }
+    },
+    {
+      "id": "fee_change.fee_applies",
+      "template": "The {amount} fee applies under current policy.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 153,
+        "where": "SCR-1 copy notes, fee-bearing change (R-21)"
+      },
+      "example": {
+        "values": {
+          "amount": "$49"
+        },
+        "rendered": "The $49 fee applies under current policy."
+      }
+    },
+    {
+      "id": "fee_change.original_stays",
+      "template": "Your original appointment stays until a representative confirms.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 153,
+        "where": "SCR-1 copy notes, fee-bearing change (R-21)"
+      },
+      "example": null
+    },
+    {
+      "id": "fee_change.cant_guarantee",
+      "template": "I can't promise anyone will confirm a change before your appointment starts; until a representative confirms, please plan on the technician arriving {window}.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 153,
+        "where": "SCR-1 copy notes, fee-bearing change, window starts before the promise"
+      },
+      "example": {
+        "values": {
+          "window": "12:00 pm – 4:00 pm"
+        },
+        "rendered": "I can't promise anyone will confirm a change before your appointment starts; until a representative confirms, please plan on the technician arriving 12:00 pm – 4:00 pm."
+      }
+    },
+    {
+      "id": "fee_change.phone_support_open",
+      "template": "Phone support is open until 7:00 pm today if you'd like to call.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 153,
+        "where": "SCR-1 copy notes, fee-bearing change, phone support open"
+      },
+      "example": null
+    },
+    {
+      "id": "followup.legend",
+      "template": "We'll follow up by email unless you'd prefer a phone call.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 154,
+        "where": "SCR-1 copy notes, follow-up legend (R-27)"
+      },
+      "example": null
+    },
+    {
+      "id": "followup.saved_phone",
+      "template": "Follow-up saved: phone call, the number ending in {digits}, {window}.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 154,
+        "where": "SCR-1 copy notes, follow-up saved line (R-27)"
+      },
+      "example": {
+        "values": {
+          "digits": "02",
+          "window": "mornings"
+        },
+        "rendered": "Follow-up saved: phone call, the number ending in 02, mornings."
+      }
+    },
+    {
+      "id": "followup.recorded_not_sent",
+      "template": "Demo: recorded, not sent",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 10766,
+        "where": "OpenAPI const; SCREEN_SPECS line 29 (R-34)"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.booked",
+      "template": "You're booked. Here are the details.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 112,
+        "where": "SCR-1 flow states, Booked"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.slot_taken",
+      "template": "Sorry, that window just went. Here are the next open ones.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 111,
+        "where": "SCR-1 flow states, Slot taken at write"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.out_of_area",
+      "template": "Sorry, that address is outside Meridian's service area, so I can't book a visit there.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 100,
+        "where": "SCR-1 flow states, Out of area"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.no_window_fits",
+      "template": "That's the earliest I can book. I can't add you to a waitlist from here.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 101,
+        "where": "SCR-1 flow states, No window fits"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.identity_needed",
+      "template": "Booking changes your account, so I need to confirm it's you before I write it.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 102,
+        "where": "SCR-1 flow states, identity needed"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.cancelled_no_fee",
+      "template": "There's no fee.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 1282,
+        "where": "CancelledBlock fee_line example; SCREEN_SPECS line 114"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.fee_standard_diagnostic",
+      "template": "Standard diagnostic fee: {amount}",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 1170,
+        "where": "ConfirmationBlock fee_line example"
+      },
+      "example": {
+        "values": {
+          "amount": "$89"
+        },
+        "rendered": "Standard diagnostic fee: $89"
+      }
+    },
+    {
+      "id": "booking.slots_not_held",
+      "template": "Windows are shown, not held.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 149,
+        "where": "SCR-1 copy notes, slot card hints"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.members_note",
+      "template": "Members' fees and member-only windows appear after the code.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 149,
+        "where": "SCR-1 copy notes, slot card hints"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.free_change_note",
+      "template": "You can change this visit free of charge until 24 hours before the window.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 1175,
+        "where": "ConfirmationBlock free_change_note example"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.urgent_note",
+      "template": "Urgent",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 97,
+        "where": "SCR-1 flow states, burning smell both ruled out: slot card marked 'Urgent'"
+      },
+      "example": null
+    },
+    {
+      "id": "booking.quick_checks_offer",
+      "template": "Before I book, there are a few quick things you can try. They're optional.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 596,
+        "where": "QuickChecksBlock offer_text example"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.turn_timeout",
+      "template": "This is taking longer than it should.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 76,
+        "where": "SCR-1 TURN_TIMEOUT card (also line 83; UXR-18)"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.busy",
+      "template": "A lot of people are chatting right now, so I can't take this message. A person can pick it up.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 2243,
+        "where": "BUSY notice example (UXR-26)"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.rate_limited",
+      "template": "I can't take more messages in this chat right now.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 124,
+        "where": "SCR-1 flow states, limit reached (rate)"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.booking_cap",
+      "template": "I can't make more bookings in this chat.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 124,
+        "where": "SCR-1 flow states, limit reached (booking cap)"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.spend_cap_reached",
+      "template": "I can't answer more questions right now. A person can pick this up.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 125,
+        "where": "SCR-1 flow states, spend cap reached"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.no_information",
+      "template": "I don't have that information.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 126,
+        "where": "SCR-1 flow states, no current source"
+      },
+      "example": null
+    },
+    {
+      "id": "limits.failure_offer",
+      "template": "It sounds like I'm not getting this right. Would you like a person?",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 127,
+        "where": "SCR-1 flow states, failure signal (two misses)"
+      },
+      "example": null
+    },
+    {
+      "id": "live.rep_joined",
+      "template": "{rep_name} (demo representative) has joined.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 120,
+        "where": "SCR-1 flow states, representative joined (EvRepresentativeJoined)"
+      },
+      "example": {
+        "values": {
+          "rep_name": "Riley"
+        },
+        "rendered": "Riley (demo representative) has joined."
+      }
+    },
+    {
+      "id": "live.ai_paused",
+      "template": "The assistant is paused while {rep_name} is here.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 120,
+        "where": "SCR-1 flow states, representative joined (EvAiPaused)"
+      },
+      "example": {
+        "values": {
+          "rep_name": "Riley"
+        },
+        "rendered": "The assistant is paused while Riley is here."
+      }
+    },
+    {
+      "id": "live.ai_resumed",
+      "template": "{rep_name} handed the chat back to the automated assistant.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 121,
+        "where": "SCR-1 flow states, handed back (EvAiResumed)"
+      },
+      "example": {
+        "values": {
+          "rep_name": "Riley"
+        },
+        "rendered": "Riley handed the chat back to the automated assistant."
+      }
+    },
+    {
+      "id": "live.chat_closed",
+      "template": "{rep_name} closed this chat.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 122,
+        "where": "SCR-1 flow states, chat closed (EvChatClosed)"
+      },
+      "example": {
+        "values": {
+          "rep_name": "Riley"
+        },
+        "rendered": "Riley closed this chat."
+      }
+    },
+    {
+      "id": "live.ai_paused_notice",
+      "template": "{rep_name} is in this chat, so the assistant is paused. Your message went to {rep_name}.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 2281,
+        "where": "CON-2 AI_PAUSED notice example"
+      },
+      "example": {
+        "values": {
+          "rep_name": "Riley"
+        },
+        "rendered": "Riley is in this chat, so the assistant is paused. Your message went to Riley."
+      }
+    },
+    {
+      "id": "live.person_request_label",
+      "template": "Talk to a person",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 142,
+        "where": "SCR-1 button label quoted in the greeting"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.shift_ended",
+      "template": "The simulated shift ended before a representative joined.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 123,
+        "where": "SCR-1 flow states, shift ended before a claim"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.staffing_changed_on_shift",
+      "template": "Staffing changed: simulated staff on shift (demo).",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 130,
+        "where": "SCR-1 flow states, simulation switched on"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.staffing_banner",
+      "template": "Simulated staffing (demo). No Meridian employee is online.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 30,
+        "where": "Copy rules on every screen, staffing banner"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.reset",
+      "template": "The demo was reset, so this chat has ended. Nothing from it was kept.",
+      "source": {
+        "kind": "screen_specs",
+        "file": "docs/ux/03-structure/SCREEN_SPECS.md",
+        "line": 128,
+        "where": "SCR-1 flow states, reset during a live chat"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.oversight_overdue",
+      "template": "{case_ref} is past its due time. Assign it or pick it up.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 6496,
+        "where": "CON-17 alert line example"
+      },
+      "example": {
+        "values": {
+          "case_ref": "MHC-C-0006"
+        },
+        "rendered": "MHC-C-0006 is past its due time. Assign it or pick it up."
+      }
+    },
+    {
+      "id": "demo.oversight_shift_ended_one_waiting",
+      "template": "Simulated shift ended with 1 customer waiting. Their case now has the 1-business-day promise.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 6600,
+        "where": "CON-17 alert line example (one waiting customer)"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.monitor_spend_cap",
+      "template": "Spend reached the {amount} daily cap: new chats hand off and no model calls run until tomorrow.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7025,
+        "where": "CON-19 decision_line example"
+      },
+      "example": {
+        "values": {
+          "amount": "$30"
+        },
+        "rendered": "Spend reached the $30 daily cap: new chats hand off and no model calls run until tomorrow."
+      }
+    },
+    {
+      "id": "demo.monitor_latency",
+      "template": "p95 latency is over 12.5 s per turn: check the model route.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7029,
+        "where": "CON-19 decision_line example"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.monitor_restart",
+      "template": "The health check restarted the service: check the logs.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7033,
+        "where": "CON-19 decision_line example"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.monitor_zero_traffic",
+      "template": "No new live chat for 4 hours: check the public URL and the health check.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7037,
+        "where": "CON-19 decision_line example"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.monitor_failure_rate",
+      "template": "More than 2% of turns failed: check the model route and the logs.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7041,
+        "where": "CON-19 decision_line example"
+      },
+      "example": null
+    },
+    {
+      "id": "demo.monitor_trace_export",
+      "template": "Trace export is failing and traces are being dropped: check the Langfuse server on the VPS.",
+      "source": {
+        "kind": "openapi",
+        "file": "docs/ux/03-structure/ui-contracts.openapi.yaml",
+        "line": 7045,
+        "where": "CON-19 decision_line example"
+      },
+      "example": null
+    }
+  ]
+}
