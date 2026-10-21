@@ -210,7 +210,7 @@ src/meridian/                                    planned                        
 ├── gates/
 │   ├── rules.py                                 typo-tolerant rules: safety, burning, danger, person, policy A1    1
 │   └── gate.py                                  parse_intake (text, choice, code, form) + decide_gate       A1    1
-├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3
+├── checks.py                                    R-46: evidence, completion check (lexicon inline), facts    A7c   3   built AEA-15 57883e6
 ├── adapters/
 │   ├── sqlite/db.py                             connections, WAL, busy_timeout, SqliteUnitOfWork            A0    0
 │   ├── sqlite/migrate.py                        first-boot copy of the issued DB; applies schema/*.sql;     A0    0
