@@ -1,31 +1,57 @@
 # Plan — [AEA-53] reads: metrics reader
 
-**Status:** planned (READY) with two prerequisites recorded as blocked-on (section 9): **AEA-29 merged** into `main`,
-and the orchestrator's **R-1 grant** (`repos_metrics.py` plus a 3-line hook in `repos_ops.py`). Gates: none.
+**Status:** planned (READY). Nothing blocks it: AEA-29 and AEA-30 are merged, and the R-1 grant is recorded
+(*Deviations*, DV-1). Gates: none.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/53 (spec copy:
-`docs/plans/tickets/AEA-53.md`) · **Base revision:** `main` at `895f271` (2026-10-21; refreshed from the `35aefdd` plan)
+`docs/plans/tickets/AEA-53.md`) · **Base revision:** `main` at `3725c90` (2026-10-21; refreshed from the `895f271` plan)
 · **Lane:** `lane::build-loop`, risk none (not `risk::security`: plan → implement with tests → review; no frozen tests,
 no security agent).
 **Planner:** Opus (`claude-opus-5-5`). **Implementer:** Sonnet. Every decision is made below. If a precondition in
 Step 0 fails, stop and report. Do not improvise.
 
-**What changed in this refresh (check against `main` at `895f271` and the sibling branches):**
-1. AEA-24's built summary (branch `aea-24-eval-harness`, `eval/harness/report.py`) stores an explicit `headline` key
-   (the held-out `M-1` measure, `None` on dev) and about 20 keys beyond OpenAPI `EvalRun`. **D-7 now reads the stored
-   `headline`**, and the new **D-10 projects each split onto `EvalRun`'s seven keys** (Step 2, `latest_eval`).
-2. AEA-24 writes measure ids `M-n`, `M-1:<topic>` and `E-1:hard`, not STF-18's `E-n`. The reader passes ids through
-   unchanged (STF-18's own consequence for AEA-53). The naming conflict goes to the orchestrator (R-4). Tests assert
-   pass-through, not the writer's naming.
-3. AEA-30's missed-promise reason code is `"past_due"` (`services/scheduler.py` `PROMISE_MISSED_REASON`). The test
-   builder copies it.
-4. `MONITOR_TRACE_EXPORT`'s stored text contains the word "Langfuse". AC-6's no-trace-link check therefore tests key
-   names, `http`, `/trace` and the trace-id sentinel, never the word "langfuse".
-5. AC-14 needs sentinel keys in the settings. `container_app` takes no settings, so the test patches
-   `tests.api.staff_session_support.make_settings` (Step 6).
-6. Binding the reader turns AEA-59's server-contract cases for the three reads from "skip at the route" into real
-   runs. Today they still skip at login with `not bound: demo_clock` (AEA-30). They are added to the affected tests.
-7. `repos_metrics.py` parses times with the public `db.parse_wall`, not the private `rows._dt`.
-8. The ICM "Routes verified" row for A10b is line 38 today (it was 36).
+**What changed in this refresh (checked against `main` at `3725c90`):**
+1. **The R-1 grant is given.** The orchestrator recorded on 2026-10-21 that Innocent chose option A ("just do whatever
+   you recommend"). It is DV-1 below, and Step 0 no longer asks for it.
+2. **AEA-29 is merged** (`ef561fc`). `services/_case_rules.py` (`REASON_LABEL`, `LIFECYCLE_WORD`, `reason_label`) and
+   `services/handoff.py` (`BriefAssembler`) are on main with the names this plan copied. R-2 is closed.
+   `handoff.py`, `_case_views.py` and `_case_actions.py` already import `_case_rules`, so the reader's import has
+   precedent.
+3. **AEA-30 is merged** (`cf8fd78`). `register_demo` now provides `Key("demo_clock")`: a `DemoClock` that reads the
+   stored `demo_state` row. That has four consequences:
+   - `container_app` (tests) no longer swaps in a `FixedClock` stand-in. The capture and integration tests run on the
+     real `DemoClock`, which reads `DEMO_START` until someone advances it.
+   - The J-10 page-read step is no longer blocked. The harness has every need, so the step runs at level
+     `integrated with a scripted model`.
+   - The journey server now runs AEA-30's `SchedulerThread`. Every 60 s a tick writes a `job_runs` row, marks
+     past-due promises `missed` and abandons idle live conversations. New decision **D-11** keeps the journey's
+     page-vs-SQL comparison stable across a tick (Step 7).
+   - AEA-59's contract runner will run the three reads' 200 cases on the real reader in this ticket (R-8).
+4. **AEA-24 is merged** (`7fddbf5`). `eval/harness/report.py` on main matches §4.2 unchanged: the `base_summary` keys,
+   `headline` (the held-out `M-1` dict), and the ids `M-1:<topic>` and `E-1:hard`.
+5. **AEA-40 is merged** (`f466ff7`), but AEA-51 (`register_graph`, `run_graph`) is not. The J-10 chat leg is now
+   blocked on **AEA-51 only**. Before, it was blocked on AEA-40, 51, 29, 27 and 30.
+6. **AEA-50 added `tests/capture/conftest.py`** (deploy-marker hooks). This ticket neither edits nor replaces it. The
+   new capture test is collected under it unchanged.
+7. **Line numbers moved.** `register_metrics_reader` is now lines 993–997 of `web/container.py`, and the area-map A10b
+   row is line 46. The ICM A10b row is still line 38. `repos_ops.py` has not changed since `895f271` (`OpsRepos` is
+   at lines 433–446).
+8. **Re-checked from the `895f271` refresh, all still true:**
+   - D-7 reads the stored `headline`, and D-10 projects each split onto `EvalRun`'s seven keys.
+   - AEA-30's missed-promise reason is `"past_due"`.
+   - AC-6 does not test for the word "langfuse".
+   - AC-14 patches `tests.api.staff_session_support.make_settings`. `container_app` still resolves `make_settings`
+     in that module.
+   - `repos_metrics.py` parses times with `db.parse_wall`.
+   - `test_repo_shells.py` accepts a new `OpsRepos` attribute: it checks only the constructor signature.
+
+## Deviations (recorded grants and departures from the issue text)
+
+| # | Deviation | Basis | Where |
+|---|---|---|---|
+| DV-1 | This ticket creates `src/meridian/adapters/sqlite/repos_metrics.py`. The grant writes the path as `src/adapters/sqlite/repos_metrics.py`, but the package root is `src/meridian/`. It also adds exactly one import and the 3-line `OpsRepos.metrics` hook to `src/meridian/adapters/sqlite/repos_ops.py` (AEA-32's merged file). It touches nothing else outside the issue's owned files | Orchestrator note, 2026-10-21: Innocent decided R-1 option A ("just do whatever you recommend"). The orchestrator checked that no in-flight branch touches `repos_ops.py`, and `git diff 895f271..main` shows the file unchanged | Step 1; section 2 |
+| DV-2 | AC-15's DO-7 edit is not made | DO-7 line 78 already says the M-26 day runs "midnight to midnight Austin time (America/Chicago)" | Step 8 |
+| DV-3 | AC-9's "drives WP-2, WP-5 and WP-7 through the real server" is met only for the read leg. The pairs' rows are written through the real writers' repositories into the running server's DB copy, and the chat-driven leg is a declared skip | AEA-51 (the graph and `run_graph`) is not merged. Integrated-journeys §3 rule 6: a blocked step is recorded, never silently dropped | Step 7; R-3 |
+| DV-4 | AC-5's CON-20 `Measure.id` clause ("a DO-5 `E-n`") is tested as pass-through of the stored ids | STF-18's own consequence for AEA-53 (the route passes ids through unchanged). DO-5's E-n names eval runs, not measures. See R-4 | Step 2 D-10; §7.2 |
 
 ---
 
@@ -53,13 +79,15 @@ fields the harness stored. It never re-scores a run.
 AEA-48 (wave 2, merged `cb7df88`) built the three routes and their schemas (`web/schemas/reads.py`), typed against the
 `MetricsReads` Protocol in `web/deps.py`. Today an allowed read answers 500 `not bound: get_metrics_reads`. This ticket
 supplies the reader behind those routes. The rows it reads come from these writers:
-- AEA-10: conversations, turns, job_runs (merged);
-- AEA-26: spend (merged);
-- AEA-29: cases and promises (built on branch `aea-29-aea-29-cases-handoff`, **not merged**);
-- AEA-30: `abandoned` and `missed` (branch, not merged);
-- AEA-32: health events and the eval tables (merged);
-- AEA-44: flags (merged);
-- AEA-24: the eval report files (branch, not merged).
+- AEA-10: conversations, turns, job_runs;
+- AEA-26: spend;
+- AEA-29: cases and promises;
+- AEA-30: `abandoned` (sweep) and `missed` (tick);
+- AEA-32: health events and the eval tables;
+- AEA-44: flags;
+- AEA-24: the eval report files.
+
+All of them are merged on `main` at `3725c90`.
 
 ### Sources checked
 
@@ -74,7 +102,7 @@ supplies the reader behind those routes. The rows it reads come from these write
 | Observability contract | `docs/design/observability-contract.md` (DO-6) row **WF-6**; **CAP-6**; *Missing instrumentation*; *Alerts on the monitoring page* | Stored counts only; no names, codes, card-like numbers or trace links; an incomplete eval run is not a result |
 | Key-metrics registry | `docs/design/key-metrics-registry.md` (DO-7) M-1…M-29; *Where this registry and other documents differ* 1–4; M-26 row (line 78) | Ids, numerators, denominators; 12.5 s; no 80% spend line; M-3 is an estimate. The M-26 day is already "America/Chicago" in DO-7, so AC-15's DO-7 edit is not needed |
 | UI contracts (read only) | `docs/ux/03-structure/ui-contracts.openapi.yaml` `OwnerMetricsResponse`, `MonitoringResponse`, `EvalResponse`, `Measure`, `Tile`, `MonitorAlert`, `EvalMeasure`, `EvalRun` (examples: `trace_export: sent 70 of 74`; null reason `Not enough turns yet (fewer than 20)`) | Field names and shapes. Example ids are illustrative and wrong (STF-18) |
-| Sibling code (read only) | AEA-24 branch `eval/harness/report.py` (`base_summary`, `build_scored_report`, `_case_measures`); AEA-30 branch `services/scheduler.py` (`PROMISE_MISSED_REASON = "past_due"`, the abandon sweep); AEA-29 branch `services/_case_rules.py` (`REASON_LABEL`, `reason_label`, `LIFECYCLE_WORD`) | What the stored rows really look like |
+| Sibling code on `main` (read only) | AEA-24 `eval/harness/report.py` (`base_summary`, `build_scored_report`, `_case_measures`); AEA-30 `services/scheduler.py` (`PROMISE_MISSED_REASON = "past_due"`, `TICK_INTERVAL_S`, the abandon sweep), `services/demo.py` (`DemoClock`); AEA-29 `services/_case_rules.py` (`REASON_LABEL`, `reason_label`, `LIFECYCLE_WORD`); AEA-31 `services/reset.py` (`seed_demo`, `seed_first_boot`, `SEED_COUNT = 4`) | What the stored rows really look like |
 | UX ↔ backend join | `docs/plans/ux-join/backend-amendments.md` AEA-53-1…4 | Unit vocabulary, unique (id, label), fixed tile list plus a note, J-10 share check |
 | Rules | `.claude/rules/build-loop-test-scope.md` (with its AEA addition), `integrated-journeys.md` §3–§5, `context-maintenance.md`, `source-authority.md`; workspace `ticket-lanes.md`, `code-design-solid-modularity.md` | Affected tests and journeys only; journey record with level; context rows in the same change |
 | Decisions | `docs/plans/7b-decisions/` CAS-22, 25, 27, 29, 30; STF-17, 18, 22; DAT-14; merge MC-5, 6, 20, 22, 24; `docs/plans/stage7-signoff.md` D-4…D-15 (none bears on this ticket) | As cited in the requirements table |
@@ -88,9 +116,9 @@ supplies the reader behind those routes. The rows it reads come from these write
 | File | Create / modify | Note |
 |---|---|---|
 | `src/meridian/services/metrics_reader.py` | create | The reader (Step 2) |
-| `src/meridian/adapters/sqlite/repos_metrics.py` | create | **Grant needed (section 8, R-1).** The read-only `MetricsRepo` (Step 1) |
-| `src/meridian/adapters/sqlite/repos_ops.py` | modify: **3 lines only** in `OpsRepos` plus one import | **Grant needed (section 8, R-1).** Wires `OpsRepos.metrics` |
-| `src/meridian/web/container.py` | modify: the **body and docstring of `register_metrics_reader` only** (lines 768–772 today) | Collision map §3 |
+| `src/meridian/adapters/sqlite/repos_metrics.py` | create | **Granted (DV-1).** The read-only `MetricsRepo` (Step 1) |
+| `src/meridian/adapters/sqlite/repos_ops.py` | modify: **3 lines only** in `OpsRepos` plus one import | **Granted (DV-1).** Wires `OpsRepos.metrics` |
+| `src/meridian/web/container.py` | modify: the **body and docstring of `register_metrics_reader` only** (lines 993–997 today) | Collision map §3 |
 | `tests/unit/services/test_metrics_reader_rows.py` | create | Shared builders, no `test_` functions (pytest collects 0 tests from it) |
 | `tests/unit/services/test_metrics_reader_repo.py` | create | `MetricsRepo` tests |
 | `tests/unit/services/test_metrics_reader.py` | create | AC-10, AC-11, AC-12, the worked pairs, the 3-of-12 example, the CON-20 projection |
@@ -101,7 +129,7 @@ supplies the reader behind those routes. The rows it reads come from these write
 | `tests/journeys/j10/test_aea_53.py` | create | AC-9 (J-10) |
 | `docs/testing/journeys/<YYYY-MM-DD>-AEA-53.md` | create (written by the harness, then one notes paragraph appended) | AC-9 evidence record |
 | `docs/plans/ux-join/AEA-53-con19-health-tiles.md` | create | AC-12 note (the only file in that folder this ticket touches) |
-| `.claude/reference/area-map.md` | modify: the **A10b row only** (line 41 today) | AC-15 |
+| `.claude/reference/area-map.md` | modify: the **A10b row only** (line 46 today) | AC-15 |
 | `.claude/state/icm-progress.md` | modify: the **A10b "Routes verified against code and tests" row only** (line 38 today, the one citing AEA-48) | AC-15 |
 
 `tests/unit/services/__init__.py`, `tests/integration/__init__.py` and `tests/capture/__init__.py` already exist on
@@ -126,9 +154,9 @@ supplies the reader behind those routes. The rows it reads come from these write
 
 ### Other slices' files: never touch
 
-- Every other `register_<area>()` hunk in `web/container.py`. The AEA-29, AEA-30, AEA-40 and AEA-43 branches edit
-  `register_cases`, `register_demo`, `register_chat` and `register_demo_routes` right now.
-- `tests/capture/conftest.py`: do not create it, because AEA-50's branch adds one.
+- Every other `register_<area>()` hunk in `web/container.py`. They are merged (AEA-29, 30, 40, 43 and others) or
+  belong to open tickets (`register_staff_cases` AEA-45, `register_graph` AEA-51).
+- `tests/capture/conftest.py` (AEA-50, on main): do not edit or replace it. It appends no fixture this ticket uses.
 - Every other journey file, including AEA-48's `tests/journeys/j10/test_aea_48.py` (its skipped
   `test_j10_read_pages_from_metrics_reader_on_db_copy` stays AEA-48's; the seam audit retires it) and
   `tests/journeys/j10/test_aea_32.py`.
@@ -151,7 +179,7 @@ supplies the reader behind those routes. The rows it reads come from these write
 | AC-6 [negative] | Sentinel names, phones, code-like digits and card-like numbers are seeded in conversations, messages and eval failure examples. CON-19 and CON-20 contain none of them and no trace link or trace id. CON-18 carries case references and no PII | The reader reads no message, quote or trace-id column (`MetricsRepo` selects none), and D-10 drops every summary key outside `EvalRun` | `tests/capture/test_cap6_reads.py::test_no_pii_codes_cards_or_trace_links` |
 | AC-7 [invariant] | Never recomputes: read-only units of work only. With the gates, `checks.py`, the policy modules and the model ports patched to raise, the pages still answer. M-18 reads `outcome` as stored. A conversation a staff flag marks wrong is dropped from M-3's numerator | Step 2: every `with self._uow() as tx` uses the default `write=False` | `tests/integration/test_reads_composition.py::test_reader_never_recomputes` |
 | AC-8 [invariant] | Stamps. CON-19 `as_of` = wall clock and `demo_now` = demo clock. CON-18 `as_of` = demo clock. `cap_cents` is 3000 from 30. `today_cents` = `spend_today()` × 100. `resets_at` = the next Chicago midnight. An open circuit shows handoff-only mode | Step 2 (`_chicago`, `_next_chicago_midnight`, the `handoff_only` tile, D-5) | `tests/unit/services/test_metrics_reader_stamps.py` (4 tests, §7.2) |
-| AC-9 [journey] | **J-10**, level `integrated with a scripted model`. Drive WP-2, WP-5 and WP-7 through the real server, read CON-18…20, and assert the stored values with their labels and denominators, each equal to a direct count. Every unit is `count`/`ms`/`share`; every share is in [0, 1] and equals n/d (AEA-53-4) | Step 7: the stored-rows leg on AEA-57's harness. The chat-driven leg is declared blocked (section 8, R-3) | `uv run pytest -m journey tests/journeys/j10/test_aea_53.py -rs --journey-record AEA-53`, plus the record `docs/testing/journeys/<date>-AEA-53.md` |
+| AC-9 [journey] | **J-10**, level `integrated with a scripted model`. Drive WP-2, WP-5 and WP-7 through the real server, read CON-18…20, and assert the stored values with their labels and denominators, each equal to a direct count. Every unit is `count`/`ms`/`share`; every share is in [0, 1] and equals n/d (AEA-53-4) | Step 7: the stored-rows leg on AEA-57's harness, compared with D-11's stable read. The chat-driven leg is a declared skip, blocked on AEA-51 (section 8 R-3; DV-3) | `uv run pytest -m journey tests/journeys/j10/test_aea_53.py -rs --journey-record AEA-53`, plus the record `docs/testing/journeys/<date>-AEA-53.md` |
 | AC-10 [invariant] | One unit vocabulary (AEA-53-1): `count`, `ms`, `share`. Shares are 0–1 fractions. `EvalMeasure.value` is 0–1. M-24 is a count with numerator and denominator. Every mapping passes AEA-48's models | Step 2 constants. Shares are `numerator / denominator`, unrounded | `tests/unit/services/test_metrics_reader.py::test_units_and_scales` over the J-10 rows |
 | AC-11 [invariant] | (`id`, `label`) unique within each response. A DO-7 split is named in `label`, and the `id` stays M-n | CON-18 and CON-19: Step 2 labels (§4.4 tables). CON-20: pass-through (R-4) | `tests/unit/services/test_metrics_reader.py::test_measure_keys_unique` |
 | AC-12 [invariant] | The CON-19 health tiles are a fixed, listed set, in order, on an empty DB and after the J-10 run, with a note in `docs/plans/ux-join/` | `HEALTH_TILES` constant (§4.4) | `tests/unit/services/test_metrics_reader.py::test_health_tiles_fixed_list`. The note is Step 8 |
@@ -164,8 +192,8 @@ supplies the reader behind those routes. The rows it reads come from these write
 | Obligation | Governing source | In ticket | Disposition | Plan step or owner |
 |---|---|---|---|---|
 | A `request` record per page read with `request_id` | DO-6 WF-6 | Observability | other-ticket: AEA-23's middleware writes one for every request. The reader logs nothing on success | AEA-23 (merged) |
-| Reads go through `UnitOfWork` repository methods | cases.md §9 ("Opens read-only units of work only"); DO-3 §2; `ports/runtime.py` `UnitOfWork` has no `connection` member | yes | **added**: no repository method lists conversations, turns, cases or promises across threads, so a read-only `MetricsRepo` is added. Needs a grant | Step 1; section 8 R-1 |
-| Reason and lifecycle **display words** have one owner | source-authority rule 9; AEA-29 plan §4.2 (`services/_case_rules.py`: `REASON_LABEL`, `reason_label`, `LIFECYCLE_WORD`) | no | added: imported from AEA-29, never copied. AEA-29's plan calls `_case_*` private to `cases.py`, but `services/handoff.py` already imports `_case_rules` and no test enforces it. Flagged for review in R-2 | Step 0 check; Step 2 |
+| Reads go through `UnitOfWork` repository methods | cases.md §9 ("Opens read-only units of work only"); DO-3 §2; `ports/runtime.py` `UnitOfWork` has no `connection` member | yes | **added**: no repository method lists conversations, turns, cases or promises across threads, so a read-only `MetricsRepo` is added. Granted (DV-1) | Step 1; DV-1 |
+| Reason and lifecycle **display words** have one owner | source-authority rule 9; AEA-29 plan §4.2 (`services/_case_rules.py`: `REASON_LABEL`, `reason_label`, `LIFECYCLE_WORD`) | no | added: imported from AEA-29, never copied. On main, `handoff.py`, `_case_views.py` and `_case_actions.py` already import `_case_rules`, and no test forbids it (R-2 note) | Step 0 check; Step 2 |
 | M-23 live latency is "segmented by gate_result" | DO-7 M-23 | no | n/a: the `Tile` schema has one value per tile. The page uses every live turn with `server_ms`, the same population `AlertEvaluator` uses. Recorded as a limit in the journey record | Step 7 record |
 | Seeds reported "with and without them" (M-3, M-13, M-27) | DO-6 WF-16 | partly (`seeds_included`, `seed_count`) | n/a: the schema carries one value per measure. CON-18 includes seed rows and says so through `seeds_included` / `seed_count`. M-3 is live-only, and seed threads have no turns | D-2 |
 | M-22 "per day" | DO-7 M-22 | no | Decision D-3: the counts cover every stored live row. The store holds the demo since its last reset (reset clears conversations and turns, cases.md §1.3), which is what the OpenAPI EMPTY example "Nothing since the reset" shows | D-3 |
@@ -182,7 +210,7 @@ supplies the reader behind those routes. The rows it reads come from these write
 
 ---
 
-## 4. Shared code to use (copied from `main` at `895f271`, the AEA-29/24/30 branches and the addenda)
+## 4. Shared code to use (copied from `main` at `3725c90` and the addenda)
 
 ### 4.1 Imports the reader uses (exact)
 
@@ -211,7 +239,12 @@ UOW_FACTORY: Key[UnitOfWorkFactory] = Key("uow_factory")  # AEA-10
 WALL_CLOCK: Key[Callable[[], datetime]] = Key("wall_clock")  # AEA-23
 # Container keys provided by earlier hunks: Key("ledger") -> LedgerService (register_spend, always);
 #   Key("alert_settings") -> AlertSettings (register_ops, only when the app has a web shell);
-#   Key("demo_clock") -> DemoClock (AEA-30's register_demo; NOT provided on main yet; container_app gives a stand-in)
+#   Key("demo_clock") -> DemoClock (AEA-30's register_demo, only when the app has a web shell)
+
+# services/demo.py (AEA-30)
+class DemoClock:
+    def __init__(self, uow: UnitOfWorkFactory) -> None: ...
+    def now(self) -> datetime: ...          # the stored demo_state.demo_now, as America/Chicago
 
 # ports/runtime.py
 class UnitOfWorkFactory(Protocol):
@@ -283,13 +316,25 @@ TextId.MONITOR_TRACE_EXPORT "Trace export is failing and traces are being droppe
 def render(text_id: TextId, /, **values: str) -> str: ...      # MONITOR_SPEND_CAP needs amount=; the others take none
 def format_usd(cents: int) -> str: ...                         # 3000 -> "$30"
 
-# services/_case_rules.py (AEA-29 branch, lines 105, 135, 342)
+# services/_case_rules.py (AEA-29, on main: lines 105, 135, 342)
 REASON_LABEL: Final[Mapping[HandoffReason, str]]   # e.g. refund "Refund request", safety "Safety report in chat"
 LIFECYCLE_WORD: Final[Mapping[str, str]]           # "unassigned" -> "Unassigned", "resolved" -> "Resolved", …
 def reason_label(reason: HandoffReason, safety_kind: str | None = None) -> str: ...   # never the enum value
 
-# AEA-30 branch services/scheduler.py line 31
+# services/scheduler.py (AEA-30, on main, lines 27-31)
+TICK_INTERVAL_S: Final = 60.0               # SchedulerThread ticks this often in a running server (not in container_app)
+ABANDON_AFTER: Final = timedelta(minutes=30)  # the sweep's wall-clock idle limit (CAS-29)
 PROMISE_MISSED_REASON: Final = "past_due"   # promises.status_reason when the tick marks a promise missed
+# SchedulerJob.tick(): job_runs.start(...) -> marks open promises with due_at < demo now 'missed' -> sets 'abandoned'
+#   on live open conversations whose last_customer_wall_at <= wall now - 30 min -> job_runs.finish(...)
+
+# services/reset.py (AEA-31): the first-boot seed (an on_start hook, so container_app, which suppresses
+#   starters, never runs it; the journey server does)
+SEED_COUNT = 4
+def seed_demo(tx: UnitOfWork, *, assembler: _BriefAssembler) -> int: ...   # 4 'seed' threads, refs MHC-C-0005..0008
+def seed_first_boot(uow: UnitOfWorkFactory, seed: Callable[[UnitOfWork], int], now: datetime, *,
+                    deploy_id: str | None = None) -> int: ...             # 4 on a store without seed rows, else 0
+# tx.cases.refs.next_case_ref() returns max(highest ref, SEED_REF_MAX) + 1, so builder refs never collide with seeds
 
 # policy/handoff.py (AEA-14), used by the test builders only
 def promise_for(reason: HandoffReason, presence: Presence, now: datetime, window_start: datetime | None = None) -> Promise
@@ -297,7 +342,7 @@ def case_due_at(reason: HandoffReason, promise: Promise, window_start: datetime 
 def priority_for(reason: HandoffReason, *, promise_due: datetime | None = None, renewal_date: date | None = None) -> Priority
 ```
 
-**AEA-24's stored summary** (branch `aea-24-eval-harness`, `report.py` `base_summary`): `run_id`, `date` (ISO Chicago
+**AEA-24's stored summary** (`eval/harness/report.py` on main, `base_summary`, lines 293–337): `run_id`, `date` (ISO Chicago
 date), `agent_version`, `size`, `mix` (rows `{category, count, origin, tests}`), `measures` (each `{id, label,
 numerator, denominator, value, min, max, target}`, values rounded to 4 places), `dev_failures` (`{case_id,
 redacted_summary}`; `[]` on held-out), plus `suite`, `split`, `split_label`, `status`, `repeats`, `experiment_id`,
@@ -436,26 +481,32 @@ carry ISO strings. **Return only these keys.**
 Area **A10b**. Dependency direction: `web/container.py` (composition root) → `services/metrics_reader.py` → `ports/`
 (`Clock`, `UnitOfWorkFactory`) and the repository types. The reader implements `MetricsReads` (web.md §4)
 structurally. It consumes `UnitOfWork` reads, a ledger Protocol (`MetricsLedger`, below) and `AlertSettings`. The one
-new seam, `MetricsRepo`, is requested in section 8 (R-1), not invented.
+new seam, `MetricsRepo`, was requested in section 8 (R-1) and granted (DV-1). It is not invented here.
 
 ### Step 0 — preconditions (stop and report if any fails)
 
 ```bash
 export UV_LINK_MODE=hardlink
-cd <your worktree>                    # branch from main; never copy a venv; no node_modules here
+cd <your worktree>                    # branch aea-53-aea-53-metrics-reader from main; never copy a venv; no node_modules
 git log --oneline -1 main
 test -f src/meridian/services/_case_rules.py && test -f src/meridian/services/handoff.py && echo "AEA-29 merged"
 uv run python -c "from meridian.services._case_rules import REASON_LABEL, LIFECYCLE_WORD, reason_label; from meridian.domain.common import HandoffReason as H; assert all(H(r) in REASON_LABEL for r in H); print(reason_label(H.REFUND), LIFECYCLE_WORD['unassigned'])"
 uv run python -c "from meridian.services.handoff import BriefAssembler; print('ok')"
 uv run python -c "from meridian.web.deps import METRICS_READS; from meridian.services.health import AlertSettings; print(AlertSettings().min_turns)"
+uv run python -c "import meridian.web.container as c; assert 'No-op until' not in (c.register_demo.__doc__ or ''); assert 'No-op until' in (c.register_metrics_reader.__doc__ or ''); print('AEA-30 merged, hunk empty')"
+test ! -e src/meridian/adapters/sqlite/repos_metrics.py && test ! -e src/meridian/services/metrics_reader.py && echo "files free"
+git diff --quiet 3725c90 HEAD -- src/meridian/adapters/sqlite/repos_ops.py src/meridian/web/container.py && echo "anchors unchanged"
 ```
-- Expected output: `AEA-29 merged`, `Refund request Unassigned`, `ok`, `20`.
-- Also confirm with the orchestrator that the R-1 grant (`repos_metrics.py` plus the `repos_ops.py` hook) is
-  recorded. Without it, stop and report `BLOCKED-ON R-1 grant`.
+- Expected output: `AEA-29 merged`, `Refund request Unassigned`, `ok`, `20`, `AEA-30 merged, hunk empty`, `files free`,
+  `anchors unchanged`.
+- If `anchors unchanged` is missing, `repos_ops.py` or `container.py` moved after this plan. Re-read `OpsRepos` and
+  `register_metrics_reader` and apply Steps 1 and 5 to the same functions. If another ticket now owns either spot,
+  stop and report.
+- The R-1 grant is recorded (DV-1). It needs no confirmation.
 - If AEA-29's names differ (for example, the labels live elsewhere), stop and report `BLOCKED-ON AEA-29 names`. Do not
   copy the label tables.
 
-### Step 1 — `src/meridian/adapters/sqlite/repos_metrics.py` and the hook (grant R-1)
+### Step 1 — `src/meridian/adapters/sqlite/repos_metrics.py` and the hook (granted, DV-1)
 
 Create the file with exactly this content, then run `ruff format` on it:
 
@@ -733,10 +784,11 @@ def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any
     """AEA-53 reads: MetricsReader bound to get_metrics_reads() (cases.md §9).
 
     Provides deps.METRICS_READS ("metrics_reads"): one MetricsReader over Key("uow_factory") (AEA-10), the demo clock
-    Key("demo_clock") (AEA-30, read through a forwarder only when a page stamps a demo time, so the app builds before
-    AEA-30 binds it; until then CON-18 and CON-19 raise RuntimeError("not bound: demo_clock")), Key("wall_clock")
-    (AEA-23), Key("ledger") (AEA-26), Key("alert_settings") (AEA-32), settings.agent_version and
-    limits.spend.daily_cap_usd (MC-22). An app that create_app did not build has no web shell, so this does nothing.
+    Key("demo_clock") (AEA-30, read through a forwarder each time a page stamps a demo time, as register_staff_live
+    does, so a container without register_demo still builds; there a demo stamp raises RuntimeError("not bound:
+    demo_clock")), Key("wall_clock") (AEA-23), Key("ledger") (AEA-26), Key("alert_settings") (AEA-32),
+    settings.agent_version and limits.spend.daily_cap_usd (MC-22). An app that create_app did not build has no web
+    shell, so this does nothing.
     """
     from datetime import datetime
 
@@ -780,6 +832,10 @@ def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any
 - The module-level imports of `container.py` are unchanged (`test_container_imports_only_policy_limits`).
 - `provide(METRICS_READS, …)` type-checks only if `MetricsReader` structurally satisfies `MetricsReads`, so mypy is the
   static proof.
+- **Why the forwarder stays now that AEA-30 is merged.** `register_cases`, `register_chat` and `register_staff_live`
+  all reach the demo clock lazily. A direct `c.get(Key("demo_clock"))` inside this factory would make
+  `container.build()` fail in any test container that runs this hunk without `register_demo`. With the real app,
+  the forwarder resolves AEA-30's `DemoClock` on every call.
 
 Then write `tests/integration/test_reads_composition.py` (§7.2).
 
@@ -787,12 +843,40 @@ Then write `tests/integration/test_reads_composition.py` (§7.2).
 
 ### Step 7 — `tests/journeys/j10/test_aea_53.py` and the record (§7.2, section 8 R-3)
 
+**D-11, a stable read on a live server.** The journey server runs AEA-30's scheduler thread, which ticks every 60 s
+(`TICK_INTERVAL_S`). A tick does three things:
+- it writes a `job_runs` row;
+- it marks `missed` every open promise whose `due_at` is before the demo time;
+- it sets `abandoned` on every live open conversation idle for 30 minutes of wall time (STALE_OPEN qualifies).
+
+So the test compares the pages with SQL like this, in a helper `_stable_read(journey, client)`:
+1. `before = _counts(journey.db)`. This is a `dict[str, object]` of every §6.4 scalar:
+   - CON-18: the ended count and each per-outcome count, the M-3 numerator and denominator, the cases-by-reason
+     rows, the seed count, and the kept and missed promise counts;
+   - CON-19: the conversation, turn, failure and trace-sent counts.
+2. GET CON-18, CON-19 and CON-20 as owner.
+3. `after = _counts(journey.db)`.
+4. If `before == after`, return the three bodies and `after`. Otherwise repeat from 1, at most 3 attempts in all.
+   Then fail with `"store changed during every read attempt"`.
+
+*Invariant:* a page is compared only with SQL that bracketed it unchanged. A tick therefore cannot make the test flaky,
+and a reader bug cannot hide behind a retry: the values must still be equal.
+
+Some fields move with wall time alone, so they are not compared for equality:
+- the `scheduler_last_run` tile: assert an `int` ≥ 0 when `journey.db.count("job_runs") > 0`, else its null reason;
+- `as_of` and `demo_now`;
+- alert states: the watchdog and the tick may write alert rows.
+
+`last_restart.at` is compared with `tx.ops.health.last_restart().at_wall`, read through
+`journey.container.get(UOW_FACTORY)` right after the GETs.
+
 Run `uv run pytest -m journey tests/journeys/j10/test_aea_53.py -rs --journey-record AEA-53`. The harness writes
 `docs/testing/journeys/<Chicago date>-AEA-53.md`. Then append one **Notes** paragraph under its table that says:
-- the other evidence and its level: the unit, capture and integration tests are `mock-tested`, in process, with a
-  demo-clock stand-in;
-- what is blocked: the chat-driven leg is blocked on AEA-40, AEA-51, AEA-29, AEA-27 and AEA-30, and the page reads on
-  the harness are blocked on AEA-30 (`demo_clock`, which login needs);
+- the other evidence and its level: the unit, capture and integration tests are `mock-tested` (in process, the real
+  container and the real `DemoClock`, no server process);
+- this journey's level: `integrated with a scripted model` for the read leg (real server, DB copy, guards on). The WP
+  rows are written through the writers' repositories, not driven through chat (DV-3);
+- what is blocked: the chat-driven leg, on AEA-51 (the graph and `run_graph`);
 - the limits: no time window (D-3); latency is not segmented by `gate_result`; CON-20 measure ids are passed through as
   the harness stores them (R-4);
 - "Journeys that will exercise this code: J-10; AEA-55's UI integration".
@@ -806,7 +890,7 @@ Run `uv run pytest -m journey tests/journeys/j10/test_aea_53.py -rs --journey-re
   - the two non-registry ids (`scheduler_last_run`, `handoff_only`, D-5);
   - one sentence that `trace_export` reads "sent n of N turns".
   Make no other edit in that folder.
-- **`.claude/reference/area-map.md`**, row A10b (line 41):
+- **`.claude/reference/area-map.md`**, row A10b (line 46):
   - Status cell → "built: AEA-48 (cb7df88): web/routes/reads.py, web/schemas/reads.py, register_reads hunk; AEA-53
     (`<code commit>`): services/metrics_reader.py, adapters/sqlite/repos_metrics.py (read-only MetricsRepo, wired as
     OpsRepos.metrics), register_metrics_reader hunk".
@@ -954,6 +1038,9 @@ and are never printed.
   - When `with_seed` is true, it first runs `seed_first_boot(uow, functools.partial(seed_demo,
     assembler=BriefAssembler()), WALL_NOW)` (4 seed cases; AEA-31 and AEA-29).
   - Then it writes the §6.2 table.
+  - **Which seed each level gets.** `container_app` suppresses starters, so its first-boot seed never runs: the
+    HTTP-level capture tests that need seeds call `seed_j10_rows(h.uow, ledger, with_seed=True)` after entering the
+    client. The journey server already ran the first-boot seed, so the journey passes `with_seed=False`.
   - `J10Rows` is a frozen dataclass with fields `wp2, wp5, wp7, failed, flagged, abandoned, stale_open, eval_thread,
     load_thread` (ThreadId), `wp5_case, wp7_case, flagged_case` (CaseRef) and `wp2_turn: TurnIds`.
 
@@ -1044,8 +1131,8 @@ uv run pytest -q tests/unit/services/test_metrics_reader_repo.py tests/unit/serv
 # once before the final commit: affected = ours + the importers of repos_ops, container, the reads routes and create_app
 grep -rl "repos_ops\|meridian.web.container\|create_app\|metrics_reader\|repos_metrics\|get_metrics_reads" tests/ | sort   # review the list; add any file not covered below
 uv run --with pytest-xdist pytest -n 2 -q tests/unit/services tests/integration tests/capture/test_cap6_reads.py \
-  tests/adapters tests/unit/adapters tests/services tests/api tests/unit/web tests/unit/test_import_direction.py \
-  tests/unit/test_skeleton.py -rs
+  tests/adapters tests/unit/adapters tests/unit/ports tests/services tests/api tests/unit/web \
+  tests/unit/test_import_direction.py tests/unit/test_skeleton.py -rs
 uv run pytest -q tests/contract/test_openapi_server.py -k "getOwnerMetrics or getMonitoring or getLatestEval" -rs
 # journeys (AEA addition): the affected journeys, then this ticket's journey with its record
 uv run python -m tests.journeys.affected --base main
@@ -1054,10 +1141,13 @@ uv run pytest -m journey tests/journeys/j10/test_aea_53.py -rs --journey-record 
 
 **Passing looks like:**
 - ruff and format clean; mypy prints "Success: no issues found"; every listed test passes.
-- The only allowed skips are those the existing suites already print, plus:
-  - the contract runner's reads cases skipped as `not bound: demo_clock` (or passing, once AEA-30 has merged);
-  - J-10's page-read step reported `blocked-on AEA-30 …`;
-  - the chat-leg skip.
+- The only allowed skips are those the existing suites already print, plus the J-10 chat-leg skip (`blocked-on
+  AEA-51`).
+- The contract runner's reads cases (`getOwnerMetrics`, `getMonitoring`, `getLatestEval`) **pass** on the real reader.
+  A skip that reads `not bound: get_metrics_reads` or `not bound: demo_clock` means the hunk is not wired: fix it.
+- `test_j10_read_pages_show_stored_rows` passes, and the record's level reads `integrated with a scripted model`.
+- `tests/journeys/j10/test_aea_48.py::test_j10_read_pages_from_metrics_reader_on_db_copy` still skips. It is AEA-48's
+  file; the seam audit retires it.
 - No paid call (no `live` marker is selected).
 - The full suite is **not** run: the container change touches only this ticket's hunk, and no shared fixture,
   settings field or dependency changes.
@@ -1236,19 +1326,20 @@ the blocked steps; `J10 = "J-10"`)
     - then the three GETs through `signed.client.call(...)`, each validated against the OpenAPI.
     - Assert what the user sees: labels, denominators, units in {count, ms, share}, each share in [0, 1] and equal to
       n/d.
-    - Assert what is stored: each count equals `journey.db.scalar(<§6.4 SQL>)`.
-    - Do not compare alert states: the harness watchdog may write alert rows between the read and the check.
-- `test_j10_worked_pairs_driven_through_chat`: mark it `@pytest.mark.skip(reason="blocked-on AEA-40, AEA-51, AEA-29,
-  AEA-27, AEA-30: WP-2, WP-5 and WP-7 through the chat API use AEA-51's scripts; see
-  docs/testing/journeys/<date>-AEA-53.md")`. Its docstring lists the steps: drive the three pairs, then re-run the page
+    - Assert what is stored with D-11 (Step 7): get the bodies and `after` from `_stable_read`, then check that each
+      page count equals its `after` entry.
+    - Do not compare alert states, `as_of`, `demo_now` or the `scheduler_last_run` value (D-11).
+- `test_j10_worked_pairs_driven_through_chat`: mark it `@pytest.mark.skip(reason="blocked-on AEA-51: WP-2, WP-5 and
+  WP-7 through the chat API need the graph (run_graph) and AEA-51's scripts; see the AEA-53 journey record")`. Its docstring lists the steps: drive the three pairs, then re-run the page
   reads and the stored-count equalities.
 
 **Existing tests that must stay green:**
 - `tests/unit/web/test_container.py` (hunk docstring and order);
 - `tests/unit/test_import_direction.py`, `tests/unit/adapters/sqlite/test_uow.py`, `tests/adapters/test_repos_ops.py`;
+- `tests/unit/adapters/test_repo_shells.py` (the `OpsRepos` constructor signature), `tests/unit/ports/test_protocol_shapes.py`;
 - `tests/services/test_alerts.py`, `tests/services/test_health_capture.py`, `tests/services/test_load_eval_reports.py`;
 - `tests/api/test_reads_routes.py`, `tests/api/test_reads_router.py`, `tests/api/test_contract_cases_reads.py`;
-- `tests/contract/test_openapi_server.py` (the three reads' cases);
+- `tests/contract/test_openapi_server.py` (the three reads' cases now run, and must pass);
 - `tests/journeys/j10/test_aea_48.py`, `tests/journeys/j10/test_aea_32.py`;
 - every `tests/api` test built on `container_app`.
 
@@ -1294,30 +1385,21 @@ git diff --name-only main...HEAD      # must list exactly the files above (AC-15
 
 ## 8. Risks and requests
 
-- **R-1, request to the orchestrator: a read-only repository seam (still open; no grant is recorded on `main`).**
-  - The reader must count conversations, turns, cases, promises and flags across every thread. No repository method
-    does that: `cases.list_open` covers open cases only, `turns.for_thread` one thread, and `ops.signals` only
-    time-windowed alert inputs.
-  - Production code may not use `tx.connection`: the `UnitOfWork` Protocol has no such member, and DO-3 §2 forbids it.
-    `db.py` and `ports/runtime.py` are frozen.
-  - **Option A (recommended):** grant AEA-53 the new file `adapters/sqlite/repos_metrics.py` plus the 3-line hook in
-    AEA-32's `repos_ops.py` (Step 1). AEA-32 is merged, and no in-flight branch touches `repos_ops.py` (checked
-    2026-10-21 against AEA-04, 24, 29, 30, 36, 37, 40, 43, 50).
-  - **Option B:** an AEA-32 follow-up adds the same file and lines, using this exact Step 1 text, and merges first.
-  - The code is the same either way. Without one of the two, this ticket is blocked.
-- **R-2, blocked-on AEA-29 (built on `aea-29-aea-29-cases-handoff`, not merged).**
-  - The reader imports `reason_label` and `LIFECYCLE_WORD` from `services/_case_rules.py` (one owner for display
-    words).
-  - AC-2's real seed needs `services.handoff.BriefAssembler`.
-  - AEA-29's plan calls the `_case_*` modules private to `cases.py`, but its own `handoff.py` imports `_case_rules`,
-    and no test enforces the privacy. If the reviewer objects, the fix is AEA-29 re-exporting the two names from
-    `services/cases.py` (its `__all__`). That is an AEA-29 change, not a copy here.
-- **R-3, J-10 cannot reach `integrated with a scripted model` yet.**
-  - Login on the harness reads `demo_clock` (AEA-30, not merged), so the page-read step reports `blocked-on AEA-30`.
-  - Driving WP-2, WP-5 and WP-7 through the chat needs AEA-40, AEA-51, AEA-29, AEA-27 and AEA-30. That leg is a
-    declared skip, never a pass, and its scripts belong to AEA-51 (integrated-journeys §6).
-  - Today's evidence is `mock-tested`: in process, real container, demo-clock stand-in.
-  - The record names every blocker (rule 6). The wave-3 seam audit should re-run J-10 once AEA-30 lands.
+- **R-1, a read-only repository seam: closed, granted as option A (DV-1).**
+  - The reader must count conversations, turns, cases, promises and flags across every thread. No existing repository
+    method does that. Production code may not use `tx.connection` (the `UnitOfWork` Protocol has no such member, and
+    DO-3 §2 forbids it).
+  - Step 1 adds `MetricsRepo` and the 3-line hook. The hook is the only edit to `repos_ops.py`.
+- **R-2, AEA-29: closed (merged, `ef561fc`).** The reader imports `reason_label` and `LIFECYCLE_WORD` from
+  `services/_case_rules.py`, the one owner of display words. Three modules besides `cases.py` already import it. If a
+  reviewer still objects to the underscore module, the fix is an AEA-29 re-export from `services/cases.py`, never a
+  copy here.
+- **R-3, J-10 reaches `integrated with a scripted model` for the read leg only.**
+  - AEA-30 is merged, so login on the harness works, and the page reads run on the real server and DB copy.
+  - Driving WP-2, WP-5 and WP-7 through the chat needs AEA-51 (the graph and `run_graph`). That leg is a declared skip,
+    never a pass. Its scripts belong to AEA-51 (integrated-journeys §6).
+  - The record names AEA-51 under *Blocked by* (rule 6). The wave-3 seam audit should re-run J-10 once AEA-51 lands.
+  - The scheduler tick in the live server is handled by D-11. It is not a reason to skip.
 - **R-4, CON-20 measure ids: a cross-ticket conflict the orchestrator should settle with AEA-24 (not blocking this
   plan).**
   - STF-18 and AC-5 say CON-20 ids are DO-5 `E-n`, but DO-5's E-1…E-8 name eval *runs*, not measures. DO-7, this
@@ -1331,31 +1413,34 @@ git diff --name-only main...HEAD      # must list exactly the files above (AC-15
     with the topic in the label only. That would make AC-5 and AC-11 literally true on stored data. Either way, this
     ticket's code is unchanged.
 - **R-5, collisions.**
-  - `web/container.py`: the AEA-29, 30, 40 and 43 branches edit other functions, so a textual merge is likely clean.
+  - `web/container.py`: only `register_metrics_reader`'s body and docstring change. Open tickets (AEA-45, AEA-51)
+    edit other functions, so a textual merge is likely clean.
+  - `repos_ops.py`: three lines plus one import (DV-1). The orchestrator found no in-flight branch touching it.
   - `area-map.md` and `icm-progress.md`: every branch adds or edits its own row. Resolve any conflict by keeping
     every row.
-  - `tests/capture/`: AEA-50 adds `conftest.py`, so do not add one. If AEA-50's conftest lands first, re-run
-    `tests/capture/test_cap6_reads.py` after rebasing.
+  - `tests/capture/conftest.py` exists on main (AEA-50). Do not edit it. If a later CAP ticket appends a hook first,
+    re-run `tests/capture/test_cap6_reads.py` after rebasing.
 - **R-6, the monitoring window (D-3) and latency segmentation** are recorded as limits, not decided against a source.
   DO-7 leaves M-22 and M-23's live windows open, and the page shows all stored live rows since the reset.
 - **R-7, handoff-only mode as tile 7 (D-5).** The OpenAPI has no field for it, and a tile is the only place inside the
   signed contract. No contract change is needed.
-- **R-8, when AEA-30 merges:** AEA-59's contract runner will run the three reads' 200 cases on the real reader instead
-  of skipping. The reader's empty-store output must validate. `test_health_tiles_fixed_list` and the empty-store part
-  of AC-2 already prove that it does.
+- **R-8, AEA-59's contract runner now runs the three reads' 200 cases on the real reader.** AEA-30 is merged, so
+  login works in the runner, and this ticket's hunk removes the last `not bound` skip. The reader's empty-store
+  output must validate. `test_health_tiles_fixed_list` and the empty-store part of AC-2 prove that it does, and
+  §7.1 runs `tests/contract/test_openapi_server.py -k` on the three operations.
 
 ---
 
 ## 9. Readiness
 
-**READY**, with two prerequisites recorded as blocked-on:
-1. **AEA-29 merged** (R-2): imports the reader truly needs (`reason_label`, `LIFECYCLE_WORD`) and the AC-2 seed's
-   `BriefAssembler`.
-2. **The R-1 grant** (option A) or the AEA-32 follow-up (option B): `repos_metrics.py` plus the 3-line `repos_ops.py`
-   hook.
+**READY.** Nothing blocks the build:
+1. AEA-29, AEA-30, AEA-24, AEA-26, AEA-32, AEA-44 and AEA-48 are merged on `main` at `3725c90`. Every import the
+   reader and its tests need exists, with the names this plan copies.
+2. The R-1 grant is recorded (DV-1).
 
-Siblings are reached by injection and doubles only: the demo clock (AEA-30, through the forwarder and a
-`FixedClock`/stand-in) and the eval reports (AEA-24, through synthetic files in AEA-24's stored shape). Neither is
-blocking. No product decision, no signed-contract change and no answer different from D-4…D-15 is needed. R-4 is a
-naming conflict between two of our own records, for the orchestrator to settle with AEA-24; this plan's code does not
-depend on its outcome. Gates: none (no human, paid or live gate).
+Siblings outside `main` are reached by doubles or declared skips only. The J-10 chat leg (AEA-51) is a declared skip
+with its blocker named (DV-3, R-3). It is not a build blocker.
+
+No product decision, no signed-contract change and no answer different from D-4…D-15 is needed. R-4 is a naming
+conflict between two of our own records, for the orchestrator to settle with AEA-24. This plan's code does not depend
+on its outcome. Gates: none (no human, paid or live gate).

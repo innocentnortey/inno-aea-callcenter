@@ -163,7 +163,7 @@ scheduling service) are injected through `GraphDeps` and tested with doubles her
 | DO-3 | `docs/design/code-design.md` §2.3 rule 1 (no transaction across a model call), §5.2–§5.4 (keys, writers, skeleton), §3 module map row `nodes/act.py` | AC-12; AC-17 row edit |
 | Residual rulings | `docs/plans/7b-decisions/residuals-graph.md` R-G-12 (act node builds every task), R-G-13 (`deps.ledger`), R-G-14 (`R2.person`, `trigger="gate"`), R-G-15 (`EscalationInputs.now`), R-G-19 (`slice_inputs`) | Settled; built as written |
 | Stage 7 sign-off | `docs/plans/stage7-signoff.md` D-4…D-15 | D-14 keeps CAS-16 option A (`burning_ruled_out` → P2 in AEA-14's `priority_for`); nothing here answers it differently |
-| Sibling plans (read only) | `AEA-02.md` §8.2 (types not built), `AEA-21.md`, `AEA-29.md` (`HandoffService.open`, `CaseWriteFailed`), `AEA-35.md` §4.6, §8.3 R-1, §9.1 (`scope_for`; the `SpecialistTask` / slice sketch; the open home question), `AEA-38.md` PD-4 (`facts` writes no `pending_change`) | §4.1, §8.3, §9.1 |
+| Sibling plans (read only) | `AEA-02.md` §8.2 (types not built), `AEA-21.md`, `AEA-29.md` (`HandoffService.open`, `CaseWriteFailed`), `AEA-35.md` §4.6 (`scope_for`), `AEA-38.md` PD-4 (`facts` writes no `pending_change`); AEA-35b's commit `68f7f19` (the three task types, option A) | §4.1, §4.2, §8.3 |
 | Rules | `.claude/rules/build-loop-test-scope.md` (+ AEA addition), `integrated-journeys.md` §3–§5, `context-maintenance.md`, `agent-architecture.md` rules 12, 16; workspace `code-structure.md` (file size), `async-safety.md` rule 1 | §7 |
 | Evaluation / observability / metrics | DO-5 E-1 (WP-4, WP-7, WP-8), E-3/E-4, E-6; DO-6 WF-1 (specialists, escalation check), WF-2 (handoff node); DO-7 M-10, M-15, M-19…M-24 | Kept computable (AC-14); no eval run in this ticket |
 
@@ -922,6 +922,7 @@ def scheduling(status="windows_shown", *, change_request=None, write=None, brake
 def failure(kind: ProviderFailureKind = ProviderFailureKind.TIMEOUT) -> ProviderFailure
     # provider="anthropic", http_status=None, retry_after_s=None, retryable=True, provider_request_id=None
 WP4_APPOINTMENT, WP4_DRAFT, WP4_INPUTS (= SchedulingSliceInputs(zone="central", member=False, appointments=(WP4_APPOINTMENT,)))
+WP4_TEXT, WP7_TEXT        # the §6.1 WP-4 and WP-7 texts, as module constants (unit tests and J-4 use them)
 def booked_write(turn_id: TurnId) -> WriteResult    # J-3 only, synthetic:
     # WriteResult(action=CompletedAction(key=ActionKey(thread_id=THREAD, turn_id=turn_id, kind=ActionKind.BOOKED,
     #   record_id="101"), kind=ActionKind.BOOKED, records={"appointment": "101", "slot": "4401"}, at=WORKED_PAIRS_NOW),
@@ -1158,7 +1159,8 @@ shared fixture, setting, dependency or cross-package seam changes here (`build-l
 `tests/graph/test_spine.py`, `tests/graph/test_run_graph.py`, `tests/unit/agent/test_routers.py`,
 `tests/unit/agent/test_signals.py`, `tests/unit/agent/test_context.py`, `tests/unit/agent/nodes/test_compose.py`,
 `tests/unit/agent/nodes/test_compose_blocks.py` (AEA-21); `tests/unit/policy/test_escalation.py`,
-`tests/unit/policy/test_handoff.py` (AEA-14); AEA-35's `tests/unit/agent/specialists/` once merged;
+`tests/unit/policy/test_handoff.py` (AEA-14); `tests/unit/domain/test_specialist_task.py` (AEA-35b);
+AEA-35's `tests/unit/agent/specialists/`; `tests/journeys/j3/test_aea_{27,28,34,43}.py`, `tests/journeys/j4/test_aea_28.py`;
 `tests/unit/test_import_direction.py`.
 
 ### 7.4 Journey record (AC-15): `docs/testing/journeys/<run-date>-AEA-39.md`

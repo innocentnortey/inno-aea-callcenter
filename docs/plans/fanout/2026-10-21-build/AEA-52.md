@@ -1,13 +1,44 @@
 # Plan — [AEA-52] integration B: staff and demo end to end
 
-**Status:** READY as a plan, **BLOCKED-ON** before the implementer starts: pass 1 waits on AEA-30 and AEA-45 merging
-to `main` (AEA-29 and AEA-43 merged since the second pass); pass 2 also waits on AEA-40 and AEA-51; one AC-6 sub-check
-waits on AEA-53 (§9).
+**Status:** READY as a plan. **BLOCKED-ON per test** (Step 0.2 gate table): the six group-G0 tests are buildable on
+`main` now; the tests that call AEA-45's eight staff-case operations (G1) wait on **AEA-45** merging; pass 2 (G2) waits
+on **AEA-51**; one AC-6 sub-check (G3) waits on **AEA-53** (§9). AEA-30 and AEA-40 merged since the third pass.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/52 (spec copy:
-`docs/plans/tickets/AEA-52.md`) · **Base revision:** `main` at `c9b17ea` (third pass; earlier passes against `cf74674` and `68b1412`)
+`docs/plans/tickets/AEA-52.md`) · **Base revision:** `main` at `8a205b2` (fourth pass; earlier passes against `cf74674`, `68b1412`, `c9b17ea`)
 · **Wave:** 3 · **Lane:** `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement code + named tests →
 test → `code-review-agent`; no test-writer, no frozen tests, no security agent) · **Planner model:** claude-opus-5-5 ·
 **Implementer:** Sonnet (`fanout-implementer`)
+
+**Refresh log (2026-10-21, fourth planner pass, against `main` `8a205b2`).** What still holds: everything below except
+the items listed here. `git diff --stat c9b17ea main` leaves every shared surface this plan reads unchanged
+(`tests/journeys/support/`, `tests/api/openapi_check.py`, `tests/conftest.py`, `web/deps.py`, `web/logging.py`,
+`services/{health,reset,staff,live_chat}.py`, `adapters/`, the ticket, the slice plan, `docs/design/contracts/`,
+`docs/plans/stage7-signoff.md`). What changed:
+1. **AEA-30 merged** (`cf8fd78`, code `f4aa2cb`). Confirmed on main: `register_demo` provides `Key[DemoClock]("demo_clock")`,
+   `deps.DEMO_SERVICE`, `Key[SchedulerJob]("scheduler_job")` and `Key[SchedulerThread]("scheduler_thread")`; the job is
+   `SchedulerJob(uow, DeferredCases(...), clock, lambda: checkpointer.prune(keep=2), c.get(deps.WALL_CLOCK))` (the lambda
+   looks `prune` up on the instance at every call, so AC-25's instance patch reaches it, and `deps.WALL_CLOCK` is the
+   harness's `StepClock`). `services/scheduler.py` defines `PROMISE_MISSED_KIND = "promise_missed"`,
+   `PROMISE_MISSED_REASON = "past_due"`, `ERROR_KINDS = ("alerts_failed", "sweep_failed", "prune_failed")`,
+   `SchedulerThread(..., name: str = "meridian-scheduler")`; `tick()` never raises for a step failure (returns
+   `status="failed"`, `error_kind=f"{step}_failed"`) and sets `_pruned_on` only after a successful prune. Step 0.4's
+   AEA-30 greps pass.
+2. **AEA-40 merged** (`f466ff7`; the ledger row still reads `blocked`; git is authoritative). `register_chat` provides
+   `deps.SESSION_SERVICE` → `SessionService` and `deps.TURN_SERVICE` → `TurnService` and routes `startChatSession`,
+   `getChatThread`, `submitTurn`. AC-1's two pass-2 rows move into pass 1. CON-1 still cannot open a chat:
+   `SessionService.open` calls `settled_view`, which forwards to `deps.REPLY_COMPOSER` (AEA-51) and raises
+   `RuntimeError("not bound: reply_composer")`; so every live-chat test stays pass 2, and pass 2 now waits on **AEA-51**
+   only (plus AEA-53 for one sub-check).
+3. **AEA-45 still not on main** (branch `aea-45-staff-cases-api` at `789a1a5`, main merged into `ea00827`; ledger
+   `blocked`; its plan is READY for a resume run). New: Step 0.2 is a **per-test gate table**, so the six tests that call
+   no AEA-45 operation (group G0) can be built before AEA-45 merges. AC-27 now gives the reset work through
+   `advanceDemoClock` (AEA-47, merged) instead of a claim, which puts it in G0.
+4. **AC-12 prune assertion hardened:** the background runner shares the `SchedulerJob`; two ticks racing on a new wall
+   day can both prune (the second prunes 0). The test asserts the **sum** of `pruned` over that day's rows.
+5. **The area map now has three A6 rows** (lines 31–33 at `8a205b2`: AEA-29's suffix, AEA-30's suffix, the stale
+   original). Step 1.13 appends to the row containing `services/demo.py, services/scheduler.py actual (AEA-30` only (§8).
+6. Must-stay-green journeys updated (§7): `j6/test_aea_30.py`, `j7/test_aea_30.py` are on main.
+7. No decision changed: R-5 (AC-25 seam), AC-17's speaker name and D-12 in AC-19 stand.
 
 **Refresh log (2026-10-21, third planner pass, against `main` `c9b17ea`).** What still holds: everything below this
 log. `git diff --stat 68b1412 main` touches, among the surfaces this plan reads, only AEA-29's service files
@@ -144,7 +175,7 @@ with all journeys (integrated-journeys §5). No `risk::security` label, so no te
 | `tests/journeys/j7/test_aea_52.py` | 2 | J-7 |
 | `tests/journeys/j8/test_aea_52.py` | 1 | J-8 |
 | `docs/testing/journeys/2026-10-21-AEA-52.md` (date = run day) | 1, 2 | Written by `--journey-record=AEA-52`, then two cells edited by hand (Step 1.12) |
-| `.claude/reference/area-map.md` | 1, 2 | **Modify** only the A6 row (line 31, the fuller of the two A6 rows) and the A9 row |
+| `.claude/reference/area-map.md` | 1, 2 | **Modify** only one A6 row (the one naming AEA-30's services; Step 1.13) and the A9 row |
 | `.claude/state/icm-progress.md` | 1, 2 | **Modify**: add one "Routes verified against code and tests" row |
 | `docs/design/code-design.md` | 1, 2 | **Modify** only the §6 rows S-7, S-11, S-19, S-20 (append the proving test) |
 
@@ -169,7 +200,7 @@ Verbatim text of each criterion: `docs/plans/tickets/AEA-52.md` lines 88–115 (
 
 | AC | Requirement (ID-cited, condensed) | P | How it is implemented | How it is verified |
 |---|---|---|---|---|
-| AC-1 | Real objects bound, no overrides; scheduler thread alive after start-up, gone after shutdown | 1 (+2 rows for AEA-40) | `open_staff_run` (own server so shutdown can be observed); key → class table; `SchedulerThread.alive`; staffing on → off reaches `case_service` (Step 1.3) | `tests/integration/test_staff_composition.py::test_real_objects_bound` |
+| AC-1 | Real objects bound, no overrides; scheduler thread alive after start-up, gone after shutdown | 1 | `open_staff_run` (own server so shutdown can be observed); key → class table; `SchedulerThread.alive`; staffing on → off reaches `case_service` (Step 1.3) | `tests/integration/test_staff_composition.py::test_real_objects_bound` |
 | AC-2 | CAP-4: claim (`result_line` "Claimed · Riley (demo)"), join, send, hand back, flag; `case_event` per action with role; message in same thread, STORE-redacted; `flags` row; `request` records with role | 2 | `run_cap4_flow` on a CON-4 live case; WP-7 variant when AEA-51's script lands | `tests/capture/test_cap4_staff_console.py::test_staff_actions_recorded` |
 | AC-3 | No customer name / Riley text in logs; card-like sentinel stored as "[card number removed]" | 2 | Same flow; values read at run time | `…::test_no_customer_pii_in_logs` |
 | AC-4 | CON-3 joined/paused/staff_message/resumed/closed; CON-3 closes on `chat_closed`, CON-21 stays open; CON-21 `controller_changed` ×2 and no `case_changed` from live actions; pre-join version accepted by `resolve`; `Last-Event-ID` replay exact; `stream_reconnect` record | 2 | Two live cases (A: join, send, hand back, resolve; B: join, close) | `tests/integration/test_staff_streams.py::test_takeover_events_and_replay` |
@@ -325,15 +356,17 @@ from meridian.web.deps import (CASE_SERVICE, DEMO_SERVICE, FLAG_SERVICE, HANDOFF
 from meridian.web.logging import ALLOWED_FIELDS, RECORD_ATTR, AllowListFormatter
 from meridian.services.cases import CaseService                 # on main since ef561fc (AEA-29)
 from meridian.services.handoff import HandoffService            # on main since ef561fc (AEA-29)
-# after AEA-30 merges (pass 1 starts only then):
-from meridian.services.demo import DemoClock, DemoService
-from meridian.services.scheduler import ERROR_KINDS, PROMISE_MISSED_KIND, SchedulerJob, SchedulerThread
+from meridian.services.demo import DemoClock, DemoService       # on main since cf8fd78 (AEA-30)
+from meridian.services.scheduler import ERROR_KINDS, PROMISE_MISSED_KIND, SchedulerJob, SchedulerThread  # cf8fd78
+from meridian.services.session import SessionService            # on main since f466ff7 (AEA-40)
+from meridian.services.turn import TurnService                  # on main since f466ff7 (AEA-40)
+from meridian.web.deps import SESSION_SERVICE, TURN_SERVICE     # Key("session_service"), Key("turn_service")
 ```
 
-### Sibling code read on the unmerged branches (confirm on `main` at Step 0.4; do not import from a branch)
+### Sibling code (AEA-29 and AEA-30 confirmed on `main` `8a205b2`; AEA-45 branch-only, Step 0.4)
 
-Read 2026-10-21 from `aea-30-aea-30-demo-clock-sched` `e5c4ce4` (unchanged at the third pass) and
-`aea-29-aea-29-cases-handoff` `b54fed9` (the AEA-29 lines below are now confirmed on main `c9b17ea`):
+First read 2026-10-21 from the AEA-29 and AEA-30 branches; every line below was re-read on main at `8a205b2` and
+holds (AEA-30 also exports `PROMISE_MISSED_REASON = "past_due"`). Never import from a branch:
 
 ```python
 # services/scheduler.py (AEA-30)
@@ -440,29 +473,44 @@ The slice stays in the test tree. Interfaces consumed: the HTTP API (CON-1…CON
 0.1 `git -C /home/linuxuser/workspaces/inno-aea-callcenter log --oneline -1 main`; branch from main as
    `aea-52-aea-52-staff-demo-integ` (worktree per the orchestrator). `export UV_LINK_MODE=hardlink`; never copy a venv.
 
-0.2 **Pass 1 is buildable** only when all exist on main: `src/meridian/services/cases.py`, `services/handoff.py`,
-   `services/demo.py`, `services/scheduler.py`, `web/routes/staff_cases.py`, `web/routes/demo.py`. Check with
-   `ls` on each path. Missing → report `blocked-on` the owner (29, 29, 30, 30, 45, 43) and stop. (At `68b1412` all six
-   are missing: 29, 30 and 43 are built on branches, 45 is not started. At `c9b17ea` three are missing:
-   `services/demo.py` and `services/scheduler.py` (AEA-30, branch `e5c4ce4`) and `web/routes/staff_cases.py` (AEA-45,
-   branch `ea00827`).) Also confirm both registrations are live, not stubs:
-   `sed -n '/^def register_demo(/,/^def register_reset(/p' src/meridian/web/container.py | grep -c 'container.provide('`
-   ≥ 1 (0 at `c9b17ea`: AEA-30's no-op) and `grep -c 'staff_cases_routes_included' src/meridian/web/container.py` ≥ 1
-   (0 at `c9b17ea`). Either 0 → stop: blocked-on AEA-30 / AEA-45.
+0.2 **Per-test gate: build only what `main` can run.** Check the four facts with the commands given, then build
+   exactly the tests whose group's facts all hold. Every other test is **not written** and is reported as
+   `not built: blocked-on AEA-NN`. Never write a test that would skip, or fail, only because a sibling is missing.
 
-0.3 **Pass 2 is buildable** only when additionally: `src/meridian/services/session.py` exists (AEA-40 CON-1), and the
-   body of `register_graph` in `src/meridian/web/container.py` contains `container.provide(` for the keys
-   `reply_composer` and `run_graph` (AEA-51). Check with
-   `sed -n '/^def register_graph/,/^def register_frontend/p' src/meridian/web/container.py | grep -n 'provide\|reply_composer\|run_graph'`.
-   WP-7 / WP-4 variants also need AEA-51's script module (§8 R-3); `test_stale_tick_shows_as_health_tile` needs
-   `metrics_reads` bound (AEA-53). Build only the tests whose needs pass; list the rest as `not built: blocked-on …`.
+   | Fact | Command (from the worktree root) | At `8a205b2` |
+   |---|---|---|
+   | F-30 AEA-30 bound | `grep -c 'container.provide(job_key, build_job)' src/meridian/web/container.py` → `1` | holds |
+   | F-45 AEA-45 routed | `ls src/meridian/web/routes/staff_cases.py` exists **and** `grep -c 'staff_cases_routes_included' src/meridian/web/container.py` → ≥ `1` | **fails** (branch only) |
+   | F-51 AEA-51 bound | `sed -n '/^def register_graph/,/^def register_frontend/p' src/meridian/web/container.py \| grep -c 'container.provide('` → ≥ `2`, and the same `sed` piped to `grep -c 'reply_composer\|run_graph'` → ≥ `2` | **fails** (docstring-only no-op) |
+   | F-53 AEA-53 bound | `sed -n '/^def register_metrics_reader/,/^def register_reads/p' src/meridian/web/container.py \| grep -c 'container.provide('` → ≥ `1` | **fails** |
+
+   (Table escaping: in a cell, `\|` before `grep` is the shell pipe `|`; inside grep's quotes `\|` stays as typed,
+   it is grep's alternation.)
+
+   | Group | Needs | Tests |
+   |---|---|---|
+   | G0 | F-30 | `tests/capture/test_cap5_clock_and_scheduler.py::test_wf7_ticks[seeds]`, `::test_daily_prune_and_abandonment`, `::test_wf5_no_key_values_or_outbound`, `::test_wf7_logs_keys_and_network`; `tests/integration/test_demo_reset.py::test_reset_makes_no_outbound_connection`; `tests/journeys/j8/test_aea_52.py::test_j8_refresh_signed_out_and_expired` |
+   | G1 | F-30, F-45 | every other Step 1 test: AC-1, AC-5, AC-6 `[seeds]`, AC-8, AC-9 `[seed_invoice]`, AC-10 `[seeds]`, AC-11, AC-13 twin, AC-14, AC-16 `[seed_mhc_c_0007]`, AC-20, AC-21; J-6 seed leg; `test_j8_role_switch_seen_by_second_client`, `test_j8_reset_sends_both_clients_to_role_reset` |
+   | G2 | F-30, F-45, F-51 | Step 2 except G2-WP and G3: AC-2, 3, 4, 7, 17, 18, 22, 23; `test_reset_ends_open_chats`; AC-16 `[live_claimed_joined]`; `test_clock_changed_reaches_open_chat`; J-7 |
+   | G2-WP | G2 + AEA-51's WP scripts (§8 R-3) | the `wp4` / `wp7` / `wp4_appointment` / `wp7_claimed_joined` variants, AC-19, the J-6 WP-7/WP-8 leg |
+   | G3 | G2 + F-53 | `test_stale_tick_shows_as_health_tile` |
+
+   Write both helper files in full whatever groups hold (they are plain functions; unused ones cost nothing). G0 tests
+   call `assert_bound(run, DEMO_NEEDS, DEMO_OPERATIONS)` (Step 1.1), never `P1_OPERATIONS`, so they pass before AEA-45.
+   A run that builds only G0 commits as "pass 1a"; a later run adds G1 to the same files ("pass 1b").
+
+0.3 **Pass 2** = groups G2, G2-WP and G3 of 0.2. AEA-40's half of the old pass-2 gate holds since `f466ff7`
+   (`services/session.py` exists; `register_chat` binds `session_service` and `turn_service`); what remains is F-51
+   (AEA-51), AEA-51's WP scripts (R-3) and F-53 (AEA-53).
 
 0.4 Confirm on `main` the sibling names §4 lists (they were read from unmerged branches). Run:
    `grep -n 'Key\[SchedulerJob\]("scheduler_job")\|Key\[SchedulerThread\]("scheduler_thread")' src/meridian/web/container.py`
    (2 hits); `grep -n 'PROMISE_MISSED_KIND\|ERROR_KINDS\|name: str = "meridian-scheduler"' src/meridian/services/scheduler.py`
    (3+ hits); `grep -n 'kind=f"action:{name}"' src/meridian/services/_case_actions.py` (1 hit);
-   `grep -n 'f"ll-{r.id}"\|"Changed since the AI saw it"' src/meridian/services/_case_views.py` (2+ hits). (The two
-   AEA-29 greps already pass at `c9b17ea`; the AEA-30 greps are the ones that matter.)
+   `grep -n 'f"ll-{r.id}"\|"Changed since the AI saw it"' src/meridian/services/_case_views.py` (2+ hits). (All four
+   greps pass at `8a205b2`; run them anyway.) When F-45 holds, also
+   `grep -c 'operation_id="getQueue"\|operation_id="getOversight"' src/meridian/web/routes/staff_cases.py` → `2` (read
+   on AEA-45's branch at `789a1a5`: all eight operationIds of §3's list are routed there).
    A miss means the owner changed the name before merging: use main's name, say so in the report, and keep the
    assertion's meaning. If `register_demo` provides **no** key for `SchedulerJob` or `SchedulerThread`, stop:
    blocked-on AEA-30. If `SchedulerJob.tick()` re-raises step failures instead of returning `status="failed"`, wrap the
@@ -488,8 +536,12 @@ P1_NEEDS = ("login_sessions", "staff_access", "flag_service", "case_service", "h
 P1_OPERATIONS = ("getSession", "switchRole", "getQueue", "getCase", "applyCaseAction", "liveChatAction",
                  "streamCaseEvents", "recordContactActivity", "createFlag", "listFlags", "reviewFlag", "getOversight",
                  "getStaffing", "setStaffing", "getDemoClock", "advanceDemoClock", "resetDemo")
-P2_NEEDS = ("session_service", "person_requests", "reply_composer")
-P2_OPERATIONS = ("startChatSession", "getChatThread", "requestPerson", "streamChatEvents")
+P2_NEEDS = ("session_service", "turn_service", "person_requests", "reply_composer", "run_graph")
+P2_OPERATIONS = ("startChatSession", "getChatThread", "submitTurn", "requestPerson", "streamChatEvents")
+DEMO_NEEDS = ("login_sessions", "staff_access", "demo_service", "demo_clock", "reset_service", "reset_gate",
+              "checkpointer", "uow_factory", "wall_clock", "ledger")       # G0: no AEA-45 object or route
+DEMO_OPERATIONS = ("getSession", "switchRole", "getStaffing", "setStaffing", "getDemoClock", "advanceDemoClock",
+                   "resetDemo")
 
 @dataclass(frozen=True)
 class Actor:
@@ -582,7 +634,8 @@ Callers validate: `assert_response_matches(read.response, op)` when `read.status
    path resolves `case_service`; unbound it answers 500).
 6. After the `with` block (keep `thread` from step 4): poll up to 5 s until `thread.alive is False` and no alive thread
    named `SCHEDULER_THREAD` remains; assert both.
-Pass 2 adds rows `Key("session_service")` → `SessionService`, `Key("turn_service")` → `TurnService`.
+Also in the step-3 table (AEA-40, on main since `f466ff7`): `SESSION_SERVICE` → `SessionService`, `TURN_SERVICE` →
+`TurnService` (building them reaches no AEA-51 object; only a call does).
 
 **1.4 `test_staff_composition.py::test_role_and_state_refusals` (AC-5).** Uses `journey`. `assert_bound`. Sessions:
 `rep = sign_in(journey, "representative")`, `sup = sign_in(journey, "supervisor")`, `owner = sign_in(journey,
@@ -664,9 +717,10 @@ X_ROLES[op])`. Additionally assert: owner `getCase` and `listFlags` are 200; rep
     flags, cases and `reset_events` counts unchanged; `demo_state.demo_now` unchanged; Riley `getQueue` → 200 (role
     not reset). `monkeypatch.undo()`.
 
-`test_reset_makes_no_outbound_connection` (AC-27): sessions rep; Riley claims MHC-C-0006 (so the reset has work);
-`before = list(journey.guard.blocked)`; `reset_demo` → 200; `assert journey.guard.blocked == before == []`; print "0
-connection attempts".
+`test_reset_makes_no_outbound_connection` (AC-27, group G0): `assert_bound(journey, DEMO_NEEDS, DEMO_OPERATIONS)`;
+sessions rep and sup; supervisor `advance(sup, "plus_1h")` → 200 (so the reset has work to undo; no AEA-45 route);
+`before = list(journey.guard.blocked)`; Riley `reset_demo` → 200 and `parse_dt(body["clock"]["now"]) == DEMO_START`;
+`assert journey.guard.blocked == before == []`; print "0 connection attempts".
 
 **1.8 `test_staff_streams.py` (pass 1 tests).**
 
@@ -810,9 +864,9 @@ the next day, and our tick follows the move at once.
    GROUP BY thread_id`, A and B excluded; expected 0).
 5. `journey_clock.advance(86_400)`; immediately `r = job.tick()`.
 6. Assert: checkpoint count per thread in `cp.path` (sqlite3 read, `SELECT COUNT(*) FROM checkpoints WHERE thread_id =
-   ?`) is 2 for A and 2 for B; across `job_runs` rows with `started_wall_at >= t - 1 min`, exactly one has
-   `counts_json["pruned"]` not null and it equals `4 + extra` (5→2 and 3→2; with
-   `extra == 0` that is 4); the summed `counts_json["abandoned"]` over those rows is 1. A: `outcome ==
+   ?`) is 2 for A and 2 for B; across `job_runs` rows with `started_wall_at >= t - 1 min`, at least one has
+   `counts_json["pruned"]` not null and the **sum** of the non-null values equals `4 + extra` (5→2 and 3→2; with
+   `extra == 0` that is 4; a runner tick racing ours on the same day prunes 0, refresh log 4 item 4); the summed `counts_json["abandoned"]` over those rows is 1. A: `outcome ==
    'abandoned'`, `ended_wall_at` parses to A's `last_customer_wall_at + 30 min`. B, E, L, S: `outcome == 'open'`.
    `messages` counts unchanged. The four seed threads' outcomes are unchanged.
 Print per-thread checkpoint counts, message counts and outcomes.
@@ -860,18 +914,22 @@ stored row.
   four refs with `seed == 1`, a `case_briefs` row for MHC-C-0005.
 
 Run with `--journey-record=AEA-52` (§7). Then edit the generated record by hand in exactly two cells: *Remaining
-limitations* append "J-7 and the J-6 WP-7/WP-8 escalation leg not built in pass 1 (need CON-1, CON-4 and CON-2 through
-AEA-40 and AEA-51)"; *Blocked by* append "AEA-40, AEA-51 (pass 2)".
+limitations* append "J-7 and the J-6 WP-7/WP-8 escalation leg not built in pass 1 (CON-1, CON-4 and CON-2 reach
+`reply_composer` and `run_graph`, which only AEA-51 binds)" and, when G1 was not built, "J-6 seed leg and two J-8 steps
+not built (AEA-45's staff-case routes not on main)"; *Blocked by* append "AEA-51 (pass 2)" and, when G1 was not built,
+"AEA-45 (G1)".
 
 **1.13 Context rows (AC-28).** Only these lines:
-- `.claude/reference/area-map.md` the first `**A6 Cases and handoff**` row (line 31 at `c9b17ea`; match by name, the
-  line moves when AEA-30/45 merge; leave a duplicate A6 row alone, §8): append to the
+- `.claude/reference/area-map.md` the `**A6 Cases and handoff**` row whose status cell contains
+  `services/demo.py, services/scheduler.py actual (AEA-30` (line 32 at `8a205b2`; match by that text, never by line;
+  leave the other two A6 rows alone, §8): append to the
   status cell "; integrated (AEA-52, `<commit>`): CON-7…9 and the scheduler proven in `tests/integration/`,
   `tests/capture/test_cap5_clock_and_scheduler.py`". The `**A9 Staff console**` row: append "; integrated (AEA-52, `<commit>`)".
 - `.claude/state/icm-progress.md`: add one row after the last "Routes verified against code and tests" row, same
   columns, ≤ 400 characters: "provisional | 2026-10-21: areas A6, A9 (integration, AEA-52 `<commit>`):
   `tests/integration/test_staff_*.py`, `test_demo_reset.py`, `tests/capture/test_cap5_*` pass (`<n>` passed), J-6
-  seed leg and J-8 at integrated level | J-7 and CAP-4 after AEA-40/51".
+  seed leg and J-8 at integrated level | J-7 and CAP-4 after AEA-51" (name only the tests actually built; when G1 was not
+  built, say "G0 only; staff-case tests after AEA-45").
 - `docs/design/code-design.md` §6 rows S-7, S-11, S-19, S-20: append to the last cell " Proven: `<test path>` (AEA-52)."
   — S-7 `tests/integration/test_staff_composition.py::test_real_objects_bound`; S-11
   `tests/integration/test_staff_streams.py::test_case_stream_after_reset`; S-19
@@ -879,7 +937,7 @@ AEA-40 and AEA-51)"; *Blocked by* append "AEA-40, AEA-51 (pass 2)".
   `tests/integration/test_demo_reset.py::test_reset_all_or_nothing`.
 Then `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` → no FAIL.
 
-**1.14 Commit (pass 1).** Gates in §7 green first. `git add` each owned path explicitly (never `-A`). Message:
+**1.14 Commit (pass 1, or "pass 1a" when only G0 was built).** Gates in §7 green first. `git add` each owned path explicitly (never `-A`). Message:
 `test(integration): AEA-52 pass 1 - staff and demo seams on the real app` + body listing ACs built and ACs blocked, last
 line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do not push; do not touch the ledger.
 
@@ -898,7 +956,7 @@ def run_cap4_flow(run: JourneyRun, rep: Actor, cust: Actor, *, text: str) -> tup
     # live case; claim (result_line == "Claimed · Riley (demo)"); join; send(text); hand_back;
     # createFlag {"case_ref": ref, "target": "answer", "message_id": str(greeting_message_id), "reason": "Synthetic flag reason."}
 ```
-AC-1 gains the `SessionService` / `TurnService` rows.
+AC-1's table is already complete in pass 1 (refresh log 4, item 2).
 
 **2.2 `test_cap4_staff_console.py`** (`parametrize("variant", ["person_request"])`; `"wp7"` added with R-3):
 - `test_staff_actions_recorded` (AC-2): `rep = sign_in(…, "representative")`, `cust = sign_in(…)`;
@@ -1011,7 +1069,7 @@ Before the final commit, cheapest first, stop at the first red:
 2. `uv run ruff check` on the same paths → "All checks passed!".
 3. `uv run mypy` on the same paths → "Success: no issues found".
 4. Affected tests: `uv run pytest tests/integration tests/capture/test_cap5_clock_and_scheduler.py tests/capture/test_cap4_staff_console.py -q -rs`
-   (serial; `-n 2` at most) → all pass, 0 skipped (pass 1: only pass-1 files exist).
+   (serial; `-n 2` at most; drop a path that does not exist yet) → all pass, 0 skipped.
 5. Journeys + record: `uv run pytest -m journey tests/journeys/j6 tests/journeys/j7 tests/journeys/j8 -v -rs --journey-record=AEA-52`
    → AEA-52 steps pass; record written to `docs/testing/journeys/<date>-AEA-52.md` (then Step 1.12's two hand edits).
 6. Affected-journey gate: `uv run python -m tests.journeys.affected --base "$(git merge-base main HEAD)"` → exit 0.
@@ -1028,9 +1086,8 @@ pairs: **WP-7** (`test_staff_actions_recorded[wp7]`, `test_contact_attempt_recor
 (`test_fee_bearing_request_reaches_staff_at_once`, `test_clock_past_due_and_scheduler[wp4]`, `test_wf7_ticks[wp4]`,
 `test_case_view_snapshot_vs_current[wp4_appointment]`), all pass 2. The single `[journey]` criterion is **AC-15** at
 level `integrated with a scripted model`. Existing tests that must stay green: `tests/journeys/support/test_support.py`, every other file under
-`tests/journeys/j6`, `j7`, `j8` (on `c9b17ea`: `j6/test_aea_{29,47}.py`, `j7/test_aea_{29,41,42,46}.py`,
-`j8/test_aea_{31,43,44}.py`; after the blockers merge also `j6/test_aea_30.py`, `j7/test_aea_30.py` (AEA-30) and
-`j6/test_aea_45.py` (AEA-45)),
+`tests/journeys/j6`, `j7`, `j8` (on `8a205b2`: `j6/test_aea_{29,30,47}.py`, `j7/test_aea_{29,30,41,42,46}.py`,
+`j8/test_aea_{31,43,44}.py`; after AEA-45 merges also `j6/test_aea_45.py`),
 `tests/unit/test_affected_journeys.py` (its `test_no_journey_yet_prints_zero_and_exits_0` is red on main since AEA-57,
 ledger rows AEA-06/44/47/57: not this slice's to fix; report it, do not edit it).
 
@@ -1056,21 +1113,24 @@ a paid model; bind 4019 or 5184 (the harness uses port 0); `git add -A`; push; f
   outputs) as importable functions in an AEA-51-owned module (proposed `tests/integration/customer_scripts.py`:
   `open_wp7_case(run) -> (Actor, LiveCase)`, `open_wp4_case(run) -> (Actor, LiveCase)`), so AEA-52 drives the same
   conversations rather than inventing scripts. If AEA-51 lands without it, the WP variants go back to the planner.
-- **R-4 (to the orchestrator; ledger row):** the ticket's *Blocked by* omits **AEA-51**: CON-1 (`SessionService` needs
-  `ReplyComposer.settled_view`), CON-4 (`register_person_request` needs `reply_composer`) and CON-2 (`run_graph`) all
-  go through objects only AEA-51's `register_graph` binds (and AEA-21 builds). So every live-chat criterion (AC-2, 3,
-  4, 7, 17, 18, 19, 22, 23, the J-7 journey, the open-chat halves of AC-6/AC-8, and the WP variants) is pass 2. The
-  AC-6 CON-19 tile also needs **AEA-53**. AEA-59 is **not** needed (`assert_response_matches` is AEA-23's, merged).
-  Recommendation: dispatch pass 1 as soon as AEA-30 and AEA-45 merge (AEA-29 and AEA-43 are merged) (it proves seams S-7, S-8, S-11,
-  S-18, S-19, S-20 early), keep the ticket open, dispatch pass 2 after AEA-40 and AEA-51.
+- **R-4 (to the orchestrator; ledger row):** the ticket's *Blocked by* omits **AEA-51**: CON-1 (`SessionService.open`
+  calls `settled_view` → `reply_composer`), CON-4 (`register_person_request` needs `reply_composer`) and CON-2
+  (`run_graph`) all go through objects only AEA-51's `register_graph` binds (and AEA-21 builds). So every live-chat
+  criterion (AC-2, 3, 4, 7, 17, 18, 19, 22, 23, the J-7 journey, the open-chat halves of AC-6/AC-8, and the WP variants)
+  is pass 2. The AC-6 CON-19 tile also needs **AEA-53**. AEA-59 is **not** needed (`assert_response_matches` is
+  AEA-23's, merged). The ledger row for AEA-40 still reads `blocked` although `f466ff7` merged it; the orchestrator
+  should correct it. Recommendation: dispatch the implementer for G0 now (it proves seam S-19 and WF-5/WF-7 logging
+  early), again for G1 when AEA-45 merges (S-7, S-8, S-11, S-18, S-20), keep the ticket open, and dispatch pass 2
+  after AEA-51.
 - **R-5 (to the orchestrator, ticket wording):** AC-25 names "a tick whose `CaseService` call is patched to raise". There
   is no such call under the signed contract, so this plan proves the same obligation through `prune_checkpoints`. No
   contract, decision or other ticket changes. Note it on issue #52 when the result is posted.
 - **R-6 (from AEA-30 R-17 / AEA-29 R-7, no action here):** a promise converted at a shift end is stored `changed`. AC-7
   asserts the converted promise's *text* and the case's reference and creation time, never its status, so either
   resolution of that open item leaves AC-7 green.
-- **Area map has two A6 rows** (lines 31 and 32, a merge artefact). This slice appends to line 31 only; the duplicate
-  is for the orchestrator to remove (AEA-29/30 will also edit the A6 row).
+- **Area map has three A6 rows** (lines 31–33 at `8a205b2`, merge artefacts: AEA-29's suffix, AEA-30's suffix, the
+  stale original). This slice appends only to the row naming AEA-30's services and never merges or deletes rows; the
+  de-duplication is the orchestrator's (a context-upkeep commit should fold AEA-29's suffix into that row).
 - **Background threads:** the scheduler runner (ticks at start-up, then every 60 s, on the same `SchedulerJob` instance
   the tests drive) and the watchdog run during tests. Every scheduler assertion keys on returned `job_run_id`s or "a
   completed run wrote it", never on a total count; AC-12 writes its rows before moving the wall clock; `stale_check`
@@ -1081,21 +1141,20 @@ a paid model; bind 4019 or 5184 (the harness uses port 0); `git add -A`; push; f
   51, 53, 24, 50; all AEA-52 files have distinct names (`tests/capture/conftest.py` is AEA-50's: never edit it; it only
   registers the `deploy` marker). AEA-45's branch adds `tests/api/staff_cases_support.py`: a different helper in a
   different folder; do not import it (AEA-52 tests run on the harness, AEA-45's on its own fixtures). Context files:
-  AEA-29 (merged), AEA-30 and AEA-45 (branches) also append to the A6/A9 area-map rows, `icm-progress.md` and DO-3 §6;
+  AEA-29 and AEA-30 (merged) and AEA-45 (branch) also append to the A6/A9 area-map rows, `icm-progress.md` and DO-3 §6;
   AEA-52 appends to its own cells after theirs and never rewrites their text.
 
 ---
 
 ## 9. Readiness
 
-**READY as a plan; BLOCKED-ON before implementation** (no product decision needed; no signed contract change; no
-D-4…D-15 answer differs from its recommendation; D-12 is followed in AC-19).
-- Pass 1 waits on **AEA-30** (DemoService, DemoClock, SchedulerJob, SchedulerThread; it also binds `demo_clock`,
-  without which a real login answers 500) and **AEA-45** (CON-11…13, 15…17 routes) reaching `main`. At `c9b17ea` both
-  are built on branches (`e5c4ce4`, ledger `blocked`, send-back unfinished; `ea00827`, ledger `blocked`). Already
-  merged: AEA-29 (CaseService, HandoffService), AEA-43 (CON-6…CON-9 routes), AEA-57 (harness), 23, 31, 32, 41, 44, 46,
-  47, 48, 59. AEA-52 is an integration ticket: its criteria require the real objects through the real app
-  (slice plan Amendment 1: "on the harness, not on fakes"), so a double cannot stand in for these four.
-- Pass 2 also waits on **AEA-40** (CON-1, CON-2, `getChatThread`; built on its branch at `8fc2d33`, ledger
-  NEEDS-DECISION) and **AEA-51** (binds `reply_composer` and `run_graph` in `register_graph`, still a no-op on main;
-  not started; WP scripts, R-3); the CON-19 tile check waits on **AEA-53** (ledger NEEDS-DECISION, not started). AEA-51 is not in the ticket's *Blocked by* (R-4).
+**READY as a plan; BLOCKED-ON per test group** (no product decision needed; no signed contract change; no D-4…D-15
+answer differs from its recommendation; D-12 is followed in AC-19).
+- **G0 is buildable on `main` `8a205b2` now** (six tests: AC-12, AC-24, AC-25 `[seeds]`, AC-26, AC-27, the J-8 refresh and
+  expiry test). Everything it needs is merged: AEA-29, AEA-30, AEA-31, AEA-32, AEA-40, AEA-43, AEA-44, AEA-47, AEA-57.
+- **G1 waits on AEA-45** (CON-11…13, 15…17 routes; built on `aea-45-staff-cases-api` at `789a1a5`, ledger `blocked`, a
+  resume run planned). AEA-52 is an integration ticket: its criteria require the real routes through the real app
+  (slice plan Amendment 1: "on the harness, not on fakes"), so a double cannot stand in for them.
+- **Pass 2 (G2, G2-WP) waits on AEA-51** (binds `reply_composer` and `run_graph` in `register_graph`, still a no-op on
+  main; not started; WP scripts, R-3). AEA-40 is merged (`f466ff7`). AEA-51 is not in the ticket's *Blocked by* (R-4).
+- **G3 (the CON-19 tile check) waits on AEA-53** (ledger NEEDS-DECISION, not started).

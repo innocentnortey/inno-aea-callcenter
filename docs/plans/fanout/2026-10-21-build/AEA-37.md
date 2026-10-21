@@ -1378,3 +1378,4 @@ build (§5 step 0), nothing for Innocent.
 ## Deviations
 
 - 2026-10-21 (resume): deleted the three plan-node rows (`planner`, `danger_classifier`, `plan_join`) from `tests/graph/test_spine.py::test_stubs_raise_loudly`; those nodes are no longer stubs. Done under Innocent's standing permission of 2026-10-21 ("just do whatever you recommend"). The `plan` import became unused and was removed. Main was merged again; conflicts in the area map, ICM progress and code-design built lines were resolved by keeping both sides.
+- 2026-10-21 (second main merge, after AEA-36 landed): conflicts in `tests/graph/test_spine.py`, the area map and `code-design.md`. Kept `act` as the only node import and removed both the `front` (AEA-36) and `plan` stub rows, since neither module is a stub now; area-map A7d row and code-design lines say both built.
