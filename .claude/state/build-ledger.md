@@ -41,7 +41,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-35 | #35 | B | blocked |  |  | NEEDS-DECISION (plan) | AEA-11,AEA-20,AEA-22 |
 | AEA-36 | #36 | B sec | ready |  |  |  | AEA-11,AEA-12,AEA-14,AEA-21 |
 | AEA-37 | #37 | B | ready |  |  |  | AEA-11,AEA-12,AEA-21 |
-| AEA-38 | #38 | B | ready |  |  |  | AEA-10,AEA-11,AEA-15,AEA-21 |
+| AEA-38 | #38 | B | merged | aea-38-graph-reply-node | 042ad35 (merge of 72b1152) | ruff check/format clean; mypy clean (361 files); tests/unit/agent 283 passed; journeys 17 passed, 16 skipped; J-2 record mock-tested, blocked by AEA-57 and AEA-51; no shared fixture/config touched, no full suite | AEA-10,AEA-11,AEA-15,AEA-21 |
 | AEA-39 | #39 | B | ready |  |  |  | AEA-11,AEA-14,AEA-21 |
 | AEA-40 | #40 | B sec | ready |  |  |  | AEA-03,AEA-10,AEA-11,AEA-12,AEA-23,AEA-02b,AEA-03b |
 | AEA-41 | #41 | B | merged | main | 9806170 (merge of fc5314b) | ruff check/format clean; mypy clean (79 files); 245 affected tests passed, 1 skipped (j7 reload step, AEA-40/57); no shared fixture/config touched, no full suite; journeys j7/j9 pass | AEA-10,AEA-11,AEA-23 |
