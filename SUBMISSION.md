@@ -32,7 +32,7 @@ lists are satisfied.
 | D-1 | Deployed URL: interactive web app | PDF 1 · portal FR-6 | "a live web app the reviewer can interact with directly. They will ask their own questions and try to break it" | — | not started |
 | D-2 | Walkthrough / demo video, 3–4 min voiceover | PDF 2 · portal "Demo Video" | "how you found the call drivers, why you chose your chunking and retrieval approach, how escalation works, and what your eval numbers say. Design reasoning, not a feature tour." | — | not started |
 | D-3 | Source repository: code + eval set + README | PDF 3 · portal "Source Code" | "a README that explains how to run it and what the containment numbers were" | — | not started |
-| D-4 | Technical documentation | Portal | "Technical Documentation" (incl. discovery findings: drivers, method, scope choice — PDF goal 1) | — | not started |
+| D-4 | Technical documentation | Portal | "Technical Documentation" (incl. discovery findings: drivers, method, scope choice — PDF goal 1) | [`docs/technical-documentation.md`](docs/technical-documentation.md) | drafted, numbers pending Stage 9 |
 | D-5 | Deployment guide | Portal | "Deployment Guide" | — | not started |
 | D-6 | Test results | Portal | "Test Results": containment, accuracy on handled drivers, escalation rate, retrieval eval | — | not started |
 | D-7 | *Extra credit:* voice interface (STT/TTS, turn-taking) | PDF · portal | "A working voice agent, even a rough one, is a strong signal." Optional. | — | not planned yet |
@@ -43,10 +43,10 @@ AI usage documentation: **not needed** (portal, "AI Usage Documentation: Not-nee
 
 | Goal (PDF) | Evidence | Status |
 |---|---|---|
-| 1 Discovery: top 4–5 drivers ranked by volume, scope decision | `docs/data/handoff-information-inventory.md` (all 420 calls classified), PRD §3 (scope) → D-4 | evidence exists; write-up into D-4 not started |
+| 1 Discovery: top 4–5 drivers ranked by volume, scope decision | `docs/data/handoff-information-inventory.md` (all 420 calls classified), PRD §3 (scope) → D-4 (`docs/technical-documentation.md` §2–§3) | evidence exists; write-up drafted in D-4, numbers pending Stage 9 |
 | 2 RAG over the KB for the top 3 drivers; retrieval evaluated on its own | retrieval eval report → D-6 | not started |
 | 3 Scheduling: availability check, confirm or offer alternatives | demo path in D-1 | not started |
 | 4 Escalation with handoff context; no guessing | escalation cases in the eval set → D-6 | not started |
 | 5 Test set from transcripts; containment 60–75% target; accuracy; escalation rate | eval set in D-3, numbers in D-6 and README | not started |
 | 6 Public interactive web app | D-1 | not started |
-| 7 Monitoring (volume, containment, escalations, failures, latency) + feedback loop | dashboard in D-1, loop described in D-4 | not started |
+| 7 Monitoring (volume, containment, escalations, failures, latency) + feedback loop | dashboard in D-1, loop described in D-4 (`docs/technical-documentation.md` §9) | dashboard not started; loop described, drafted |

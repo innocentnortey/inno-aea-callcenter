@@ -26,7 +26,7 @@ serves it, whether the backend agrees field by field, and what the backend needs
 |---|---|---|
 | Two kinds of failure | Composed outcomes are HTTP 200 (`ErrorBlock`, `NoticeBlock` + `Notice`, always with `settled`); 4xx/5xx only for requests that could not be processed | `ApiErrorCode` in [internal-components §11](internal-components.md#11-errors-halts-and-what-the-customer-sees) now uses the UX-3 names (VALIDATION_ERROR 400, VERSION_CONFLICT, CASE_ALREADY_CLAIMED, SPEND_CAP_REACHED, STAFF_AUTH_REQUIRED with `details.reason`, REQUEST_RATE_LIMITED 429, CODE_CAP_REACHED, AI_PAUSED, RESET_FAILED, HANDOFF_FAILED, ROLE_NOT_ALLOWED, CASE_NOT_FOUND, FLAG_NOT_FOUND) |
 | Error body | `ApiError {error: {code, field, constraint, details}, request_id}` | One handler in `web/app.py` rewrites FastAPI's 422 to 400 `VALIDATION_ERROR`; `details` carries named extras only, never a value |
-| Cookies | `mhc_demo` (browser demo session; owns threads; scopes the inbox), `mhc_staff` (staff session) | Unchanged from DO-4 rev 2 |
+| Cookies | One cookie, `mhc_session`, set by login (CON-22); it carries the current role, owns threads and scopes the inbox. `mhc_demo` and `mhc_staff` are retired (OpenAPI `info.description`) | Reconciled at Stage 7 (AEA-08); the OpenAPI wins on wire names |
 | IDs on the wire | `message_id`, `flag_id`, inbox `id` are strings | Integer row IDs are serialised as strings by `web/schemas/*` |
 | Priority | `Priority {level, word}` (`Safety`, `Danger`, `Time-sensitive`, `Standard`, `Routine`) | `policy/handoff.py` owns the word per level |
 | Identity status | `not_checked`, `code_sent`, `verified`, `not_verified`, `locked` | The internal `located` state is shown as `not_checked`: locating reveals nothing (R-16) |
@@ -37,35 +37,39 @@ serves it, whether the backend agrees field by field, and what the backend needs
 
 ## 1. Per contract: serving component and agreement
 
-Area and wave are DO-3 §8's. "Agrees" means every request and response field in the OpenAPI is one the backend can
+Area and wave are DO-3 §8's; the route file and its ticket are the slice plan's §3 (one route file and one schema file per ticket, AEA-08, 2026-10-21). "Agrees" means every request and response field in the OpenAPI is one the backend can
 produce with the meaning UX-3 gives it.
 
 | CON | operationIds | Served by (area) | Agreement | Backend notes |
 |---|---|---|---|---|
-| CON-1 | `startChatSession`, `getChatThread` | `web/routes/chat.py` → `services/session.py` (A8) | **Agrees** | `getChatThread` is new: reads `messages`, `conversations.state` and `settled` from A0's `repos_core` |
-| CON-2 | `submitTurn` | `web/routes/chat.py` → `services/turn.py` → graph (A8, A7) | **Differs: UXR-21, UXR-24, UXR-25, UXR-26** | `form` payload → `gates/gate.py` intake (A1) and `nodes/front.py` (A7d): a locate form goes to `IdentityService.locate`, a where form sets the task's ZIP; both by code. `AI_PAUSED` notice composed by `nodes/compose.py` when `controller = human`. `TURN_IN_PROGRESS` carries `details.retry_after_ms` (2000 [A]) |
-| CON-3 | `streamChatEvents` | `web/routes/events.py` (A8), async SSE polling `events` (`id > Last-Event-ID`) about once a second [A] | **Differs: UXR-25** (the `shift_ended` event embeds a `HandoffBlock`) | Event names as UX-3 (`staff_message`, `ai_resumed`; no `case_created` to the customer). Writers: A6 (`staffing_changed`, `clock_changed`, `shift_ended`, `demo_reset`), A9 (`representative_joined`, `staff_message`, `ai_paused`, `ai_resumed`, `chat_closed`) |
-| CON-4 | `requestPerson` | `web/routes/chat.py` → `services/handoff.py` (A8 → A6) | **Differs: UXR-25** | One open case per thread: a second tap or a second reason returns `already_open` with the same reference (internal-components §7) |
-| CON-5 | `saveFollowUp` | `web/routes/chat.py` → `CaseService.set_followup` (A8 → A6) | **Agrees** | `general_only` in the handoff block's `followup_chooser` when the customer is not verified |
-| CON-6 | `listDemoInbox` | `web/routes/demo.py` → `IdentityService.inbox` (A8 → A4) | **Agrees** | The only response carrying a code; excluded from request logging bodies |
-| CON-7 | `getStaffing`, `setStaffing` | `web/routes/demo.py` → `DemoService` (A8 → A6) | **Agrees** | Requires the demo login session (R-48, UXR-27); §3 item 5 superseded |
-| CON-8 | `getDemoClock`, `advanceDemoClock` | read: `web/routes/demo.py` (A8); **advance: `web/routes/staff.py` (A9)**, because it needs the supervisor session | **Agrees** | Advance is supervisor-only per UX-3 (DO-4 rev 2 had it open; UX-3 wins). The chat's "today" follows the demo clock [Decided, Innocent 2026-10-21] |
-| CON-9 | `resetDemo` | `web/routes/demo.py` → `ResetService` (A8 → A6) | **Agrees** | Body `{confirm: true}`; 409 RESET_IN_PROGRESS on reset, 503 elsewhere; see §3 item 5 |
-| CON-10 | `listStaffRoles`, `createStaffSession`, `getStaffSession`, `endStaffSession` | `web/routes/staff.py` → `services/staff.py` (A9) | **Agrees** | `services/staff.py` also provides `require_staff(roles)`, the one staff-session check every staff route uses |
-| CON-11 | `getQueue` | `web/routes/staff.py` → `CaseService.queue` (A9 → A6) | **Agrees** | Backend orders rows; `age_label`, `due_label` from the demo clock |
-| CON-12 | `getCase` | `web/routes/staff.py` → `CaseService.detail` + lookup log (A9 → A6) | **Differs: UXR-24** (`CaseSource.version_date`) | Every role reads; owner gets `allowed_actions: []`, never ROLE_NOT_ALLOWED [settled by UX-3, proposal]. `Brief` fields as UX-3 (internal-components §7 aligned) |
-| CON-13 | `applyCaseAction` | `web/routes/staff.py` → `CaseService.apply` (A9 → A6) | **Agrees** | `expected_version` required; VERSION_CONFLICT with `details.changed_by`, `changed_at`, `current_version` |
-| CON-14 | `liveChatAction` | `web/routes/staff.py` → `services/live_chat.py` (A9) | **Agrees** | Writes `conversations.controller` and the message in one transaction; appends the CON-3 and CON-21 events |
-| CON-15 | `recordContactActivity` | `web/routes/staff.py` → `CaseService.record_activity` (A9 → A6) | **Agrees** | Fixed label "Demo: recorded, not sent" |
-| CON-16 | `createFlag`, `listFlags`, `reviewFlag` | `web/routes/staff.py` → `services/staff.py` (A9) | **Differs: UXR-22** | — |
-| CON-17 | `getOversight` | `web/routes/staff.py` → `CaseService.oversight` (A9 → A6) | **Agrees** | Lanes in UX-3's fixed order |
-| CON-18 | `getOwnerMetrics` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b, **now wave 3**, after A9's `require_staff`) | **Agrees** | `in_scope_correct_resolution` is the M-3 estimate (`kind: estimate`); the measured north star links to CON-20 |
-| CON-19 | `getMonitoring` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b) | **Differs: UXR-23** | Spend day midnight to midnight America/Chicago, `resets_at` from it; zero-traffic alert 4 h outside 22:00–06:00 Chicago [Decided 2026-10-21, per UX-3]. `as_of` is real time (§4) |
-| CON-20 | `getLatestEval` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b) | **Agrees** | Reads the eval results tables A11's harness writes |
-| CON-21 | `streamCaseEvents` | **`web/routes/staff.py` (A9)**, async SSE polling the case's event stream | **Agrees** | Its own small async generator over `repos_core.events.after(...)`; no shared SSE helper with CON-3 until a third stream exists (code-design S-11) |
+| CON-1 | `startChatSession`, `getChatThread` | `web/routes/chat.py` → `services/session.py` (A8; AEA-40) | **Agrees** | `getChatThread` is new: reads `messages`, `conversations.state` and `settled` from A0's `repos_core` |
+| CON-2 | `submitTurn` | `web/routes/chat.py` → `services/turn.py` → graph (A8, A7; AEA-40) | **Differs: UXR-21, UXR-24, UXR-25, UXR-26** | `form` payload → `gates/gate.py` intake (A1) and `nodes/front.py` (A7d): a locate form goes to `IdentityService.locate`, a where form sets the task's ZIP; both by code. `AI_PAUSED` notice composed by `nodes/compose.py` when `controller = human`. `TURN_IN_PROGRESS` carries `details.retry_after_ms` (2000 [A]) |
+| CON-3 | `streamChatEvents` | `web/routes/events.py` (A8; AEA-41), async SSE polling `events` (`id > Last-Event-ID`) about once a second [A] | **Differs: UXR-25** (the `shift_ended` event embeds a `HandoffBlock`) | Event names as UX-3 (`staff_message`, `ai_resumed`; no `case_created` to the customer). Writers: A6 (`staffing_changed`, `clock_changed`, `shift_ended`, `demo_reset`), A9 (`representative_joined`, `staff_message`, `ai_paused`, `ai_resumed`, `chat_closed`) |
+| CON-4 | `requestPerson` | `web/routes/handoff.py` → `services/person_request.py` → `services/handoff.py` (A8 → A6; AEA-42) | **Differs: UXR-25** | One open case per thread: a second tap or a second reason returns `already_open` with the same reference (internal-components §7) |
+| CON-5 | `saveFollowUp` | `web/routes/handoff.py` → `CaseService.set_followup` (A8 → A6; AEA-42) | **Agrees** | `general_only` in the handoff block's `followup_chooser` when the customer is not verified |
+| CON-6 | `listDemoInbox` | `web/routes/demo.py` → `IdentityService.inbox` (A8 → A4; AEA-43) | **Agrees** | The only response carrying a code; excluded from request logging bodies |
+| CON-7 | `getStaffing`, `setStaffing` | `web/routes/demo.py` → `DemoService` (A8 → A6; AEA-43) | **Agrees** | Requires the demo login session (R-48, UXR-27); §3 item 5 superseded |
+| CON-8 | `getDemoClock`, `advanceDemoClock` | read: `web/routes/demo.py` (A8; AEA-43); **advance: `web/routes/staff_clock.py` (A9; AEA-47)**, because it needs the supervisor session | **Agrees** | Advance is supervisor-only per UX-3 (DO-4 rev 2 had it open; UX-3 wins). The chat's "today" follows the demo clock [Decided, Innocent 2026-10-21] |
+| CON-9 | `resetDemo` | `web/routes/demo.py` → `ResetService` (A8 → A6; AEA-43) | **Agrees** | Body `{confirm: true}`; 409 RESET_IN_PROGRESS on reset, 503 elsewhere; see §3 item 5 |
+| CON-10 | `listDemoRoles`, `switchRole` | `web/routes/staff_session.py` → `services/staff.py` (A9; AEA-44) | **Agrees** | A role switch for the signed-in session (R-48), no passcode. `services/staff.py` also implements `require_staff(*roles)`, the one staff-session check every staff route uses; `web/deps.py` (AEA-23) declares it |
+| CON-11 | `getQueue` | `web/routes/staff_cases.py` → `CaseService.queue` (A9 → A6; AEA-45) | **Agrees** | Backend orders rows; `age_label`, `due_label` from the demo clock |
+| CON-12 | `getCase` | `web/routes/staff_cases.py` → `CaseService.detail` + lookup log (A9 → A6; AEA-45) | **Differs: UXR-24** (`CaseSource.version_date`) | Every role reads; owner gets `allowed_actions: []`, never ROLE_NOT_ALLOWED [settled by UX-3, proposal]. `Brief` fields as UX-3 (internal-components §7 aligned) |
+| CON-13 | `applyCaseAction` | `web/routes/staff_cases.py` → `CaseService.apply` (A9 → A6; AEA-45) | **Agrees** | `expected_version` required; VERSION_CONFLICT with `details.changed_by`, `changed_at`, `current_version` |
+| CON-14 | `liveChatAction` | `web/routes/staff_live.py` → `services/live_chat.py` (A9; AEA-46) | **Agrees** | Writes `conversations.controller` and the message in one transaction; appends the CON-3 and CON-21 events |
+| CON-15 | `recordContactActivity` | `web/routes/staff_cases.py` → `CaseService.record_activity` (A9 → A6; AEA-45) | **Agrees** | Fixed label "Demo: recorded, not sent" |
+| CON-16 | `createFlag`, `listFlags`, `reviewFlag` | `web/routes/staff_cases.py` → `FlagService` in `services/staff.py` (A9; AEA-45, AEA-44) | **Differs: UXR-22** | — |
+| CON-17 | `getOversight` | `web/routes/staff_cases.py` → `CaseService.oversight` (A9 → A6; AEA-45) | **Agrees** | Lanes in UX-3's fixed order |
+| CON-18 | `getOwnerMetrics` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b; AEA-48, AEA-53) | **Agrees** | Route in ticket wave 2 (AEA-48), reader in wave 3 (AEA-53). `in_scope_correct_resolution` is the M-3 estimate (`kind: estimate`); the measured north star links to CON-20 |
+| CON-19 | `getMonitoring` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b; AEA-48, AEA-53) | **Differs: UXR-23** | Spend day midnight to midnight America/Chicago, `resets_at` from it; zero-traffic alert 4 h outside 22:00–06:00 Chicago [Decided 2026-10-21, per UX-3]. `as_of` is real time (§4) |
+| CON-20 | `getLatestEval` | `web/routes/reads.py` → `services/metrics_reader.py` (A10b; AEA-48, AEA-53) | **Agrees** | Reads the eval results tables A11's harness writes |
+| CON-21 | `streamCaseEvents` | **`web/routes/staff_live.py` (A9; AEA-46)**, async SSE polling the case's event stream | **Agrees** | Its own small async generator over `repos_core.events.after(...)`; no shared SSE helper with CON-3 until a third stream exists (code-design S-11) |
+| CON-22 | `login`, `logout`, `getSession` | `web/routes/auth.py` (A8; AEA-23) | **Adopted** (UXR-27, R-48) | The one gate for the whole deployment: username and password from the Railway variables, `mhc_session` cookie, `UNAUTHENTICATED` (401) on every route except login and `/healthz`; login failures are one message (`LOGIN_FAILED`) and rate limited per IP |
 
 **Count: 15 of 21 contracts agree field by field; 6 differ (CON-2, CON-3, CON-4, CON-12, CON-16, CON-19), each by a
 request below; 0 gaps** (every one of the 29 operations has a serving component).
+CON-22 (login, logout, getSession) came later with R-48 and is outside that count.
+
+> **Reconciled 2026-10-21 (AEA-08):** the *Served by* cells name the route files as the slice plan split them (one route file and one schema file per ticket), CON-10's operationIds are the OpenAPI's, the cookie row follows the OpenAPI, and CON-22 has its row. No field, type, status code, error name or signature changed.
 
 ---
 
@@ -78,7 +82,7 @@ UX-3 adopted 17 and adapted 3; the backend accepts the three adaptations as writ
 | UXR | UX-3 outcome | Backend |
 |---|---|---|
 | UXR-3 | Adapted: a fourth payload kind `form` | Accepted: `Intake.kind = "form"` with `FormValues` (internal-components §3); routed by code, never to a model |
-| UXR-9 | Adapted: the staff stream is the new **CON-21** | Accepted: served by A9 (`web/routes/staff.py`) |
+| UXR-9 | Adapted: the staff stream is the new **CON-21** | Accepted: served by A9 (`web/routes/staff_live.py`, AEA-46) |
 | UXR-10 | Adapted: `staff_message`, `ai_resumed`; no `case_created` to the customer | Accepted |
 | UXR-18 | Adopted; TURN_TIMEOUT copy left to the copy owner | **Settled: UX owns customer copy.** The text is "This is taking longer than it should." (internal-components §11 fixed) |
 
