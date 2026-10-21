@@ -49,7 +49,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-44 | #44 | B sec | planned | aea-44-aea-44-staff-sessions |  |  | AEA-10,AEA-23 |
 | AEA-45 | #45 | B | ready |  |  |  | AEA-23 |
 | AEA-46 | #46 | B | ready |  |  |  | AEA-10,AEA-23 |
-| AEA-47 | #47 | B | planned | aea-47-staff-clock-advance |  |  | AEA-23 |
+| AEA-47 | #47 | B sec | merged | aea-47-staff-clock-advance | 23dd4ac | ruff check/format clean; mypy clean; tests/api+contract+unit+journeys 996 passed, 1 skipped, 1 stale test failing on main too (test_no_journey_yet_prints_zero); J-6 record skipped until AEA-45/57; no full suite | AEA-23 |
 | AEA-48 | #48 | B | ready |  |  |  | AEA-23 |
 | AEA-49 | #49 | B | ready |  |  |  | AEA-23 |
 | AEA-50 | #50 | B sec | ready |  |  |  | AEA-16,AEA-31,AEA-32,AEA-33,AEA-19,AEA-23 |

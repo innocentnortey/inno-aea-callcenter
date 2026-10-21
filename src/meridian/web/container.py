@@ -498,8 +498,54 @@ def register_reset(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-44 staff: StaffSessionStore, FlagService, CON-10 routes (staff.md §2).
 
-    No-op until AEA-44 fills it.
+    Provides deps.LOGIN_SESSIONS and deps.STAFF_ACCESS (one StaffSessionStore built from deps.UOW_FACTORY,
+    settings.session_secret, Key("demo_clock") and limits.web.login_session_lifetime_s) and deps.FLAG_SERVICE
+    (FlagService), and includes the CON-10 router once. Key("demo_clock") is AEA-30's and is read only when a clock
+    reading is needed; until it is provided that reading raises RuntimeError("not bound: demo_clock"), so the app
+    still builds. An app that create_app did not build has no web shell, so this does nothing.
     """
+    import datetime as dt
+
+    from meridian.config import Settings
+    from meridian.ports.runtime import Clock
+    from meridian.services.staff import FlagService, StaffSessionStore
+    from meridian.web.deps import FLAG_SERVICE, LOGIN_SESSIONS, STAFF_ACCESS, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_session import build_router
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+    typed = cast(Settings, settings)
+    demo_key: Key[Clock] = Key("demo_clock")
+    store_key: Key[StaffSessionStore] = Key("staff_session_store")
+
+    class _DemoClock:
+        def now(self) -> dt.datetime:
+            try:
+                clock = container.get(demo_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_key.name}":
+                    raise RuntimeError(f"not bound: {demo_key.name}") from None
+                raise
+            return clock.now()
+
+    demo_clock = _DemoClock()
+    container.provide(
+        store_key,
+        lambda c: StaffSessionStore(
+            c.get(UOW_FACTORY),
+            typed.session_secret,
+            demo_clock,
+            lifetime_s=limits.web.login_session_lifetime_s,
+        ),
+    )
+    container.provide(LOGIN_SESSIONS, lambda c: c.get(store_key))
+    container.provide(STAFF_ACCESS, lambda c: c.get(store_key))
+    container.provide(FLAG_SERVICE, lambda c: FlagService(c.get(UOW_FACTORY), demo_clock))
+    if not getattr(app.state, "staff_session_routes_included", False):
+        app.include_router(build_router())
+        app.state.staff_session_routes_included = True
 
 
 def register_chat(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -639,8 +685,19 @@ def register_staff_live(container: Container, app: FastAPI, *, settings: Any, li
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-47 staff API: the CON-8 clock-advance route (staff.md §8).
 
-    No-op until AEA-47 fills it.
+    Includes routes/staff_clock.py's router (advanceDemoClock: POST /api/demo/clock only; the GET on the same path is
+    AEA-43's) once per app. Provides nothing: DemoService is bound by AEA-30's register_demo hunk. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_clock import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_clock_routes_included", False):
+        return  # a second lifespan on the same app must not add the route again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_clock_routes_included = True
 
 
 def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
