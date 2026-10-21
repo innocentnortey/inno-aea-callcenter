@@ -6,13 +6,56 @@ files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51** (
 **Part C** (the paid run and its record) is **blocked-on AEA-51 and AEA-60**, and waits on **`gate::paid`**: Innocent's
 go with the day's spend statement (sign-off D-15, "a statement, not a choice").
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `76f14f4` (refresh 3, 2026-10-21; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `b68df7e` (refresh 4, 2026-10-21; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
 
-**Refresh 3 (2026-10-21, `main` at `76f14f4`).** Read this box first; refreshes 2 and 1 below are kept as history.
+**Refresh 4 (2026-10-21, `main` at `b68df7e`).** Read this box first; refreshes 3, 2 and 1 below are kept as history.
+Nothing in §1–§9 changes except the base revision, R-1, the DANGER path rule in A6 (item 4 below) and §9's revision.
+
+1. **Merged since refresh 3** (first-parent `main`, `76f14f4..b68df7e`):
+   - **AEA-37** at `8d025b7` (`agent/nodes/plan.py`: planner, planner fallback, danger classifier, plan join;
+     `agent/prompts/routing.py`).
+   - **AEA-58** at `eb51ba4` (browser journeys; adds the dev dependency `pytest-playwright>=0.10`).
+   - **AEA-45** at `1a6712a`, **AEA-53** at `b9be4dc`, **FIX-W1** at `38d3884`, **AEA-52** at `55d9adf`
+     (`tests/integration/staff_*.py`, `test_demo_reset.py`: staff helpers, not AEA-51's customer helpers).
+2. **Unchanged since `76f14f4`**, checked by `git diff --stat 76f14f4 b68df7e`: `tests/journeys/support/`,
+   `eval/cases/`, `scripts/`, `tests/fixtures/`, `tests/api/openapi_check.py`, `tests/conftest.py`, `tests/live/`,
+   `tests/unit/adapters/test_retrieval_fastembed.py`, and the AEA-51 and AEA-60 plan files (so §4.3 still holds).
+   - `pyproject.toml` gained only the `pytest-playwright` dev dependency; `addopts`, the `journey` and `live` markers
+     and the mypy `files` are unchanged.
+   - `src/` changed only in `agent/nodes/plan.py`, `agent/prompts/routing.py`, the metrics reader, the staff-cases
+     routes and schemas, and the `register_staff_cases` / `register_metrics_reader` hunks of `web/container.py`. No
+     §4.1 name is touched. `register_chat` still reads `Key("run_graph")` lazily and `register_graph` is still
+     AEA-51's, so a live turn on today's `main` still fails at turn 1.
+3. **PD-6 confirmed against AEA-37's merged code** (no change to the rule):
+   - `planner()` runs `Role.PLANNER_FALLBACK` whenever Jev's planner output fails, returns
+     `PlannerOutcome(fallback_used=True, …)` (stored as `turns.planner_fallback_used`), and emits
+     `SignalName.PLANNER_FALLBACK` (`"planner_fallback"`) through `emit_signal` on logger `meridian.signal`.
+   - `danger_classifier()` on a failure emits `SignalName.CLASSIFIER_FALLBACK` and stores
+     `CheckEvent.from_danger(...)` with `check="classifier"`, `result="fallback"`, `codes=("fallback", <kind>)`.
+   - `turns.planner_failed = 1` (both planner models failed) always comes with `planner_fallback_used = 1`, so the
+     existing planner-fallback check already catches it; no extra check.
+4. **One rule tightened (A6, DANGER path line).** The path is read from the stored classifier event, not from the
+   spend rows: `"classifier"` when the first turn has a `checks` row with `check_kind == "classifier"` and
+   `result == "raised"`, otherwise `"danger_rule"`. Reason: on AEA-37's code the classifier is called on every
+   gated turn (AEA-37's J-5 journey shows a planner and a classifier call on DANGER), so "a classifier spend row
+   exists" would name the classifier even when the danger rule had already decided. The model-call count still
+   comes from `turns[0].model_calls`.
+5. **`pytest-playwright` and A8 test 5.** The subprocess run of `tests/live/test_live_smoke.py` now loads that
+   plugin too. It adds options and fixtures only. A8 test 5 already matches on `"10 skipped"` and the reason text
+   and must not assert on anything else in the output (plugin header lines may differ).
+6. **Still not on `main`:**
+   - AEA-51 (ledger `blocked`). Its only unmerged blocker is now **AEA-39** (ledger `blocked`, "re-run" since AEA-35
+     merged).
+   - AEA-60 (ledger `blocked`, also waiting on AEA-39).
+   - `tests/integration/customer_support.py`, `tests/graph/worked_pair_scenarios.py` and
+     `tests/contract/test_prompts_vs_consumers.py` do not exist.
+7. **Blockers recorded for the orchestrator:** part A none; part B AEA-51; part C AEA-51, AEA-60 and `gate::paid`.
+
+**Refresh 3 (2026-10-21, `main` at `76f14f4`).** History; superseded by refresh 4 above.
 
 1. **Merged since refresh 2** (first-parent `main`):
    - **AEA-40** at `f466ff7`: `services/session.py`, `services/turn.py`, `web/routes/chat.py`, `web/schemas/chat.py`,
@@ -164,7 +207,7 @@ the same assertion the live run uses.
 | Observability (DO-6) | `docs/design/observability-contract.md` WF-1 (turn, spend, lookup, check, case, promise), WF-3 (inbox), WF-18 (login), *Status values*, `signal` record | Reads only; writes nothing new |
 | Metrics (DO-7) | M-23 (`turn.server_ms`), M-24 (`failure_kind`, `http_status`, `degrade_reason`), M-25 (cost per conversation; SP-1 B max $0.039 [M]), M-26 ($30/day, Chicago day), M-29 (`trace_export`) | Copied into the record, never compared with a line |
 | Case files | `eval/cases/FORMAT.md` §2 (schema validation recipe), §3 (`clock` is always the demo start; `$seed:` tokens; `code_from_inbox` holds no digits), §6 (held-out keys at `/home/linuxuser/.meridian-sealed/heldout/`); `eval/cases/models.py`, `eval/cases/checks.py` | Loader and custody |
-| Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`; refresh 3 re-checked at `76f14f4`, adding `domain/specialists.py` report models and `web/schemas/chat.py`; refresh 2 added `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
+| Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`; refresh 3 re-checked at `76f14f4`, adding `domain/specialists.py` report models and `web/schemas/chat.py`; refresh 4 re-checked at `b68df7e`, adding `agent/nodes/plan.py` (planner fallback, classifier fallback) and `domain/turn.py` `CheckEvent.from_danger`; refresh 2 added `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
 | Sibling plans (not on `main`) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §5 C1 (support module API, re-read at its refresh 2), D1/D2 (scenario building blocks, `TOOLS`); `AEA-60.md` (test path) | Part B names in §4.3; re-checked at part B's step B0 |
 
 ### Source-contract reconciliation
@@ -314,7 +357,7 @@ level is `mock-tested` and the part A record line says `blocked by AEA-51`.
 
 ---
 
-## 4. Shared code to use (copied from the current code at `cf8fd78`, re-checked unchanged at `76f14f4`; the addenda; or the sibling plan named)
+## 4. Shared code to use (copied from the current code at `cf8fd78`, re-checked unchanged at `76f14f4` and `b68df7e`; the addenda; or the sibling plan named)
 
 ### 4.1 On `main` now (import exactly these)
 
@@ -883,8 +926,9 @@ once more. Values:
 - **Result:**
   - one line per case: `f"{case_id or '—'} ({label}, {journey}): pass"`, or `": fail: " + "; ".join(quote(f,
     forbidden) for f in failures)`, or `f": {reason}"`;
-  - then, when present: the DANGER line `f"DANGER path: {'danger_rule' if no classifier spend row on turn 1 else
-    'classifier'}; model calls: {turns[0].model_calls}"`;
+  - then, when present: the DANGER line `f"DANGER path: {path}; model calls: {turns[0].model_calls}"`, where `path`
+    is `"classifier"` when the first turn has a `checks` row with `check_kind == "classifier"` and `result ==
+    "raised"`, else `"danger_rule"` (refresh 4 item 4);
   - the WP-4F follow-up reply `quote(" ".join(text of the last exchange's text blocks), forbidden)`;
   - the WP-4 case line `f"WP-4 case {ref} {priority} due {due_at}; promise: {quote(promise text, forbidden)}"`;
   - the WP-2 order line `f"WP-2 verified at turn {s}; INV-204411 snapshots at turns {list}"`;
@@ -1392,7 +1436,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`). AEA-51 itself still waits on AEA-37 (sent back on a merge conflict) and AEA-39 (NEEDS-DECISION) | Part A now; B0 verifies the names after AEA-51 merges |
+| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`; AEA-37 merged at `8d025b7`). AEA-51's only unmerged blocker is now AEA-39 (ledger `blocked`, to re-run) | Part A now; B0 verifies the names after AEA-51 merges |
 | R-2 | Blocker (part C) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) | P1 waits |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
@@ -1414,7 +1458,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `76f14f4` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| A | Buildable on `main` `b68df7e` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
 | B | **Blocked-on AEA-51** (test helpers, wired graph) |
 | C | **Blocked-on AEA-51 and AEA-60**, plus `gate::paid` (D-15 spend statement) |
 

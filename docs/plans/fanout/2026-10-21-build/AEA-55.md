@@ -1,15 +1,39 @@
 # Plan: [AEA-55] UI integration: `apps/web` against the real backend ("UI verify again")
 
-**Status:** planned. **READY to build once its five blockers are merged** (BLOCKED-ON AEA-51, AEA-52, AEA-53, AEA-58,
-AEA-62; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
+**Status:** planned. **READY to build once its two remaining blockers are merged** (BLOCKED-ON AEA-51, AEA-62;
+AEA-52, AEA-53 and AEA-58 merged since the last version; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
 orchestrator) and by the checklist *Skips* row "UX-5 first run". The ★ boxes stay Innocent's.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/55 (identical to
-`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `6b845a3` (2026-10-21; first written against `ef561fc`, refreshed at `c9b17ea`) · **Wave:** 5 · **Lane:**
+`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `b68df7e` (2026-10-21; first written against `ef561fc`, refreshed at `c9b17ea` and `6b845a3`) · **Wave:** 5 · **Lane:**
 `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests, no
 security agent) · **Gates:** `gate::ux5` (cleared, above), `gate::paid` (AC-10 walkthrough only, Innocent's).
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-55-ui-verify-again` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-55`), cut from `main` after the five blockers merged.
+
+**Refresh, 2026-10-21 (fourth version; read this box first).** Re-checked against `main` at `b68df7e`, 41 commits
+after `6b845a3`. Merged in that range: **AEA-58** (`eb51ba4`, browser journeys), **AEA-53** (`b9be4dc`, metrics reader),
+**AEA-52** (`55d9adf`, pass 1 only: groups G0 + G1; its AEA-51 halves are not built), plus AEA-35, AEA-37, AEA-45 and
+FIX-W1. Still unchanged since `6b845a3`: everything under `apps/web/`, `docs/ux/` (the OpenAPI included; `05-verify/`
+still absent), `tests/journeys/support/`, the ticket, the slice plan, `stage7-signoff.md`, `backend-amendments.md` and
+AEA-51's plan (§4.2 names hold). `docs/plans/ux-join/selectors.md` is still unpublished (R-10). Checklist lines 90, 91,
+120, 127, 150, 151 and the area-map *Screens* line 55 are unchanged. What changed in this version:
+1. **Blockers (§9, Step 0.2):** only AEA-51 (`blocked`) and AEA-62 (`planned`) remain. Ledger and merge subjects now
+   agree for every blocker.
+2. **Step 0.2 file check:** AEA-52's journey files are `tests/journeys/j6/test_aea_52.py` and
+   `tests/journeys/j8/test_aea_52.py`; there is no `j7/test_aea_52.py`. The check now names `j6`.
+3. **mypy form:** `uv run mypy` with **no path argument** (it reads `files = ["src/meridian", "tests", "eval"]` from
+   `pyproject.toml`). An explicit file path loses the package config and reports `import-untyped` (AEA-52 deviation 5).
+   Step 8 and §7 changed.
+4. **§4.3 confirmed against the merged reader.** `metrics_reader.py` line 25 imports
+   `from meridian.services._case_rules import LIFECYCLE_WORD, reason_label`; `HEALTH_TILES` (lines 53–61) and the
+   `repos_metrics.py` queries (`conversations`, `cases` joined to `conversations` on `run_tag`, `live_turns` with
+   `t.run_tag = 'live' AND c.run_tag = 'live'`) match Step 6.7 test 4 exactly. `AlertSettings.min_turns = 20`
+   (`services/health.py` line 66) is the "fewer than 20" in the latency null reason.
+5. **R-7** adds the demo-reset limit (`WebLimits.resets_per_ip = 10` per `reset_window_s = 600`); this run resets once.
+6. **R-11** restated: AEA-52 left its AEA-51 halves unbuilt, and `tests/journeys/j7/test_aea_30.py` is red on `main`
+   until AEA-51 binds `reply_composer` and `run_graph` (AEA-52 plan, *Deviations*). Both are AEA-51's, and both must be
+   green before Step 10 can meet AC-13.
 
 **Refresh, 2026-10-21 (third version).** Re-checked against `main` at `6b845a3`, 44 commits after `c9b17ea`. In that
 range AEA-30, AEA-35, AEA-35b, AEA-36 and AEA-40 merged. None of them touched `apps/web/`, `docs/ux/` (the OpenAPI
@@ -305,12 +329,12 @@ TOOLS: Mapping[str, str]                  # "invoice" -> READ_INVOICES_NAME, …
 def wp2(run, client=None) -> ScenarioResult;  def wp5(...);  def wp7(...)   # drivers: their run.steps.set_step(...) calls per turn are the source of the entries copied in Step 6.4
 ```
 
-### 4.3 From AEA-53 (merged before this ticket)
+### 4.3 From AEA-53 (merged at `b9be4dc`; re-read on `b68df7e`)
 
 - `MetricsReader` served by `GET /api/staff/owner-metrics` (`getOwnerMetrics`, roles owner and supervisor) and
   `GET /api/monitoring` (`getMonitoring`, any signed-in role).
-- `reason_label`: import it from the **same module `src/meridian/services/metrics_reader.py` imports it from** (today
-  it is defined in `meridian.services._case_rules`; Step 0.4 greps). Its signature on `main` (line 342):
+- `reason_label`: import it from the **same module `src/meridian/services/metrics_reader.py` imports it from**. On
+  `b68df7e` that is `from meridian.services._case_rules import reason_label` (metrics_reader line 25; Step 0.4 re-greps). Its signature on `main` (line 342):
   `def reason_label(reason: HandoffReason, safety_kind: str | None = None) -> str`. AC-8 calls it **without**
   `safety_kind`, i.e. `reason_label(HandoffReason(r))`. That is how AEA-53 labels `handoffs_by_reason` and
   `escalations_by_reason` (AEA-53 plan §4.4). Only CON-18's `cases[]` list passes `safety_kind`, and AC-8 does not compare
@@ -325,8 +349,14 @@ def wp2(run, client=None) -> ScenarioResult;  def wp5(...);  def wp7(...)   # dr
     `correctness{containment_estimate: Tile, escalations_by_reason[Tile]}`; `alerts[]`; `trace_export: str`.
 - CON-18 outcome labels: `Resolved by the AI` = `ai_resolved`, `Handed off to a person` = `handed_off`,
   `Safety reply given` = `safety_reply`, `Abandoned` = `abandoned`.
-- Latency null reasons: `No turns yet` (0 values) and `Not enough turns yet (fewer than 20)` (fewer than 20).
-  Nearest rank: `sorted[ceil(q·n) − 1]`.
+- Latency null reasons: `No turns yet` (0 values) and `Not enough turns yet (fewer than 20)` (fewer than 20;
+  `AlertSettings.min_turns = 20`). Nearest rank: `sorted[ceil(q·n) − 1]`.
+- Merged code (`metrics_reader.py`): `HEALTH_TILES` is the fixed seven-tile list in the order above, on an empty store
+  too (`docs/plans/ux-join/AEA-53-con19-health-tiles.md`). The `Failures` tile has `value = numerator = failures` and
+  `denominator = live turns` when there are turns, else `value None` with `No turns yet`. `Overdue job last ran` is
+  null with `The overdue job has not run yet` until the scheduler has run once. `trace_export` reads
+  `sent {n} of {N} turns`. CON-18's `handoffs_by_reason` rows each have `denominator = len(cases)` (all reasons) and are
+  sorted by count descending, then label; AC-8 compares them as a label → numerator map, so the order does not matter.
 
 ### 4.4 `apps/web` (read only; used by the new specs)
 
@@ -418,7 +448,7 @@ default config: they bind 5184 or 4019.
    4. If either holds, these files must exist on the worktree, or **stop and report** "AEA-NN shows as merged but its
       files are missing":
       - AEA-51: `tests/integration/customer_support.py`, `tests/graph/worked_pair_scenarios.py`;
-      - AEA-52: `tests/integration/staff_support.py`, `tests/journeys/j7/test_aea_52.py`;
+      - AEA-52: `tests/integration/staff_support.py`, `tests/journeys/j6/test_aea_52.py`;
       - AEA-53: `src/meridian/services/metrics_reader.py`, `tests/journeys/j10/test_aea_53.py`;
       - AEA-58: `tests/journeys/browser/plugin.py`, `tests/journeys/j1/test_aea_58.py`;
       - AEA-62: `tests/journeys/j2/test_aea_62.py`.
@@ -1123,8 +1153,10 @@ happens: the D-5 `CaseDetail.events.last_event_id` edit landed without its regen
 
 ### Step 8 — Python fast gates
 
-`uv run ruff format tests/integration/test_ui_run_records.py && uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy tests/integration/test_ui_run_records.py`
-→ clean. `uv run pytest tests/integration/test_ui_run_records.py -q -rs` without the opt-in → collected and skipped
+`uv run ruff format tests/integration/test_ui_run_records.py && uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy`
+→ clean. Run `uv run mypy` with **no path argument**: it checks the `pyproject.toml` file set (`src/meridian`, `tests`,
+`eval`), and a path argument loses the package config. Report the error count; any error in the new file is yours to
+fix, and an error elsewhere that is also present on `main` is reported, not fixed. `uv run pytest tests/integration/test_ui_run_records.py -q -rs` without the opt-in → collected and skipped
 with the reason (proves import and collection).
 
 ### Step 9 — Commit 1 (code and config)
@@ -1299,11 +1331,11 @@ gates cheapest first and stop at the first red.
 | When | Command | Passing looks like |
 |---|---|---|
 | While iterating (TS) | `cd apps/web && npm run typecheck && npm run lint` | exit 0 |
-| While iterating (Python) | `uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy tests/integration/test_ui_run_records.py` | clean |
+| While iterating (Python) | `uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy` | clean (mypy: no path argument) |
 | Affected tests (`vite.config.ts` changed) | `cd apps/web && npm run test` | vitest green, same count as on `main` |
 | AC-2 | `cd apps/web && npm run check:gen && npm run build && npm run check:dist` | three exits 0; `dist is clean: no dev-layer markers`; `git status --porcelain -- apps/web/src` empty |
 | Collection without opt-in | `uv run pytest tests/integration/test_ui_run_records.py -q -rs` | 6 skipped, with the opt-in reason |
-| Fast gates before the final commit | `uv run ruff format --check tests/integration/test_ui_run_records.py && uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy tests/integration/test_ui_run_records.py`; `cd apps/web && npm run lint && npm run typecheck` | all clean; results in the report to the orchestrator |
+| Fast gates before the final commit | `uv run ruff format --check tests/integration/test_ui_run_records.py && uv run ruff check tests/integration/test_ui_run_records.py && uv run mypy`; `cd apps/web && npm run lint && npm run typecheck` | all clean; results in the report to the orchestrator |
 | AC-13 journeys (the affected journeys: `apps/web/` changed, so all are selected; the wave-merge form) | `export MERIDIAN_WEB_DIST_DIR=$PWD/apps/web/dist; perl -e 'alarm 1800; exec @ARGV' uv run pytest -m journey --journeys-strict --browser-channel chrome --journey-record=AEA-55 -rs` and `CONTRACT_STRICT=1 uv run pytest tests/contract -q -rs` | exit 0; record written at `integrated with a scripted model` |
 | The UX-5 rerun (the six named tests) | `MERIDIAN_UI_VERIFY=1 perl -e 'alarm 5400; exec @ARGV' uv run pytest tests/integration/test_ui_run_records.py -v -s -rs` | 6 passed: `test_proxy_chain_probes`, `test_suite_completed_through_the_chain`, `test_wp2_through_ui_leaves_no_code`, `test_reads_equal_records_after_flows`, `test_role_reset_and_clock_phase`, `test_prism_log_has_no_violations`; UX-spec FAILs are allowed and reported |
 | AC-12 | `git diff --name-only main...HEAD` | only §2 files |
@@ -1337,9 +1369,10 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 - **R-6, Prism and SSE.** Prism's proxy probably buffers the upstream body to validate it, so the stream probe will
   likely route both SSE paths straight to the backend (the AC-14 exception). That is recorded, and it means stream
   frames are not contract-checked by Prism. AEA-59's server-contract cases cover them.
-- **R-7, per-IP limits.** The whole suite comes from 127.0.0.1: `reads_per_ip_per_min = 240`, and
-  `login_rejects_per_ip = 10` per 10 min (this run makes about 4 rejects). A 429 is retried once and reported
-  (Step 11).
+- **R-7, per-IP limits.** The whole suite comes from 127.0.0.1: `reads_per_ip_per_min = 240`,
+  `login_rejects_per_ip = 10` per 10 min (this run makes about 4 rejects), and `resets_per_ip = 10` per
+  `reset_window_s = 600` (this run resets once, in `99-role-reset`; the UX specs never reset; past the limit the
+  answer is 409 `RESET_IN_PROGRESS`). A 429 is retried once and reported (Step 11).
 - **R-8, screenshots are not committed** (disk at about 83%; AC-12's file list). They stay under
   `var/ui-verify/<stamp>/` on the VPS, and the report names them. If Innocent wants them in git, that is a one-line
   follow-up adding a folder beside the report.
@@ -1348,16 +1381,17 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 - **R-10, AEA-58's selector contract** (`docs/plans/ux-join/selectors.md`, UX session) is still missing on `main`. If
   it is still missing at build time, AEA-58's on-screen journey steps are *blocked* and `--journeys-strict` fails
   (AC-13 not met, reported with owner "UX session").
-- **R-11, upstream holds (at `6b845a3`).** AEA-30, AEA-35, AEA-36 and AEA-40 are now merged on `main`, though the
-  ledger still shows AEA-35 `planned` and AEA-40 `blocked` (Step 0.2 handles this). Still open upstream of AEA-51 and
-  AEA-52:
-  - AEA-37 is `sent-back` (a merge conflict in `tests/graph/test_spine.py`; it needs a rebase);
-  - AEA-39 and AEA-45 are `blocked`; AEA-45 is upstream of AEA-52 only.
-
-  AEA-53's own plan now records its R-1 grant (DV-1, base `3725c90`), but its ledger row still reads
-  `NEEDS-DECISION`, so the orchestrator must re-dispatch it. AEA-58 waits on AEA-40, which is now merged (the ledger
-  has not caught up). AEA-62 waits on AEA-51, AEA-52 and AEA-58. Any delay there delays this ticket. None of them is a
-  decision this ticket needs.
+- **R-11, upstream holds (at `b68df7e`).** AEA-52, AEA-53 and AEA-58 are merged; ledger and merge subjects agree.
+  - **AEA-51** is `blocked` on unmerged upstream tickets; among them AEA-39 (`blocked`, needs a re-run now that AEA-35
+    merged). Until AEA-51 binds `reply_composer` and `run_graph`, `startChatSession` answers 500 and
+    `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` is red on `main` (AEA-52 plan,
+    *Deviations*).
+  - **AEA-52** merged pass 1 only (G0 + G1). Its AEA-51 halves (pass 2: G2, G2-WP, G3) are not built. Whether they are
+    re-dispatched after AEA-51 is the orchestrator's call. This ticket does not import them; it needs only the staff
+    routes on real services, which are merged (AEA-45, AEA-46, AEA-47). Any AEA-52 journey step still blocked when
+    Step 10 runs makes `--journeys-strict` fail, and AC-13 is then reported not met with owner AEA-52.
+  - **AEA-62** is `planned`; it waits on AEA-51.
+  None of these is a decision this ticket needs.
 - **R-12, scripted-table fidelity.** WP-2's entries come from AEA-51's driver. If WP-2 still fails through the UI
   (`script.problems()` not empty, or a marker word turns out to occur in a prompt), the implementer stops and sends
   the plan back to the planner. It does not change markers ad hoc.
@@ -1379,22 +1413,21 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 
 ## 9. Readiness
 
-**READY**, BLOCKED-ON **AEA-51, AEA-52, AEA-53, AEA-58, AEA-62** being merged into `main`. Step 0.2 checks this.
+**READY**, BLOCKED-ON **AEA-51, AEA-62** being merged into `main`. Step 0.2 checks all five of the original
+blockers, so it still passes for the three already merged.
 
-State at `6b845a3`. None of the five is merged: there is no `Merge AEA-NN` subject on `main` and no ledger row
-reads `merged`.
-- AEA-51, AEA-52, AEA-58 and AEA-62 are `blocked` (a blocker is not merged).
-- AEA-53 is `blocked` with NEEDS-DECISION on its R-1 grant. Its refreshed plan records the grant as DV-1, so it waits
-  only on re-dispatch.
-
-AEA-49 and AEA-57, also named in the slice-plan row, are merged.
+State at `b68df7e`:
+- merged: AEA-52 (`55d9adf`, pass 1), AEA-53 (`b9be4dc`), AEA-58 (`eb51ba4`); also AEA-49 and AEA-57 from the
+  slice-plan row;
+- AEA-51 `blocked` (upstream tickets not merged);
+- AEA-62 `planned` (waits on AEA-51).
 
 | Blocker | Why it is truly needed |
 |---|---|
 | AEA-51 | **Imports:** `tests/integration/customer_support.py` (`open_customer_run`, `StepScript`, `step_overrides`, `build_capture_sink`, `finished_spans`, `RunOptions`); `tests/graph/worked_pair_scenarios.py` (script helpers and the `wp2`/`wp7` entries); and the real customer graph behind CON-2 |
-| AEA-52 | **Runtime:** staff routes on the real services, behind SCR-5…SCR-8 and AC-7, AC-11, AC-19; journeys J-6, J-7, J-8 for AC-13 |
-| AEA-53 | **Runtime:** the real `MetricsReader` behind CON-18…CON-20 (AC-8, AC-9, AC-21); `reason_label` import path |
-| AEA-58 | **Runtime:** `pytest-playwright` (`--browser-channel`) and the browser J-1/J-9 journeys that AC-13 runs |
+| AEA-52 (merged) | **Runtime:** staff and demo seams on the real app, behind SCR-5…SCR-8 and AC-7, AC-11, AC-19; journeys J-6 and J-8 (`j6/`, `j8/test_aea_52.py`) for AC-13 |
+| AEA-53 (merged) | **Runtime:** the real `MetricsReader` behind CON-18…CON-20 (AC-8, AC-9, AC-21); `reason_label` import path |
+| AEA-58 (merged) | **Runtime:** `pytest-playwright` (`--browser-channel`) and the browser J-1/J-9 journeys that AC-13 runs |
 | AEA-62 | **Runtime:** the browser legs of J-2, J-3, J-6 and J-8 that AC-13 runs |
 
 No `NEEDS-DECISION`. The UX-5 gate question was answered by Innocent (relayed); R-1 is an orchestrator confirmation,

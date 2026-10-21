@@ -1,19 +1,48 @@
 # Plan — [AEA-62] browser journeys for integrated capabilities (J-2, J-3, J-6, J-8)
 
-**Status:** planned — READY, **blocked-on AEA-58** (its `tests/journeys/browser/` package plus the three additions in
-§8 R-1, which the orchestrator should fold into AEA-58's plan before AEA-58 is built, or land as one AEA-58 follow-up
-merged first) and **AEA-51** (`tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`, §4.4).
-AEA-52, AEA-45, AEA-35, AEA-37, AEA-39 and the UX session's `docs/plans/ux-join/selectors.md` are **run-time**
-dependencies: missing ones show as *blocked* steps with their owner, never imported and never passed. No
+**Status:** planned — READY, **blocked-on AEA-58-F1** (one AEA-58 follow-up carrying additions A-1, A-2 and A-3 of §8
+R-1: AEA-58 merged at `eb51ba4` **without** them) and **AEA-51** (`tests/integration/customer_support.py` and
+`tests/graph/worked_pair_scenarios.py`, §4.4; AEA-51 itself waits on AEA-39). The UX session's
+`docs/plans/ux-join/selectors.md` (still unpublished) and AEA-51's `run_graph` / `reply_composer` bindings are
+**run-time** dependencies: missing ones show as *blocked* steps with their owner, never imported and never passed. No
 `NEEDS-DECISION`: Decision 6 (D-8, start fresh) and WEB-1 (D-4, option A) are applied as decided; no contract change.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/62 (identical to
-`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `6b845a3` (earlier versions: `e22aebb`, `bb9a471`, `c9b17ea`) · **Wave:** 4 · **Lane:** build-loop ·
-**Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests) · **Gate:** inherits
-`gate::ux4` through AEA-58.
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet).
+`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `b68df7e` (earlier versions: `6b845a3`, `c9b17ea`, `bb9a471`,
+`e22aebb`) · **Wave:** 4 · **Lane:** build-loop · **Risk:** none (no `risk::security`: plan → implement with tests →
+review; no frozen tests) · **Gate:** inherits `gate::ux4` through AEA-58.
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refresh 5) · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-62-browser-journeys` at
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-62`), cut from `main` **after** AEA-58 and AEA-51 merged.
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-62`), cut from `main` **after** AEA-58-F1 and AEA-51 merged.
 
+**Refresh 5 (2026-10-21, against `main` `b68df7e`; read this box first, then refresh 4).** Merged since `6b845a3`:
+**AEA-58** (browser harness, `eb51ba4`), **AEA-35** (specialist runner, `1ce98c4`), **AEA-37** (plan node and
+`join_plan`, `8d025b7`), **AEA-45** (staff cases API: `getQueue`, `getCase`, `1a6712a`), **AEA-52** (staff and demo
+integration, `55d9adf`), AEA-53 and FIX-W1 (neither touches this slice). Still not merged: **AEA-51** (build ledger: "a
+blocker is not merged"; AEA-39 is blocked), so `run_graph` and `reply_composer` are unbound and no chat turn can run.
+`docs/plans/ux-join/selectors.md` is still unpublished (`CONTRACT_ROWS` is empty on `main`, so every on-screen step
+reports `blocked-on UX session`, as AEA-58's own record shows). Unchanged since `6b845a3`: `src/meridian/agent/routers.py`,
+`agent/nodes/{front,reply}.py`, `services/{session,turn,cases,handoff,_case_views}.py`, `tests/journeys/support/`,
+`tests/journeys/j1/test_aea_57.py`, the ticket and the slice plan row. Every §4.5 import was re-run on `b68df7e` and gives
+the same names and values. What changed in this version:
+1. **AEA-58 merged without additions A-1…A-3** (§8 R-1). On `main` there is no `browser_journey_factory`, no
+   `locate_by`, no `BrowserRun.screenshot_element`, and `SELECTOR_KEYS` holds only AEA-58's 16 keys, so a §4.3 key this
+   slice needs raises `KeyError` in `missing_selectors`. The blocker is now **one AEA-58 follow-up, called AEA-58-F1
+   here**, merged before this slice. A-1 is re-specified against the merged code: `open_browser_journey` already takes
+   `environ_overrides`, so the index directory goes in as `MERIDIAN_INDEX_DIR`, and A-1 only adds `script`, `with_clock`
+   and `overrides_for`.
+2. **§4.2 now copies the merged browser API** (earlier it was copied from AEA-58's plan): `journey_chrome` is
+   **module**-scoped; `ApiExchange.headers` is `list[tuple[str, str]]` (use `.header(name)`); the merged helpers
+   `sign_in_to_scr1`, `thread_id_of`, `SIGN_IN_SCR1` and `ROOT_REDIRECT` exist and may be used;
+   `test_no_selector_strings_outside_module` scans **every** `.py` under `tests/journeys/` for `locator(` and `get_by_`.
+3. **AEA-37's `join_plan` is on `main` and matches the WP-8 tables:** a `membership_cancel` handoff forces
+   `account = "membership"` and `knowledge = "yes"`, so the code turn runs an account task and a knowledge task (§4.6).
+   **AEA-45's `getQueue` and `getCase` are mounted**, so J-6 and J-8 staff steps no longer block on AEA-45.
+4. Context-row positions moved: the `icm-progress.md` *Integrated-journey protection* rows are now **line 46** (the
+   AEA-57/AEA-58 row, the one to edit) and **line 59** (the older one); area-map row `3+` is line 47 and still ends
+   "; the rest planned"; DO-3 §9's `journeys/` tree line is 717 and *Built on `main`* is line 724. §2, §5 step 9 and §8
+   R-6 are updated.
+5. §2 *owned by other slices* lists the files now in `j2` (`test_aea_35.py`, `test_aea_38.py`), `j6` (adds
+   `test_aea_45.py`, `test_aea_52.py`) and `j8` (adds `test_aea_52.py`).
 **Refresh 4 (2026-10-21, against `main` `6b845a3`; read this box first).** Merged since `c9b17ea`: **AEA-40** (CON-1 and
 CON-2 chat routes, `SessionService`, `TurnService`; merge `f466ff7`), **AEA-30** (demo clock and scheduler, `cf8fd78`),
 **AEA-35b** (`SpecialistTask`, `KnowledgeSlice`, `AccountSlice` in `domain/tools.py`, `3725c90`) and **AEA-36** (the real
@@ -111,10 +140,10 @@ case. Every `/api/*` response Chrome received is checked against the OpenAPI whe
 
 AEA-51 and AEA-52 prove J-2, J-3, J-6 and J-8 through the HTTP API; AEA-58 proves J-1 in a browser. This ticket moves
 the integrated legs of J-2, J-3, J-6 and J-8 into Chrome (slice plan §0a, Amendment 1), using AEA-58's browser harness,
-AEA-57's support package and AEA-51's script helpers, all unchanged. On `main` today (`6b845a3`) neither AEA-58's
-`browser/` package nor AEA-51's helpers exist, `join_plan` (AEA-37) and the specialist runner (AEA-35/39) are not
-merged, and `docs/plans/ux-join/selectors.md` has not been published, so until those land every on-screen step reports
-*blocked* with its owner.
+AEA-57's support package and AEA-51's script helpers, all unchanged. On `main` today (`b68df7e`) AEA-58's `browser/`
+package is merged but without the three additions this slice needs (§8 R-1, AEA-58-F1), AEA-51's helpers and graph
+bindings do not exist yet, and `docs/plans/ux-join/selectors.md` has not been published, so until those land every
+on-screen step reports *blocked* with its owner.
 
 ### Sources checked
 
@@ -130,7 +159,7 @@ merged, and `docs/plans/ux-join/selectors.md` has not been published, so until t
 | Evaluation plan | DO-5 | n/a: no E-n suite, no number (ticket *Evaluation*) |
 | Observability contract | DO-6 rows WF-1, WF-3 ("`thread_id` of the code request"), WF-4, WF-18, WF-19 | AC-17 |
 | Key-metrics registry | DO-7 M-7, M-9, M-10, M-18, M-22, M-27 | Source columns asserted present on the rows each journey creates; no value reported |
-| Current code read (`main` `6b845a3`) | `services/{session,turn}.py` (AEA-40: `GREETING_TURN_ID`, `SessionService.thread`, completed-turn replay), `web/routes/chat.py`, `web/deps.py` (`owned_thread`, `_owned`), `web/container.py::register_chat`, `agent/nodes/front.py` (AEA-36: `gates`, `identity`); `src/meridian/services/{cases,handoff,_case_views,_case_rules}.py` (AEA-29: `open_case` events, `BriefAssembler`, `resolve_staff_guidance`, `case_sources`, `brief_view`, `mask`), `adapters/sqlite/schema/{60_cases,90_staff}.sql`, `adapters/sqlite/repos_cases_state.py` (`next_case_ref`), `web/container.py` (`_guidance`), `web/deps.py` (`HANDOFF_SERVICE`, `CASE_SERVICE`); `tests/journeys/support/{steps,run,client,db,scripted_model,plugin,server,record,logtap,README}.py/md`, `tests/journeys/j1/test_aea_57.py`, `tests/journeys/affected.py`; `src/meridian/agent/routers.py` (`route_after_gates`, `route_after_identity`, `_route_planned`), `agent/nodes/reply.py` (`_task_status`), `agent/tools/{knowledge,account,scheduling}.py` (tool names, argument models, descriptions), `adapters/retrieval_fastembed.py`, `retrieval/settings.py`, `domain/{turn,specialists,handoff,records,common}.py`, `policy/{handoff,texts,limits}.py`, `web/{logging,middleware,frontend}.py`, `web/routes/{auth,demo}.py`, `adapters/sqlite/schema/00_core.sql`; the AEA-58 and AEA-51 plans in this folder (AEA-58 §5 steps 2–8; AEA-51 Part C1, Part D1) | §4 |
+| Current code read (`main` `6b845a3`; refresh 5 re-read on `b68df7e`: `tests/journeys/browser/*.py`, `agent/nodes/plan.py::join_plan`, `web/routes/staff_cases.py`, `web/schemas/staff_cases.py`, the build ledger) | `services/{session,turn}.py` (AEA-40: `GREETING_TURN_ID`, `SessionService.thread`, completed-turn replay), `web/routes/chat.py`, `web/deps.py` (`owned_thread`, `_owned`), `web/container.py::register_chat`, `agent/nodes/front.py` (AEA-36: `gates`, `identity`); `src/meridian/services/{cases,handoff,_case_views,_case_rules}.py` (AEA-29: `open_case` events, `BriefAssembler`, `resolve_staff_guidance`, `case_sources`, `brief_view`, `mask`), `adapters/sqlite/schema/{60_cases,90_staff}.sql`, `adapters/sqlite/repos_cases_state.py` (`next_case_ref`), `web/container.py` (`_guidance`), `web/deps.py` (`HANDOFF_SERVICE`, `CASE_SERVICE`); `tests/journeys/support/{steps,run,client,db,scripted_model,plugin,server,record,logtap,README}.py/md`, `tests/journeys/j1/test_aea_57.py`, `tests/journeys/affected.py`; `src/meridian/agent/routers.py` (`route_after_gates`, `route_after_identity`, `_route_planned`), `agent/nodes/reply.py` (`_task_status`), `agent/tools/{knowledge,account,scheduling}.py` (tool names, argument models, descriptions), `adapters/retrieval_fastembed.py`, `retrieval/settings.py`, `domain/{turn,specialists,handoff,records,common}.py`, `policy/{handoff,texts,limits}.py`, `web/{logging,middleware,frontend}.py`, `web/routes/{auth,demo}.py`, `adapters/sqlite/schema/00_core.sql`; the AEA-58 and AEA-51 plans in this folder (AEA-58 §5 steps 2–8; AEA-51 Part C1, Part D1) | §4 |
 
 ### Source-contract reconciliation
 
@@ -171,7 +200,7 @@ merged, and `docs/plans/ux-join/selectors.md` has not been published, so until t
 | `tests/journeys/j8/test_aea_62.py` | create | J-8: role switch and resume, refusal then allowed, signed out and expired, header for four roles, role change elsewhere, evidence clean, records present (AC-13…AC-17, AC-19, AC-20) | ≤ 500 |
 | `docs/testing/journeys/<run-date>-AEA-62.md` + folder `docs/testing/journeys/<run-date>-AEA-62/` (PNGs) | create (written by command C-6, then committed) | AC-18 record and screenshots | generated |
 | `.claude/reference/area-map.md` | modify **one cell**: row `3+`, last column | AC-21 | — |
-| `.claude/state/icm-progress.md` | modify **one row**: the *Integrated-journey protection* row whose evidence cell names AEA-57 (today line 44) | AC-21 | ≤ 400 chars |
+| `.claude/state/icm-progress.md` | modify **one row**: the *Integrated-journey protection* row whose evidence cell names AEA-57 and AEA-58 (today line 46) | AC-21 | ≤ 400 chars |
 | `docs/design/code-design.md` | modify §9 only: the `journeys/` lines of the `tests/` tree and the *Built on `main`* sentence | AC-21 | — |
 
 `tests/journeys/browser/README.md` is **not** edited: AEA-58's plan gives its README no journey list for later tickets,
@@ -191,10 +220,12 @@ so per AC-21 a list line would be a follow-up on AEA-58 (§8 R-6).
 
 `tests/journeys/browser/` and its plugin (AEA-58; a missing fixture, selector key or helper is a follow-up there, §8
 R-1), `tests/journeys/support/` (AEA-57), AEA-51's `tests/integration/customer_support.py`,
-`tests/integration/customer_api.py` and `tests/graph/worked_pair_scenarios.py`, the API-level `j2`/`j3`/`j6`/`j8` files
-of AEA-51 and AEA-52, the other tickets' files already in `j2` (`test_aea_38.py`), `j3` (`test_aea_27.py`, `test_aea_28.py`,
-`test_aea_34.py`, `test_aea_43.py`), `j6` (`test_aea_29.py`, `test_aea_30.py`, `test_aea_47.py`) and `j8`
-(`test_aea_31.py`, `test_aea_43.py`, `test_aea_44.py`), `docs/plans/ux-join/selectors.md` (UX session).
+`tests/integration/customer_api.py` and `tests/graph/worked_pair_scenarios.py`, every existing `tests/integration/*.py`
+and `tests/graph/*.py`, the API-level `j2`/`j3`/`j6`/`j8` files of AEA-51 and AEA-52, the other tickets' files already in
+`j2` (`test_aea_35.py`, `test_aea_38.py`), `j3` (`test_aea_27.py`, `test_aea_28.py`, `test_aea_34.py`, `test_aea_43.py`),
+`j6` (`test_aea_29.py`, `test_aea_30.py`, `test_aea_45.py`, `test_aea_47.py`, `test_aea_52.py`) and `j8`
+(`test_aea_31.py`, `test_aea_43.py`, `test_aea_44.py`, `test_aea_52.py`), `docs/plans/ux-join/selectors.md` (UX
+session).
 
 ---
 
@@ -277,38 +308,57 @@ operations `login`, `logout`, `getSession`, `switchRole`, `startChatSession`, `g
 `run.step` catches `Exception` only, so a `pytest.skip` raised inside a step records nothing; `block_here()` (§5 step
 2) therefore records the `StepResult` itself before calling `stop_blocked`.
 
-### 4.2 AEA-58 browser harness (`tests/journeys/browser/`, from AEA-58's plan §5 steps 2–8; re-check names after it merges)
+### 4.2 AEA-58 browser harness (`tests/journeys/browser/`, merged `eb51ba4`; copied from the code; A-n = AEA-58-F1)
 
 ```python
 from tests.journeys.browser.pages import DESKTOP, PHONE, BrowserPage, BrowserRun, Device
     # DESKTOP = Device("chrome-desktop", 1280, 800); PHONE = Device("chrome-phone", 390, 844)
-    # BrowserPage(device, context, page, net: NetworkLog)
-    # BrowserRun(run: JourneyRun, browser, channel, build, shots_dir, session, test_name, pages)
-    #   .open(device) -> BrowserPage (new context: own cookie jar, locale en-US, tz America/Chicago, base_url)
-    #   .screenshot(bp, label) -> Path   (label must match ^[a-z0-9-]{1,40}$; file <test_name>-<device>-<label>.png)
-    #   .screenshot_element(bp, target, label) -> Path   (addition A-3)
-    #   .close()  (teardown: validates every /api exchange; raises on any OpenAPI failure)
-from tests.journeys.browser.steps import (SIGN_IN_SELECTORS, BrowserLogin, browser_step, first_hop, page_fetch,
-                                          sign_in_via_form, sign_out_via_shell)
-    # browser_step(run, journey, name, *, needs=(), operations=(), selectors=()) -> context manager
-    # BrowserLogin(session_id: str, login: ApiExchange); sign_in_via_form(run, bp) -> BrowserLogin
-    # sign_out_via_shell(run, bp) -> ApiExchange (204)
+    # @dataclass BrowserPage(device: Device, context: BrowserContext, page: Page, net: NetworkLog)
+    # @dataclass BrowserRun(run: JourneyRun, browser, channel: str, build: ProductionBuild, shots_dir: Path,
+    #                       session: BrowserSession, test_name: str, pages: list[BrowserPage])
+    #   .open(device) -> BrowserPage (new context: own cookie jar, viewport, locale en-US, tz America/Chicago, reduced
+    #        motion, base_url = run.base_url, default timeout 15 s; a NetworkLog attached to the context)
+    #   .screenshot(bp, label) -> Path   (label must match ^[a-z0-9-]{1,40}$; file <test_name>-<device>-<label>.png,
+    #        appended to session.screenshots)
+    #   .screenshot_element(bp, target: Locator, label) -> Path   (A-3; not on main yet)
+    #   .close()  (teardown: validates every /api exchange of every page in .pages; raises on any OpenAPI failure)
+from tests.journeys.browser.steps import (ROOT_REDIRECT, SIGN_IN_SCR1, SIGN_IN_SELECTORS, BrowserLogin, browser_step,
+                                          first_hop, page_fetch, sign_in_to_scr1, sign_in_via_form, sign_out_via_shell,
+                                          thread_id_of)
+    # browser_step(run, journey, name, *, needs=(), operations=(), selectors=()) -> context manager; a missing selector
+    #   row records the step blocked (owner "UX session", plus any missing needs) and calls stop_blocked; else run.step
+    # SIGN_IN_SELECTORS = ("login.username", "login.password", "login.submit"); SIGN_IN_SCR1 = (*SIGN_IN_SELECTORS,
+    #   "screen.scr1"); ROOT_REDIRECT = "/login?return_to=%2F&reason=none"
+    # @dataclass(frozen=True) BrowserLogin(session_id: str, login: ApiExchange)   # the POST /api/login exchange (200)
+    # sign_in_via_form(run, bp) -> BrowserLogin  (fills the demo pair from run, submits, asserts exactly one new
+    #   staff_sessions row)
+    # sign_in_to_scr1(brun, bp) -> BrowserLogin  (goto "/", first hop 303 to ROOT_REDIRECT, sign in, SCR-1 visible,
+    #   page.url == base_url + "/")
+    # thread_id_of(bp, since=0) -> str  (waits for startChatSession since the mark; asserts 201)
+    # sign_out_via_shell(run, bp) -> ApiExchange (asserts 204)
     # first_hop(response) -> Response (first hop of a redirect chain); page_fetch(bp, path) -> {"status", "text"} (GET)
-from tests.journeys.browser.selectors import locate, locate_by, locate_in, missing_selectors   # locate_by: A-2
+from tests.journeys.browser.selectors import SELECTOR_KEYS, locate, locate_in, missing_selectors
+    # locate(page, key) -> Locator; locate_in(parent: Locator, key) -> Locator
+    # locate_by(target: Page | Locator, key: str, value: str) -> Locator   (A-2; not on main yet)
 from tests.journeys.browser.network import ApiExchange
-    # ApiExchange(index, method, url, path, operation_id, status, headers, request_body: bytes|None, body: bytes|None,
-    #   is_sse, failed); .header(name) -> str | None (case-insensitive)
-    # NetworkLog (bp.net): .mark() -> int; .operations(since=0) -> list[str];
+    # @dataclass ApiExchange(index, method, url, path, operation_id: str | None, status: int,
+    #   headers: list[tuple[str, str]], request_body: bytes | None, body: bytes | None = None, is_sse: bool = False,
+    #   failed: str | None = None); .header(name) -> str | None (case-insensitive)
+    # NetworkLog (bp.net): .mark() -> int; .operations(since=0) -> list[str]; .exchanges: list[ApiExchange];
     #   .wait_for(page, operation_id, *, since=0, timeout_ms=15_000, finished=True) -> ApiExchange
-    #   .origins() -> set[str]; .dev_param_hits(*, allowed_urls=()) -> list[str]; .exchanges: list[ApiExchange]
+    #     (AssertionError "no <op> response within <ms> ms (seen: [...])" on timeout)
+    #   .origins() -> set[str]; .dev_param_hits(*, allowed_urls=()) -> list[str]
 from tests.journeys.browser.record import browser_record_values
     # browser_record_values(base: RecordData, session: BrowserSession, *, collector, root) -> dict[str, str]
 ```
 
-Fixture: **`browser_journey_factory`** (addition A-1, §8 R-1), never `browser_journey`, because every AEA-62 run passes
-AEA-51's `StepScript`, and J-2/AC-12 need the built index and AC-15 the run clock. Each test module declares
+Fixture: **`browser_journey_factory`** (A-1, §8 R-1), never `browser_journey`, because every AEA-62 run passes
+AEA-51's `StepScript`, J-2, AC-11 and AC-12 need the built index, and AC-15 needs the run clock. `journey_chrome` is
+**module**-scoped on `main` (a started sync Playwright breaks later `asyncio.run`). Each test module declares
 `pytest_plugins = ("tests.journeys.browser.plugin",)` (AEA-58's loading rule; never import the plugin module).
 `ApiExchange.body` and `request_body` are **bytes**: decode with `json.loads(ex.body)` (accepts bytes).
+`test_browser_support.py::test_no_selector_strings_outside_module` scans every `.py` under `tests/journeys/`: the text
+`locator(` or `get_by_` may not appear anywhere in this slice's files, comments included.
 
 ### 4.3 Selector keys this ticket uses
 
@@ -459,6 +509,14 @@ Script arguments (exact; built from the models so a rename fails at import):
   then `send_code` when located; `CODE_ENTRY` with digits → `identity.verify`.
 - `web/container.py::register_chat` (AEA-40): `run_graph` and `reply_composer` are AEA-51's keys; until they are bound
   a chat turn raises `RuntimeError("not bound: <key>")`, so `TURN_NEEDS` steps report blocked with owner AEA-51.
+- `agent/nodes/plan.py::join_plan` (AEA-37, merged `8d025b7`): when the handoff request is
+  `HandoffReason.MEMBERSHIP_CANCEL` it sets `account = "membership"` and `knowledge = "yes"`; drafts are ordered account,
+  scheduling, knowledge, with `needs_identity=True` for account and scheduling and `False` for knowledge. WP-8's opening
+  turn therefore goes to identity (`_route_planned`, above), and the code turn runs the account and the knowledge
+  specialist (the `CANCEL_MARKERS` case of §5 step 5).
+- `web/routes/staff_cases.py` (AEA-45, merged `1a6712a`): `getQueue` and `getCase` are mounted; `QueueResponse`
+  (`web/schemas/staff_cases.py`) is `{as_of, staffing, live[], needs_my_action[]}` of `QueueRowOut {…, priority
+  {level, word}, owner: str | None, due_label: str | None, …}`.
 
 ### 4.7 Wire and storage shapes (OpenAPI and schema, read only)
 
@@ -517,13 +575,12 @@ Nothing imports the j-files except other j-files of this ticket.
 ### Step 0 — environment (no code)
 
 1. `export UV_LINK_MODE=hardlink`; `df -h /home` (stop and report under 5 GB free).
-2. Confirm AEA-58 and AEA-51 merged: `ls tests/journeys/browser/{plugin,pages,steps,selectors,network,record}.py
-   tests/integration/customer_support.py tests/graph/worked_pair_scenarios.py`. Missing → stop, report
-   `BLOCKED-ON AEA-58` / `AEA-51`.
-3. Confirm the three AEA-58 additions (§8 R-1): `grep -n "browser_journey_factory\|def locate_by\|def screenshot_element\|overrides_for"
-   tests/journeys/browser/*.py` finds all four, and
-   `uv run python -c "from tests.journeys.browser.selectors import SELECTOR_KEYS; print(sorted(SELECTOR_KEYS))"` lists
-   every key of §4.3. Missing → stop, report `BLOCKED-ON AEA-58 addition A-<n>`.
+2. Confirm AEA-58-F1 merged (AEA-58's package itself is on `main` since `eb51ba4`):
+   `grep -n "def browser_journey_factory\|def locate_by\|def screenshot_element\|overrides_for" tests/journeys/browser/*.py`
+   finds all four, and `uv run python -c "from tests.journeys.browser.selectors import SELECTOR_KEYS;
+   print(sorted(SELECTOR_KEYS))"` lists every key of §4.3. Missing → stop, report `BLOCKED-ON AEA-58-F1 (addition A-<n>)`.
+3. Confirm AEA-51 merged: `ls tests/integration/customer_support.py tests/graph/worked_pair_scenarios.py`. Missing → stop,
+   report `BLOCKED-ON AEA-51`.
 4. Confirm AEA-51's names: `uv run python -c "from tests.integration.customer_support import StepScript, step_overrides,
    built_index_dir, fastembed_offline; from tests.graph.worked_pair_scenarios import NORMAL, brief, planner, report,
    responder, step, tool"`. Fails → stop, report `BLOCKED-ON AEA-51` (or use the merged names, §4.4).
@@ -1099,7 +1156,7 @@ representative", "supervisor": "Demo supervisor", "owner": "Demo business owner"
 
 ### Step 7 — run while iterating
 
-C-1 per file (§7). Expect *blocked* skips with owners where AEA-35/37/39/45/51/52 or the UX selector rows are missing;
+C-1 per file (§7). Expect *blocked* skips with owners where AEA-39/AEA-51 or the UX selector rows are missing;
 **no failures**. A failure whose cause is the real system storing or showing something other than the expected value is
 a **seam finding on the owning ticket**: report it; never edit the expectation (AEA-57 §2 rule). Known likely finding:
 AC-17's WF-3 line (§8 R-9).
@@ -1124,11 +1181,12 @@ commit body.
    - `.claude/reference/area-map.md` row `3+`, last cell: add before `; the rest planned` (or the cell's closing
      clause as AEA-58 left it): `; browser legs of J-2, J-3, J-6, J-8 `tests/journeys/j{2,3,6,8}/test_aea_62.py`
      actual (AEA-62, `<sha>`)`.
-   - `.claude/state/icm-progress.md`: the *Integrated-journey protection* row whose evidence cell names AEA-57 (today
-     line 44; **not** the older row at line 54): replace the evidence link with the AEA-62 record
-     (`[…-AEA-62.md](../../docs/testing/journeys/<date>-AEA-62.md)`), keep the row ≤ 400 characters; next cell: `Every
-     J-2/3/6/8 browser step integrated under --journeys-strict (needs the UX selector contract)`. Do not delete or merge
-     the duplicate row; mention it in the commit body.
+   - `.claude/state/icm-progress.md`: the *Integrated-journey protection* row whose evidence cell names AEA-57 and
+     AEA-58 (today line 46; **not** the older row at line 59): append `; browser J-2/J-3/J-6/J-8 (AEA-62, `<sha>`)` after
+     the AEA-58 clause and replace its record link with `[`AEA-62`](../../docs/testing/journeys/<date>-AEA-62.md)`; keep
+     the row ≤ 400 characters (shorten wording, never drop a SHA); next cell: `Every J-2/3/6/8 browser step integrated
+     under --journeys-strict (needs the UX selector contract)`. Do not delete or merge the duplicate row; mention it in
+     the commit body.
    - `docs/design/code-design.md` §9: in the `journeys/` lines add `j2/j3/j6/j8 test_aea_62.py = AEA-62's browser legs`;
      in *Built on `main`* add `; `tests/journeys/j{2,3,6,8}/test_aea_62.py` (AEA-62, `<sha>`)`.
 3. **Commit 2** (docs): `git add docs/testing/journeys/<date>-AEA-62.md docs/testing/journeys/<date>-AEA-62
@@ -1197,49 +1255,57 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 
 ## 8. Risks and requests
 
-- **R-1 (request to the orchestrator; blocks this slice): three additions to AEA-58's `browser/` package.** AEA-58 is
-  not built yet and its plan does not carry them; fold them into AEA-58's plan now, or land one AEA-58 follow-up merged
-  before this slice.
+- **R-1 (request to the orchestrator; blocks this slice): AEA-58-F1, one follow-up on AEA-58's `browser/` package,
+  merged before this slice.** AEA-58 merged at `eb51ba4` without the three additions earlier versions of this plan asked
+  for. Open it as one small `lane::build-loop` ticket in AEA-58's area (files `tests/journeys/browser/server.py`,
+  `plugin.py`, `selectors.py`, `pages.py`, `test_browser_support.py`, and the README's *Adding a browser journey later*
+  paragraph), no `risk::security`, with its own self-checks in `test_browser_support.py`. Its exact content:
   - **A-1 run options.** In `server.py`: `OverridesFor = Callable[[Settings, JourneyScript, Callable[[], datetime] |
-    None], tuple[ContainerOverrides, Mapping[Role, ScriptedModel]]]`;
-    `browser_environ(root, dist_dir, *, index_dir: Path | None = None)` adds `MERIDIAN_INDEX_DIR=str(index_dir)` when
-    given; `open_browser_journey(*, collector, strict, nodeid, build, index_dir: Path | None = None, with_clock: bool =
-    False, script: JourneyScript | None = None, overrides_for: OverridesFor | None = None)`: `script = script if script
-    is not None else JourneyScript()`; `clock = StepClock() if with_clock else None`; `overrides, models =
-    (overrides_for or _default_overrides)(settings, script, clock)` where `_default_overrides(s, sc, clk) =
-    scripted_overrides(s, sc, wall_clock=clk)`; `JourneyRun(..., script=script, clock=clock, ...)`. In `plugin.py`:
-    fixture `browser_journey_factory(request, journey_chrome, production_build, tmp_path) -> Callable[...,
-    AbstractContextManager[BrowserRun]]` whose callable `open_run(*, index_dir=None, with_clock=False, script=None,
-    overrides_for=None)` composes exactly as `browser_journey` (same screenshots folder, same teardown validation).
-    Why: J-2 and AC-12 need the built index; AC-15 needs the run clock; every AEA-62 run needs AEA-51's `StepScript`
-    with `step_overrides` (parallel specialists, refresh note 1). AEA-58 stays independent of AEA-51: it only accepts a
-    script and a builder.
-  - **A-2 selectors.** Add every key of §4.3 to `SELECTOR_KEYS` (state descriptions as in that table), allow a
-    contract row whose `value` holds one `{value}` placeholder (parametric rows: `card.slot.window_by_id`,
-    `queue.row_by_ref`, `brief.section_by_number`, `case.source_by_id`), and add `locate_by(target: Page | Locator, key:
-    str, value: str) -> Locator` (same `css` / `role` / `label` dispatch, the placeholder filled with `value`). Rows stay
-    empty until `selectors.md` gives them, so those steps report `blocked-on UX session`.
+    None], tuple[ContainerOverrides, Mapping[Role, ScriptedModel]]]`; `open_browser_journey(*, collector, strict,
+    nodeid, build, environ_overrides=None, script: JourneyScript | None = None, with_clock: bool = False,
+    overrides_for: OverridesFor | None = None)`: `script = script if script is not None else JourneyScript()`;
+    `clock = StepClock() if with_clock else None` (`StepClock` from `tests.journeys.support.server`); `overrides, models
+    = (overrides_for or _default_overrides)(settings, script, clock)` with `_default_overrides(s, sc, clk) =
+    scripted_overrides(s, sc, wall_clock=clk)`; `JourneyRun(..., script=script, clock=clock, ...)`. Today's callers
+    (`browser_journey`, `serve.py`) keep their behaviour. In `plugin.py`: fixture `browser_journey_factory(request,
+    journey_chrome, production_build, tmp_path) -> Callable[..., AbstractContextManager[BrowserRun]]` whose callable
+    `open_run(*, index_dir: Path | None = None, with_clock: bool = False, script: JourneyScript | None = None,
+    overrides_for: OverridesFor | None = None)` composes exactly as `browser_journey` (same collector, strict flag,
+    screenshots folder, `BrowserRun` fields, `close()` in `finally`), passing
+    `environ_overrides={"MERIDIAN_INDEX_DIR": str(index_dir)}` when `index_dir` is given (`MERIDIAN_INDEX_DIR` is the
+    `Settings` env name of `index_dir`, `src/meridian/config.py`). Why: J-2, AC-11 and AC-12 need the built index; AC-15
+    needs the run clock; every AEA-62 run needs AEA-51's `StepScript` with `step_overrides` (parallel specialists,
+    refresh note 1). AEA-58 stays independent of AEA-51: it accepts a script and a builder and imports nothing from it.
+  - **A-2 selectors.** Add every key of §4.3 that is not already in `SELECTOR_KEYS` (state descriptions as in that
+    table); allow a contract row whose `value` holds one `{value}` placeholder (parametric rows: `card.slot.window_by_id`,
+    `queue.row_by_ref`, `brief.section_by_number`, `case.source_by_id`); add `locate_by(target: Page | Locator, key: str,
+    value: str) -> Locator` (the same `css` / `role` / `label` dispatch as `locate`, the placeholder filled with
+    `value`). Rows stay empty until `selectors.md` gives them, so those steps report `blocked-on UX session`.
   - **A-3 element screenshot.** `BrowserRun.screenshot_element(bp: BrowserPage, target: Locator, label: str) -> Path`,
-    same label rule, path pattern and session bookkeeping as `screenshot`, using `target.screenshot(path=...)`. Why: the
-    ticket wants "a screenshot of the account card only" in flows that showed identity values.
+    same label rule, path pattern and `session.screenshots` bookkeeping as `screenshot`, using
+    `target.screenshot(path=str(path))`. Why: the ticket wants "a screenshot of the account card only" in flows that
+    showed identity values.
+  This slice must **not** work around a missing addition: no copy of `open_browser_journey` in a test file, no
+  `.filter(has_text=…)` standing in for a parametric key, no direct `Locator.screenshot` call.
 - **R-2 the UX selector contract does not exist.** `docs/plans/ux-join/selectors.md` is unpublished; until it lands
   and the hooks are in `dist`, every on-screen step reports `blocked-on UX session` (sign-in included, so in practice
   every test). Ask the UX session for the rows of §4.3 (FOR-UX-SESSION §2 says "before AEA-62"). Not a new decision.
 - **R-3 model call pattern per turn.** The step tables assume the routing read on `main` (§4.6) and DO-3 §5.4 (free
   text: planner + classifier, then specialists and responder; locate and code turns: no planner; brief only when a case
   opens). `expect_turn` fails loudly on an `exhausted` or invalid call and on a *must* role that never ran; roles that
-  are given an entry but not called are harmless. `join_plan` (AEA-37) and the specialist runner (AEA-35/39) are not on
-  `main`; a mismatch at run time is reported as a seam finding on them, never guessed around.
+  are given an entry but not called are harmless. `join_plan` (AEA-37) and the specialist runner (AEA-35) are on `main`;
+  the act node (AEA-39) is not; a mismatch at run time is reported as a seam finding on them, never guessed around.
 - **R-4 brief quote message ids.** `next_message_id` predicts the customer message id from `sqlite_sequence`; the test
   asserts the prediction after the turn. A wrong prediction is a plan error (stop and report), never a reason to loosen
   the quote check.
 - **R-5 the 300 s cap.** About 18 browser tests, each with its own server, plus a one-off index build (AEA-51's
   `built_index_dir`, cached per process). If C-6 exceeds 300 s, report the measured time; the reviewer command's cap is
   the ticket's and is not raised here.
-- **R-6 shared context rows.** AEA-58, AEA-61 and AEA-55 also edit area-map row `3+`, the icm-progress journey row and
-  DO-3 §9. Each edit is one clause; the merge agent keeps both sides. AC-21's `browser/README.md` journey list is a
-  follow-up on AEA-58 (its README has no such list). `icm-progress.md` carries two *Integrated-journey protection*
-  rows (lines 44 and 54 today); this slice edits only the AEA-57 one and reports the duplicate for context upkeep.
+- **R-6 shared context rows.** AEA-61 and AEA-55 also edit area-map row `3+`, the icm-progress journey row and DO-3 §9,
+  and AEA-58-F1 may too. Each edit is one clause; the merge agent keeps both sides. AC-21's `browser/README.md` journey
+  list is a follow-up on AEA-58 (its README has an *Adding a browser journey later* recipe but no journey list).
+  `icm-progress.md` carries two *Integrated-journey protection* rows (lines 46 and 59 today); this slice edits only the
+  AEA-57/AEA-58 one (line 46) and reports the duplicate for context upkeep.
 - **R-7 test-to-test imports.** j3, j6 and j8 import helpers from `tests.journeys.j2.test_aea_62` (only non-`test_`
   names), as AEA-58 imports from `j1/test_aea_57.py`. The convention check forbids a separate helper module in `j<N>/`,
   and AC-1 limits this ticket to four files. j2 is therefore the tightest file against the 500-line cap (C-5).
@@ -1271,15 +1337,16 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 
 ## 9. Readiness and gates
 
-**READY**, **BLOCKED-ON AEA-58** (its `browser/` package plus additions A-1, A-2, A-3 of §8 R-1) and **AEA-51** (the
-imports in §4.4: `tests/integration/customer_support.py` — `StepScript`, `step_overrides`, `built_index_dir`,
-`fastembed_offline` — and `tests/graph/worked_pair_scenarios.py`). Run-time dependencies, reported as *blocked* steps
-with their owners and never passed: AEA-52 / AEA-45 (queue and case-view routes `getQueue`, `getCase`; AEA-29's services
-are merged), AEA-51's `run_graph` and `reply_composer` bindings (and through them AEA-37 / AEA-35 / AEA-39: plan join and
-specialists), and the UX session's `selectors.md` rows plus its B1/B2, A-5 and B-3 fixes in `dist`. Already merged and no
-longer blocking: AEA-27 (identity), AEA-28 (booking), AEA-29 (cases and handoff), AEA-30 (demo clock), AEA-31 (reset),
-AEA-36 (front nodes), AEA-40 (chat routes; AEA-40-1 greeting after reload), AEA-43 (demo inbox), AEA-44 (staff
-sessions), AEA-57 (harness, wall clock). No `NEEDS-DECISION`.
+**READY**, **BLOCKED-ON AEA-58-F1** (the AEA-58 follow-up with additions A-1, A-2, A-3 of §8 R-1; AEA-58 itself merged
+at `eb51ba4` without them) and **AEA-51** (the imports in §4.4: `tests/integration/customer_support.py` — `StepScript`,
+`step_overrides`, `built_index_dir`, `fastembed_offline` — and `tests/graph/worked_pair_scenarios.py`; AEA-51 waits on
+AEA-39). Run-time dependencies, reported as *blocked* steps with their owners and never passed: AEA-51's `run_graph` and
+`reply_composer` bindings (and through them AEA-39, the act node), and the UX session's `selectors.md` rows plus its
+B1/B2, A-5 and B-3 fixes in `dist`. Already merged and no longer blocking: AEA-27 (identity), AEA-28 (booking), AEA-29
+(cases and handoff), AEA-30 (demo clock), AEA-31 (reset), AEA-35 (specialist runner), AEA-36 (front nodes), AEA-37
+(plan join), AEA-40 (chat routes; AEA-40-1 greeting after reload), AEA-43 (demo inbox), AEA-44 (staff sessions), AEA-45
+(`getQueue`, `getCase`), AEA-52 (staff and demo integration), AEA-57 (harness, wall clock), AEA-58 (browser harness). No
+`NEEDS-DECISION`.
 
 **Gates:** no human, external, paid or live gate of its own; inherits `gate::ux4` through AEA-58. No model call is paid
 (scripted adapter only).

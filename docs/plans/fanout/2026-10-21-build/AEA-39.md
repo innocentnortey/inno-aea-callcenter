@@ -1,20 +1,47 @@
 # Plan — [AEA-39] graph: act node (fan-out, escalation, handoff)
 
-**Status:** **READY** (refresh 3). The §9.1 question is answered: Innocent chose option A on 2026-10-21 ("just do
-whatever you recommend"), so `SpecialistTask`, `KnowledgeSlice` and `AccountSlice` live in `src/meridian/domain/tools.py`,
-built by **AEA-35b**. Merge order before this ticket builds: **AEA-35b, then AEA-35** (`scope_for`, a real import);
-step 0 checks both and stops if either is missing. Every other name this plan uses is on `main` and was checked; every
+**Status:** **READY** (refresh 4). Every prerequisite is on `main`: AEA-35b (`SpecialistTask`, `KnowledgeSlice`,
+`AccountSlice` in `src/meridian/domain/tools.py`, merged `3725c90`) and AEA-35 (`scope_for` in
+`agent/specialists/runner.py`, merged `1ce98c4`). The §9.1 question is answered (option A, Innocent 2026-10-21: "just do
+whatever you recommend"). Step 0 is now a sanity check only. Every name this plan uses is on `main` and was checked; every
 decision is made below.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/39 (spec copy:
-`docs/plans/tickets/AEA-39.md`) · **Base revision:** `main` at `8a205b2` plus AEA-35b's branch `aea-35b-specialist-types`
-at `68f7f19` (refresh 3; refresh 2 at `2ec19ad`; refresh 1 at `b559c75`; first written at `96096be` plus AEA-21's
-then-unmerged branch `aea-21-graph-spine`) · **Lane:**
-`lane::build-loop`, no `risk::security` · **Wave:** 2 · **Planner:** Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-21 ·
-**Implementer:** `fanout-implementer` on Sonnet.
+`docs/plans/tickets/AEA-39.md`) · **Base revision:** `main` at `b68df7e` (refresh 4; refresh 3 at `8a205b2` plus AEA-35b's
+branch at `68f7f19`; refresh 2 at `2ec19ad`; refresh 1 at `b559c75`; first written at `96096be` plus AEA-21's then-unmerged
+branch `aea-21-graph-spine`) · **Lane:** `lane::build-loop`, no `risk::security` · **Wave:** 2 · **Planner:** Claude Opus
+5.5 (`claude-opus-5-5`), 2026-10-21 · **Implementer:** `fanout-implementer` on Sonnet.
 
 Read this whole file before writing code. Every decision is already made here (§8.1 lists them). If the code on `main`
 disagrees with a name in this plan, **the code on `main` wins**: follow it and say so in your report. If a name this plan
 needs is **missing** on `main`, stop and report `blocked-on` (step 0 lists the checks). Never invent a missing type.
+
+**Refresh 4 (2026-10-21, `main` at `b68df7e`).** What changed since refresh 3 (`8a205b2`), and what it does to this plan:
+
+1. **AEA-35b merged** (`3725c90`, commit `68f7f19`). `src/meridian/domain/tools.py` lines 39–57 hold `KnowledgeSlice`,
+   `AccountSlice` and `SpecialistTask` exactly as §4.2 copies them. No change.
+2. **AEA-35 merged** (`1ce98c4`, commit `e614508`). `src/meridian/agent/specialists/runner.py` line 51 has
+   `def scope_for(state: ConversationState, ctx: TurnContext) -> ToolCallScope` with the body §4.2 describes, and line 91
+   `class SpecialistRunner` with `run(self, task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult`
+   (never raises; emits no signal). `runner.py` imports nothing from `agent/graph.py` or `agent/nodes/`, so `act.py`
+   importing `scope_for` makes no cycle (checked on `b68df7e`: `import meridian.agent.graph,
+   meridian.agent.specialists.runner, meridian.agent.nodes.act` succeeds). **No blocker is left.**
+3. **AEA-36 and AEA-37 merged** (front and plan nodes). Each deleted its own rows from AEA-21's
+   `tests/graph/test_spine.py::test_stubs_raise_loudly` (`a3874c8`, `7509e26`). The three rows left are this ticket's
+   (`act.run_specialist`, `act.escalation`, `act.handoff`); they assert `NotImplementedError` and **go red the moment `act.py`
+   has real bodies**. New in this refresh: the plan owns one edit to `tests/graph/test_spine.py` (step 7, PD-15, PA-4):
+   delete the whole `test_stubs_raise_loudly` test and the two imports only it uses (`import inspect`,
+   `from meridian.agent.nodes import act`). The file is added to §2.1.
+4. **Context rows changed shape.** The area-map A7b row now marks built files inline in its *Paths* cell
+   (`` `agent/specialists/{specs,runner}.py` (**actual**, AEA-35 `e614508`) ``) and its status cell still begins `planned;`.
+   With `act.py` built, every A7b path is actual, so step 9 marks `act.py` inline the same way and changes `planned;` to
+   `built;`. `icm-progress.md` has a `Last reconciled:` line each ticket prefixes; step 9 now does that too.
+   `code-design.md` line 302 still ends `stub AEA-21 6df4f4c`.
+5. Unchanged since `8a205b2` (checked with `git diff 8a205b2..main`): `src/meridian/domain/*` apart from `tools.py`,
+   `src/meridian/policy/*`, `agent/{context,routers,graph,signals}.py`, the 33-line `act.py` stub,
+   `tests/graph/_spine_doubles.py`, `tests/services/_case_fixtures.py`, `tests/fixtures/*`, `tests/fakes/*`,
+   `tests/journeys/affected.py`. No AEA-39 branch or worktree exists yet.
+6. The build ledger row AEA-39 reads `blocked` ("blocked on AEA-35 … AEA-35 has since merged, re-run"), blockers
+   `AEA-11,AEA-14,AEA-21,AEA-35b`. §8.3 R-3 asks for `ready` and `AEA-35` added.
 
 **Refresh 3 (2026-10-21, `main` at `8a205b2`; AEA-35b at `68f7f19`).** What changed since refresh 2, and what it does to
 this plan:
@@ -190,6 +217,7 @@ scheduling service) are injected through `GraphDeps` and tested with doubles her
 | `.claude/reference/area-map.md` | A7b row | Append this ticket's mention only (§5 step 9) |
 | `.claude/state/icm-progress.md` | *Routes verified…* rows | Add one row (§5 step 9) |
 | `docs/design/code-design.md` | §3 module-map line for `nodes/act.py` | Status suffix only (§5 step 9) |
+| `tests/graph/test_spine.py` | AEA-21's spine tests; `test_stubs_raise_loudly` now holds only this ticket's three `act` rows | **Delete** `test_stubs_raise_loudly` (decorator and body) and the two imports only it uses, `import inspect` and `from meridian.agent.nodes import act` (step 7, PD-15). Change nothing else |
 
 `tests/unit/agent/nodes/__init__.py` already exists (AEA-21). `tests/journeys/j3/__init__.py` and `j4/__init__.py` exist on
 `main`. Do not create or edit them.
@@ -248,6 +276,7 @@ tests/unit/agent/nodes/test_act.py -q`.
 | PA-1 | `bookings_left` is `max(0, Limits.booking.max_per_conversation − counters.bookings)`; never negative | `test_build_specialist_task` (case *bookings*) |
 | PA-2 | A failure of `deps.handoff.open` is not swallowed: the exception leaves the node unchanged (no halt written, no retry here; the service already retried once) | `test_handoff_open_failure_propagates` |
 | PA-3 | When this turn's results hold a staff change request draft, the `HandoffRequest` carries it, whatever reason won | `test_wp4_fee_bearing_escalates_p2` (draft present); `test_escalation_record_fields_and_case_per_escalate` (WP-7 row: `change_request is None`) |
+| PA-4 | AEA-21's stub test no longer pins `act.py` to `NotImplementedError`: `test_stubs_raise_loudly` (only `act` rows left) is deleted, as AEA-36 and AEA-37 deleted their rows | `uv run pytest tests/graph/test_spine.py -q` → 0 failed; `grep -n "test_stubs_raise_loudly" tests/graph/test_spine.py` prints nothing |
 
 ### 3.3 Source-contract reconciliation
 
@@ -258,8 +287,8 @@ tests/unit/agent/nodes/test_act.py -q`.
 | `customer_text = redact(state.turn_input.text_store, SONNET).text` | graph-nodes §9.5 | yes | in-ticket (AC-16) | step 2 |
 | `task_messages` = the open task's customer messages, SONNET | DO-4 §5, graph-nodes §9.5 | yes (no derivation given) | **added** (PD-1) | step 2 |
 | `SchedulingSlice.pending_change = state.pending_change is not None` | graph-nodes §9.5 | yes | **added** (PD-13): `ConversationState.pending_change` is not on `main` (AEA-02 §8.2) and nothing writes it this wave (AEA-38 PD-4); read with `getattr`, `False` until it lands | step 2 |
-| `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` exist | DO-4 §5, graph-tools §2 (+ AEA-35b home note) | yes (named as AEA-02's) | **other-ticket AEA-35b**: option A (Innocent, 2026-10-21) puts them in `domain/tools.py`; merged before this ticket builds | step 0 item 2 |
-| `scope_for` imported from `agent/specialists/runner.py` | graph-tools §2 | yes | **blocked-on AEA-35** (module not on `main`; a free function cannot be injected) | step 0 |
+| `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` exist | DO-4 §5, graph-tools §2 (+ AEA-35b home note) | yes (named as AEA-02's) | **other-ticket AEA-35b**, merged `3725c90`: option A (Innocent, 2026-10-21) puts them in `domain/tools.py` | step 0 item 2 (sanity check) |
+| `scope_for` imported from `agent/specialists/runner.py` | graph-tools §2 | yes | **other-ticket AEA-35**, merged `1ce98c4` (a free function, so a real import, not injection) | step 0 item 3 (sanity check) |
 | `GraphDeps`, `emit_signal`, `BRAKE_HALTS`, stub file | graph-core §4, §5; graph-nodes §4 | yes | in-ticket (on `main` since AEA-21 merged, `5531664`) | step 0 (sanity check) |
 | Slice inputs read closes before the run | DO-3 §2.3 rule 1, R-G-19 | yes | in-ticket (AC-12) | step 3 |
 | `offer_quick_checks` three conditions | graph-tools §6 | yes | in-ticket (AC-2) | step 2 |
@@ -275,13 +304,14 @@ tests/unit/agent/nodes/test_act.py -q`.
 | CAS-16 burning-"no" priority | cases §3.3; D-14 (option A) | yes | in-ticket: pass through `decide_escalation`; assert **no** priority level on that path | step 4 |
 | Journey J-3, J-4 | slice plan §0a; integrated-journeys §3–§4 | yes | in-ticket (AC-15); integrated steps **other-ticket** AEA-51 (AEA-57's harness and AEA-40's CON-2 have merged) | step 8 |
 | Context rows | context-maintenance; collision map | yes | in-ticket (AC-17) | step 9 |
+| AEA-21's `test_stubs_raise_loudly` rows for `act.py` | collision map ("stubs replaced in place"); AEA-36 `a3874c8`, AEA-37 `7509e26` precedent | no | **added** (PA-4, PD-15) | step 7 |
 | Dev-log entry | context-maintenance *At the end of a run* | no | **other-ticket**: the orchestrator writes it (outside owned files) | §8.3 R-4 |
 
 ---
 
 ## 4. Shared code to use (exact; verify each in step 0)
 
-### 4.1 Types and functions on `main` now (`8a205b2`; unchanged since `b559c75`)
+### 4.1 Types and functions on `main` now (`b68df7e`; unchanged since `b559c75`)
 
 ```python
 # meridian.domain.state (AEA-02)
@@ -485,7 +515,7 @@ def redact(text: str, profile: RedactionProfile) -> Redacted
 CHICAGO = ZoneInfo("America/Chicago"); WORKED_PAIRS_NOW = datetime(2026, 10, 16, 10, 0, tzinfo=CHICAGO)
 ```
 
-### 4.2 AEA-21's names (on `main`), AEA-35b's types and AEA-35's `scope_for` (step 0 checks the last two)
+### 4.2 AEA-21's names, AEA-35b's types and AEA-35's `scope_for` (all on `main` at `b68df7e`)
 
 ```python
 # AEA-21 — ON MAIN since 5531664 (re-checked at b559c75)
@@ -525,7 +555,7 @@ def install_doubles(monkeypatch, visits: list[str], **overrides: Callable[..., A
     # replaces the 14 stub node functions (module attributes) with doubles that append their name to `visits`;
     # an override is any callable (state, runtime, *, deps)
 
-# NOT YET ON MAIN — AEA-35, agent/specialists/runner.py (its plan §4.6; merges after AEA-35b, before this ticket)
+# ON MAIN — AEA-35, agent/specialists/runner.py (merged 1ce98c4, commit e614508; scope_for line 51, SpecialistRunner line 91)
 def scope_for(state: ConversationState, ctx: TurnContext) -> ToolCallScope
     # customer_id = state.identity.customer_id only when status == "verified", else None;
     # shown_slot_ids = frozenset(s.slot_id for s in state.shown_slots); now = ctx.now; ids = ctx.ids;
@@ -533,7 +563,7 @@ def scope_for(state: ConversationState, ctx: TurnContext) -> ToolCallScope
 class SpecialistRunner:
     def run(self, task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult  # never raises
 
-# AEA-35b — meridian.domain.tools (branch aea-35b-specialist-types, 68f7f19; merged before this ticket builds).
+# AEA-35b — meridian.domain.tools (merged 3725c90, commit 68f7f19; lines 39–57).
 # Copied from that commit. MeridianModel is frozen: build each object once, never assign to a field.
 class KnowledgeSlice(MeridianModel):
     """AEA-35b: kind-only marker. The knowledge specialist sees only the customer's text (graph-tools section 2)."""
@@ -652,22 +682,24 @@ def handoff(state: ConversationState, runtime: Runtime[TurnContext], *, deps: Gr
 
 Work in your worktree from the repo root. `export UV_LINK_MODE=hardlink`. Never copy a venv; no `node_modules`.
 
-**Step 0 — prerequisites (stop if any fails; report `blocked-on <ticket>` and do nothing else).**
+**Step 0 — prerequisites (sanity checks; all held on `b68df7e`. If one fails, stop and report `blocked-on <ticket>`).**
 
-1. Sanity check (AEA-21 merged at `5531664`): `git log --oneline main | grep -i "AEA-21"` shows the merge, and `grep -n "NotImplementedError"
-   src/meridian/agent/nodes/act.py` shows the three stubs. `grep -n "^class GraphDeps\|^class ModelsStatus"
-   src/meridian/agent/context.py`, `grep -n "^def emit_signal" src/meridian/agent/signals.py`, `grep -n "^BRAKE_HALTS\|^def
-   route_act_plan" src/meridian/agent/routers.py`, `grep -n "^def timed_node\|^def build_graph\|^def run_graph"
-   src/meridian/agent/graph.py`, `ls tests/graph/_spine_doubles.py` all print. Else → `blocked-on AEA-21`.
-2. `grep -n "^class SpecialistTask\|^class KnowledgeSlice\|^class AccountSlice" src/meridian/domain/tools.py` prints all
-   three (AEA-35b; `git log --oneline main | grep -i "35b"` shows its merge). `SpecialistTask` must have exactly the fields
-   `task`, `customer_text`, `task_messages`, `slice`, `offer_quick_checks`, and `KnowledgeSlice()` / `AccountSlice()` must
-   construct with **no arguments** (check: `uv run python -c "from meridian.domain.tools import KnowledgeSlice,
-   AccountSlice, SpecialistTask; print(KnowledgeSlice(), AccountSlice(), sorted(SpecialistTask.model_fields))"`). Else →
+1. AEA-21: `grep -n "NotImplementedError" src/meridian/agent/nodes/act.py` shows the three stubs;
+   `grep -n "^class GraphDeps\|^class ModelsStatus" src/meridian/agent/context.py`, `grep -n "^def emit_signal"
+   src/meridian/agent/signals.py`, `grep -n "^BRAKE_HALTS\|^def route_act_plan" src/meridian/agent/routers.py`,
+   `grep -n "^def timed_node\|^def build_graph\|^def run_graph" src/meridian/agent/graph.py` and
+   `ls tests/graph/_spine_doubles.py` all print. Else → `blocked-on AEA-21`.
+2. AEA-35b: `uv run python -c "from meridian.domain.tools import KnowledgeSlice, AccountSlice, SpecialistTask;
+   print(KnowledgeSlice(), AccountSlice(), sorted(SpecialistTask.model_fields))"` prints
+   `kind='knowledge' kind='account' ['customer_text', 'offer_quick_checks', 'slice', 'task', 'task_messages']`. Else →
    `blocked-on AEA-35b` (if the slices need constructor arguments, that is a plan change: return to the planner).
    `pending_change` is **not** checked (PD-13).
-3. `grep -n "^def scope_for" src/meridian/agent/specialists/runner.py` prints. Else → `blocked-on AEA-35`.
-4. `uv run python -c "import meridian.agent.graph"` succeeds (import check; no baseline suite).
+3. AEA-35: `grep -n "^def scope_for" src/meridian/agent/specialists/runner.py` prints. Else → `blocked-on AEA-35`.
+4. `uv run python -c "import meridian.agent.graph, meridian.agent.specialists.runner"` succeeds (import check; no
+   baseline suite).
+5. `grep -n "test_stubs_raise_loudly\|(act, " tests/graph/test_spine.py` shows the test with exactly the three `act` rows
+   (step 7 deletes it). If rows for other modules are back in its list, delete only the three `act` rows in step 7 and keep
+   the test and its imports.
 
 **Step 1 — module skeleton.** Write the imports, constants and `__all__` of §4.4 into `act.py`, keep the three stubs
 raising for now. Check: `uv run ruff check src/meridian/agent/nodes/act.py` and `uv run mypy src/meridian/agent/nodes/act.py`.
@@ -818,8 +850,15 @@ Check: `-k "wp4 or person or second_handoff or model_text or propagates" -q`.
 `test_escalation_record_fields_and_case_per_escalate`). Check: `uv run pytest tests/unit/agent/nodes/test_act.py -q` →
 all 17 pass (AC-6 counts 4 parametrised cases, so pytest reports 20).
 
-**Step 7 — AEA-21 regression.** `uv run pytest tests/graph tests/unit/agent -q` (AEA-21's spine tests patch the act
-functions with doubles; they must stay green with the real bodies in place).
+**Step 7 — retire AEA-21's stub test, then the AEA-21 regression (PA-4, PD-15).** In `tests/graph/test_spine.py`, delete
+the whole `test_stubs_raise_loudly` test: the `@pytest.mark.parametrize(("module", "name", "path"), [...])` decorator with
+its three `act` rows and the function body down to `fn(None, None, deps=None)`, plus the extra blank lines so two blank
+lines separate the neighbouring functions. Then delete `import inspect` and `from meridian.agent.nodes import act`; nothing
+else in the file uses them (check with `grep -n "inspect\|\bact\b\." tests/graph/test_spine.py` before deleting: only the
+deleted test may match). Touch no other line. AEA-36 (`a3874c8`) and AEA-37 (`7509e26`) did the same for their rows. Check:
+`uv run ruff check tests/graph/test_spine.py && uv run ruff format --check tests/graph/test_spine.py`, then
+`uv run pytest tests/graph tests/unit/agent -q` → 0 failed (AEA-21's spine tests patch the act functions with doubles; they
+must stay green with the real bodies in place).
 
 **Step 8 — journeys (AC-15).** Write `tests/journeys/j3/test_aea_39.py` and `tests/journeys/j4/test_aea_39.py` (§7.1, §6.3).
 Check: `uv run pytest -m journey tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py -q` (2 pass) and
@@ -830,24 +869,27 @@ Check: `uv run pytest -m journey tests/journeys/j3/test_aea_39.py tests/journeys
 1. Run §7.2 in order; all green.
 2. Commit 1 (code and tests only):
    `git add src/meridian/agent/nodes/act.py tests/unit/agent/nodes/test_act.py tests/unit/agent/nodes/act_fixtures.py
-   tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py`
+   tests/graph/test_spine.py tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py`
    Message: `feat(graph): act node — specialist fan-out, escalation, handoff (AEA-39)`, a short body (what each node does,
    the test counts), last line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Note its short SHA as `<sha>`.
 3. Context docs (AC-17), each a one-line change:
-   - `.claude/reference/area-map.md`, row `| 3 | **A7b Act** | …`: in the last cell, after
-     ``…`policy/escalation.py` actual (AEA-14, `af848c9`; built in wave 1, slice plan §2)`` append
-     ``; `agent/nodes/act.py` actual (AEA-39, `<sha>`)``. Change nothing else in the row (AEA-22 and AEA-35 edit the same row).
+   - `.claude/reference/area-map.md`, row `| 3 | **A7b Act** | …`, two in-row edits and nothing else: in the *Paths* cell
+     replace `` `agent/nodes/act.py`, `` with `` `agent/nodes/act.py` (**actual**, AEA-39 `<sha>`), `` (the pattern the same
+     row uses for AEA-35); in the last cell replace the leading `planned;` with `built;`. Leave the A7a row's
+     "stubs of … act.py (AEA-39)" text alone (AEA-21's row; AEA-36 and AEA-37 left theirs too).
    - `.claude/state/icm-progress.md`: add one row directly after the last existing `| Routes verified against code and
-     tests |` row: `| Routes verified against code and tests | provisional | <run-date>: area map A7b → `agent/nodes/act.py`
-     checked against `tests/unit/agent/nodes/test_act.py` (AEA-39, `<sha>`; <N> passed) | Each slice adds its route; verified
-     when every area-map row is actual |` (≤ 400 characters; `<N>` from your run).
+     tests |` row (today the AEA-52 row): `| Routes verified against code and tests | provisional | <run-date>: area map A7b →
+     `agent/nodes/act.py` checked against `tests/unit/agent/nodes/test_act.py`, `tests/graph/test_spine.py` (AEA-39, `<sha>`;
+     <N> passed); J-3/J-4 mock-tested | Each slice adds its route; verified when every area-map row is actual |` (≤ 400
+     characters; `<N>` from your run). Then, in the line that starts `Last reconciled: 2026-10-21 — `, insert
+     `AEA-39 act node (routes row); earlier, ` right after `— `.
    - `docs/design/code-design.md` §3, the line `│   ├── nodes/act.py …  A7b   3   stub AEA-21 6df4f4c`: replace the suffix
      `stub AEA-21 6df4f4c` with `built AEA-39 <sha>` (if the line has no suffix, append `   built AEA-39 <sha>`).
    - Create `docs/testing/journeys/<run-date>-AEA-39.md` (§7.4).
 4. Commit 2: `git add .claude/reference/area-map.md .claude/state/icm-progress.md docs/design/code-design.md
    docs/testing/journeys/<run-date>-AEA-39.md`; message `docs(AEA-39): journey record and context for agent/nodes/act.py`,
    last line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
-5. `git diff --name-only main...HEAD` lists exactly the nine owned files (§2.1). Do not push; the merge step pushes `main`.
+5. `git diff --name-only main...HEAD` lists exactly the ten owned files (§2.1). Do not push; the merge step pushes `main`.
 
 ---
 
@@ -1134,8 +1176,8 @@ still type-checks calls; use `cast(...)` where a double stands in for a typed fi
 ### 7.2 Gates (cheapest first; stop at the first red). From the worktree root, `export UV_LINK_MODE=hardlink`.
 
 ```bash
-FILES="src/meridian/agent/nodes/act.py tests/unit/agent/nodes/test_act.py tests/unit/agent/nodes/act_fixtures.py tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py"
-uv run ruff format --check $FILES          # pass: "5 files already formatted"
+FILES="src/meridian/agent/nodes/act.py tests/unit/agent/nodes/test_act.py tests/unit/agent/nodes/act_fixtures.py tests/graph/test_spine.py tests/journeys/j3/test_aea_39.py tests/journeys/j4/test_aea_39.py"
+uv run ruff format --check $FILES          # pass: "6 files already formatted"
 uv run ruff check $FILES                   # pass: "All checks passed!"
 uv run mypy                                # pass: "Success: no issues found in N source files" (project config: strict)
 grep -n "uow(" src/meridian/agent/nodes/act.py    # pass: no output (AC-12 review grep)
@@ -1156,7 +1198,7 @@ shared fixture, setting, dependency or cross-package seam changes here (`build-l
 
 ### 7.3 Existing tests that must stay green
 
-`tests/graph/test_spine.py`, `tests/graph/test_run_graph.py`, `tests/unit/agent/test_routers.py`,
+`tests/graph/test_spine.py` (minus `test_stubs_raise_loudly`, deleted in step 7), `tests/graph/test_run_graph.py`, `tests/unit/agent/test_routers.py`,
 `tests/unit/agent/test_signals.py`, `tests/unit/agent/test_context.py`, `tests/unit/agent/nodes/test_compose.py`,
 `tests/unit/agent/nodes/test_compose_blocks.py` (AEA-21); `tests/unit/policy/test_escalation.py`,
 `tests/unit/policy/test_handoff.py` (AEA-14); `tests/unit/domain/test_specialist_task.py` (AEA-35b);
@@ -1208,6 +1250,7 @@ Title `# Journey record: AEA-39 act node (fan-out, escalation, handoff)`, then t
 | PD-12 | J-3/J-4 run the real `build_graph` with AEA-21's node doubles and the real act nodes, level `mock-tested` | integrated-journeys §4: AEA-57's harness and AEA-40's CON-2 have merged, but the graph is not wired into the turn before AEA-51 |
 | PD-14 | J-4 opens its case through AEA-29's real `HandoffService` on a temp SQLite copy (its own `services()` / `new_thread()` / `summary_of()` helpers, imported, never edited), with the graph run on that database thread | AC-15 asks for "a P2 `fee_bearing_change` case row" and "the appointment row unchanged"; AEA-29 merged, so the stored effect is checkable now at no new cost. The unit tests keep the `HandoffDouble` (AC-10 needs a scripted second open) |
 | PD-13 | `SchedulingSlice.pending_change` is `getattr(state, "pending_change", None) is not None` | graph-nodes §9.5 names the field; it is not on `ConversationState` (AEA-02 §8.2) and AEA-38 (PD-4) writes none this wave, so the value is `False` either way; `getattr` keeps this file right when the field lands, with no edit and no blocker |
+| PD-15 | Delete AEA-21's `test_stubs_raise_loudly` (only `act` rows remain) and its two now-unused imports, rather than rewrite it as a signature check | AEA-36/AEA-37 precedent (each dropped its rows); the signatures are pinned by AC-13's key test, mypy and `build_graph`'s use of the functions; the test's only purpose was to fail loudly while a stub remained |
 
 ### 8.2 Collisions with sibling tickets
 
@@ -1216,6 +1259,7 @@ Title `# Journey record: AEA-39 act node (fan-out, escalation, handoff)`, then t
 | `src/meridian/agent/nodes/act.py` | AEA-21 created the stub | Replace in place after AEA-21 merges (collision map: "stubs replaced in place") |
 | `tests/unit/agent/nodes/` | AEA-21 (`compose_fixtures.py`, `test_compose*.py`) | Add new files only |
 | `tests/graph/_spine_doubles.py` | AEA-21 (published helpers) | Import only; if a helper is missing, report it, never edit |
+| `tests/graph/test_spine.py` | AEA-21 (owner); AEA-36, AEA-37 removed their stub rows | Delete only `test_stubs_raise_loudly` and its two imports (step 7); every other spine test stays as is |
 | `agent/specialists/runner.py` | AEA-35 | Import `scope_for` only |
 | `.claude/reference/area-map.md` A7b row | AEA-22, AEA-35, AEA-14 | Append only this ticket's mention; trivial text conflict expected at merge |
 | `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` | AEA-35b owns them (`domain/tools.py`); AEA-35 imports them too | Import only; neither AEA-35 nor AEA-39 may define or edit them |
@@ -1226,19 +1270,15 @@ Title `# Journey record: AEA-39 act node (fan-out, escalation, handoff)`, then t
 
 ### 8.3 Requests to the orchestrator
 
-- **R-1 (resolved).** Innocent chose option A on 2026-10-21; AEA-35b (`aea-35b-specialist-types`, `68f7f19`) puts
-  `SpecialistTask`, `KnowledgeSlice` and `AccountSlice` in `domain/tools.py` with the shape §4.2 copies. Request: merge
-  AEA-35b before AEA-35 and AEA-39. If its merged shape differs from §4.2 (e.g. the slices gain fields), send this plan
-  back to the planner.
-- **R-2 (merge order, the dependency tree).** AEA-35b → AEA-35 → AEA-39. AEA-39 imports `scope_for` from AEA-35's
-  `runner.py`; a module-level function cannot be injected through `GraphDeps`, so this is a real import edge. AEA-28 and
-  AEA-29 (both merged) stay injected-only in `act.py`. Hand this plan to its implementer the moment AEA-35 merges.
-- **R-3 (ledger and slice plan).** The build ledger row AEA-39 reads `blocked`, NEEDS-DECISION (plan), blockers
-  `AEA-11,AEA-14,AEA-21`; it should read `blocked` (a blocker is not merged) with blockers
-  `AEA-11,AEA-14,AEA-21,AEA-35b,AEA-35` and lose the NEEDS-DECISION note. The slice plan row AEA-39 (`blocked by 11, 14,
-  21`) needs the same two additions at AEA-08's next reconcile.
+- **R-1 (resolved).** Innocent chose option A on 2026-10-21; AEA-35b merged (`3725c90`) with the shape §4.2 copies.
+- **R-2 (resolved).** AEA-35 merged (`1ce98c4`); `scope_for` is on `main`. Hand this plan to its implementer now.
+- **R-3 (ledger and slice plan).** The build ledger row AEA-39 reads `blocked` ("blocked on AEA-35 … re-run") with
+  blockers `AEA-11,AEA-14,AEA-21,AEA-35b`; it should read `ready` with blockers `AEA-11,AEA-14,AEA-21,AEA-35b,AEA-35`. The
+  slice plan row AEA-39 (`blocked by 11, 14, 21`) needs `35b, 35` added at AEA-08's next reconcile.
 - **R-4 (dev log).** One entry in `Gauntlet AI/devlogs/aea-callcenter/` per `.claude/reference/dev-log.md`, written by
   the orchestrator (outside this ticket's files).
+- **R-5 (shared test file).** This ticket edits AEA-21's `tests/graph/test_spine.py` (deletes the stub test, PD-15), as
+  AEA-36 and AEA-37 did. If another open branch edits the same lines, keep the deletion at merge.
 
 ### 8.4 Spec gaps and other risks
 
@@ -1281,19 +1321,14 @@ Title `# Journey record: AEA-39 act node (fan-out, escalation, handoff)`, then t
 
 ## 9. Readiness
 
-**READY.** Every decision is made, and the one product question (§9.1) is answered. Step 0 enforces the merge order:
-
-1. **AEA-35b** (`SpecialistTask`, `KnowledgeSlice`, `AccountSlice` in `domain/tools.py`; branch `aea-35b-specialist-types`,
-   `68f7f19`, not yet on `main`). `build_specialist_task` returns a `SpecialistTask`, so nothing here type-checks without it.
-2. **AEA-35** (`scope_for` in `agent/specialists/runner.py`; not merged; its plan was waiting on the same answer).
-
-On `main` at `8a205b2` and checked: AEA-11, AEA-14, AEA-21 (the ticket's listed blockers), AEA-01, AEA-02, AEA-04,
-AEA-28, AEA-29, AEA-34, AEA-38, AEA-40, AEA-57. `HandoffService` and `slice_inputs` are injected in `act.py` and doubled in
-the unit tests; J-4 runs the real `HandoffService`. `pending_change` is not a blocker (PD-13). The `[journey]`
+**READY.** Every decision is made, the one product question (§9.1) is answered, and every import this ticket needs is on
+`main` at `b68df7e`: AEA-35b's three task types (`3725c90`) and AEA-35's `scope_for` (`1ce98c4`), with the ticket's listed
+blockers AEA-11, AEA-14, AEA-21 and the collaborators AEA-01, AEA-02, AEA-04, AEA-28, AEA-29, AEA-34, AEA-36, AEA-37,
+AEA-38, AEA-40, AEA-57. Step 0 is a sanity check. `HandoffService` and `slice_inputs` are injected in `act.py` and doubled
+in the unit tests; J-4 runs the real `HandoffService`. `pending_change` is not a blocker (PD-13). The `[journey]`
 criterion's integrated level waits on AEA-51 (not a merge blocker; the record says so). No sign-off decision D-4…D-15 is
-answered differently: CAS-16 stays on D-14's option A inside AEA-14. No signed contract changes in this ticket (the home
-note under graph-tools §2 is AEA-35b's). **Gates:** none (no human, paid or live gate). No security review unless the
-reviewer adds `risk::security` (§8.4).
+answered differently: CAS-16 stays on D-14's option A inside AEA-14. No signed contract changes in this ticket. **Gates:**
+none (no human, paid or live gate). No security review unless the reviewer adds `risk::security` (§8.4).
 
 ### 9.1 Decision for Innocent: answered
 
