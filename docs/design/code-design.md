@@ -282,7 +282,7 @@ src/meridian/                                    planned                        
 │   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3
 │   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3
 │   ├── specialists/runner.py                    the braked tool loop                                        A7b   3
-│   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3
+│   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3   built AEA-22 5d0a4e4 (ticket wave 1)
 │   ├── prompts/specialists.py                   specialist wording                                          A7b   3
 │   ├── prompts/routing.py                       planner and classifier wording, choice fields               A7d   3
 │   └── prompts/reply.py                         responder and brief wording; trimmed schemas                A7c   3

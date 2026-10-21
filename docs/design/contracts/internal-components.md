@@ -296,6 +296,8 @@ read or a single write through the scheduling service (DO-2 §A.1). Danger routi
 
 ## 5. Specialist contracts
 
+> Stage 7: the dispatcher's public API and executor registration (`ToolRegistry`, `ToolDispatcher.schemas` / `dispatch`, `DispatchedCall`, `ToolCallRecord`) are defined in [stage7/graph-tools.md](stage7/graph-tools.md) §1 (GRT-1); built by AEA-22 in `agent/tools/dispatch.py`.
+
 > Superseded at Stage 7: the SONNET profile also masks contact details: emails, street addresses, and phones down to their last two digits (system design §3.2 and §10 *What each vendor sees*; [stage7/data.md](stage7/data.md) §1, DAT-5). The comments on `customer_text`, `task_messages` and `wanted_text` below read that way; no field or type changes.
 
 ```python
