@@ -4,7 +4,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 
 | ticket | issue | lane | state | branch | commit | evidence | blockers |
 |---|---|---|---|---|---|---|---|
-| AEA-01 | #1 | B | sent-back | aea-01-aea-01-foundation | 90757d3 (code commit 893b825) | conflict: content conflicts in .claude/reference/area-map.md and .claude/state/icm-progress.md when merging; implementer merges main into branch | - |
+| AEA-01 | #1 | B | merged | aea-01-aea-01-foundation | 07924f5 (code commit 893b825) | ruff check/format clean; mypy clean (68 files); full suite 121 passed (pyproject, lock and conftest are new); journeys: 0 affected, record mock-tested, blocked by AEA-57 | - |
 | AEA-02 | #2 | B sec | planned |  |  |  | AEA-04 |
 | AEA-03 | #3 | B | merged | aea-03-fixed-customer-texts | 60617f9 | merge of 44730d2: ruff check/format clean; 14 tests pass (policy texts, import direction); type check n/a (no pyproject yet); journey record at mock-tested, blocked by AEA-57 | - |
 | AEA-04 | #4 | B sec | sent-back | aea-04-aea-04-redaction | 22023f2 (code commit 9145044) | conflict: content conflicts in .claude/reference/area-map.md and docs/design/code-design.md when merging; implementer merges main into branch | - |
