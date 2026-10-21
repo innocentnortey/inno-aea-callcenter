@@ -176,3 +176,39 @@ with the submission" (DAT-3 option B); held-out keys are described as kept outsi
 reads *run instructions written; containment pending Stage 9*. **Next action for the owners:** each ticket replaces only its own
 `pending:` line: AEA-02 (`.env.example`, the env-names line), AEA-16 (ingest), AEA-23 (start command), AEA-24 (eval commands),
 AEA-49/55 (screens), AEA-50 (Docker), AEA-54 (deployment guide link), AEA-56 (URL), Stage 9 (results, test-results link).
+
+## Stage 8: wave 0 context upkeep (2026-10-21, VPS)
+
+**Merged in wave 0:** AEA-01, AEA-02, AEA-03, AEA-04, AEA-05, AEA-06, AEA-07, AEA-08 (rows and commits in `build-ledger.md`).
+Audited at `e63c8fa` in a detached worktree (since removed); every check used the scripted model, no paid calls, no ports bound.
+
+**Security audit: Verdict WARNING.** No blockers, no highs. Read: `redact.py`, `config.py`, the AEA-02 identity, records, turn, common and
+ports/models types, the identity repo shell, `.env.example` and `gate.py`'s `parse_intake`. Secret handling meets the checks: settings
+secrets are `SecretStr`; start-up errors carry only the variable name, code and constraint (`hide_input_in_errors` set, `include_input`
+off, pydantic exception dropped with `from None`); `CodePayload.code`, `Intake.code_digits`, `Locator.phone`, `Customer.phone`/`email` and
+`InboxMessage.code` are `SecretStr`; `TurnInput` holds no code digits or form values; `Intake` stores the text_store marker, not the code;
+`.env.example` holds names only; redaction is stdlib-only, pure and bounded, LOG keeps length only, the `Redacted` repr shows counts only.
+**Not audited:** the wider seams (container, routes, deps; AEA-02 and AEA-04 add no routes), auth guards on web routes, the held-out answer
+keys. No shell, so nothing was run and the frozen AEA-04 tests and other test files were not read.
+
+**Seams audit: FAIL (one Medium gap).** Full suite 1253 passed, 13 skipped, 1 failed. `tests/journeys` + `tests/contract`: 52 passed,
+12 skipped. The failure is a stale AEA-01 test (finding 5). Seams checked connect; each skipped journey step names a ticket not yet landed,
+so those paths are unverified, not broken. Run with the main checkout's `.venv` and `PYTHONPATH` at the worktree (`meridian.__file__` confirmed), serial pytest.
+
+**Open findings:**
+1. **Medium, AEA-04** (`src/meridian/privacy/redact.py:64` `_CARD`, `:86` `_CODE`): code and card patterns catch only a single space or dash
+   between digits. A code typed `123 456` or `123-456`, or a card with two spaces, dots or slashes, is kept by STORE, TRACE, SONNET and JEV;
+   `parse_intake` then leaves `card_number_seen` false. The signed spec (data.md section 1, DO-6) says "standalone six-digit run" and
+   "13-19 digits, spaces or dashes allowed", so this is a limit of the signed design, not a deviation. **Raise with Innocent** or add a follow-up test.
+2. **Low, AEA-04** (`redact.py:86`): lookbehind `(?<!\d[.,])` leaves `5,123456` / `5.123456` raw; same for a run followed by `[.,-]digit`.
+3. **Low, AEA-04** (`redact.py:92-96`): JEV name masking needs an introduction pattern and a capitalised name; `my name is omar patel`
+   reaches Jev unmasked. Accepted DAT-1 option A limit. **Confirm** AC-12's DO-6 line has landed (the auditor did not read DO-6).
+4. **Low, AEA-04** (`redact.py:154-160`): `UnknownRedactionProfile` echoes a short lowercase `str` profile; swapped arguments could put short
+   text in the message. AC-9 allows it; a fixed message would remove the case.
+5. **Medium, test-only** (`tests/unit/test_affected_journeys.py:56-71` vs `tests/journeys/affected.py`): `test_no_journey_yet_prints_zero_and_exits_0`
+   asserts `0 journeys affected` but 12 journeys exist (line 61; line 71 likewise). Red full suite blocks the pre-deploy gate. **Proposed new ticket:**
+   `lane::build-loop`, test-only, owner AEA-57 or the next integration ticket; rewrite both tests against a temporary root with no journeys
+   (or a fixture count). Acceptance: the file passes with the current 12 journeys and after a journey is added.
+
+**Next action:** cut the finding-5 ticket; put finding 1 to Innocent as a decision; confirm finding 3; then continue wave 1 and the blocked
+tickets (AEA-13 awaits decision AEA-13-fees; AEA-17, 18, 21 and 29 need their issue follow-ups; AEA-27 and 35 wait on their blockers).
