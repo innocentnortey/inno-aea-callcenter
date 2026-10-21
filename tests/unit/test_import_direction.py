@@ -142,3 +142,46 @@ def test_domain_ports_config_imports() -> None:
                 ):
                     continue
                 raise AssertionError(f"{path.name} ({area}) must not import {module}")
+
+
+# --- AEA-05: gates/rules.py ---
+
+
+def _aea05_imported_modules(tree: ast.Module) -> list[str]:
+    names: list[str] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.extend(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            assert node.level == 0, "relative import in gates/rules.py"
+            names.append(node.module or "")
+    return sorted(names)
+
+
+def test_rules_imports() -> None:
+    """AEA-05 AC-11: gates/rules.py imports only the standard library and meridian.domain; no own types; no I/O."""
+    tree = ast.parse((SRC / "gates" / "rules.py").read_text(encoding="utf-8"))
+    seen = _aea05_imported_modules(tree)
+    print("gates/rules.py imports:", seen)
+    outside = [
+        name
+        for name in seen
+        if not (
+            name.split(".")[0] in sys.stdlib_module_names
+            or name == "__future__"
+            or name == "meridian.domain"
+            or name.startswith("meridian.domain.")
+        )
+    ]
+    assert not outside, outside
+    defined = {n.name for n in ast.walk(tree) if isinstance(n, ast.ClassDef)}
+    assert not defined & {"RuleMatches", "SafetyKind", "HandoffReason"}
+    io_builtins = {"open", "print", "input", "exec", "eval", "compile", "__import__", "breakpoint"}
+    called = {n.func.id for n in ast.walk(tree) if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert not called & io_builtins, called & io_builtins
+
+    import meridian.gates.rules as rules_mod
+    from meridian.domain.turn import RuleMatches, SafetyKind
+
+    assert vars(rules_mod)["RuleMatches"] is RuleMatches
+    assert vars(rules_mod)["SafetyKind"] is SafetyKind
