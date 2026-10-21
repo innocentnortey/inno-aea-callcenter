@@ -1,52 +1,62 @@
 # Plan — [AEA-45] staff API: queue, case, actions, contact log, flags, oversight (CON-11…13, 15…17)
 
-**Status:** planned — **READY (resume run).** Refreshed 2026-10-21 against `main` `c9b17ea`.
+**Status:** planned — **READY (resume run 3).** Refreshed 2026-10-21 against `main` `f466ff7`.
 
 **What this run is.** The routes, wire models, `result_line`, the `register_staff_cases` hunk, four API test files, the
 J-6 journey file, the journey record and the context rows are **already built and committed** on branch
-`aea-45-staff-cases-api` (`c6cdab6` code, `ea00827` record and rows), in the worktree
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-45` (clean). The ledger shows the ticket `blocked` because the
-last run could not build AC-19: R-1 (below) was never granted. This run resumes on that branch:
+`aea-45-staff-cases-api` (`c6cdab6` code, `ea00827` record and rows). The branch has since merged `main` `384ded9`, which
+brought AEA-30, in `789a1a5`. It lives in the worktree `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-45`, which
+is clean. The ledger shows the ticket `blocked` because AC-19 could not be built: R-1 (below) was never granted.
 
-1. merge `main` and resolve two documentation conflicts;
-2. add one seam test that puts the now-merged real `CaseService` behind the routes (plan-added AC-23);
+This run resumes on that branch:
+
+1. merge `main` `f466ff7` (AEA-40) and resolve one documentation conflict;
+2. add the seam test that puts the real `CaseService` behind the routes (plan-added AC-23);
 3. build AC-19 if R-1 has landed or been granted;
-4. refresh the journey record and the context rows;
-5. re-run the checks.
+4. record the J-6 journey at `integrated with a scripted model` (it now passes all seven steps), fix its stale
+   docstring, and refresh the context rows;
+5. re-run the checks with two command fixes (§7 C and D).
 
-Steps **R0–R7** in §5 are the work. Steps 0–6 and 8 are the built reference; step 7 is still to build; steps 9–10 are
-replaced by R5–R7.
+Steps **R0–R7** in §5 are the work. Steps 0–6 and 8 are the built reference. Step 7 is still to build. Steps 9–10 are
+replaced by R1, R6 and R7.
 
-**What changed on `main` since the last plan (`2ec19ad` → `c9b17ea`):**
+**What changed on `main` since the last plan (`c9b17ea` → `f466ff7`):**
 
-- AEA-29 merged (`ef561fc`): `services/cases.py` (`CaseService`, `CaseNotFound(LookupError)` with `.case_ref`) and the
-  `register_cases` hunk, which binds `case_service`. Its signatures equal §4.4 exactly; its check order equals R-2's.
-- AEA-30 is **still not merged** (ledger `blocked`). `register_demo` is a no-op, so `demo_clock` and `demo_service` are
-  unbound, a real login still answers 500, and the J-6 file still skips at step 0.
-- R-1's `case_state` word is **still absent** from `tests/contract/openapi_cases.py` `LOCAL_DRIVER_ONLY`.
+- **AEA-30 merged** (`cf8fd78`, ledger `384ded9`). `register_demo` binds `Key("demo_clock")` and `deps.DEMO_SERVICE`,
+  so the real login works and `get_demo_service` resolves. The branch already merged it in `789a1a5`, cleanly: against
+  `384ded9` the branch differs only in AEA-45's own A9 cell, its DO-3 `**Built:**` line, its ICM row and its
+  `register_staff_cases` body.
+- **AEA-40 merged** (`f466ff7`): the `register_chat` hunk, chat routes, and an A8 area-map cell, DO-3 line and ICM row. A
+  dry-run `git merge-tree` of the branch × `main` shows **one** conflict: `.claude/reference/area-map.md`, where AEA-40's
+  A8 edit sits next to AEA-45's A9 edit. `container.py`, `code-design.md` and `icm-progress.md` merge cleanly.
+- **R-1's `case_state` word is still absent** from `tests/contract/openapi_cases.py` `LOCAL_DRIVER_ONLY`.
 - The OpenAPI `CaseDetail` still has 11 properties (no `events`), so AC-21 stays skipped.
-- Nothing the branch imports changed. The diff from the branch base `895f271` to `main` is empty for
-  `domain/{views,staff,common}.py`, `services/staff.py`, `web/{deps,errors,middleware,app}.py`,
-  `tests/api/{openapi_check,web_shell_support}.py`, `tests/contract/openapi_*`, `tests/contract/test_openapi_server.py`,
-  `tests/journeys/support/`, `tests/fixtures/sqlite.py`, `tests/fakes/clock.py`, `pyproject.toml` and `uv.lock`.
-- A dry-run merge (`git merge-tree`) shows exactly **two** conflicts, both documentation:
-  `.claude/reference/area-map.md` (the block holding the A9 row) and `docs/design/code-design.md` (the `**Built:**`
-  lines). `container.py` and `icm-progress.md` merge cleanly.
-- `uv run mypy … tests/journeys/j6` is red on `main` (5 errors in `tests/services/_case_fixtures.py`, AEA-29's, pulled in
-  by `tests/journeys/j6/test_aea_29.py`). Check B therefore names this ticket's journey file, not the folder (§7, §8 R-10).
+- R-10's mypy red has a typing fix on `main` (`247ce45`). Check B still names only this ticket's journey file.
 
-**Pre-dispatch request (§8 R-1): land the `case_state` word on `main`, or write "R-1 granted to AEA-45" in the dispatch
-message.** Without one of them, AC-19 stays unbuilt and the ticket cannot close.
+**Planner probes on the worktree at `789a1a5`.** These were read-only runs; no file changed.
+
+| Probe | Result |
+|---|---|
+| Check B (mypy) | `Success: no issues found in 98 source files` |
+| The four built API files | 107 passed, 1 skipped (AC-21's `blocked-on UX session`) |
+| `uv run pytest -m journey tests/journeys/j6/test_aea_45.py -rs` | **1 passed**: all seven J-6 steps ran against the real app (integrated with a scripted model) |
+| The runner's generated 401/400 cases for the eight operations | 12 passed |
+| The old check D filter `-k "Queue or Case or Contact or Flag or Oversight"` | Matches 69 tests (`-k` is case-insensitive, so "case" matches `test_route_cases_match_contract[...]` for every operation). It **hangs**: AEA-46's `liveChatAction/unknown_case` and `streamCaseEvents/unknown_case` time out (> 20 s) on `main` `f466ff7` too, without AEA-45. §8 R-15; checks C and D now deselect or narrow |
+
+**Pre-dispatch request (§8 R-1, third time): land the `case_state` word on `main`, or write "R-1 granted to AEA-45" in
+the dispatch message.** Without one of them, AC-19 stays unbuilt and the ticket cannot close. Everything else in this
+run goes ahead either way.
 
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/45 (identical to
-`docs/plans/tickets/AEA-45.md`) · **Base revision:** `main` `c9b17ea` (branch base `895f271`, branch head `ea00827`).
+`docs/plans/tickets/AEA-45.md`) · **Base revision:** `main` `f466ff7` (branch head `789a1a5`; code `c6cdab6`; record
+`ea00827`).
 **Wave:** 2 · **Lane:** `lane::build-loop` · **Risk:** none (no `risk::security`), so the loop is plan → implement (code + the
 tests named here) → test → `code-review-agent`. No test-writer, no frozen tests, no security agent.
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21. Third pass: first against `4754991`, then `2ec19ad`, now
-`c9b17ea`.
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21. Fourth pass: against `4754991`, `2ec19ad`, `c9b17ea`, now
+`f466ff7`.
 **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** **reuse** `aea-45-staff-cases-api` in `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-45`.
-Do not create a branch or worktree, do not rebase; merge `main` in (R1).
+Do not create a branch or worktree, and do not rebase; merge `main` in (R1).
 
 ---
 
@@ -88,15 +98,18 @@ Wave 2 route ticket. On `main` now:
 - AEA-23's web shell: middleware, `require_staff`, providers, `openapi_check.py`;
 - AEA-02b's view types (`domain/views.py`);
 - AEA-44's `FlagService`;
-- AEA-57's journey harness;
-- AEA-59's contract runner;
-- since `ef561fc`, AEA-29's real `CaseService`, bound as `case_service`.
+- AEA-57's journey harness and AEA-59's contract runner;
+- AEA-29's real `CaseService`, bound as `case_service` (`ef561fc`);
+- AEA-30's real `DemoService` and demo clock, bound as `demo_service` and `demo_clock` (`cf8fd78`);
+- AEA-40's chat routes (`f466ff7`).
 
-Not on `main`: `DemoService` (AEA-30). The routes reach it by injection (`get_demo_service`), and the API tests use a
-clock double. Every 2xx example in the OpenAPI round-trips through the real `domain/views.py` types unchanged (26 of 26,
-checked in the first pass). Now that AEA-29 is merged, this run adds one seam test that puts the **real** `CaseService`,
-over a seeded temporary DB, behind the routes (§5 R3). That proves the wire models against real views before AEA-30
-unblocks the journey.
+So the whole staff path now runs for real. The J-6 extension passes all seven steps on AEA-57's harness (planner probe,
+`789a1a5`). The routes still reach every service only by injection. The API tests use service doubles (`mock-tested`).
+The plan-added seam test (AC-23, §5 R3) puts the **real** `CaseService`, over a seeded temporary DB, behind the routes
+in-process. It covers what the journey does not reach: `CASE_ALREADY_CLAIMED` with the real owner name,
+`REASON_REQUIRED`, the activity label, the 404 `details`, the owner's `allowed_actions: []` and the oversight lanes.
+Every 2xx example in the OpenAPI round-trips through the real `domain/views.py` types unchanged (26 of 26, checked in
+the first pass).
 
 ### Sources checked
 
@@ -110,7 +123,7 @@ unblocks the journey.
 | Stage 7 addenda (win over DO-4) | `stage7/staff.md` §1, §2, §6 (request rules, `result_line` table), §10, §11; `stage7/web.md` §1, §3, §4, §7, §10, §13; `stage7/cases.md` §5, §6 | `require_staff`, providers, `FlagService`, result lines, request rules, reset behaviour, `request` record |
 | Code on `main` | `src/meridian/domain/views.py` (AEA-02b), `src/meridian/services/staff.py` (AEA-44), `src/meridian/services/cases.py` (AEA-29), `src/meridian/web/{deps,errors,container}.py` (AEA-23), sibling routes `web/routes/staff_{clock,live}.py` (pattern) | exact types in §4 |
 | AEA-29 code (merged `ef561fc`; read for fidelity, the routes never import it) | `src/meridian/services/{cases,_case_actions,_case_rules,_case_views}.py`; seed `src/meridian/services/reset.py` | `apply` returns `CaseSummaryView \| CaseActionRejected`; `record_activity` returns `ActivityResult \| CaseActionRejected`; `detail` raises `CaseNotFound(LookupError)` with `.case_ref == str(case_ref)`. `apply_in` checks: not found → role (only when the action is outside `ROLE_ACTIONS[actor.role]`) → missing field (the 422s) → version → state. A claim on a claimed case answers `CASE_ALREADY_CLAIMED` with `details.claimed_by` = the owner's persona name ("Riley"). `ROLE_ACTIONS[OWNER]` is empty, so the owner's `allowed_actions` is `[]`. `brief_view` already emits `source_ids`. The seed: MHC-C-0005…0008, `unassigned`, `owner_role` NULL, version 1; MHC-C-0007's customer is MHC-10002 |
-| AEA-30 code (not merged; ledger `blocked`) | branch `aea-30-aea-30-demo-clock-sched` | `clock_view()` returns `ClockView(now=Chicago)`; never imported here |
+| AEA-30 code (merged `cf8fd78`, ledger `384ded9`) | `src/meridian/services/{demo,scheduler}.py`; `register_demo` hunk | `register_demo` binds `Key("demo_clock")` and `deps.DEMO_SERVICE`; `clock_view()` returns `ClockView(now=Chicago)`; never imported by the routes (reached through `get_demo_service`) |
 | Signed wire contract (read only) | `docs/ux/03-structure/ui-contracts.openapi.yaml` (§4.5) | every wire field, status, error code, x-roles order |
 | Contract runner (read only) | `tests/contract/openapi_cases.py`, `openapi_driver.py`, `test_openapi_server.py`, `cases/README.md` | case-file format: allowed drive keys, closed precondition vocabulary, one 2xx drive per request example; skip only `not bound:` / `route not registered:` |
 | Journey harness (read only) | `tests/journeys/support/README.md`, `steps.py` (`NEED_OWNERS`, `OPERATION_OWNERS`), `run.py` | journey file rules: `journey` fixture, named steps with `needs`/`operations`, no doubles, no `TestClient`, every `/api` call names its operationId |
@@ -140,11 +153,11 @@ unblocks the journey.
 | No 503 from these routes; the middleware waits | staff.md §11; STF-7; MC-14 | AC-15 | in-ticket (the route adds nothing) | — |
 | `allowed_actions` and every display field passed through | R-W-13; AEA-45-1 | AC-18 | in-ticket | steps 1–2 |
 | `CaseDetail.events.last_event_id` | D-5; AEA-45-2 | AC-21 | **blocked-on UX session: OpenAPI amendment** (evidence only; `CaseDetail` in the OpenAPI still has 11 properties, re-checked at `c9b17ea`) | step 5 (conditional skip, built) |
-| Server contract cases | AEA-45-3; AEA-59 format | AC-19 | in-ticket. Needs one new local-driver word (§8 R-1), still absent at `c9b17ea` | R4 → step 7 |
-| J-6 extension and record | integrated-journeys §3–§4 | AC-20 | in-ticket. Built on AEA-57's harness. Every step stays `blocked-on AEA-30`, because the real login reads `demo_clock` | step 8 (built); R6 refreshes the record |
+| Server contract cases | AEA-45-3; AEA-59 format | AC-19 | in-ticket. Needs one new local-driver word (§8 R-1), still absent at `f466ff7`. Since AEA-30 merged, every drive without a local-driver word runs for real against the first-boot seed | R4 → step 7 |
+| J-6 extension and record | integrated-journeys §3–§4 | AC-20 | in-ticket. Built on AEA-57's harness; **passes all seven steps** at `integrated with a scripted model` on `789a1a5` (planner probe). The record moves to that level; AEA-52 stays *Blocked by* for CAP-4 end to end only | step 8 (built); R6 |
 | Staff routes never call `open_case` | DO-4 §13; DO-3 §6 S-7 | AC-16 | in-ticket | §7 G-2 |
 | REASON_REQUIRED constraint text: the OpenAPI example says "required for release, assign and change_priority"; AEA-29 (merged) builds `f"required for {name}"` (`_case_rules.py` line 266) | OpenAPI applyCaseAction 422; AEA-29 | no | **other-ticket** (AEA-52 integration). The route passes `constraint` through unchanged; the seam test asserts only the prefix `required for` | §8 R-5 |
-| The wire models accept the **real** `CaseService` views, and real stored times render in America/Chicago | DO-4 §13; UI_CONTRACTS *Conventions*; R-4 | no | **added** as AC-23 (plan-added): the real `CaseService` over a seeded temp DB behind the routes; demo clock and session store doubled. The orchestrator posts the added criterion on issue #45 | R3 |
+| The wire models accept the **real** `CaseService` views on the refusal and owner paths the journey does not reach, and real stored times render in America/Chicago | DO-4 §13; UI_CONTRACTS *Conventions*; R-4 | no | **added** as AC-23 (plan-added): the real `CaseService` over a seeded temp DB behind the routes, in-process; demo clock (for fixed due states) and session store doubled. The orchestrator posts the added criterion on issue #45 | R3 |
 | Context rows | context-maintenance | AC-22 | in-ticket | step 9 |
 
 ### Entry-point registration
@@ -159,25 +172,26 @@ unblocks the journey.
 
 ### Owned files: the only files the implementer may create or edit
 
-| File | Current (branch head `ea00827`) | Action this run |
+| File | Current (branch head `789a1a5`) | Action this run |
 |---|---|---|
-| `src/meridian/web/routes/staff_cases.py` | built (`c6cdab6`, 292 lines) | **keep**. Edit only to fix a failure that R2 or R3 exposes, and record it in *Deviations* |
+| `src/meridian/web/routes/staff_cases.py` | built (`c6cdab6`, 292 lines) | **keep**. Edit only to fix a failure that R2–R5 expose, and record it in *Deviations* |
 | `src/meridian/web/schemas/staff_cases.py` | built (`c6cdab6`, 399 lines) | **keep**; same rule |
-| `src/meridian/web/container.py` | `register_staff_cases` body built (`c6cdab6`) | **keep**; it merges cleanly. Touch nothing else in the file |
+| `src/meridian/web/container.py` | `register_staff_cases` body built (`c6cdab6`) | **keep**; it merges cleanly with AEA-40's `register_chat` edits. Touch nothing else in the file |
 | `tests/api/staff_cases_support.py` | built (355 lines) | keep. Step 7's driver may add helpers here (stay under 500 lines); never change `staff_app`'s signature |
 | `tests/api/test_staff_cases_routes.py` | built (408 lines) | keep |
 | `tests/api/test_staff_cases_access.py` | built | keep |
-| `tests/api/test_staff_cases_refusals.py` | built | keep. `test_real_case_not_found_maps_to_404` now runs, because `CaseNotFound` exists on `main` |
+| `tests/api/test_staff_cases_refusals.py` | built | keep. `test_real_case_not_found_maps_to_404` runs and passes against AEA-29's `CaseNotFound` |
 | `tests/api/test_staff_cases_capture.py` | built | keep |
 | `tests/api/test_staff_cases_seam.py` | absent | **create** (R3): plan-added AC-23 |
 | `tests/api/test_contract_cases_staff_cases.py` | absent | **create** (R4 → step 7), only when `case_state` is available |
 | `tests/contract/cases/staff_cases.py` | absent | **create** (R4 → step 7), only when `case_state` is available |
-| `tests/journeys/j6/test_aea_45.py` | built | keep |
-| `docs/testing/journeys/2026-10-21-AEA-45.md` | built | **rewrite** (R6) if `date +%F` prints `2026-10-21`; otherwise create `docs/testing/journeys/<date>-AEA-45.md` and leave this one as history |
-| `.claude/reference/area-map.md` | A9 row edited on the branch; conflicts with `main` | **resolve** (R1): take `main`'s file, re-apply only the A9 *Status* cell |
-| `.claude/state/icm-progress.md` | AEA-45 row added; merges cleanly | **edit** (R6): the AEA-45 row only |
-| `docs/design/code-design.md` | AEA-45 `**Built:**` line; conflicts with `main` | **resolve** (R1): take `main`'s file, then add the AEA-45 line after the last `**Built:**` line |
+| `tests/journeys/j6/test_aea_45.py` | built; passes all seven steps | **edit the module docstring only** (R6.0); it still says the steps are blocked |
+| `docs/testing/journeys/2026-10-21-AEA-45.md` | built (says every J-6 step is blocked) | **rewrite** (R6.1) if `date +%F` prints `2026-10-21`; otherwise create `docs/testing/journeys/<date>-AEA-45.md` and leave this one as history |
+| `.claude/reference/area-map.md` | A9 cell edited on the branch; conflicts with `main`'s A8 edit | **resolve** (R1): take `main`'s file, re-apply only the A9 *Status* cell |
+| `.claude/state/icm-progress.md` | AEA-45 row on the branch; merges cleanly | **edit** (R6.2): the AEA-45 row only |
+| `docs/design/code-design.md` | AEA-45 `**Built:**` line on the branch; merges cleanly | change only the SHA, and only if R6.3 says so |
 | `tests/contract/openapi_cases.py`, `tests/contract/cases/README.md` | AEA-59's | **only when R1 = `granted`** (R0): the exact lines in §8 R-1, in their own commit. Otherwise never edit |
+| This plan file | — | append to *Deviations* at `/home/linuxuser/workspaces/inno-aea-callcenter/docs/plans/fanout/2026-10-21-build/AEA-45.md` (the main checkout) only. Never edit the worktree's copy, never commit it |
 
 **One deviation from the ticket's paths.** The ticket names `tests/api/test_staff_cases_routes.py::…` for every test. A
 single file would be about 700 lines, over the 500-line test hard cap in `code-structure.md`. So the tests are split across
@@ -212,39 +226,39 @@ four files with **unchanged test names**; §3 gives each test's file.
 Level of every `tests/api` test: `mock-tested`. The middleware, the login route, `require_staff` and the error renderer
 are real; the services are doubles. The exception is `test_staff_cases_seam.py`: its `CaseService` and SQLite DB are
 real, while its demo clock and session store are doubles. Under integrated-journeys §4 it is still `mock-tested`
-(in-process `TestClient`, no harness server).
+(in-process `TestClient`, no harness server). The J-6 file runs at `integrated with a scripted model`.
 
-| # | Requirement (ticket AC, abridged; full text in the issue) | How it is implemented | Verified by (file :: test) | Status at `ea00827` → this run |
+| # | Requirement (ticket AC, abridged; full text in the issue) | How it is implemented | Verified by (file :: test) | Status at `789a1a5` → this run |
 |---|---|---|---|---|
-| AC-1 | Every 2xx body validates against its OpenAPI response for each named example shape | Output wire models copied from the OpenAPI; doubles return each named example as the real `domain/views.py` type | `tests/api/test_staff_cases_routes.py` :: `test_getQueue_matches_openapi`, `test_getCase_matches_openapi`, `test_applyCaseAction_matches_openapi`, `test_recordContactActivity_matches_openapi`, `test_createFlag_matches_openapi`, `test_listFlags_matches_openapi`, `test_reviewFlag_matches_openapi`, `test_getOversight_matches_openapi` (each `assert_matches` + `response.json() == example`) | built → re-run in R2 |
-| AC-2 | `result_line` per staff.md §6, eight actions | `result_line()` in `schemas/staff_cases.py` | `test_staff_cases_routes.py` :: `test_result_lines` (parametrised, 8) | built → R2 |
-| AC-3 | Role matrix from x-roles before any service call; 403 carries `details.role`, `details.needs` (x-roles order), `details.reason` `wrong_role` | `actor: StaffActor = Depends(require_staff(...))` as the **first** parameter of each handler | `test_staff_cases_access.py` :: `test_role_matrix` | built → R2 |
-| AC-4 | Representative assign / change_priority → 403 `needs ["supervisor"]`; `apply` never called | Second check: `_SUPERVISOR_ONLY(session=session, access=access)` | `test_staff_cases_access.py` :: `test_assign_and_priority_supervisor_only` | built → R2 |
-| AC-5 | Two sessions acting as representative hand `apply` equal `StaffActor`s | The actor comes only from `require_staff` | `test_staff_cases_access.py` :: `test_actor_is_the_role` | built → R2 |
-| AC-6 | `getCase` passes `CaseDetail` through unchanged; never 403 to a staff role | `CaseDetailOut.model_validate(view)` → `model_dump(mode="json")` | `test_staff_cases_routes.py` :: `test_case_detail_passthrough` | built → R2 |
-| AC-7 | 404 for unknown; malformed → 404 on getCase, 400 field `reference` on actions / activities | Regex check in the route; structural `LookupError` match; rejection table | `test_staff_cases_refusals.py` :: `test_case_not_found_and_malformed_reference`, `test_real_case_not_found_maps_to_404`; real-service twin in `test_staff_cases_seam.py` | built → R2: `test_real_case_not_found_maps_to_404` must now **pass**, not skip |
-| AC-8 | 409 VERSION_CONFLICT / CASE_ALREADY_CLAIMED / NOT_ALLOWED_IN_STATE with their details | `REJECTION_STATUS`; details copied | `test_staff_cases_refusals.py` :: `test_case_action_409s` | built → R2 |
-| AC-9 | Named 422s stay 422; a missing `expected_version` → 400 from AEA-23's handler | Rejection table; `StrictInt` required field | `test_staff_cases_refusals.py` :: `test_named_422_vs_400` | built → R2 |
-| AC-10 | Activity 201 with the label unchanged; 409s mapped | Pass-through + table | `test_staff_cases_refusals.py` :: `test_contact_activity` | built → R2 |
-| AC-11 | Flag rules: reason null when blank; 2,001 chars → 400; `message_id` rejection; bad status; unknown flag; list order | Field validators; `Literal["reviewed"]`; table; pass-through | `test_staff_cases_refusals.py` :: `test_flags` | built → R2 |
-| AC-12 | One demo-clock reading as `now`; no server-clock call in the route or schema file | `now = demo.clock_view().now` once per case handler | `test_staff_cases_capture.py` :: `test_now_is_demo_clock` + grep G-1 (§7) | built → R2 |
-| AC-13 | Queue / oversight bodies carry no contact value | Output models `extra="ignore"`, `from_attributes=True`, documented fields only | `test_staff_cases_capture.py` :: `test_queue_and_oversight_carry_no_contact` | built → R2 |
-| AC-14 | Staff free text never logged; no 400 echoes a value | Route logs nothing; the handler reads only loc/type/msg | `test_staff_cases_capture.py` :: `test_staff_text_never_logged` | built → R2 |
-| AC-15 | 401 without session on all eight; 403 `role_reset`; reset wait → 200, never 503 | AEA-23 middleware (unchanged) | `test_staff_cases_access.py` :: `test_login_gate_role_reset_and_reset_wait` | built → R2 |
+| AC-1 | Every 2xx body validates against its OpenAPI response for each named example shape | Output wire models copied from the OpenAPI; doubles return each named example as the real `domain/views.py` type | `tests/api/test_staff_cases_routes.py` :: `test_getQueue_matches_openapi`, `test_getCase_matches_openapi`, `test_applyCaseAction_matches_openapi`, `test_recordContactActivity_matches_openapi`, `test_createFlag_matches_openapi`, `test_listFlags_matches_openapi`, `test_reviewFlag_matches_openapi`, `test_getOversight_matches_openapi` (each `assert_matches` + `response.json() == example`) | built, probe green → re-run in R2 |
+| AC-2 | `result_line` per staff.md §6, eight actions | `result_line()` in `schemas/staff_cases.py` | `test_staff_cases_routes.py` :: `test_result_lines` (parametrised, 8) | built, probe green → R2 |
+| AC-3 | Role matrix from x-roles before any service call; 403 carries `details.role`, `details.needs` (x-roles order), `details.reason` `wrong_role` | `actor: StaffActor = Depends(require_staff(...))` as the **first** parameter of each handler | `test_staff_cases_access.py` :: `test_role_matrix` | built, probe green → R2 |
+| AC-4 | Representative assign / change_priority → 403 `needs ["supervisor"]`; `apply` never called | Second check: `_SUPERVISOR_ONLY(session=session, access=access)` | `test_staff_cases_access.py` :: `test_assign_and_priority_supervisor_only` | built, probe green → R2 |
+| AC-5 | Two sessions acting as representative hand `apply` equal `StaffActor`s | The actor comes only from `require_staff` | `test_staff_cases_access.py` :: `test_actor_is_the_role` | built, probe green → R2 |
+| AC-6 | `getCase` passes `CaseDetail` through unchanged; never 403 to a staff role | `CaseDetailOut.model_validate(view)` → `model_dump(mode="json")` | `test_staff_cases_routes.py` :: `test_case_detail_passthrough`; real-service equality in J-6 step 3 | built, probe green → R2, E |
+| AC-7 | 404 for unknown; malformed → 404 on getCase, 400 field `reference` on actions / activities | Regex check in the route; structural `LookupError` match; rejection table | `test_staff_cases_refusals.py` :: `test_case_not_found_and_malformed_reference`, `test_real_case_not_found_maps_to_404`; real-service twin in `test_staff_cases_seam.py` | built, probe green → R2; twin R3 |
+| AC-8 | 409 VERSION_CONFLICT / CASE_ALREADY_CLAIMED / NOT_ALLOWED_IN_STATE with their details | `REJECTION_STATUS`; details copied | `test_staff_cases_refusals.py` :: `test_case_action_409s` | built, probe green → R2 |
+| AC-9 | Named 422s stay 422; a missing `expected_version` → 400 from AEA-23's handler | Rejection table; `StrictInt` required field | `test_staff_cases_refusals.py` :: `test_named_422_vs_400` | built, probe green → R2 |
+| AC-10 | Activity 201 with the label unchanged; 409s mapped | Pass-through + table | `test_staff_cases_refusals.py` :: `test_contact_activity` | built, probe green → R2 |
+| AC-11 | Flag rules: reason null when blank; 2,001 chars → 400; `message_id` rejection; bad status; unknown flag; list order | Field validators; `Literal["reviewed"]`; table; pass-through | `test_staff_cases_refusals.py` :: `test_flags` | built, probe green → R2 |
+| AC-12 | One demo-clock reading as `now`; no server-clock call in the route or schema file | `now = demo.clock_view().now` once per case handler | `test_staff_cases_capture.py` :: `test_now_is_demo_clock` + grep G-1 (§7) | built, probe green → R2, G-1 |
+| AC-13 | Queue / oversight bodies carry no contact value | Output models `extra="ignore"`, `from_attributes=True`, documented fields only | `test_staff_cases_capture.py` :: `test_queue_and_oversight_carry_no_contact` | built, probe green → R2 |
+| AC-14 | Staff free text never logged; no 400 echoes a value | Route logs nothing; the handler reads only loc/type/msg | `test_staff_cases_capture.py` :: `test_staff_text_never_logged` | built, probe green → R2 |
+| AC-15 | 401 without session on all eight; 403 `role_reset`; reset wait → 200, never 503 | AEA-23 middleware (unchanged) | `test_staff_cases_access.py` :: `test_login_gate_role_reset_and_reset_wait` | built, probe green → R2 |
 | AC-16 | No `open_case` in the route or schema file | — | grep G-2 (§7), re-run by `code-review-agent` | built → G-2 |
-| AC-17 | One `request` record per call through the real container; actor + reason / outcome / note reach writes | `staff_full_app` (real `build_container`) + doubles | `test_staff_cases_capture.py` :: `test_wf4_case_entry_points_emit_records` | built → R2 |
-| AC-18 | Views pass through unchanged per role | Output models never strip, default or rewrite | `test_staff_cases_routes.py` :: `test_views_pass_through_unchanged` | built → R2 |
-| AC-19 | `tests/contract/cases/staff_cases.py` holds the server cases | Case file + local driver (step 7) | `tests/api/test_contract_cases_staff_cases.py` :: `test_staff_cases_contract_cases_drive_and_cover`; runner `uv run pytest tests/contract/test_openapi_server.py -k "Queue or Case or Contact or Flag or Oversight" -rs`. The strict form `CONTRACT_STRICT=1 …` is the wave-merge check once AEA-30 is merged | **not built** (R-1 absent) → R4 builds it when R1 = `landed` or `granted` |
-| AC-20 [journey] | Extends J-6: claim → result line; queue and case carry display fields and `allowed_actions`; stale version → VERSION_CONFLICT; user-visible and stored state | `tests/journeys/j6/test_aea_45.py` on AEA-57's `journey` fixture | `uv run pytest -m journey tests/journeys/j6/test_aea_45.py -rs`. Today the whole file skips `blocked-on AEA-30` at step 0 (the login reads `demo_clock`); the record says `mock-tested`, *Blocked by* AEA-30 and AEA-52 | built, skips → if AEA30 = `yes` (R0) all seven steps must pass at `integrated with a scripted model` |
+| AC-17 | One `request` record per call through the real container; actor + reason / outcome / note reach writes | `staff_full_app` (real `build_container`) + doubles | `test_staff_cases_capture.py` :: `test_wf4_case_entry_points_emit_records` | built, probe green → R2 |
+| AC-18 | Views pass through unchanged per role | Output models never strip, default or rewrite | `test_staff_cases_routes.py` :: `test_views_pass_through_unchanged` | built, probe green → R2 |
+| AC-19 | `tests/contract/cases/staff_cases.py` holds the server cases | Case file + local driver (step 7) | `tests/api/test_contract_cases_staff_cases.py` :: `test_staff_cases_contract_cases_drive_and_cover`; runner checks D and D2 (§7). The ticket's verify line uses `-k "Queue or Case or Contact or Flag or Oversight"`; that filter matches every operation and hangs on AEA-46's drives (§8 R-15), so D and D2 name the eight operations instead | **not built** (R-1 absent) → R4 builds it when R1 = `landed` or `granted` |
+| AC-20 [journey] | Extends J-6: claim → result line; queue and case carry display fields and `allowed_actions`; stale version → VERSION_CONFLICT; user-visible and stored state | `tests/journeys/j6/test_aea_45.py` on AEA-57's `journey` fixture | `uv run pytest -m journey tests/journeys/j6/test_aea_45.py -rs` | built; **passes all seven steps** at `integrated with a scripted model` (probe) → E; R6 records that level |
 | AC-21 | `events.last_event_id` passed through | Not built until the OpenAPI amendment lands | `test_staff_cases_routes.py` :: `test_case_detail_carries_last_event_id` (skips `blocked-on UX session: OpenAPI amendment …` while the OpenAPI `CaseDetail` has no `events`) | built, skips → unchanged |
 | AC-22 | Area map, ICM row, DO-3 §3 updated | R1 (re-applied after the merge), R6 | `git diff --stat` | built → R1, R6 |
-| AC-23 (plan-added) [invariant] | With the **real** `CaseService` (AEA-29) over a seeded temporary DB behind the routes: the WP-2 claim on MHC-C-0007 answers 200 "Claimed · Riley (demo)" and stores `claimed` / `representative` / version + 1; a repeat answers 409 `VERSION_CONFLICT` with `current_version` and stores nothing; the supervisor's claim answers 409 `CASE_ALREADY_CLAIMED` with `claimed_by` "Riley"; a release without a reason answers 422 `REASON_REQUIRED` field `reason`; a CALL answers 201 with the label "Demo: recorded, not sent"; an unknown reference answers 404 with `details.reference`; the owner sees `allowed_actions: []`; queue, case and oversight bodies validate, and real times render with `-05:00` | Override `get_case_service` with a real `CaseService` over `temp_sqlite()` + `seed_demo` (§4.7) | `tests/api/test_staff_cases_seam.py` :: `test_real_case_service_wp2_claim`, `test_real_case_service_views_per_role` | **new** → R3 |
-| WP-2 | The ticket's example pair on MHC-C-0007 | — | `test_staff_cases_routes.py` :: `test_wp2_example_pair_mhc_c_0007` (doubles); real-service twin `test_staff_cases_seam.py` :: `test_real_case_service_wp2_claim` | built → R2; twin new in R3 |
-| (plan) | The hunk includes the router once; nothing without a web shell | Step 3 | `test_staff_cases_access.py` :: `test_register_hunk_includes_router_once` | built → R2 |
+| AC-23 (plan-added) [invariant] | With the **real** `CaseService` (AEA-29) over a seeded temporary DB behind the routes: the WP-2 claim on MHC-C-0007 answers 200 "Claimed · Riley (demo)" and stores `claimed` / `representative` / version + 1; a repeat answers 409 `VERSION_CONFLICT` with `current_version` and stores nothing; the supervisor's claim answers 409 `CASE_ALREADY_CLAIMED` with `claimed_by` "Riley"; a release without a reason answers 422 `REASON_REQUIRED` field `reason`; a CALL answers 201 with the label "Demo: recorded, not sent"; an unknown reference answers 404 with `details.reference`; the owner sees `allowed_actions: []`; queue, case and oversight bodies validate, and real times render with `-05:00` | Override `get_case_service` with a real `CaseService` over `temp_sqlite()` + `seed_demo` (§4.7) | `tests/api/test_staff_cases_seam.py` :: `test_real_case_service_wp2_claim`, `test_real_case_service_views_per_role` | **new** → R3. The orchestrator posts the added criterion on issue #45 |
+| WP-2 | The ticket's example pair on MHC-C-0007 | — | `test_staff_cases_routes.py` :: `test_wp2_example_pair_mhc_c_0007` (doubles); real-service twin `test_staff_cases_seam.py` :: `test_real_case_service_wp2_claim`; J-6 steps 4–5 (integrated) | built, probe green → R2; twin new in R3 |
+| (plan) | The hunk includes the router once; nothing without a web shell | Step 3 | `test_staff_cases_access.py` :: `test_register_hunk_includes_router_once` | built, probe green → R2 |
 
 ---
 
-## 4. Shared code to use (copied from `main` `2ec19ad`; re-checked unchanged at `c9b17ea`)
+## 4. Shared code to use (copied from `main` `2ec19ad`; re-checked unchanged at `f466ff7`)
 
 ### 4.1 Web shell (AEA-23): import exactly these
 
@@ -252,7 +266,7 @@ real, while its demo clock and session store are doubles. Under integrated-journ
 from meridian.web.deps import (
     StaffAccess,          # Protocol: actor_for(session: LoginSession, needs: tuple[StaffRole, ...]) -> StaffActor | RoleRefusal
     get_case_service,     # (request: Request) -> Any ; bound since AEA-29 (ef561fc) by register_cases (the real CaseService)
-    get_demo_service,     # (request: Request) -> Any ; RuntimeError("not bound: get_demo_service") until AEA-30 binds Key("demo_service")
+    get_demo_service,     # (request: Request) -> Any ; bound since AEA-30 (cf8fd78) by register_demo (the real DemoService)
     get_flag_service,     # (request: Request) -> Any ; bound by AEA-44 (real FlagService)
     get_login_session,    # (context: RequestContext = Depends(get_request_context)) -> LoginSession
     get_staff_access,     # (request: Request) -> StaffAccess
@@ -510,7 +524,8 @@ with temp_sqlite() as db:                                     # db: TempStore (.
   already used by `routes/staff_live.py`, which imports `services.live_chat`.
 - It reaches `CaseService`, `FlagService` and `DemoService` only through small **private** typing Protocols declared in the
   route file (consumer-side interface segregation, as `routes/staff_clock.py::ClockAdvancer` does).
-- It imports no service class and no adapter, and adds no new public seam.
+- It imports no service class and no adapter, and adds no new public seam. This run adds no production code unless a
+  check exposes a fault in the owned files.
 
 ### This run: steps R0–R7 (resume on the existing branch)
 
@@ -523,62 +538,82 @@ are replaced by R1, R6 and R7.
 1. `cd /home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-45`; `export UV_LINK_MODE=hardlink`.
    - `git status --short` prints nothing.
    - `git rev-parse --abbrev-ref HEAD` prints `aea-45-staff-cases-api`.
-   - `git log -1 --format=%h` prints `ea00827`.
+   - `git log -1 --format=%h` prints `789a1a5`.
    - If any of these differ, stop and report.
-2. `git log -1 --format=%h main`: note the SHA (`c9b17ea` or later).
+2. `git log -1 --format=%h main`: note the SHA (`f466ff7` or later).
 3. Set three switches from `main` and the dispatch message. Write all three in the report.
    - **AEA30** = `yes` if `git show main:src/meridian/web/container.py | grep -c "No-op until AEA-30"` prints `0`;
-     otherwise `no` (expected: `no`).
+     otherwise `no`. Expected: `yes`. If it is `no`, stop and report (main was rewound; nothing below fits).
    - **R1** = `landed` if `git show main:tests/contract/openapi_cases.py | grep -c '"case_state"'` prints `1`.
      Otherwise `granted` if the dispatch message contains "R-1 granted to AEA-45". Otherwise `absent`.
    - **EVENTS** is set in R1 step 7, after the merge.
 
 **R1. Merge `main` into the branch.**
 
-1. `git merge --no-ff --no-commit main`. Expect conflicts in exactly two files: `.claude/reference/area-map.md` and
-   `docs/design/code-design.md` (`git diff --name-only --diff-filter=U`). If any other file conflicts, run
-   `git merge --abort` and stop.
+1. `git merge --no-ff --no-commit main`. List conflicts with `git diff --name-only --diff-filter=U`.
+   - Expected (dry-run at `f466ff7`): exactly one, `.claude/reference/area-map.md`.
+   - If `main` moved past `f466ff7`, `docs/design/code-design.md` or `.claude/state/icm-progress.md` may conflict too;
+     steps 3–4 say how to resolve them.
+   - If any **other** file conflicts, run `git merge --abort` and stop.
 2. **Area map.** `git checkout --theirs .claude/reference/area-map.md`. In `git merge main`, *theirs* is `main`.
-   - Then edit the single row that begins `| 2 | **A9 Staff console** |` (there is exactly one on `main`). In its last
-     cell:
-     - replace the leading `partly built:` with `built:`;
-     - replace the trailing `; the rest planned` with
-       `; AEA-45 (c6cdab6): web/routes/staff_cases.py, web/schemas/staff_cases.py, register_staff_cases hunk`.
-   - Change nothing else. The file's duplicated rows (A6, A11, A7a, A8 and A12 each appear twice on `main`) are not this
+   - `grep -c '^| 2 | \*\*A9 Staff console\*\* |' .claude/reference/area-map.md` must print `1`. If not, stop.
+   - In that one row's last cell (the *Status* cell):
+     - replace the leading `| partly built: ` with `| built: `;
+     - replace the trailing `; the rest planned |` with
+       `; AEA-45 (c6cdab6): web/routes/staff_cases.py, web/schemas/staff_cases.py, register_staff_cases hunk |`.
+   - Change nothing else. The duplicated rows on `main` (A6, A11, A7a, A8 and A12 each appear twice) are not this
      ticket's (§8 R-13).
+   - Verify: `grep "A9 Staff console" .claude/reference/area-map.md | grep -c "AEA-45 (c6cdab6)"` prints `1`, and
+     `grep -c "AEA-40 (e74e3c2)" .claude/reference/area-map.md` prints at least `1` (main's A8 edit survived).
    - *Protects:* the other tickets' edits on `main` survive, and the A9 cell says what the branch built.
-3. **Code design.** `git checkout --theirs docs/design/code-design.md`. Then insert one line directly after the **last**
-   line that starts with `**Built:**` (on `c9b17ea` that is the AEA-24 line, line 196):
-   `` **Built:** `web/routes/staff_cases.py`, `web/schemas/staff_cases.py`, the `register_staff_cases` hunk (AEA-45, `c6cdab6`). ``
-4. `grep -c "^<<<<<<<\|^>>>>>>>" .claude/reference/area-map.md docs/design/code-design.md` prints `0` for both files.
-5. `git add .claude/reference/area-map.md docs/design/code-design.md`, then commit the merge:
+3. **Code design** (auto-merged at `f466ff7`). Verify both:
+   - ``grep -c 'AEA-45, `c6cdab6`' docs/design/code-design.md`` prints `1`;
+   - ``grep -c 'AEA-40, `e74e3c2`' docs/design/code-design.md`` prints `1`.
+   - If it conflicted instead: `git checkout --theirs docs/design/code-design.md`, then insert directly after the
+     **last** line that starts with `**Built:**`:
+     `` **Built:** `web/routes/staff_cases.py`, `web/schemas/staff_cases.py`, the `register_staff_cases` hunk (AEA-45, `c6cdab6`). ``
+4. **ICM** (auto-merged at `f466ff7`). Verify `grep -c "AEA-45, c6cdab6" .claude/state/icm-progress.md` prints `1` and
+   `grep -c "AEA-40, e74e3c2" .claude/state/icm-progress.md` prints `1`. If it conflicted instead: take *theirs*, then
+   re-add the branch's AEA-45 row (`git show 789a1a5:.claude/state/icm-progress.md | grep "AEA-45, c6cdab6"`) directly
+   after the last `| Routes verified against code and tests |` row.
+5. `grep -c "^<<<<<<<\|^>>>>>>>\|^=======$" .claude/reference/area-map.md docs/design/code-design.md .claude/state/icm-progress.md`
+   prints `0` for each file.
+6. `git add .claude/reference/area-map.md` (plus any file resolved in steps 3–4), then commit the merge:
    ```
-   git commit -m "Merge main into aea-45-staff-cases-api (AEA-29 merged)" \
-     -m "Conflicts: .claude/reference/area-map.md, docs/design/code-design.md. Kept main's files; re-applied AEA-45's A9 status cell and Built line." \
+   git commit -m "Merge main (f466ff7, AEA-40) into aea-45-staff-cases-api" \
+     -m "Conflict: .claude/reference/area-map.md (AEA-40's A8 cell next to AEA-45's A9 cell). Kept main's file; re-applied AEA-45's A9 status cell." \
      -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
    ```
-6. `uv sync`, then `uv run python -c "import meridian.web.routes.staff_cases, meridian.services.cases"` exits 0.
-7. **EVENTS** = the output of
+   Use the real `main` SHA in the subject if it is not `f466ff7`.
+7. `uv sync`, then
+   `uv run python -c "import meridian.web.routes.staff_cases, meridian.services.cases, meridian.services.demo, meridian.web.routes.chat"`
+   exits 0.
+8. **EVENTS** = the output of
    `uv run python -c "from tests.api.openapi_check import load_document; print('events' in load_document()['components']['schemas']['CaseDetail']['properties'])"`.
    - `False` is expected; go on.
    - `True` means the UX amendment landed. AC-21's test will stop skipping and fail, as R-6 intends. Stop after R2 and
      report `NEEDS R-6 follow-up` (the domain `CaseDetail` in `domain/views.py` is not this ticket's file).
-8. `git diff --name-only main...HEAD` lists only the branch's files (the "built" rows of §2's table). If anything else
-   appears, stop.
+9. `git diff --name-only main...HEAD` prints exactly these 13 files and nothing else:
+   `.claude/reference/area-map.md`, `.claude/state/icm-progress.md`, `docs/design/code-design.md`,
+   `docs/testing/journeys/2026-10-21-AEA-45.md`, `src/meridian/web/container.py`, `src/meridian/web/routes/staff_cases.py`,
+   `src/meridian/web/schemas/staff_cases.py`, `tests/api/staff_cases_support.py`, `tests/api/test_staff_cases_access.py`,
+   `tests/api/test_staff_cases_capture.py`, `tests/api/test_staff_cases_refusals.py`, `tests/api/test_staff_cases_routes.py`,
+   `tests/journeys/j6/test_aea_45.py`. If anything else appears, stop.
 
 **R2. Re-run the built tests on the merged tree.**
 
 `uv run --with pytest-xdist pytest -n 2 tests/api/test_staff_cases_routes.py tests/api/test_staff_cases_access.py tests/api/test_staff_cases_refusals.py tests/api/test_staff_cases_capture.py -q -rs`
 
-- Expected: all pass. The only skip is `test_case_detail_carries_last_event_id` (blocked-on UX session).
-- `test_real_case_not_found_maps_to_404` must now **pass**, not skip.
+- Expected: 0 failed. The only skip is `test_case_detail_carries_last_event_id` (blocked-on UX session). The planner's
+  probe at `789a1a5` gave 107 passed, 1 skipped.
 - A failure here is a merge regression. Fix it inside the owned files only, and record it in *Deviations*.
 
 **R3. Create `tests/api/test_staff_cases_seam.py` (plan-added AC-23, about 170 lines).**
 
 - **Module docstring:** "AEA-45 AC-23 (plan-added): the real CaseService (AEA-29) over a seeded temporary copy of the
-  issued DB, behind the real routes, middleware and role check. The demo clock (AEA-30, not merged) and the session store
-  are doubles. Level: mock-tested (in-process TestClient, no harness server). Issued and synthetic data only."
+  issued DB, behind the real routes, middleware and role check. The demo clock is a double fixed at WORKED_PAIRS_NOW, so
+  the seeded due states are deterministic; the session store is a double. Level: mock-tested (in-process TestClient, no
+  harness server). Issued and synthetic data only."
 - **Imports:**
   - the §4.7 block;
   - `from collections.abc import Iterator`, `from contextlib import contextmanager`, `from pathlib import Path`,
@@ -645,62 +680,87 @@ real view is a real seam bug:
 - **`absent`:** write neither step-7 file. Report AC-19 as `blocked-on R-1 (case_state word)`. Everything else in this
   run still goes ahead.
 
-**One change to step 7 since the last plan.** Its paragraph *Why none of these is red on today's `main`* is out of date:
-`case_service` is now bound. Drives that reach a case route now skip with `not bound: get_demo_service`, because the demo
-provider resolves after the case provider and raises. The flag drives that reach the real `FlagService` still skip with
-`not bound: demo_clock`. If AEA30 = `yes`, all of these run for real and must give the statuses in step 7's tables. Those
-statuses follow AEA-29's merged check order (R-2).
+**What changed for step 7 since AEA-30 merged.** Step 7's paragraph *Why none of these is red on today's `main`* is
+history. Every drive in step 7 **without** a `case_state` or `case_claimed_by_supervisor` word now runs for real: the
+runner builds a fresh app over a first-boot DB copy per drive (`openapi_driver.real_app`), and AEA-29, AEA-30 and AEA-44
+are all bound. None of them may skip. The planner re-read AEA-29's rules at `f466ff7` against step 7's tables:
+
+- the check order is not found → role → missing field → version → state (`_case_actions.py::apply_in`), and for
+  activities not found → role → version → state;
+- `wait` needs only `wake_up_at` (no reason), so `wait_without_wake_up` answers `WAKE_UP_REQUIRED`;
+- `release` needs a reason, `resolve` needs an outcome, and both are in the representative's `ROLE_ACTIONS`;
+- the first-boot seed (`seed_first_boot` → `seed_demo`) writes MHC-C-0005…0008 as `unassigned`, version 1.
+
+So the statuses in step 7's tables are the expected real answers. If a real drive answers differently:
+
+- the route is at fault (wrong mapping, wrong field): fix it in the owned files and log it in *Deviations*;
+- the service answers another **documented** status for an honest reason: change that one drive's `status` / `code`
+  in the case file, and log the reason in *Deviations*;
+- anything else (an undocumented status, a 500): stop and report it as a seam finding. Never edit `services/*`.
 
 **R5. Gates.** Run §7's checks A → H, cheapest first; stop at the first red.
 
-**R6. Record and context rows** (after the R7 code commit, so its SHA is known).
+**R6. Journey docstring, record and context rows.**
 
-1. **Record.** Rewrite `docs/testing/journeys/2026-10-21-AEA-45.md` (or create `<date>-AEA-45.md`, §2). Keep step 8's
-   table shape and fill it from this run:
-   - *Claim:* add AC-23 and, if built, AC-19.
-   - *Level:* `mock-tested` for the API tests (service doubles) and for the seam test (real `CaseService` and SQLite,
-     doubled clock and session store). The J-6 file did not run integrated, because it is blocked at step 0 by AEA-30,
-     unless AEA30 = `yes`; then `integrated with a scripted model` for its seven steps.
-   - *Tested revision:* the R7 code commit SHA.
-   - *Result:* the counts printed by checks C, D and E, plus every skip reason quoted.
-   - *Remaining limitations:* no real `DemoService`; AC-21 waits on the OpenAPI amendment; the AC-19 strict run waits on
-     AEA-30; no browser leg (AEA-62).
-   - *Blocked by:* AEA-30 (login and `demo_service`) for J-6 at `integrated with a scripted model`; R-1 for AC-19 when
-     R1 = `absent`; AEA-52 for CAP-4 end to end.
+0. **Journey docstring** (`tests/journeys/j6/test_aea_45.py`; this goes in the R7 code commit). Replace only the module
+   docstring with these exact lines, and change nothing else in the file:
+   ```python
+   """J-6 extension (slice plan section 0a): the representative claims the escalated case MHC-C-0007 on AEA-57's harness
+   (real app on a first-boot DB copy, real CaseService and DemoService, scripted model; no model call is reached). Each
+   step names the services it needs, so a regression that unbinds one is reported as blocked, never as passed. CAP-4
+   end to end is AEA-52's."""
+   ```
+   Then re-run check E's first command; it still shows `1 passed`.
+1. **Record** (after the R7 code commit, so its SHA is known). Rewrite `docs/testing/journeys/2026-10-21-AEA-45.md` (or
+   create `<date>-AEA-45.md`, §2). Keep the field table and fill it from this run:
+
+   | Field | Value |
+   |---|---|
+   | Claim | AEA-45 routes CON-11…13, 15…17 (AC-1…AC-18, AC-20, AC-23; plus AC-19 if built); J-6 step "the representative claims the escalated case" |
+   | Level | **`integrated with a scripted model`** for the seven J-6 steps (AEA-57's harness: the real app served on an OS-assigned loopback port, a first-boot DB copy, the real `CaseService`, `DemoService` and `FlagService`, the login gate and role check on, the scripted model; no model call is reached). **`mock-tested`** for `tests/api/test_staff_cases_*.py` (service doubles; the seam test has a real `CaseService` and SQLite with a doubled clock and session store) and for the runner drives (in-process app) |
+   | Tested revision | the R7 code commit SHA |
+   | Environment | VPS worktree, Python 3.12, uv; in-process FastAPI for `tests/api` and the runner; the harness's uvicorn on a loopback port for the journey; no model call, no paid call |
+   | Command | the exact commands of checks C, D (and D2 if run) and E |
+   | Result | the counts printed by C, D, D2 and E, every skip reason quoted, and the two deselected AEA-46 drives named (§8 R-15) |
+   | Evidence location | this file; GitLab issue #45 comment (the orchestrator posts it at merge) |
+   | Remaining limitations | AC-21 waits on the UX session's OpenAPI amendment; AC-19 waits on R-1 when it was not built; no browser leg (AEA-62); the REASON_REQUIRED constraint text differs from the OpenAPI example (§8 R-5) |
+   | Blocked by | none for J-6 at `integrated with a scripted model`; R-1 (AEA-59 follow-up) for AC-19 when R1 = `absent`; UX session for AC-21; AEA-62 for the browser leg; AEA-52 for CAP-4 end to end |
 2. **ICM row.** Replace the row that starts
    `| Routes verified against code and tests | provisional | 2026-10-21: area map A9 → web/routes/staff_cases.py` with
-   one row of at most 400 characters:
-   `| Routes verified against code and tests | provisional | 2026-10-21: area map A9 → web/routes/staff_cases.py, web/schemas/staff_cases.py (AEA-45, <code sha>) checked against tests/api/test_staff_cases_*.py incl. a real-CaseService seam test (<N> passed, <S> skipped); record docs/testing/journeys/<date>-AEA-45.md | <tail> |`
+   one row of at most 400 characters (check with
+   `python3 -c "import sys; print(len(sys.argv[1]))" '<row>'`):
+   `| Routes verified against code and tests | provisional | 2026-10-21: area map A9 → web/routes/staff_cases.py, web/schemas/staff_cases.py (AEA-45, <code sha>) vs tests/api/test_staff_cases_*.py incl. a real-CaseService seam test (<N> passed); J-6 integrated (scripted model); record docs/testing/journeys/<date>-AEA-45.md | <tail> |`
    - `<tail>` is `Each slice adds its route; verified when every area-map row is actual` when AC-19 is built.
-   - Otherwise it is `Server contract cases (AC-19) wait on the case_state word; verified when every area-map row is actual`.
-3. **SHA in the area map and DO-3.** If R2–R4 changed any file under `src/`, replace `c6cdab6` in the A9 cell and in the
+   - Otherwise it is `Server contract cases (AC-19) wait on the case_state word`.
+3. **SHA in the area map and DO-3.** If R2–R5 changed any file under `src/`, replace `c6cdab6` in the A9 cell and in the
    AEA-45 `**Built:**` line with the R7 code commit SHA. Otherwise leave `c6cdab6`.
 4. `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` shows no **new** FAIL. The
-   `FAIL icm … (budget 8192 B)` is pre-existing (the file is 15,697 B on `main`): report it, and do not trim other
+   `FAIL icm … (budget 8192 B)` line is pre-existing (the file is about 16 KB on `main`): report it, and do not trim other
    tickets' rows.
 
 **R7. Commits.** Use explicit paths only. Never `git add -A`, never push, never force-push.
 
 1. **Code and tests** (after R5 is green):
-   - `git add tests/api/test_staff_cases_seam.py`;
+   - `git add tests/api/test_staff_cases_seam.py tests/journeys/j6/test_aea_45.py`;
    - plus, when built, `tests/api/test_contract_cases_staff_cases.py tests/contract/cases/staff_cases.py`;
-   - plus any owned file changed in R2–R4 (`git status --short` lists them; every one must be in §2's table).
-   - Message: `AEA-45: real-CaseService seam test and server contract cases (AC-23, AC-19)`. Drop "and server contract
-     cases" and "AC-19" when R1 = `absent`.
-   - Body: the ACs met and the waits (AC-20 integrated, AC-21, AC-19 strict). Last line
+   - plus any owned file changed in R2–R5 (`git status --short` lists them; every one must be in §2's table).
+   - Message: `AEA-45: real-CaseService seam test, server contract cases, J-6 docstring (AC-23, AC-19, AC-20)`. Drop
+     "server contract cases, " and "AC-19, " when R1 = `absent`.
+   - Body: the ACs met and the waits (AC-21; AC-19 when absent). Last line
      `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 2. **Record and rows:**
    - `git add docs/testing/journeys/<date>-AEA-45.md .claude/state/icm-progress.md`;
    - plus `.claude/reference/area-map.md docs/design/code-design.md` if R6.3 changed them.
-   - Message: `AEA-45: refresh journey record and context rows`, with the same last line.
-3. **The plan file:** append to *Deviations* below, but do **not** commit it; the orchestrator commits plan files.
+   - Message: `AEA-45: journey record at the integrated level and context rows`, with the same last line.
+3. **The plan file:** append to *Deviations* in the main checkout's copy (§2), but do **not** commit it; the
+   orchestrator commits plan files.
 4. **Report:**
    - the R0 switches;
    - the merge SHA and every commit SHA;
    - each gate's output line;
    - the record path with its Level and *Blocked by*;
    - the AC table marked verified / waiting;
-   - the pre-existing reds you saw (§7, §8 R-10).
+   - the pre-existing reds you saw (§7, §8 R-15).
 
 ### Step 0: preflight — SUPERSEDED by R0 (kept as the first run's record)
 
@@ -1423,7 +1483,7 @@ Module constants: `_REP = ("login", "role:representative")`, `_SUP = ("login", "
   | `representative_refused` | 403 | ROLE_NOT_ALLOWED | `_REP` |
   | `owner_refused` | 403 | ROLE_NOT_ALLOWED | `_OWN` |
 
-**Why none of these is red on today's `main`** (the AEA-59 runner, non-strict):
+**Historical (superseded by R4; true only before AEA-30 merged): why none of these was red on `main` `c9b17ea`** (the AEA-59 runner, non-strict):
 
 - Role refusals run, because `require_staff` is the first parameter.
 - Drives that reach `CaseService`/`DemoService` skip with `not bound: get_case_service` / `get_demo_service`.
@@ -1532,8 +1592,8 @@ One test, `test_j6_representative_claims_escalated_case(journey: JourneyRun) -> 
 6. `with journey.step("J-6", "6 reopening shows it claimed", needs=("case_service", "demo_service"), operations=("getCase",)):`
    GET case → `owner == "Riley"`, `version == v0 + 1`, `"claim" not in allowed_actions`.
 
-**Today:** steps 0–1 pass. Step 2 is recorded `blocked-on AEA-29, AEA-30` and the test is skipped. That is the harness's
-`stop_blocked`; with `--journeys-strict` it fails instead.
+**Historical (before AEA-30):** steps 0–1 were expected to pass and step 2 to be blocked. Superseded: since `789a1a5`
+all seven steps pass at `integrated with a scripted model` (planner probe); R6 records that level.
 
 **Record:** `docs/testing/journeys/<YYYY-MM-DD>-AEA-45.md`. Hand-written, the same table as `2026-10-21-AEA-27.md`:
 
@@ -1602,7 +1662,7 @@ journey harness binds an OS-assigned loopback port (never 4019 / 5184).
 | `FIXED_NOW` | 2026-10-19 07:00 America/Chicago (−05:00), the ticket's AC-12 instant | Demo-clock double |
 | Distinctive free text | `rand_word()` (letters only, so never code-, card- or phone-like) | AC-14, AC-18 |
 | MHC-10002's email and service address | Issued scheduling DB (`tests/fixtures/sqlite.ISSUED_DB`), opened `mode=ro` at run time | AC-13 only; never written into source, never printed; no phone column read |
-| Seeded case MHC-C-0007 (journey, runner) | AEA-31's first-boot seed (`services/reset.py`: unassigned, version 1) on the harness's / runner's DB copy | Present on `main` (AEA-29 merged). The routes reach it only once AEA-30 binds the demo clock |
+| Seeded case MHC-C-0007 (journey, runner) | AEA-31's first-boot seed (`services/reset.py`: unassigned, version 1) on the harness's / runner's DB copy | Present on `main` (AEA-29 merged). Reached for real by J-6 and the runner since AEA-30 (`cf8fd78`) |
 | Seam-test DB (R3) | `tests/fixtures/sqlite.temp_sqlite()`: a temporary copy of the issued DB, deleted on exit, seeded with `seed_demo(tx, assembler=BriefAssembler())` | Never writes the issued file; asserts no contact value; prints no body |
 | Settings and secrets | `make_settings(tmp_path)`; the harness's own generated env | As AEA-23's tests |
 | Case references | `MHC-C-0007` (seeded), `MHC-C-0099` / `MHC-C-9999` (unknown), `MHC-C-7` (malformed); flag ids `flg-1`, `flg-3`, `flg-99`, `flg-999999` | None is phone- or card-like |
@@ -1612,16 +1672,20 @@ journey harness binds an OS-assigned loopback port (never 4019 / 5184).
 ## 7. Checks
 
 Run inside the worktree with `export UV_LINK_MODE=hardlink`, cheapest first, and stop at the first red. The planner ran
-none of these (one exception: a mypy probe on `main` that found R-10's pre-existing red).
+read-only probes of B, the four built API files, E's first command and D's generated cases at `789a1a5` (header table).
+
+The two AEA-46 drives that hang (§8 R-15) are deselected by node ID in C. Shell variables do not persist between
+commands, so every command below is written out in full; copy each one as a single line.
 
 | # | Check | Command | Passing looks like |
 |---|---|---|---|
 | A | Lint + format | `uv run ruff check src/meridian/web tests/api tests/contract tests/journeys/j6 && uv run ruff format --check src/meridian/web tests/api tests/contract tests/journeys/j6` | `All checks passed!`; `N files already formatted` |
-| B | Type check | `uv run mypy src/meridian/web tests/api tests/contract tests/journeys/j6/test_aea_45.py` | `Success: no issues found`. Not the whole `tests/journeys/j6` folder: `test_aea_29.py` pulls in AEA-29's `tests/services/_case_fixtures.py`, which has 5 mypy errors on `main` (R-10) |
+| B | Type check | `uv run mypy src/meridian/web tests/api tests/contract tests/journeys/j6/test_aea_45.py` | `Success: no issues found` (probe at `789a1a5`: 98 source files). Names this ticket's journey file only, not the folder (§8 R-10) |
 | C1 | New files, while iterating | `uv run pytest tests/api/test_staff_cases_seam.py tests/api/test_contract_cases_staff_cases.py -q -rs` (leave out the second file when R1 = `absent`) | all pass |
-| C | Affected tests, once at the end | `uv run --with pytest-xdist pytest -n 2 tests/api tests/unit/web tests/unit/test_import_direction.py tests/contract/test_openapi_server.py tests/services/test_health_capture.py -q -rs` | 0 failed. Allowed skips: `test_case_detail_carries_last_event_id` (blocked-on UX session) and runner drives skipped as `not bound: …` / `route not registered: …`. `test_real_case_not_found_maps_to_404` passes |
-| D | AC-19 runner subset | `uv run pytest tests/contract/test_openapi_server.py -k "Queue or Case or Contact or Flag or Oversight" -rs` | 0 failed. AEA30 = `no`: every skip reason starts with `not bound:`. AEA30 = `yes`: no skip for the eight operations |
-| E | Journeys | `uv run pytest -m journey tests/journeys/j6/test_aea_45.py -rs`, then `uv run python -m tests.journeys.affected --base main -- -q -rs` | AEA30 = `no`: the J-6 file shows 1 skipped, reason `blocked-on AEA-30: …`; the affected journeys show 0 failed. AEA30 = `yes`: the J-6 file passes all seven steps |
+| C | Affected tests, once at the end | `uv run --with pytest-xdist --with pytest-timeout pytest -n 2 --timeout 120 tests/api tests/unit/web tests/unit/test_import_direction.py tests/contract/test_openapi_server.py tests/services/test_health_capture.py -q -rs --deselect 'tests/contract/test_openapi_server.py::test_route_cases_match_contract[liveChatAction/unknown_case]' --deselect 'tests/contract/test_openapi_server.py::test_route_cases_match_contract[streamCaseEvents/unknown_case]'` | 0 failed, 2 deselected. Allowed skips: `test_case_detail_carries_last_event_id` (blocked-on UX session), and runner drives of **other** tickets' operations skipped as `not bound: …` / `route not registered: …`. No skip for any of the eight AEA-45 operations. `test_real_case_not_found_maps_to_404` passes |
+| D | Runner, this ticket's operations | `uv run --with pytest-timeout pytest --timeout 120 tests/contract/test_openapi_server.py -k "well_formed or format_example or every_operation or applyCaseAction or createFlag or getCase or getOversight or getQueue or listFlags or recordContactActivity or reviewFlag" -rs` | 0 failed, **0 skipped** for the eight operations (AEA-30 is bound). The case-file checks pass. Probe of this exact command at `789a1a5`, before the case file exists: 15 passed (12 generated 401/400 cases + 3 case-file checks) |
+| D2 | AC-19 strict (only when step 7 is built) | `CONTRACT_STRICT=1 uv run --with pytest-timeout pytest --timeout 120 tests/contract/test_openapi_server.py -k "applyCaseAction or createFlag or getCase or getOversight or getQueue or listFlags or recordContactActivity or reviewFlag" -rs` | 0 failed, 0 skipped. This is AC-19's verify command with the filter narrowed (§8 R-16); record that in the journey record's *Command* field |
+| E | Journeys | `uv run pytest -m journey tests/journeys/j6/test_aea_45.py -rs`, then `timeout 900 uv run python -m tests.journeys.affected --base main -- -q -rs` | First: **1 passed** (all seven steps; probe at `789a1a5`). Second: 0 failed; skips name their blocker |
 | F | Collect | `uv run pytest --collect-only -q > /dev/null` | exit 0 |
 | G-1 | No server clock (AC-12) | `grep -nE "datetime\.now\|time\.time\|date\.today" src/meridian/web/routes/staff_cases.py src/meridian/web/schemas/staff_cases.py` | prints nothing |
 | G-2 | Never `open_case` (AC-16) | `grep -n "open_case" src/meridian/web/routes/staff_cases.py src/meridian/web/schemas/staff_cases.py` | prints nothing |
@@ -1635,10 +1699,11 @@ none of these (one exception: a mypy probe on `main` that found R-10's pre-exist
 - This ticket's diff against `main` reaches the same places as before: `register_staff_cases` adds eight routes to every
   app built by `create_app` + the real `build_container`. The test folders that build such an app are `tests/api`,
   `tests/contract/test_openapi_server.py` (the AEA-59 runner and its case-file checks, which load the new case file),
-  `tests/unit/web` (container stubs, deps, and now AEA-29's `test_register_cases.py`),
+  `tests/unit/web` (container stubs, deps, `test_register_cases.py`, `test_register_chat.py`),
   `tests/services/test_health_capture.py` and `tests/journeys` (via the affected command).
 - `test_import_direction.py` checks `container.py`'s imports.
-- The merge brings in `main`'s own changes. `main`'s merge gates already proved those, so they are not re-run here.
+- The merge brings in `main`'s own changes (AEA-30, AEA-40). `main`'s merge gates already proved those, so they are not
+  re-run here beyond the folders above.
 
 **Full suite: not required.** No shared fixture, settings, dependency, lockfile or cross-package module changes (rule
 `build-loop-test-scope`).
@@ -1646,37 +1711,39 @@ none of these (one exception: a mypy probe on `main` that found R-10's pre-exist
 **Existing tests that must stay green:**
 
 - all of `tests/api/`, especially:
-  - `test_gate.py::test_every_api_route_but_login_requires_session` (it now meets the real staff routes behind its
-    probes);
-  - `test_web_frontend.py::test_example_pair` (`/api/staff/cases/MHC-C-0007` as a customer now answers a JSON 403
-    instead of a JSON 404; the test checks only JSON-ness);
+  - `test_gate.py::test_every_api_route_but_login_requires_session` (it meets the real staff routes behind its probes);
+  - `test_web_frontend.py::test_example_pair` (`/api/staff/cases/MHC-C-0007` as a customer answers a JSON 403; the test
+    checks only JSON-ness);
   - `test_staff_session_*` (its `getQueue` probe is registered before the lifespan and still wins);
-- `tests/unit/web/test_container.py`, `tests/unit/web/test_deps.py`, `tests/unit/web/test_register_cases.py`;
+  - AEA-40's `test_chat*.py` (new on `main`; they share the container);
+- `tests/unit/web/test_container.py`, `test_deps.py`, `test_register_cases.py`, `test_register_chat.py`;
 - `tests/contract/test_openapi_server.py`. Its `test_unauthenticated_matches_contract[<op>]` cases for the eight
-  operations run and must answer 401. Its `test_validation_error_matches_contract[createFlag|reviewFlag]` cases run and
-  must answer 400.
+  operations answer 401, and its `test_validation_error_matches_contract[applyCaseAction|createFlag|recordContactActivity|reviewFlag]`
+  cases answer 400 (probe: all 12 pass).
 
 **Known reds on `main` that are not this ticket's:**
 
-- `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero…` (ledger rows AEA-44/47/57). Do not include that
-  file; report it if seen.
-- mypy on `tests/services/_case_fixtures.py` (R-10). Check B avoids it; report it.
+- AEA-46's `test_route_cases_match_contract[liveChatAction/unknown_case]` and `[streamCaseEvents/unknown_case]` hang
+  (> 20 s; planner probe on `main` `f466ff7`). Deselected in C; report them (§8 R-15).
+- `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero…` (ledger rows AEA-44/47/57). Not in the
+  affected set; report it if seen.
 
 ---
 
 ## 8. Risks and requests
 
-- **R-1: request to the orchestrator (pre-dispatch): one local-driver word for the contract cases.** Still open at
-  `c9b17ea`. This is the only reason the ledger shows AEA-45 `blocked`.
+- **R-1: request to the orchestrator (pre-dispatch, third time): one local-driver word for the contract cases.** Still
+  open at `f466ff7`. This is the only reason the ledger shows AEA-45 `blocked`, and the only AC that cannot be built.
   - **Why it is needed.**
-    - AEA-59's format check (`check_cases_mapping`) requires a 2xx drive for every named request example: CLAIM v3,
-      WAIT v5, RESOLVE v8, RELEASE v4, ASSIGN v3, CHANGE_PRIORITY v3, CALL v4, ANSWER with `message_id` m-2, and REVIEW of
-      an existing flag.
+    - AEA-59's format check (`check_cases_mapping`, re-read at `f466ff7`) fails a case file unless every named request
+      example has a 2xx drive: CLAIM v3, WAIT v5, RESOLVE v8, RELEASE v4, ASSIGN v3, CHANGE_PRIORITY v3, CALL v4, ANSWER
+      with `message_id` m-2, and REVIEW of an existing flag.
     - The runner cannot build those states on a fresh first-boot copy: the seed is at version 1, has no message it can
-      name, and has no flags. Run as-is, those drives would turn red once AEA-30 merges. Two of them (`flag_answer`,
-      `review`) reach the real `FlagService`.
+      name, and has no flags. Since AEA-30 merged, every drive without a local-driver word runs for real, so those nine
+      drives would be **red today**, not skipped.
     - A drive that carries a `LOCAL_DRIVER_ONLY` word is listed, not run (`RUNNABLE` in `test_openapi_server.py`
-      excludes it), and the route's local driver proves it. None of the existing words describes these states honestly.
+      excludes it), and the route's local driver proves it. None of the existing eight words describes these states
+      honestly (`case_claimed_by_supervisor` would answer 409, not 200).
     - The README says a new word "is a follow-up on AEA-59, not an edit to your file".
   - **The exact change (two files, two lines):**
     - In `tests/contract/openapi_cases.py`, inside `LOCAL_DRIVER_ONLY`, directly after the `"case_events": …` line,
@@ -1686,63 +1753,71 @@ none of these (one exception: a mypy probe on `main` that found R-10's pre-exist
       `` `case_claimed_by_supervisor`, `case_events`, `case_state`. ``
     - Check: `uv run pytest tests/contract/test_openapi_server.py -k "well_formed or format_example" -q` passes.
   - **Options.**
-    - (a) **Recommended:** the orchestrator lands it on `main` before dispatching AEA-45. It is a one-file-pair change
-      under 30 lines, so it can go straight to a `fanout-implementer` with this bullet as its whole plan. R0 then reads
-      `landed`.
+    - (a) **Recommended:** the orchestrator lands it on `main` before dispatching AEA-45. It is a two-line change in one
+      file pair, so under the fan-out rule it can go straight to a `fanout-implementer` with this bullet as its whole
+      plan. R0 then reads `landed`.
     - (b) Write "R-1 granted to AEA-45" in the dispatch message. R4 then commits it on its own, first.
-    - With neither, R4 skips step 7 and the ticket comes back `blocked-on R-1` again.
-- **R-2: AEA-29 check order (confirmed on `main`).** `_case_actions.py::apply_in` (lines 75–102) runs not found → role →
-  missing field → version → state, and `record_activity_in` (lines 226–252) runs not found → role → version → state.
-  Step 7's raw-body drives follow exactly that. If AEA-29 ever changes it, the AEA-59 runner flags the drive, and the
-  fix is a one-line status/code edit in this case file, not a route change.
+    - With neither, R4 skips step 7 and the ticket comes back `blocked-on R-1` a third time.
+- **R-2: AEA-29 check order (re-confirmed at `f466ff7`).** `apply_in` runs not found → role → missing field → version →
+  state; `record_activity_in` runs not found → role → version → state. `missing_field_refusal` (`_case_rules.py`):
+  release / close_unresolved / assign / change_priority need a reason; wait needs `wake_up_at` (and it must be after
+  the demo time); resolve needs an outcome. Step 7's raw-body drives follow exactly that. If AEA-29 ever changes it, the
+  runner flags the drive, and the fix is a status/code edit in this case file (R4's rules), not a route change.
 - **R-3: AEA-29 shapes (satisfied).** `CaseNotFound(LookupError)` sets `case_ref = str(case_ref)` and is raised by
-  `detail()`; `apply` and `record_activity` return the documented unions. `test_real_case_not_found_maps_to_404` now
-  runs.
+  `detail()`; `apply` and `record_activity` return the documented unions. `test_real_case_not_found_maps_to_404` passes.
 - **R-4: wire times in America/Chicago (a plan decision).** UI_CONTRACTS *Conventions* line 20 says times are ISO 8601
   "with offset (America/Chicago, the demo clock)". The sibling route files `staff_live.py` and `events.py` already
   render `astimezone(America/Chicago)`. The instant is unchanged, so AC-18's "rewrite nothing" holds for every value;
-  only its offset form changes. AC-23 now checks it on real stored times.
+  only its offset form changes. AC-23 checks it on real stored times, and J-6 step 3 compares the route body with the
+  real service's view serialised the same way.
 - **R-5: REASON_REQUIRED wording (for AEA-52).** The OpenAPI example's constraint is "required for release, assign and
-  change_priority"; AEA-29, now merged, builds `f"required for {name}"`. The route copies whatever the service returns,
-  so this ticket is unaffected. AEA-52 should align them when it integrates.
+  change_priority"; AEA-29 builds `f"required for {name}"`. The route copies whatever the service returns, so this
+  ticket is unaffected. AEA-52 should align them when it integrates.
 - **R-6: AC-21 follow-up when the UX amendment lands.**
   - `test_case_detail_carries_last_event_id` stops skipping the moment `CaseDetail` gains `events` in the OpenAPI.
   - It then fails until `CaseDetailOut` gets `events: CaseEventsOut` (`last_event_id: int`, as the amended schema says).
     That failure is intended: the output models ignore unknown keys, so without it the new field would be dropped
     silently.
   - **Ask:** pair the UX amendment with a one-file follow-up on `schemas/staff_cases.py`, plus AEA-02b's `CaseDetail`
-    (`domain/views.py`). R1 step 7 stops the run if the amendment has already landed.
+    (`domain/views.py`). R1 step 8 stops the run if the amendment has already landed.
 - **R-7: the test paths differ from the ticket's.** `test_staff_cases_routes.py` holds AC-1, 2, 6, 18, 21 and WP-2. The
   rest sit in sibling files with unchanged names (`_access`, `_refusals`, `_capture`, and now `_seam`), to respect the
   500-line test cap.
-- **R-8: shared lines (expected textual conflicts; resolve as the union).**
-  - The area-map A9 row block and DO-3's `**Built:**` lines: resolved in R1.
-  - `container.py`: AEA-30's `register_demo` hunk is still in flight. It edits only its own function, so expect at most
-    a textual neighbour conflict at that merge.
-  - The ICM *Routes verified* rows.
+- **R-8: shared lines (expected textual conflicts; resolve as the union).** The area-map block holding the A8 and A9
+  rows (R1 step 2), DO-3's `**Built:**` lines and the ICM *Routes verified* rows (both merge cleanly at `f466ff7`).
+  `container.py` merges cleanly: AEA-30's `register_demo` and AEA-40's `register_chat` edit only their own functions.
 - **R-9: dependency order inside the routes is load-bearing** (step 2, item 5). A reviewer who reorders the parameters
-  would let an unbound provider turn a 403 into a 500, which would also turn the AEA-59 runner's role drives from pass
-  into skip. `test_role_matrix`'s zero-call assertions and the runner's 403 drives guard it.
-- **R-10: pre-existing mypy red on `main` (AEA-29's, for the orchestrator).** `uv run mypy tests/journeys/j6` reports 5
-  `no-untyped-call` errors in `tests/services/_case_fixtures.py` (lines 540–569), reached through
-  `tests/journeys/j6/test_aea_29.py`. Check B names this ticket's files so the red is not this ticket's. The seam test
-  must not import `_case_fixtures`. A fix belongs to an AEA-29 follow-up.
-- **R-11: AEA-30 may land before this run.** R0's AEA30 switch covers it. The journey and the runner drives then run for
-  real, and any failure is a real seam to report. Fix it in owned files only when the route or schema is at fault.
+  would let a provider failure turn a 403 into a 500, and would let a service run before the role check.
+  `test_role_matrix`'s zero-call assertions and the runner's 403 drives guard it.
+- **R-10: mypy on the j6 folder.** The red in `tests/services/_case_fixtures.py` has a typing fix on `main` (`247ce45`).
+  The planner did not re-prove the whole `tests/journeys/j6` folder, so check B still names only this ticket's journey
+  file. The seam test must not import `tests.services._case_fixtures`.
+- **R-11: AEA-30 landed (resolved).** The J-6 steps and the runner drives now run for real; any failure there is a real
+  seam. Fix it in the owned files only when the route or schema is at fault (R4's rules).
 - **R-12: stale comment (for AEA-29 / AEA-08).** `domain/handoff.py` line 73 says the route (AEA-45) serialises
-  `sources` as `source_ids`. In fact `CaseService`'s `brief_view` does it (`_case_views.py` line 330), and the route
-  must not add a mapping. Not this ticket's file.
+  `sources` as `source_ids`. In fact `CaseService`'s `brief_view` does it (`_case_views.py`), and the route must not add
+  a mapping. Not this ticket's file.
 - **R-13: duplicated area-map rows on `main` (for a `lane::direct` cleanup).** A6, A11, A7a, A8 and A12 each appear
   twice in `.claude/reference/area-map.md`. R1 keeps them as they are; only the A9 cell is this ticket's.
 - **R-14: disk and CPU.** The tests copy nothing large. `full_app`, the runner and `temp_sqlite()` each make a small DB
   copy in a temp dir and delete it. Use `-n 2` at most.
+- **R-15: two of AEA-46's runner drives hang on `main` (for the orchestrator; not this ticket's).**
+  `tests/contract/test_openapi_server.py::test_route_cases_match_contract[liveChatAction/unknown_case]` and
+  `[streamCaseEvents/unknown_case]` time out after 20 s on `main` `f466ff7` (planner probe with `pytest-timeout`), with
+  or without AEA-45. They likely began when AEA-30 bound the demo clock. Any merge gate that runs the whole of
+  `tests/contract/test_openapi_server.py` without a timeout will stall on them. This plan deselects them by node ID in
+  check C. **Ask:** an AEA-46 follow-up.
+- **R-16: AC-19's verify filter.** The ticket's `-k "Queue or Case or Contact or Flag or Oversight"` matches 69 runner
+  tests, because pytest's `-k` ignores case and "case" matches `test_route_cases_match_contract[...]` for every
+  operation. Those include R-15's hanging drives. Checks D and D2 name the eight operations instead; the journey record
+  states the command used. The ticket text is not edited.
 - **No signed-contract change and no D-4…D-15 reversal.** Nothing edits the OpenAPI, `UI_CONTRACTS.md` or `docs/ux/**`.
   D-5 (Decision 2 option A) is followed by waiting for the UX session's amendment.
 
 ### What the implementer must not do
 
 - Re-create the branch, rebase, or rewrite the built files from steps 1–6 and 8. Edit them only to fix a failure that
-  R2 or R3 shows, and log it in *Deviations*.
+  R2–R5 show, and log it in *Deviations*. The one planned edit to a built file is the journey docstring (R6.0).
 - Define `CaseAction`, `ActivityIn`, `CaseActionRejected`, `FlagIn`, `FlagRejected`, `CaseNotFound` (except the
   test-only stand-in) or any service class. Import them.
 - Decide anything a service owns: no lifecycle check, no ordering, no due state, no `allowed_actions` computation or
@@ -1755,7 +1830,9 @@ none of these (one exception: a mypy probe on `main` that found R-10's pre-exist
 - Change `staff_app`'s signature; import `tests.services._case_fixtures`.
 - Edit any file outside §2's list. That includes `web/deps.py`, `web/errors.py`, `web/middleware.py`, `services/*`,
   `domain/*`, `tests/api/openapi_check.py`, `tests/api/web_shell_support.py`, `tests/journeys/support/`,
-  `tests/services/*`, other hunks and the OpenAPI. R-1's two files are allowed only when R1 = `granted`.
+  `tests/services/*`, AEA-46's case file, other hunks and the OpenAPI. R-1's two files are allowed only when R1 =
+  `granted`.
+- Fix or skip AEA-46's hanging drives (R-15) in any file; deselect them on the command line only.
 - Put a phone number, card-like number, verification code, secret or the MHC-10002 contact values in source, test
   names, fixtures or output; print a response body or the contact values.
 - Run the full suite, bind ports 4019 / 5184, `git add -A`, push, force-push, or commit the plan file.
@@ -1764,21 +1841,19 @@ none of these (one exception: a mypy probe on `main` that found R-10's pre-exist
 
 ## 9. Readiness
 
-**READY (resume run).** No product decision is needed, and no signed contract changes.
+**READY (resume run 3).** No product decision is needed, and no signed contract changes.
 
-| Prerequisite | Why | Status on `main` `c9b17ea` |
+| Prerequisite | Why | Status on `main` `f466ff7` |
 |---|---|---|
 | AEA-23 web shell | `require_staff`, providers, renderer, `openapi_check` | merged |
 | AEA-02b case view types | `CaseAction`, `ActivityIn`, `CaseActionRejected` (imported) | merged `5305d57` |
 | AEA-44 flags | `FlagIn`, `FlagRejected` (imported) | merged `ec86bf8` |
-| AEA-29 `CaseService` | not imported by the routes; enables the R3 seam test and `test_real_case_not_found_maps_to_404` | merged `ef561fc` |
-| **R-1 `case_state` word** (AEA-59 follow-up) | AC-19's case file must pass AEA-59's format check without planting reds | **open: land on `main` (recommended) or grant to this ticket before dispatch** |
+| AEA-29 `CaseService` | not imported by the routes; the R3 seam test, J-6 and the runner drives use it | merged `ef561fc` |
+| AEA-30 `DemoService` | not imported by the routes; the real login, J-6 and the runner drives use it | merged `cf8fd78` |
+| **R-1 `case_state` word** (AEA-59 follow-up) | AC-19's case file must pass AEA-59's format check without planting reds | **open: land on `main` (recommended) or grant to this ticket before dispatch.** AC-19 only; the rest of the run goes ahead without it |
 
-**Not blockers** (injection and doubles, or evidence only):
-
-- AEA-30 `DemoService` (`clock_view().now` only; the J-6 steps and the runner's real drives wait on it);
-- AEA-52 (CAP-4 end to end);
-- the UX session's OpenAPI amendment (AC-21).
+**Not blockers** (evidence only): AEA-52 (CAP-4 end to end); AEA-62 (browser leg); the UX session's OpenAPI amendment
+(AC-21).
 
 **Gates:** none (no human, paid or live gate).
 
