@@ -341,8 +341,46 @@ def register_demo(container: Container, app: FastAPI, *, settings: Any, limits: 
 def register_reset(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-31 reset: ResetService and the demo seed (cases.md §7).
 
-    No-op until AEA-31 fills it.
+    Binds the reset service (restore and checkpoint clear from storage, the reset gate, the seed with AEA-29's
+    BriefAssembler, AEA-30's format_clock) and loads the demo seed once at first boot. An app create_app did not build
+    has no web shell, so this does nothing.
     """
+    import functools
+    import importlib
+
+    from meridian.services.reset import ResetService, seed_demo, seed_first_boot
+    from meridian.web.deps import RESET_GATE, RESET_SERVICE, UOW_FACTORY, WALL_CLOCK
+    from meridian.web.middleware import WebShellState
+
+    shell = getattr(app.state, "web_shell", None)
+    if not isinstance(shell, WebShellState):
+        return
+
+    def sibling(module: str, name: str) -> Any:
+        # Same-wave siblings (AEA-29, AEA-30), resolved when the container builds, not at import.
+        return getattr(importlib.import_module(module), name)
+
+    def seed() -> Callable[[Any], int]:
+        return functools.partial(
+            seed_demo, assembler=sibling("meridian.services.handoff", "BriefAssembler")()
+        )
+
+    def build(c: Container) -> ResetService:
+        checkpointer = c.get(Key[Any]("checkpointer"))
+        return ResetService(
+            c.get(UOW_FACTORY),
+            c.get(RESET_GATE),
+            c.get(Key[Any]("restore_working_copy")),
+            checkpointer.clearing,
+            seed(),
+            format_clock=sibling("meridian.services.demo", "format_clock"),
+        )
+
+    def first_boot() -> None:
+        seed_first_boot(container.get(UOW_FACTORY), seed(), container.get(WALL_CLOCK)())
+
+    container.provide(RESET_SERVICE, build)
+    container.on_start(first_boot)
 
 
 def register_staff_session(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
