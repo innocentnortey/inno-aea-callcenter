@@ -33,7 +33,7 @@ lists are satisfied.
 | D-2 | Walkthrough / demo video, 3–4 min voiceover | PDF 2 · portal "Demo Video" | "how you found the call drivers, why you chose your chunking and retrieval approach, how escalation works, and what your eval numbers say. Design reasoning, not a feature tour." | — | not started |
 | D-3 | Source repository: code + eval set + README | PDF 3 · portal "Source Code" | "a README that explains how to run it and what the containment numbers were" | `README.md` | run instructions written; containment pending Stage 9 |
 | D-4 | Technical documentation | Portal | "Technical Documentation" (incl. discovery findings: drivers, method, scope choice — PDF goal 1) | [`docs/technical-documentation.md`](docs/technical-documentation.md) | drafted, numbers pending Stage 9 |
-| D-5 | Deployment guide | Portal | "Deployment Guide" | — | not started |
+| D-5 | Deployment guide | Portal | "Deployment Guide" | [`docs/deployment-guide.md`](docs/deployment-guide.md) | written; live URL pending AEA-56 |
 | D-6 | Test results | Portal | "Test Results": containment, accuracy on handled drivers, escalation rate, retrieval eval | — | not started |
 | D-7 | *Extra credit:* voice interface (STT/TTS, turn-taking) | PDF · portal | "A working voice agent, even a rough one, is a strong signal." Optional. | — | not planned yet |
 

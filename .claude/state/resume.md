@@ -258,3 +258,102 @@ confirmation). Wave-0 finding 5 (stale `test_affected_journeys.py`) needs its ti
 **Next action:** wave 3. Land AEA-30 first (the demo clock unblocks login, the strict contract run and the j1 steps); then AEA-29, 40, 43, 45, 51 and 53 as
 planned. Cut the tickets for findings 1 to 3, 8 and 9; carry 4 to 7 into AEA-56 and AEA-53. Wave-3 merge gate adds `CONTRACT_STRICT=1` for the registered
 operations. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to the planners of the unmerged tickets; do not sweep them in.
+
+## Stage 8: second wave 2 batch context upkeep (2026-10-21, VPS)
+
+**Merged in this batch:** AEA-29, AEA-34, AEA-38, AEA-43 (rows and commits in `build-ledger.md`; AEA-50 and AEA-24 merged on `main` after them). Audited at `ef561fc`
+(integrated main after the four merges) in a detached worktree (since removed); scripted model only, no paid calls, no ports bound.
+
+**Security audit: PASS for AEA-29 and AEA-43.** No blocker, high or medium findings. The auditor read the services, routes, schemas, container hunks, deps and the middleware
+gate; it did not open the test files, journey records or docs rows, and ran no tests (no shell). Auth: every AEA-43 route sits behind the gate; only POST /api/login,
+GET /healthz and the SPA login page and assets are public; the session comes from the gate, never from a query, header or body; the inbox is scoped to the caller's own
+session id; reset and staffing are open to any signed-in role (the signed R-48 rule), with a per-IP limit on reset. Secrets and codes: inbox code and body are `SecretStr`,
+revealed only by the JSON serializer; when the process no longer holds the digits the wire shows dots and `INBOX_CODE_GONE` and an `active` status is shown as `expired`; no code
+is stored on these paths. Redaction and logging: customer-derived strings in staff views pass `mask()` (SONNET profile) on read; staff free text is masked before storage; the case
+and handoff modules have no logging or print and `CaseWriteFailed` carries no value. Injection: all case writes go through repository calls on the unit of work; `record_kind()`
+uses `fullmatch`; action, assignee and priority are schema-typed; `StaffingRequest` and `ResetRequest` hide input in validation errors. Neither ticket touches held-out answer keys
+or model calls.
+
+**Seams audit: PASS, two low findings.** No broken seam on `ef561fc`. `uv run --with pytest-xdist pytest tests/journeys tests/contract -n 2`: 538 passed, 108 skipped, 1 xfailed;
+ruff and mypy clean (116 source files); every `meridian` module imports. Cross-ticket paths checked: (1) AEA-29 `CaseService` callbacks against AEA-38 `ReplyComposer`
+(`handoff_block`, `settled_view` match `HandoffBlockFn`, `SettledViewFn` and the `HandoffComposer` protocol); (2) AEA-38 reply nodes against AEA-29 storage (`reply.brief` calls
+`deps.cases.attach_brief`, `services/cases.py:314`; `graph.py` wires all four reply nodes); (3) container wiring (`register_cases` provides `case_service`, `handoff_service`,
+`brief_assembler`; `register_demo_routes` includes the router; unbound siblings `demo_clock`, `demo_service`, `reply_composer` fail with `RuntimeError 'not bound: <key>'`, not at
+import); (4) anonymous GET `/api/demo/inbox`, `/staffing`, `/clock` and POST `/api/demo/reset`, `/api/handoff/request` all return 401 `UNAUTHENTICATED`; a bad login returns 401
+`LOGIN_FAILED`; `/healthz` is 200. Journeys that exist: j1 (49, 57, 59), j2 (38), j3 (27, 28, 34, 43), j4 (28), j6 (29, 47), j7 (29, 41, 42, 46), j8 (44), j10 (32, 48);
+j5 and j9 hold only a skeleton. Many steps skip as blocked on AEA-30, 40, 45, 51, 52 and 53. The contract suite skips 69 cases on `not bound: demo_clock` and about 20 on
+`route not registered` (getChatThread, getOversight, applyCaseAction, getQueue, createFlag, getCase, reviewFlag, listFlags, startChatSession, recordContactActivity, submitTurn).
+These figures are the auditor's report (second-hand), not re-run here.
+
+**Open findings (all low):**
+1. `BriefAssembler.attach_extraction` keeps every model quote when `customer_messages` is None, so the exact-substring check fails open
+   (`src/meridian/services/handoff.py:207-228`). Deliberate default (AEA-29 plan O-8, so AEA-31's seed call compiles); AEA-38's `check_quotes` runs upstream; no production caller
+   yet; `brief_view` masks on read. **When AEA-38 or AEA-51 wires the real brief node it must pass `customer_messages`, and a test must assert that.**
+2. The stored Brief holds unmasked KB and staff-note text from `assemble()`; masking happens only in `brief_view` and `case_sources` (`handoff.py:169-199`, `_case_views.py:295-341`).
+   Safe while the brief is read only through those views; any new reader of `tx.cases.briefs.get()` must go through `brief_view`.
+3. Known by-design gap, flagged once: `resetDemo` and `setStaffing` are open to every signed-in demo role (R-48) and reset is global and destructive; the only brakes are the per-IP
+   `RESET_IP` limiter and the reset gate (`web/routes/demo.py:138-164`). Acceptable for a public demo; not an authorization boundary.
+4. Demo clock unbound: a real login returns 500 on the assembled app (`RuntimeError`, `/api/login`, status 500); the bad-credentials case returns 401. Expected until AEA-30
+   (`web/container.py` `register_demo` is a no-op). Same as wave-2 finding 1 above; not new.
+5. **Context drift (proposed `lane::direct` ticket, not yet cut):** `.claude/reference/area-map.md` has the A6 row twice (the second copy is stale and says "planned"), and the A7a row
+   lists `reply.py` as a stub though the A7c row and the code show it actual (385 lines). Acceptance: `grep -n 'A6 Cases and handoff' .claude/reference/area-map.md` returns one row, and
+   no "stub" for `reply.py`. (This is the same A6 duplicate as wave-2 finding 9.)
+
+**Next action:** land AEA-30 (unblocks login, the strict contract run and the j1 steps), then AEA-40, 45, 51, 52 and 53 as planned (worktrees for 30, 36, 37, 40 and 45 are open).
+Cut the `lane::direct` area-map ticket (finding 5). Carry finding 1 into AEA-38/AEA-51 and finding 2 into any reader ticket. Wave-0 findings 1 and 3 still wait on Innocent.
+The wave-3 merge gate still adds `CONTRACT_STRICT=1`. Untracked plan files in `docs/plans/fanout/2026-10-21-build/` belong to planners of unmerged tickets; do not sweep them in.
+
+## Stage 8: AEA-54 deployment guide (2026-10-21, VPS)
+
+`docs/deployment-guide.md` (D-5) is merged; `SUBMISSION.md` D-5 reads *written; live URL pending AEA-56* and the README links it. Two gaps found while writing it, for the
+owners (also on issue #54): the start-up turn sweep (`fail_running`) has no caller until AEA-40's `register_chat` lands, and `migrate.py` creates missing tables only, so a release
+that changes an existing table's columns needs a rebuilt volume. **Next action for AEA-56:** run the guide's section 5 smoke list after AEA-30 and AEA-40 are merged and replace
+the `pending: AEA-56` lines (URL, redeploy downtime).
+
+## Stage 8: wave 1 context upkeep, AEA-24 eval harness (2026-10-21, VPS)
+
+**Merged in wave 1:** AEA-24 (eval harness), on top of the earlier merges on `main` (rows and commits in `build-ledger.md`). Audited `main` at `7fddbf5` in a detached worktree (since removed); scripted models only, no paid calls.
+
+**Security audit: PASS** (no blocker or high findings). The auditor read the harness source in full apart from `records.py`, `retrieval.py` and the test files, plus the retrieval entry, the case and split files and `.gitignore`. AEA-24 adds no route, container registration or auth surface: the harness is an HTTP client, and its only app import is `eval/run_retrieval.py`, by design. Redaction, secrets and held-out custody each have a fail-closed control with no bypass found. Three medium or low items remain (trust-boundary gaps in the freeze and calibration controls, and a held-out custody question for Stage 9).
+
+**Seams audit: PASS** with low and medium findings. Journeys: 20 passed, 20 skipped, 0 failed (`tests/journeys` has j1..j10 and `support/`, all scripted models). Every skip names its blocker: AEA-30 (`demo_clock`, `demo_service` not bound), AEA-40, AEA-51, AEA-52 (session, turn, run_graph not bound; routes not registered), AEA-45/53. Contract: `tests/contract` gave 506 passed, 86 skipped, 1 xfailed, 0 failed; the skips are unbound routes (listFlags, applyCaseAction, getQueue, startChatSession, submitTurn and others) and "not bound: demo_clock"; the xfail is the AEA-59 AC-14 value-leak item. No seam is broken between the registrations that exist, their imports and the OpenAPI cases, but no cross-ticket path is end-to-end yet. These are the auditors' reports (second-hand), not re-run here.
+
+**Open findings (wave 1):**
+1. **Medium (AEA-24):** the judge calibration record (`eval/judge-calibration.json`) is outside the tamper digest. `harness_digest()` hashes only `eval/harness/**/*.py` (no tests) plus `eval/cases/models.py`; `is_calibrated()` checks model name, `labels >= 20` and `agreement >= 0.8` with no provenance or hash, and does not check that `labelled_by` is human. Anyone who can write the file can turn the judge from advisory (`passed=None`) to gate-affecting on a frozen harness. Fix: add the file and its label set to the digest, or record its hash in the freeze file and check it in `check_frozen`. (`judge.py:53-65`, `freeze.py:36-49`, `runner.py:647-649`)
+2. **Low:** the freeze file sits beside the code it protects and `python -m eval.harness freeze` rewrites it, so a modified harness can be re-frozen. At Stage 9 record the freeze commit where the harness cannot overwrite it (signed checklist or report). The file does not exist yet, so real runs fail closed with `not_frozen`. (`deps.py:23`, `cli.py:106-115`, `runner.py:475-495`)
+3. **Low:** on `--split held-out --judge`, `AnthropicJudge.judge()` sends held-out `must_say` text and the rubric unscrubbed to the provider. Probably intended; DAT-2 and DO-5 *Who may read what* should say so. **Decide before the Stage 9 held-out run.** (`judge.py:88-103`, `scoring.py:207-218`)
+4. **Low:** the scrubber matches exact strings only (min length 4); a secret that JSON-escapes differently (quote or backslash) passes `assert_absent` on report JSON. Fix: also add the `json.dumps` form. (`scrub.py:25-52`, `runner.py:439-442`)
+5. **Low:** the harness sends the eval key and demo login to whatever `--base-url` it is given, including plain http. Consider refusing non-https unless loopback or the stub. (`client.py:63-70`, `cli.py:49`)
+6. **Low, expected:** login returns 500 on the assembled app until AEA-30 binds `demo_clock` (even wrong credentials give 500, not 401). No new ticket.
+7. **Medium:** stale blocker in `tests/journeys/j1/test_aea_59.py` (`test_j1_every_response_matches_contract`): the skip says "blocked-on AEA-57: support/ is not on main", but `support/` is on main. J-1 has no response-contract check. **Fix ticket (AEA-59 follow-up):** correct the skip reason (real blockers: AEA-30 and the unrouted ops); when AEA-30 lands, replace the placeholder with login, startChatSession, submitTurn, getChatThread-after-refresh and signed-out-401 steps, each checked by the harness hook. Acceptance: not skipped after AEA-30 and AEA-51 merge; lists every operationId checked. (Same item as wave-2 finding 3.)
+8. **Medium:** `test_ux_dump_fixtures_match` in `tests/contract/test_openapi_fixtures.py` never runs: it skips on missing `docs/plans/ux-join/selectors.md` (the folder holds `audit-*.md`, `backend-amendments.md` and others). Fails only under `contract_strict()`. **Fix ticket:** AEA-59 follow-up, or a UX-side handoff (`docs/ux` and `apps/web` are off limits here), to produce the selectors file and fixtures JSON. Acceptance: runs and passes with no skip; the wave-merge gate runs it strict. (`ux_dump_path`, line 94)
+9. **Low:** the wave-merge gate cannot yet prove the main paths (most of the 86 contract skips are unregistered routes or unbound `demo_clock`). **Suggested fix:** make `contract_strict()` fail on any skip whose blocker ticket has already merged. Acceptance: the strict run fails on a skip that cites a merged ticket. (`tests/contract/openapi_driver.py:67`, `tests/journeys/support/steps.py:181`; AEA-59 / AEA-57 follow-up)
+
+**Next action:** land AEA-30 first (demo clock: unblocks login, the strict contract run and the j1 steps), then AEA-40, 45, 51, 52 and 53 (worktrees for 30, 36, 37, 40 and 45 are open under `inno-aea-callcenter-wt/`). Cut tickets for findings 1, 7, 8 and 9 (and the area-map `lane::direct` ticket still pending from earlier waves); put finding 3 to Innocent before Stage 9. Carry 2, 4 and 5 into the Stage 9 freeze checklist. The wave-3 gate adds `CONTRACT_STRICT=1`. Modified plan files `AEA-61.md` and `AEA-62.md` under `docs/plans/fanout/2026-10-21-build/` belong to planners; do not sweep them in.
+
+## Stage 8: wave 3 context upkeep, AEA-50 deploy image (2026-10-21, VPS)
+
+**Merged in wave 3:** AEA-50 (deploy image: Dockerfile, `.dockerignore`, `railway.json`, `scripts/{serve,reset,agent_version,image_check}.py`, `scripts/log_config.json`; row and commit in `build-ledger.md`). Not deployed (AEA-56 does that). Audits are second-hand reports of the auditors, not re-run here. Seams audit ran on `7fddbf5` (AEA-50, plus AEA-24, 29, 43 already on main) in a worktree since removed.
+
+**Security audit: PASS for AEA-50.** No blocker, high or medium findings; two low notes. The auditor read the Dockerfile, `.dockerignore`, `railway.json`, the four scripts, `scripts/log_config.json` and `tests/deploy/fault_app.py`; for the seams it read `web/app.py` (`create_app`, `/healthz`), `web/middleware.py` (the session gate), the route inventory under `web/routes` and the public-path registrations in `web/container.py`. It could not read test bodies or container logs, so the dynamic checks (AC-4, AC-18, AC-21, AC-23, AC-25) are unverified by it; those tests are marked `deploy` and must be run before deploy.
+- Secrets in the image: none; the Dockerfile has no secret ARG or ENV (only paths, PORT, `HF_HUB_OFFLINE`); runtime is `debian:bookworm-slim` with Python 3.12 copied across, avoiding the official image's `GPG_KEY` ENV.
+- Build context: `.dockerignore` excludes `.env`, `.env.*`, `var/`, `.git/`, `.venv/`, `node_modules`, `tests/`, `.claude/`, `eval/cases/` and all of `docs/` except the issued dataset and the one OpenAPI file. Held-out answer keys are not in the image.
+- Settings holds every secret as `SecretStr`; `serve.py`'s `config_hash` uses non-secret fields and `langfuse_complete()` only. Script output is ids, counts, statuses or an exception class name; `log_config.json` routes uvicorn, meridian and root through `AllowListFormatter`; access logs are off. Nothing stores verification codes or cards.
+- Auth: only POST `/api/login`, GET `/healthz` and the frontend page and asset prefixes are public; every other path gets 401 or a redirect to `/login`. `/healthz` returns only `{"status":"ok"}` or `{"status":"stale"}`. AEA-50 adds no route and no model, query or file-path path.
+- `fault_app.py` is in `tests/` (excluded from the image; nothing in `src/` or `railway.json` selects it). One worker (`--workers 1`, `numReplicas 1`); keep-alive 75 s above the 65 s browser wait; `railway.json` matches data.md section 7. Issued data is read-only (`chmod a-w`), working copy in `/data`. With Langfuse unset, `serve.py` uses the `NullTraceSink` (export off).
+
+**Seams audit: FAIL (no path broken), no Critical or High gaps.** Journeys: 20 passed, 20 skipped (all skips blocked on unmerged tickets). `tests/contract`: 506 passed, 86 skipped, 1 xfailed. Non-journey, non-contract suite: 1743 passed, 2 failed (findings 1 and 4 below). `ruff` and `mypy` clean. Assembled app under the scripted model: `/healthz` 200, bad login 401, anonymous chat, staff, oversight and demo routes 401; reads routes (getOwnerMetrics, getMonitoring, getLatestEval) registered and waiting on AEA-53's reader. Routes for AEA-40 and AEA-45 are not registered; AEA-30 is not merged.
+
+**Open findings (wave 3):**
+1. **Medium, red test on main:** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` still expects `0 journeys affected` but 22 journeys exist. The wave-merge gate missed it (not in the "affected" set); the pre-deploy full suite will hit it. **Fix ticket:** make it fixture-driven (a temp tree with no journeys). Acceptance: passes with 22 or more journeys present; the file is green on main. (Same item as wave-0 finding 5.)
+2. **Medium, stale skip:** `tests/journeys/j1/test_aea_59.py::test_j1_every_response_matches_contract` is skipped as "blocked-on AEA-57", but AEA-57 is on main; real blockers are AEA-40 and AEA-51. **Fix ticket:** correct the skip reason; add `assert_response_matches` per operationId to J-1 after AEA-51. Acceptance: no journey skip cites an already merged ticket (a grep check is fine). (Same as wave-1 finding 7.)
+3. **Medium, context drift (`lane::direct` ticket, not yet cut):** `.claude/reference/area-map.md` has duplicate rows for A6, A7a, A8, A11 and A12 (one says planned, the other built or actual); A7b still says planned though `dispatch.py` is actual; A7c is partly built. Acceptance: exactly one row per area and every "actual" path exists. Check: `grep -n '^| [0-9+]* | \*\*A\(6\|7a\|8\|11\|12\) ' .claude/reference/area-map.md`.
+4. **Low, flaky:** `tests/unit/adapters/test_tracing_langfuse.py::test_export_never_blocks_hanging_exporter` (AEA-19) failed once under `-n 2`, passed alone. **Fix ticket:** generous bound or injected clock. Acceptance: 20 consecutive `-n 2` runs pass.
+5. **Low (AEA-50):** the runtime image has no `USER` directive, so uvicorn runs as root; hardening note, Railway isolates containers. (`Dockerfile`, runtime stage)
+6. **Low (AEA-50):** `scripts/reset.py` checks the working database exists but not that the service is stopped (its own `ResetGate` cannot block a live process); running it on a live service could race SQLite writes. The ticket and the AEA-54 guide say stopped service only; documentation and operator risk.
+7. **Low, expected until AEA-30:** real login returns 500 on the assembled app (demo clock unbound); 69 contract skips `not bound: demo_clock`, 5 journey skips `blocked-on AEA-30`, 3 more `demo_service not bound`. No new ticket.
+8. **Low:** chat and staff-case routes (AEA-40, AEA-45) and `run_graph`/`register_graph` (AEA-51) are not registered or are no-ops, so J-1 to J-4 cannot run end to end; reads routes answer 500 "not bound" after the role check until AEA-53. Re-audit after AEA-30, 40, 45, 51 and 53 merge (acceptance: zero "route not registered" or "not bound" skips).
+
+**Before deploy:** run the `deploy`-marked tests (AC-4, AC-18, AC-21, AC-23, AC-25) and the full suite; the full suite is red until finding 1 is fixed.
+
+**Next action:** land AEA-30, then AEA-40, 45, 51, 52 and 53 (worktrees for 30, 36, 37, 40 and 45 are open under `inno-aea-callcenter-wt/`). Cut tickets for findings 1, 2, 3 (`lane::direct`) and 4; carry 5 and 6 into AEA-56 and the AEA-54 guide. Wave-1 findings 1, 3 and 7 to 9, and wave-0 findings 1 and 3, are still open above. Modified plan files `AEA-61.md` and `AEA-62.md` belong to planners; do not sweep them in.
