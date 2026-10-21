@@ -692,6 +692,8 @@ tests/                                       planned
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); the rest of this tree is planned.
+
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
 - **Safety invariants are unit tests on the pure core**, so they run in milliseconds on every change.
