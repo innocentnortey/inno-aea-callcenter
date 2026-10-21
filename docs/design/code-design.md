@@ -299,7 +299,7 @@ src/meridian/                                    planned                        
 │   ├── nodes/compose.py                         ReplyComposer: blocks, notices (incl. AI_PAUSED), settled   A7a   2   built AEA-21 6df4f4c
 │   ├── nodes/front.py                           gates, safety, identity nodes (stub by A7a)                 A7d   3   built AEA-36 712b9e9
 │   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   built AEA-37 b760241
-│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
+│   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   built AEA-39 ded15a7
 │   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   built AEA-38 ec94722
 │   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3   built AEA-35 e614508 (ticket wave 2)
 │   ├── specialists/runner.py                    the braked tool loop                                        A7b   3   built AEA-35 e614508 (ticket wave 2)

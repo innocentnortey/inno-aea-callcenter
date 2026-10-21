@@ -1301,3 +1301,9 @@ reviewer adds `risk::security` (§8.4).
 `domain/specialists.py` (which would import `domain/turn.py` and close an import cycle)? **Answered 2026-10-21:** option A
 ("just do whatever you recommend"), built by AEA-35b. Options B (a deferred import in `specialists.py`) and C (the types in
 `agent/specialists/specs.py`) were not taken. AEA-08 reconciles the file name in graph-tools §2.
+
+## Deviations
+
+- **Test file sizes.** `tests/unit/agent/nodes/test_act.py` (about 720 lines) and `act_fixtures.py` (about 610 lines) exceed the plan's 500-line target after `ruff format` (project line length). Not split, to keep the plan's binding test names and file list; a follow-up may split by AC group.
+- **AC-2 test.** `test_specialist_task_slices_and_quick_check_offer` is parametrised for the offer table; the slice, knowledge-slice and `scope_for` checks sit in `test_specialist_task_offer_other_cases_and_slices`, and the resumed-task offer check in `test_resumed_task_with_other_service_type_does_not_offer` (31 tests reported rather than 20).
+- **`decide_escalation` recording.** Tests patch `meridian.agent.nodes.act.decide_escalation` with `monkeypatch.setattr(act_mod, ...)` and import the real function from `meridian.policy.escalation` (mypy rejects reading it off `act`, which does not re-export it).
