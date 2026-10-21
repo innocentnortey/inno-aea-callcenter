@@ -9,7 +9,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-03 | #3 | B | merged | aea-03-fixed-customer-texts | 60617f9 | merge of 44730d2: ruff check/format clean; 14 tests pass (policy texts, import direction); type check n/a (no pyproject yet); journey record at mock-tested, blocked by AEA-57 | - |
 | AEA-04 | #4 | B sec | merged | aea-04-aea-04-redaction | 22023f2 (code commit 9145044) | merged in run 1 | - |
 | AEA-05 | #5 | B | merged | aea-05-gates-word-rules | 6cd01a6 (merge of 0c89af0) | ruff check/format clean; mypy clean (107 files); gates + import-direction + affected-journey tests 134 passed; journeys 0 affected; record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
-| AEA-06 | #6 | B | ready |  |  |  | - |
+| AEA-06 | #6 | B | built | aea-06-eval-case-files | 6de7c4f |  | - |
 | AEA-07 | #7 | D | merged | main | 5073dd0 (docs, pushed to main as a fast-forward); ledger row in bc02266 | docs/technical-documentation.md: 13 sections, links resolve, figures sourced or pending, 6+1 open decisions labelled proposed; diff touches docs, SUBMISSION.md and .claude/state only | - |
 | AEA-08 | #8 | D | merged | main | c0621de (documents); ledger and ICM row in 5f2e1bb | DO-3 at revision 3 (103 modules recounted); area map has a Tickets column (01-62 except the six direct/human tickets, AEA-14 twice); stale-name greps leave only history, Superseded notes and retired-name sentences; check_context no FAIL; diff touches docs and .claude/state only | - |
 | AEA-10 | #10 | B sec | merged | aea-10-aea-10-storage | dc65bc5 (code commit ff4b9bd) | ruff check/format clean; mypy clean (60 files); 86 affected tests passed; full suite 780 passed (conftest-adjacent fixtures/sqlite.py new); journey record mock-tested, blocked by AEA-57 | - |
@@ -50,7 +50,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-45 | #45 | B | ready |  |  |  | AEA-23 |
 | AEA-46 | #46 | B sec | merged | aea-46-aea-46-live-takeover | 6da3818 (merge; code commit 0d152ee) | ruff check/format clean; mypy clean (87 files); 332 affected tests passed (api, services, unit/web, contract); journeys 9 passed, 4 skipped (J-7 mock-tested, blocked by AEA-57/AEA-52); no shared fixture/config touched, no full suite | AEA-10,AEA-23 |
 | AEA-47 | #47 | B sec | merged | aea-47-staff-clock-advance | 23dd4ac | ruff check/format clean; mypy clean; tests/api+contract+unit+journeys 996 passed, 1 skipped, 1 stale test failing on main too (test_no_journey_yet_prints_zero); J-6 record skipped until AEA-45/57; no full suite | AEA-23 |
-| AEA-48 | #48 | B | ready |  |  |  | AEA-23 |
+| AEA-48 | #48 | B | merged | aea-48-aea-48-reads-api | ea01fbd (merge of 7766616; code cb7df88) | ruff check/format clean; mypy clean (91 files); tests/api, unit/web, contract, services, journeys 381 passed, 12 skipped; journey gate 0 affected; web container.py changed, so web-importing test folders ran, no full suite | AEA-23 |
 | AEA-49 | #49 | B sec | merged | aea-49-aea-49-serve-web-dist | 95e2504 (code a5467a8) | ruff check/format clean; mypy clean (88 files); 324 passed/4 skipped (api, unit/web, services, capture cap11, journeys); no shared fixture/config touched, no full suite; journey record mock-tested, blocked by AEA-57 | AEA-23 |
 | AEA-50 | #50 | B sec | ready |  |  |  | AEA-16,AEA-31,AEA-32,AEA-33,AEA-19,AEA-23 |
 | AEA-51 | #51 | B | ready |  |  |  | AEA-17,AEA-18,AEA-20,AEA-26,AEA-27,AEA-28,AEA-29,AEA-33,AEA-34,AEA-35,AEA-36,AEA-37,AEA-38,AEA-39,AEA-40,AEA-42,AEA-43,AEA-11,AEA-19,AEA-30,AEA-44,AEA-46,AEA-57,AEA-59 |
@@ -59,7 +59,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-54 | #54 | D | ready |  |  |  | AEA-50 |
 | AEA-57 | #57 | B | merged | aea-57-aea-57-journey-harness | bd79a29 (merge of c37ef04) | ruff check/format clean; mypy clean (89 files); tests/journeys + skeleton + import direction + affected-journeys 47 passed, 12 skipped, 1 failed (stale test_no_journey_yet_prints_zero, pre-existing since the first journey landed); journeys 11 passed, 9 skipped; no shared fixture/config touched, no full suite; J-1 steps 3-7 blocked on AEA-30/AEA-40/AEA-51 | AEA-02,AEA-10,AEA-11,AEA-23 |
 | AEA-58 | #58 | B | ready |  |  |  | AEA-40,AEA-49,AEA-57 |
-| AEA-59 | #59 | B | ready |  |  |  | AEA-02,AEA-23 |
+| AEA-59 | #59 | B | built | aea-59-aea-59-contract-boundary | ef4c398 |  | AEA-02,AEA-23 |
 | AEA-60 | #60 | B | ready |  |  |  | AEA-20,AEA-22,AEA-35,AEA-37,AEA-38,AEA-39,AEA-17,AEA-18,AEA-27,AEA-28,AEA-33,AEA-57 |
 | AEA-61 | #61 | B | ready |  |  |  | AEA-51,AEA-57,AEA-60,AEA-06,AEA-50 |
 | AEA-62 | #62 | B | ready |  |  |  | AEA-58,AEA-51,AEA-52,AEA-29,AEA-40,AEA-57 |
