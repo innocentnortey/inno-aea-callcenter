@@ -1,7 +1,7 @@
 """J-7 (proposed extension): with staffing on, a person request is live-queued; turning staffing off converts the case
-and tells the chat. API level on AEA-57's harness. Blocked today on AEA-43 (setStaffing), AEA-40 (startChatSession) and
-AEA-29 (handoff and case services); the service-level behaviour is in tests/services/test_demo.py
-(test_shift_end_commits_with_conversions, mock-tested).
+and tells the chat. API level on AEA-57's harness. Step 2 starts a chat, and startChatSession builds its settled view
+through AEA-51's `reply_composer`, so until AEA-51 binds it the test reports `blocked-on AEA-51` after step 1 passes.
+The service-level behaviour is in tests/services/test_demo.py (test_shift_end_commits_with_conversions, mock-tested).
 """
 
 from __future__ import annotations
@@ -45,7 +45,14 @@ def test_j7_shift_end_converts_queued_case(journey: JourneyRun) -> None:
     with journey.step(
         "J-7",
         "2 person request live-queued",
-        needs=("session_service", "handoff_service", "person_requests"),
+        needs=(
+            "session_service",
+            "demo_service",
+            "demo_clock",
+            "reply_composer",
+            "handoff_service",
+            "person_requests",
+        ),
         operations=("startChatSession", "requestPerson"),
     ):
         started = signed.client.call("POST", "/api/chat/sessions", operation_id="startChatSession")
