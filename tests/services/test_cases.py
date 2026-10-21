@@ -7,6 +7,7 @@ data at run time; none is written in this file.
 from __future__ import annotations
 
 import datetime as dt
+from collections.abc import Callable
 from typing import Any
 
 import pytest
@@ -124,10 +125,10 @@ def test_unstaffed_never_live_queued() -> None:
         with s.uow() as tx:
             queued = tx.connection.execute(
                 "SELECT COUNT(*) FROM cases WHERE lifecycle = 'live_queued'"
-            ).fetchone()[0]  # type: ignore[attr-defined]
+            ).fetchone()[0]
             live = tx.connection.execute(
                 "SELECT COUNT(*) FROM conversations WHERE live_state = 'queued'"
-            ).fetchone()[0]  # type: ignore[attr-defined]
+            ).fetchone()[0]
         assert queued == 0 and live == 0
 
 
@@ -206,7 +207,7 @@ def test_convert_joins_caller_transaction() -> None:
 
 # ---------------------------------------------------------------------------------------------------------- AC-9
 
-_REJECTIONS = (
+_REJECTIONS: tuple[tuple[Any, ...], ...] = (
     ("stale_version", "unassigned", None, REP, "claim", {}, 1, "VERSION_CONFLICT"),
     ("already_claimed", "claimed", SUP, REP, "claim", {}, 3, "CASE_ALREADY_CLAIMED"),
     ("release_no_reason", "claimed", REP, REP, "release", {}, 3, "REASON_REQUIRED"),
@@ -357,7 +358,7 @@ def test_promise_status_kept_and_missed() -> None:
         resolve_before, resolve_after, reached, left, no_answer = mk(), mk(), mk(), mk(), mk()
         safety = mk(reason=HandoffReason.SAFETY)
         rep = actor_for(REP)
-        steps = (
+        steps: tuple[tuple[Any, Callable[[Any], Any], str], ...] = (
             (
                 resolve_before,
                 lambda r: cases.apply(r, case_action("resolve", 3, outcome="Done"), rep, 3, NOW),
@@ -452,7 +453,7 @@ def test_detail_current_value_changed() -> None:
         source, _ = invoice_source()
         assert source["changed_since"] is False and source["current"] is not None
         with s.uow(write=True) as tx:
-            tx.connection.execute("UPDATE invoices SET balance_cents = 0 WHERE invoice_id = 'INV-204411'")  # type: ignore[attr-defined]
+            tx.connection.execute("UPDATE invoices SET balance_cents = 0 WHERE invoice_id = 'INV-204411'")
             tx.commit()
         source, body = invoice_source()
         assert source["changed_since"] is True and source["changed_note"].startswith(
@@ -618,7 +619,7 @@ def test_attach_brief_upserts() -> None:
             assert tx.cases.briefs.get(ref).status == "ready"
             count = tx.connection.execute(
                 "SELECT COUNT(*) FROM case_briefs WHERE case_ref = ?", (str(ref),)
-            ).fetchone()[0]  # type: ignore[attr-defined]
+            ).fetchone()[0]
         assert count == 1
 
 
@@ -657,13 +658,14 @@ def test_allowed_actions_listed_iff_accepted() -> None:
     """invariant (AC-18): an action is listed exactly when the server accepts it, for each role and state."""
     refusals = {"ROLE_NOT_ALLOWED", "NOT_ALLOWED_IN_STATE", "CASE_ALREADY_CLAIMED"}
     mismatches: list[str] = []
+    action: str
     live_keys = ("claim_and_join", "join_chat", "send_live_message", "hand_back", "close_chat")
     with store() as s:
         cases, _, _, _ = services(s.uow)
         for row, lifecycle, owner, live_state, staffing, rep_list, sup_list, own_list in TABLE:
             expected = {REP: rep_list, SUP: sup_list, OWN: own_list}
             for role in STAFF_ROLES:
-                state = {
+                state: dict[str, Any] = {
                     "lifecycle": lifecycle,
                     "owner_role": owner,
                     "live_state": live_state,
@@ -719,7 +721,12 @@ def test_allowed_actions_by_role() -> None:
         "log_email",
     }
     for row, lifecycle, owner, live_state, staffing, _r, _s, _o in TABLE:
-        state = {"lifecycle": lifecycle, "owner_role": owner, "live_state": live_state, "staffing": staffing}
+        state: dict[str, Any] = {
+            "lifecycle": lifecycle,
+            "owner_role": owner,
+            "live_state": live_state,
+            "staffing": staffing,
+        }
         assert list(actions_for(**state, actor_role=OWN)) == [], row
         assert not supervisor_never & set(actions_for(**state, actor_role=SUP)), row
         rep = set(actions_for(**state, actor_role=REP))
