@@ -433,8 +433,19 @@ def register_identity(container: Container, app: FastAPI, *, settings: Any, limi
 def register_scheduling(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-28 scheduling: SchedulingService (cases.md §4).
 
-    No-op until AEA-28 fills it.
+    Provides Key[SchedulingService]("scheduling"), the one SchedulingService, built from the "uow_factory" key (AEA-10)
+    and limits.booking (the R-41 cap, MC-22). The graph wiring (AEA-51) passes it to GraphDeps.scheduling and to
+    scheduling_tools(); no tool is registered here (GRT-1).
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.scheduling import SchedulingService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> SchedulingService:
+        return SchedulingService(c.get(uow_key), limits.booking)
+
+    container.provide(Key[SchedulingService]("scheduling"), build)
 
 
 def register_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
