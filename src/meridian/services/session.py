@@ -9,6 +9,7 @@ settled-panel builder arrive injected.
 from __future__ import annotations
 
 import datetime as dt
+import logging
 import sys
 import uuid
 from collections.abc import Callable, Iterable, Mapping
@@ -27,8 +28,15 @@ from meridian.policy.limits import Limits
 from meridian.policy.texts import TextId, render
 from meridian.ports.runtime import Clock, UnitOfWorkFactory
 from meridian.services.person_request import PersonRequestOutcome
-from meridian.services.turn import ASSISTANT_SPEAKER, SettledViewFn, ThreadNotOpen, TurnResponse
+from meridian.services.turn import (
+    ASSISTANT_SPEAKER,
+    LOG_RECORD_ATTR,
+    SettledViewFn,
+    ThreadNotOpen,
+    TurnResponse,
+)
 
+SESSION_LOGGER: Final = "meridian.services.session"
 GREETING_TURN_ID: Final = "greeting"
 GREETING_BLOCK_ID: Final = "blk-greeting"
 EVENT_LINE_TYPES: Final = frozenset(
@@ -240,7 +248,17 @@ class SessionService:
                 try:
                     con4[str(row.turn_id)] = (PersonRequestOutcome.model_validate_json(row.response).block,)
                 except ValueError:
-                    pass
+                    # Ids only, never the stored response: it may hold customer text.
+                    logging.getLogger(SESSION_LOGGER).warning(
+                        "thread_turn_skipped",
+                        extra={
+                            LOG_RECORD_ATTR: {
+                                "record": "thread_turn_skipped",
+                                "turn_id": str(row.turn_id),
+                                "thread_id": thread_id,
+                            }
+                        },
+                    )
         labels = _option_labels(b for blocks in replies.values() for b in blocks)
 
         case_anchor: dict[int, int] = {}
