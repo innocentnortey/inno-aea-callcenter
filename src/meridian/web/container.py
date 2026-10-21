@@ -601,8 +601,19 @@ def register_staff_live(container: Container, app: FastAPI, *, settings: Any, li
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-47 staff API: the CON-8 clock-advance route (staff.md §8).
 
-    No-op until AEA-47 fills it.
+    Includes routes/staff_clock.py's router (advanceDemoClock: POST /api/demo/clock only; the GET on the same path is
+    AEA-43's) once per app. Provides nothing: DemoService is bound by AEA-30's register_demo hunk. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_clock import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_clock_routes_included", False):
+        return  # a second lifespan on the same app must not add the route again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_clock_routes_included = True
 
 
 def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
