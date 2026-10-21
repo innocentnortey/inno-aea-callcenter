@@ -229,8 +229,28 @@ def register_tracing(container: Container, app: FastAPI, *, settings: Any, limit
 def register_spend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-26 spend: LedgerService and the spend guard (models.md §6).
 
-    No-op until AEA-26 fills it.
+    Provides Key[LedgerService]("ledger"), the one LedgerService, built from the "uow_factory" key (AEA-10), the
+    "wall_clock" key (AEA-23, create_app's choice; MC-20, D-13) and limits.spend.daily_cap_usd (MC-22). The gateway
+    (AEA-20), the turn service (AEA-40, typed as SpendGuard), the alert evaluator (AEA-32), the metrics reader (AEA-53)
+    and GraphDeps.ledger (AEA-51) all get it with container.get(Key[LedgerService]("ledger")).
     """
+    import datetime as dt
+
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.ledger import LedgerService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+    wall_key: Key[Callable[[], dt.datetime]] = Key("wall_clock")  # = web.deps.WALL_CLOCK
+
+    def build(c: Container) -> LedgerService:
+        return LedgerService(
+            c.get(uow_key),
+            wall_clock=c.get(wall_key),
+            daily_cap_usd=limits.spend.daily_cap_usd,
+            probe_lost_after_s=float(limits.turn.deadline_s),
+        )
+
+    container.provide(Key[LedgerService]("ledger"), build)
 
 
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
