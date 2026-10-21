@@ -647,22 +647,37 @@ class ContainerOverrides:                             # web/app.py (AEA-23). TES
     tools: Mapping[ToolRole, ToolCallingModel] | None = None
     trace: TraceSink | None = None                    # an in-memory sink or exporter the test built (AEA-51 capture);
                                                       #   None → the container's own choice (models.md §7)
+    wall_clock: Callable[[], datetime] | None = None  # Innocent D-13. When set, get_wall_clock() (§4) returns THIS
+                                                      #   callable, so session expiry, limiter windows, reset `now`
+                                                      #   and every MC-20 consumer read it; the demo clock is
+                                                      #   untouched. None → `lambda: datetime.now(UTC)`. It must
+                                                      #   return an aware UTC datetime. Settable only in code: no
+                                                      #   Settings field, env name, CLI flag, header, query or route
+                                                      #   reads or changes it, and the deployed factory passes none.
     # Each port object keeps the read-only `provider` attribute (models.md §5). The RoleSpec (model, caps, redaction)
     # still comes from Settings, so ledger rows name the configured model (models.md §7 AEA-51 assertion).
 
 def create_app(settings: Settings | None = None, *, overrides: ContainerOverrides | None = None) -> fastapi.FastAPI: ...
     # settings None → Settings() from the environment (AEA-02 config.py). The lifespan builds AEA-01's container once with
-    # (settings, overrides) and closes it once (AEA-23 AC-23). The container passes `overrides` through untouched, as it
-    # does Settings, and only register_graph (AEA-51) reads it: for a role present in a map it pairs that object with the
-    # role's RoleSpec instead of calling adapter_for (models.md §7); every other role, and every role when overrides is
-    # None, gets the real adapter.
+    # (settings, overrides) and closes it once (AEA-23 AC-23). Before the container is built, create_app binds
+    # get_wall_clock (§4) to `overrides.wall_clock` when it is set (the container then hands that one callable to every
+    # MC-20 consumer). The container passes `overrides` through untouched, as it does Settings, and only register_graph
+    # (AEA-51) reads the port maps and `trace`: for a role present in a map it pairs that object with the role's
+    # RoleSpec instead of calling adapter_for (models.md §7); every other role, and every role when overrides is None,
+    # gets the real adapter.
 ```
 
-**Guards** (AEA-23 tests): `create_app()` with no arguments builds no override; a grep over `src/meridian/` finds
-`ContainerOverrides(` constructed nowhere; `register_graph` is the only reader (AEA-51 AC-1: "no double is reachable
-except the scripted provider adapter and the in-memory trace exporter"). Consumers: AEA-57 (journey launcher), AEA-51
-(integration harness, `register_graph`), AEA-59 and AEA-58 (through AEA-57's launcher). AEA-01's container builder gains
-the one pass-through keyword `overrides` (residual log R-W-8).
+**Guards** (AEA-23 tests): `create_app()` with no arguments builds no override and its `get_wall_clock()` reads
+`datetime.now(UTC)`; a grep over `src/meridian/` finds `ContainerOverrides(` constructed nowhere; `register_graph` is the
+only reader of the port maps and `trace` (AEA-51 AC-1: "no double is reachable except the scripted provider adapter and
+the in-memory trace exporter"), and `create_app`'s `get_wall_clock` binding the only reader of `wall_clock`; no
+`Settings` field, env variable, header, query parameter or route sets or shifts the wall clock. Consumers: AEA-57
+(journey launcher and its wall-clock control), AEA-51 (integration harness, `register_graph`), AEA-52 (J-8's expired
+session, through AEA-57), AEA-59 and AEA-58 (through AEA-57's launcher). AEA-01's container builder gains the one
+pass-through keyword `overrides` (residual log R-W-8).
+
+**Ledger, 2026-10-21 (Innocent D-13):** `wall_clock` added so the journey harness sets the server's one wall clock and
+J-8's expired-session step needs no real 12-hour wait; test-only like the other fields (AEA-23 AC-34/AC-35, AEA-57 AC-17).
 
 ---
 

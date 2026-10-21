@@ -141,7 +141,8 @@ per moment (R-G-9); no second clock fake.
 - [ ] AC-20 [negative] Staff reads never speak as or for the customer: in CON-12 `conversation`, every customer line's speaker is `{kind: "customer", display_name: CUSTOMER_SPEAKER_NAME}` ("Customer", staff.md §1; cases §5 rules table; R-W-14, R-G-16), never "You" (the OpenAPI example's customer-side wording) and never the customer's name or a contact value (amendment AEA-29-3; staff audit A3) — verify: `tests/services/test_cases.py::test_staff_conversation_customer_unnamed` and `::test_customer_speaker_name` (seeded MHC-10002 Omar Patel) — evidence: every customer line's `display_name` equals `CUSTOMER_SPEAKER_NAME`; no `display_name` in the serialised `CaseDetail` is "You", "Omar" or "Omar Patel".
 - [ ] AC-21 [invariant] Only CON-13 actions, CON-15 activities and the scheduler and staffing transitions of cases §5 change a case's `version` or `lifecycle`; the conversation writes that live chat makes (controller, `live_state`, a representative message, `close`) change neither and append no `case_changed` (staff.md §5; R-W-16; amendment AEA-29-4; staff audit A4) — verify: `tests/services/test_cases.py::test_conversation_writes_keep_case_version` (a case at version n; the conversation-row writes `LiveChatService` makes, applied through the repositories; `detail` re-read) — evidence: version n and the lifecycle unchanged; 0 new `case_changed` rows.
 - [ ] AC-22 [journey] Extends J-6 and J-7 (slice plan §0a journey map; J-7 is a proposed addition to the map for this ticket, from the join audits; `backend-amendments.md` §3): J-6, the escalated case appears in `getQueue` and `getCase` with eight headings, the policy promise, an `allowed_actions` list the server accepts for the viewing role, and every brief `source_ids` entry resolving to a source of the same case (staff audit A1, A2; AC-18, AC-19); J-7, after join, send and hand back the case `version` is unchanged (A4; AC-21); asserting what the user sees and what is stored, in `tests/journeys/j6/test_aea_29.py` and `tests/journeys/j7/test_aea_29.py` with the scripted model adapter on AEA-57's harness — verify: `uv run pytest -m journey tests/journeys/j6/test_aea_29.py tests/journeys/j7/test_aea_29.py` — evidence: the steps pass at level `integrated with a scripted model`; until AEA-57 and AEA-52 land, the record `docs/testing/journeys/YYYY-MM-DD-AEA-29.md` states level `mock-tested` and *Blocked by* AEA-57 and AEA-52 (`integrated-journeys.md` §4).
-- [ ] AC-23 [regression/context] Same change updates: the area-map row for `services/cases.py` and `services/handoff.py` (planned → built, commit); the `.claude/state/icm-progress.md` row "Routes verified against code and tests" evidence if this is the first built A6 slice; DO-3 code-design status for these two modules (planned → built) and any contract gap found, recorded against stage7/cases §5 — verify: `git diff --name-only` — evidence: those files in the diff, only this ticket's rows.
+- [ ] AC-23 [invariant] `CaseService.detail` sets `CaseDetail.events.last_event_id` to the newest event id of `case:<ref>`, read in the same read transaction as the view, so a CON-21 connection resumed from it replays nothing the view already shows (Decision 2 option A, Innocent 2026-10-21; amendment AEA-29-5; staff audit B5). The field comes from the UX session's OpenAPI amendment (`docs/ux/**`); until it lands and the `CaseDetail` view type carries it, this AC is reported `blocked-on UX session: OpenAPI amendment`, never passed or dropped — verify: `tests/services/test_cases.py::test_detail_last_event_id_same_snapshot` (append events, read the detail, append one more) — evidence: the id equals the newest id at read time; only the later event is after it.
+- [ ] AC-24 [regression/context] Same change updates: the area-map row for `services/cases.py` and `services/handoff.py` (planned → built, commit); the `.claude/state/icm-progress.md` row "Routes verified against code and tests" evidence if this is the first built A6 slice; DO-3 code-design status for these two modules (planned → built) and any contract gap found, recorded against stage7/cases §5 — verify: `git diff --name-only` — evidence: those files in the diff, only this ticket's rows.
 
 ### Observability
 
@@ -187,6 +188,13 @@ is AEA-11's (wave 1). AC-22's journey record names AEA-57 (harness, wave 2) and 
 *Blocked by* for its integrated level only (`integrated-journeys.md` §4); they are evidence-level dependencies, not merge
 blockers, so no wave moves.
 
+UX session: OpenAPI amendment (Decision 2 option A, Innocent 2026-10-21) — the UX session adds `CaseDetail.events.last_event_id`
+to `docs/ux/03-structure/ui-contracts.openapi.yaml` in `docs/ux/**`; this ticket never edits the OpenAPI and uses the field only
+after that lands. Evidence-level for the ticket, but AC-23 cannot be built without it: the field must exist in the
+`CaseDetail` view type this service returns (cases A-2: fields from the OpenAPI, homed in `domain/` by the AEA-02 follow-up,
+which this ticket must not edit). So AC-23 alone waits (`blocked-on UX session: OpenAPI amendment`, and on the AEA-02
+follow-up carrying the field); every other AC proceeds, and no wave moves (the UX session is outside the wave graph).
+
 ### Agent handoff
 
 - Area / owner: A6 Cases and handoff (area map); owns `src/meridian/services/cases.py`, `src/meridian/services/handoff.py`,
@@ -217,8 +225,9 @@ blockers, so no wave moves.
   a customer; a bug could show a full phone number or email in a queue row, a case event or a log, or save an on-record
   destination for an unverified customer. `test-writer-agent` freezes AC-12, AC-13 and AC-20 (and AC-7's staff-only half)
   failing first; `security-privacy-agent` reads this diff at the wave-2 merge.
-- Awaiting Innocent: join Decision 2 (`docs/plans/ux-join/decisions-for-innocent.md`) — conditional amendment AEA-29-5
-  (`CaseDetail.events.last_event_id` read in the view's snapshot) is applied only if he picks A; not in this ticket yet.
+- Decided by Innocent 2026-10-21: join Decision 2 option A (`docs/plans/ux-join/decisions-for-innocent.md`) — amendment
+  AEA-29-5 applied as AC-23 (`CaseDetail.events.last_event_id` read in the view's snapshot). The OpenAPI change is the UX
+  session's (`docs/ux/**`); this ticket uses the field only after it lands (*Blocked by*).
 - Awaiting Innocent: GRC-3 — built on the recommended option A (a safety turn while a person holds the chat still calls
   `open`, which returns the existing case raised to P0, AC-2); under B or C no safety handoff reaches `open` while a
   person holds the chat, and AC-2's safety-on-open-case path is exercised only outside live chat.

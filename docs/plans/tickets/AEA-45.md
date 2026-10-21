@@ -104,7 +104,7 @@ proves CAP-4 end to end) and AEA-55 (the UI against the real backend).
 - DO-6 WF-4, CAP-4, *Content and redaction*; DO-7 M-3, M-13, M-27.
 - SCREEN_SPECS SCR-5…SCR-8 (states only).
 - Slice plan §0a (journey map, J-6) and rule `.claude/rules/integrated-journeys.md` §3–§4; UX-join amendments
-  `docs/plans/ux-join/backend-amendments.md` AEA-45-1, AEA-45-3 and §3 (AEA-45-2 waits on Innocent's Decision 2); residual
+  `docs/plans/ux-join/backend-amendments.md` AEA-45-1, AEA-45-2 (Innocent's Decision 2 option A, 2026-10-21), AEA-45-3 and §3; residual
   R-W-13 (`docs/plans/7b-decisions/residuals-web.md`: `allowed_actions` is `CaseService`'s, the route passes it through).
 - **Contract notes (OpenAPI wins; listed, not edited; AEA-08 reconciles the documents, STF-26):** (1) api-con-mapping §1
   serves these from `web/routes/staff.py`; the slice plan gives them `web/routes/staff_cases.py`. (2) The OpenAPI
@@ -141,7 +141,8 @@ proves CAP-4 end to end) and AEA-55 (the UI against the real backend).
 - [ ] AC-18 [invariant] The routes add, drop and rewrite nothing in a case view: `allowed_actions` and every display field of `QueueRow`, `CaseSummary` and `CaseDetail` (`reason`, `priority.word`, `due_label`, `age_label`, `follow_up_short`, `queued_at`, `identity.line`, `BriefItem.source_ids`, `CaseSource.source_id`, `version_label`) reach the client exactly as the `CaseService` double returns them, for each staff role; the owner's `[]` comes from the double, not from the route (AEA-45-1; staff audit A1, A2; `allowed_actions` = cases.md §5's table ∩ `ROLE_ACTIONS`, computed by `CaseService`, staff.md §1, R-W-13) — verify: `tests/api/test_staff_cases_routes.py::test_views_pass_through_unchanged` (a double returning distinctive values per field and per role) — evidence: the response JSON equals the double's serialised view for representative, supervisor and owner.
 - [ ] AC-19 [contract] `tests/contract/cases/staff_cases.py` holds the server cases for `getQueue`, `getCase`, `applyCaseAction`, `recordContactActivity`, `createFlag`, `listFlags`, `reviewFlag` and `getOversight`: preconditions (a role per operation's x-roles; a seeded case reference), every named request example, and each documented error status the routes can produce (401, 403 `ROLE_NOT_ALLOWED`, 404, 400, 409 `VERSION_CONFLICT` / `CASE_ALREADY_CLAIMED` / `NOT_ALLOWED_IN_STATE`, 422 `REASON_REQUIRED` / `WAKE_UP_REQUIRED` / `OUTCOME_REQUIRED`) (AEA-45-3) — verify: `CONTRACT_STRICT=1 uv run pytest tests/contract/test_openapi_server.py -k "Queue or Case or Contact or Flag or Oversight" -rs` once AEA-59's runner is merged — evidence: one pass per case; skips only as `not bound: <name>` for a later issue's provider.
 - [ ] AC-20 [journey] Extends J-6 (slice plan §0a journey map): the representative claims the escalated case (`result_line` "Claimed · Riley (demo)"), the queue and case view carry `allowed_actions` and the display fields unchanged, and a stale `expected_version` answers `VERSION_CONFLICT`; asserting what the user sees and what is stored, in `tests/journeys/j6/test_aea_45.py` with the scripted model adapter on AEA-57's harness — verify: `uv run pytest -m journey tests/journeys/j6/test_aea_45.py` — evidence: the steps pass at level `integrated with a scripted model`; until AEA-57 and AEA-52 land, the record `docs/testing/journeys/YYYY-MM-DD-AEA-45.md` states level `mock-tested` and *Blocked by* AEA-57 and AEA-52 (`integrated-journeys.md` §4).
-- [ ] AC-21 [regression/context] Same change updates `.claude/reference/area-map.md` (this issue's row, planned → actual with the commit), `.claude/state/icm-progress.md` (the A9 staff-console row's evidence link) and DO-3 §3's status for `web/routes/staff_cases.py` and `web/schemas/staff_cases.py` — verify: `git diff --stat` — evidence: only those rows change.
+- [ ] AC-21 [invariant] `getCase` returns `events.last_event_id` from `CaseService.detail` unchanged and validates against the amended `CaseDetail` (Decision 2 option A, Innocent 2026-10-21; amendment AEA-45-2; staff audit B5); the wire model in `web/schemas/staff_cases.py` copies the field from the UX session's amended OpenAPI, and until that amendment lands the validation half is reported `blocked-on UX session: OpenAPI amendment`, never passed against the unamended schema — verify: `tests/api/test_staff_cases_routes.py::test_case_detail_carries_last_event_id` with `assert_response_matches(response, "getCase")` — evidence: the field present and equal to the double's value.
+- [ ] AC-22 [regression/context] Same change updates `.claude/reference/area-map.md` (this issue's row, planned → actual with the commit), `.claude/state/icm-progress.md` (the A9 staff-console row's evidence link) and DO-3 §3's status for `web/routes/staff_cases.py` and `web/schemas/staff_cases.py` — verify: `git diff --stat` — evidence: only those rows change.
 
 ### Observability
 
@@ -176,6 +177,11 @@ proves CAP-4 end to end) and AEA-55 (the UI against the real backend).
   `get_demo_service`, `openapi_check.py`).
 - Evidence only, not a merge edge (wave unchanged): AC-19's strict run waits for AEA-59's runner, and AC-20's journey
   record stays `mock-tested` with *Blocked by* AEA-57 and AEA-52 until they land (`integrated-journeys.md` §4).
+- UX session: OpenAPI amendment (evidence only, not a merge edge; wave unchanged) — the UX session adds
+  `CaseDetail.events.last_event_id` to `docs/ux/03-structure/ui-contracts.openapi.yaml` in `docs/ux/**` (Decision 2 option
+  A); this ticket never edits the OpenAPI, copies the field into its wire model only after that lands, and until then
+  reports AC-21's validation `blocked-on UX session: OpenAPI amendment`. The route only passes the value through, so the
+  rest of the ticket builds without it.
 
 ### Agent handoff
 
@@ -199,7 +205,8 @@ proves CAP-4 end to end) and AEA-55 (the UI against the real backend).
 - **Decisions applied:** STF-1 (identity is the role), STF-2 / MC-2 (types in `domain/staff.py`), STF-3 / MC-4 (second
   `actor_for` for assign and change_priority; `needs` in x-roles order), STF-7 / MC-14 (no 503; middleware waits), STF-8
   (shared validator), STF-9 (`result_line` table), STF-10 (`FlagService` and its rejections), STF-26 (contract notes are
-  AEA-08's to reconcile).
+  AEA-08's to reconcile), UX-join Decision 2 option A (Innocent 2026-10-21: `CaseDetail.events.last_event_id`, AC-21; the
+  OpenAPI change is the UX session's, used here only after it lands).
 - **Wave and gates:** wave 2; no gate.
 - **Lane:** `lane::build-loop` — route, schema and test code (ticket-lanes: changes code).
 - **Risk:** None (slice plan). Roles are demo labels behind the login (R-48); the login gate itself is AEA-23/AEA-44.

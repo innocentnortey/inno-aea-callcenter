@@ -191,3 +191,10 @@ See [`decisions-for-innocent.md`](decisions-for-innocent.md). Don't change these
 - **Rename or remove a selector after AEA-58 starts** without a line in `selectors.md`'s change log first.
 - **Edit backend files** (`src/`, `tests/`, the tickets, the slice plan). Ask in this folder; a note here is read before each wave.
 - **Commit or push** without Innocent's yes (project rule). He is being asked to commit the tree now (Decision 3).
+
+
+## Decided by Innocent, 2026-10-21 (all recommendations taken)
+
+- **WEB-1: option A.** Public-before-login files stay as the app is built (no separate login page).
+- **Add `CaseDetail.events.last_event_id` to `ui-contracts.openapi.yaml`:** yes. **This is yours to do** in `docs/ux/**` (the backend session does not edit that file); tell the backend session when it lands. AEA-29, AEA-45 and the staff reads use it afterwards.
+- **No 410** on `streamChatEvents`. **Login throttle:** a separate message line. **After signing in again:** SCR-1 starts a fresh chat (one new `startChatSession`); the earlier thread is not resumed.

@@ -44,3 +44,8 @@ Engineering choices made without you (overrule any): the customer's speaker name
 
 1. You answer D-1 to D-3 (the rest can follow). I commit, then create the labels and 62 issues on project 2318 (`env -u GITLAB_TOKEN glab`).
 2. Wave 0 and 1 start together: 25 tickets, Opus planners then Sonnet implementers, frozen tests first on `risk::security` tickets, affected tests only, journey suite at merge.
+
+## Decisions taken (Innocent, 2026-10-21: "ill take all your recommendations")
+
+D-4 to D-15 are all decided as recommended: D-4 WEB-1 option A; D-5 add `CaseDetail.events.last_event_id` (the OpenAPI edit is made by the UX session, see `ux-join/FOR-UX-SESSION.md`); D-6 no 410 on the chat stream; D-7 a separate throttle message; D-8 start a fresh chat after signing in again; D-9 drop WF-2 from the seven requirements (audit updated); D-10 Stage 9 stays Stage 9 work (the seven eval gaps are accepted); D-11 narrow R-36 to the 10 workflows; D-12 accept the supervisor-alert limit, no contract change; D-13 add a test-only wall-clock override to `ContainerOverrides`; D-14 the DAT/CAS/GRC items stay on their recommended options; D-15 the spend line is still to be set before wave 4 (a statement, not a choice).
+Applied: held amendments AEA-29-5, AEA-45-2, AEA-58-3, AEA-58-4, AEA-62-3; wall-clock seam in web.md §15, AEA-23, AEA-57. **Still needs Innocent:** only the AEA-61 spend line (before wave 4) and a yes to the UX session making the OpenAPI edit.
