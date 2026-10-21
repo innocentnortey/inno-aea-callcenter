@@ -870,6 +870,8 @@ second only for a retryable failure whose wait (`retry_after_s`, or backoff 0.5�
 attempt writes a `spend_ledger` row and a masked span; `PROVIDER_SPEND_CAP` trips the circuit (`services/ledger.py`);
 the per-turn Sonnet-call brake (6, proposal) is counted here.
 
+> Built (AEA-20, `src/meridian/agent/gateway.py`, 2bcb8fb) to the rules as restated in [stage7/models.md](stage7/models.md) §5: provider admission through `ledger.admit_call` replaces "refuse at once if models are disabled (our cap …)"; our $30 cap is checked before the turn (MOD-11).
+
 **Role caps under the 60 s deadline [Decided SDQ-1].** The deadline bounds the turn; the role caps (proposal) bound
 each call, so one stalled call cannot use the whole minute. With 60 s, the one retry DO-1 allows almost always fits;
 the attempt count stays at 2 (DO-1 §11 decision 5 is not an SDQ and is unchanged).
