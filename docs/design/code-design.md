@@ -193,6 +193,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `agent/nodes/reply.py` (four node bodies), `agent/prompts/reply.py` (AEA-38, `ec94722`).
 **Built:** `agent/nodes/load_context.py` (AEA-34, `8d6be78`).
 **Built:** `services/cases.py`, `services/handoff.py`, `services/_case_rules.py`, `services/_case_views.py`, `services/_case_actions.py`, the `register_cases` hunk (AEA-29, `d3facfe`).
+**Built:** `eval/harness/{__main__,cli,deps,records,cases,freeze,scrub,runlog,client,runner,invariants,scoring,judge,ledger,dbcheck,report,load,retrieval,dryrun}.py`, `eval/run_retrieval.py` (AEA-24, branch `aea-24-eval-harness`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
