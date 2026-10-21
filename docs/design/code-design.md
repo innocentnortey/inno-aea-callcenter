@@ -299,10 +299,10 @@ src/meridian/                                    planned                        
 │   ├── nodes/plan.py                            planner, danger classifier, join_plan (stub by A7a)         A7d   3   stub AEA-21 6df4f4c
 │   ├── nodes/act.py                             specialist fan-out, escalation, handoff nodes (stub by A7a) A7b   3   stub AEA-21 6df4f4c
 │   ├── nodes/reply.py                           facts, responder, brief extraction, checks (stub by A7a)    A7c   3   built AEA-38 ec94722
-│   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3
-│   ├── specialists/runner.py                    the braked tool loop                                        A7b   3
+│   ├── specialists/specs.py                     SpecialistSpec per kind: prompt, tools, result builder      A7b   3   built AEA-35 e614508 (ticket wave 2)
+│   ├── specialists/runner.py                    the braked tool loop                                        A7b   3   built AEA-35 e614508 (ticket wave 2)
 │   ├── tools/dispatch.py                        schemas from ToolDef; guard; every branch; lookup-log rows  A7b   3   built AEA-22 5d0a4e4 (ticket wave 1)
-│   ├── prompts/specialists.py                   specialist wording                                          A7b   3
+│   ├── prompts/specialists.py                   specialist wording                                          A7b   3   built AEA-35 e614508 (ticket wave 2)
 │   ├── prompts/routing.py                       planner and classifier wording, choice fields               A7d   3
 │   └── prompts/reply.py                         responder and brief wording; trimmed schemas                A7c   3   built AEA-38 ec94722
 ├── web/
