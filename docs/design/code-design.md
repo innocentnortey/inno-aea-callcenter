@@ -190,7 +190,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/identity.py`, `adapters/sqlite/repos_identity.py` body, `agent/tools/account.py` (AEA-27, `93dfca4`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 **Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
-**Built:** `services/turn.py`, `web/routes/chat.py` (`submitTurn`), `web/schemas/chat.py` (`TurnRequest`), the `register_chat` hunk (AEA-40 Part A, `d7fb642`); Part B (`services/session.py`, the CON-1 routes) is blocked on AEA-02b and an AEA-03 follow-up.
+**Built:** `services/{turn,session}.py`, `web/routes/chat.py`, `web/schemas/chat.py`, the `register_chat` hunk (AEA-40, `e74e3c2`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
