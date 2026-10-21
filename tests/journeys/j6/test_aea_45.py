@@ -1,7 +1,6 @@
 """J-6 extension (slice plan section 0a): the representative claims the escalated case MHC-C-0007 on AEA-57's harness
-(real app on a first-boot DB copy, scripted model; no model call is reached). Steps that need `case_service` (AEA-29)
-or `demo_service` (AEA-30) are reported blocked until those merge; so are steps 0-1, because the real login reads
-`demo_clock` (AEA-30). CAP-4 end to end is AEA-52's."""
+(real app on a first-boot DB copy, scripted model; no model call is reached). AEA-29 and AEA-30 have merged, so every
+step runs against the real `CaseService` and `DemoService`. CAP-4 end to end is AEA-52's."""
 
 from __future__ import annotations
 

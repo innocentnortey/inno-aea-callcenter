@@ -1516,3 +1516,15 @@ Appended by the implementer, 2026-10-21 (branch `aea-45-staff-cases-api`, code c
   the ICM row (after the AEA-47 row, 37) were edited in commit 2. `check_context.py` reports `FAIL icm 14537 B (budget
   8192 B)`; the file was already over budget from other tickets' rows, and is not this ticket's to trim.
 - Test files hold a few more parametrised cases than the plan lists (per-example parametrisation); names match.
+
+Resumed 2026-10-21 (Innocent granted R-1; AEA-29 and AEA-30 merged into the branch).
+
+- **R-1 applied:** `case_state` added to `LOCAL_DRIVER_ONLY` in `tests/contract/openapi_cases.py` and to the README list.
+  Step 7 built: `tests/contract/cases/staff_cases.py` (59 drives, built with a small local `_d` helper rather than literal
+  dicts) and `tests/api/test_contract_cases_staff_cases.py`.
+- **J-6 now runs integrated.** The earlier "blocked from step 0" deviation is resolved: all steps ran and passed against the
+  real services. Record updated to level `integrated`.
+- **Runner subset:** run with `-k "(...) and not liveChat and not streamCase"`, because `-k Case` also selects AEA-46's
+  `liveChatAction/unknown_case`, which is red on the branch before this work (its case expects 404, AEA-29 answers 403
+  NOT_CLAIMED_BY_YOU). A request for AEA-46's owner, not edited here.
+- `mypy` reports 5 `no-untyped-call` errors in `tests/services/_case_fixtures.py` (not this ticket's file, present on main).

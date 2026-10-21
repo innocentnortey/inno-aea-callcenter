@@ -112,6 +112,7 @@ LOCAL_DRIVER_ONLY: Final[Mapping[str, str]] = MappingProxyType(
         "live_case_unclaimed": "seeds an unclaimed live case; proved by the route's local driver (mock-tested)",
         "case_claimed_by_supervisor": "seeds a supervisor-owned case; proved by the route's local driver (mock-tested)",
         "case_events": "seeds case-stream events; proved by the route's local driver (mock-tested)",
+        "case_state": "seeds the case, message or flag state the drive's body or path assumes (lifecycle, owner, version, message_id, flag_id); proved by the route's local driver (mock-tested)",
         "rate_limited": "needs the rate limiter to refuse the request; proved by the route's local driver (mock-tested)",
     }
 )
