@@ -708,10 +708,22 @@ def register_metrics_reader(container: Container, app: FastAPI, *, settings: Any
 
 
 def register_reads(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-48 reads API: CON-18 to CON-20 routes (staff.md §9).
+    """AEA-48 reads API: the CON-18 to CON-20 routes (staff.md §9).
 
-    No-op until AEA-48 fills it.
+    Includes routes/reads.py's router (getOwnerMetrics, getMonitoring, getLatestEval) once per app. Provides nothing:
+    the routes reach the reader through web/deps.py's get_metrics_reads(), which AEA-53's register_metrics_reader hunk
+    binds; until then an allowed read answers 500 ("not bound: get_metrics_reads") after the role check. An app that
+    create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.reads import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "reads_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.reads_routes_included = True
 
 
 def register_graph(
