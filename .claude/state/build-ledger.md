@@ -16,7 +16,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-11 | #11 | B | built | aea-11-test-support-fakes | a0b2693 |  | AEA-01,AEA-02 |
 | AEA-12 | #12 | B sec | planned |  |  |  | AEA-01,AEA-02,AEA-04,AEA-05 |
 | AEA-13 | #13 | B | blocked |  |  | awaiting Innocent: decision AEA-13-fees | AEA-02,AEA-03 |
-| AEA-14 | #14 | B | built | aea-14-aea-14-policy-handoff | 37ee4d9 |  | AEA-02,AEA-03 |
+| AEA-14 | #14 | B | merged | main | 551b13c (merge of 37ee4d9) | ruff check/format clean; mypy clean (47 files); 225 affected tests passed (policy, gates, import direction, affected journeys, skeleton, web container); journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
 | AEA-15 | #15 | B | planned | aea-15-checks-completion-facts |  |  | AEA-02 |
 | AEA-16 | #16 | B | planned | aea-16-aea-16-retrieval-ingest |  |  | AEA-02 |
 | AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
