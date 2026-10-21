@@ -4,12 +4,28 @@
 AEA-62; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
 orchestrator) and by the checklist *Skips* row "UX-5 first run". The ★ boxes stay Innocent's.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/55 (identical to
-`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `c9b17ea` (2026-10-21; first written against `ef561fc`) · **Wave:** 5 · **Lane:**
+`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `6b845a3` (2026-10-21; first written against `ef561fc`, refreshed at `c9b17ea`) · **Wave:** 5 · **Lane:**
 `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests, no
 security agent) · **Gates:** `gate::ux5` (cleared, above), `gate::paid` (AC-10 walkthrough only, Innocent's).
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-55-ui-verify-again` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-55`), cut from `main` after the five blockers merged.
+
+**Refresh, 2026-10-21 (third version).** Re-checked against `main` at `6b845a3`, 44 commits after `c9b17ea`. In that
+range AEA-30, AEA-35, AEA-35b, AEA-36 and AEA-40 merged. None of them touched `apps/web/`, `docs/ux/` (the OpenAPI
+included), `tests/integration/` or `tests/journeys/support/`, and `docs/ux/05-verify/` is still absent. So §4.1,
+§4.4–§4.6 and every spec step hold unchanged. AEA-51's plan (§4 C1, Part D) has not changed since this plan was first
+written. AEA-53's plan was refreshed (base `3725c90`), and its §4.4 labels, null reasons and §6.4 SQL still match §4.3
+and Step 6.7. What changed in this version:
+1. **Step 0.2 no longer trusts the build ledger alone.** On `6b845a3` the ledger lags git: AEA-35 reads `planned` and
+   AEA-40 reads `blocked`, yet `Merge AEA-35 specialist runner` and `Merge AEA-40 sessions and turns` are on `main`. A
+   blocker now counts as merged when its ledger row **or** a merge-commit subject says so. Either way, its files must
+   exist.
+2. The area-map *Screens* paragraph is now **line 55** (§2, Step 14). The checklist lines 90, 91, 120, 127, 128 and 151
+   are unchanged.
+3. §4.3 copies `reason_label`'s exact signature. It takes an optional `safety_kind`, and AC-8 calls it without one,
+   as AEA-53 does for its by-reason rows.
+4. R-11 and §9 restate the blocker states at `6b845a3`.
 
 **Refresh, 2026-10-21 (second version).** Re-checked against `main` at `c9b17ea`. Since `ef561fc`, nothing under
 `apps/web/`, `tests/journeys/`, `tests/integration/`, `tests/graph/` or `src/meridian/` has changed. The copied
@@ -89,8 +105,8 @@ by Innocent (no `TRACEABILITY.md`, no `QA_REPORT.md`, no Lighthouse); the second
 | Observability (DO-6) | `docs/design/observability-contract.md` rows WF-1, WF-2, WF-3, WF-4, WF-5, WF-6, WF-18, WF-19 | AC-6 (`request` record per response, code stored as "[code entered]"), AC-8 (reads count, never recompute) |
 | Metrics (DO-7) | `docs/design/key-metrics-registry.md` M-18, M-22, M-23, M-24, M-26 as AEA-53 serves them | AC-8 SQL (copied from AEA-53's plan §6.4) |
 | Evaluation (DO-5) | `docs/design/evaluation-plan.md` | n/a: no E-n number; AC-10 is compatibility evidence only |
-| Sibling plans read (re-read at `c9b17ea`; AEA-53 and AEA-62 were refreshed since `ef561fc`, AEA-52 and AEA-58 are being edited by their planners) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §4 C1/C2/D1/D2 (`customer_support.py`, `worked_pair_scenarios.py` public API), `AEA-53.md` §4.3–§4.4, §6.4 (wire shapes, SQL), `AEA-58.md` §2, Step 0 (worktree build rule, `MERIDIAN_WEB_DIST_DIR`), `AEA-62.md` §7 C-6 (browser journey command), `AEA-52.md` §2 (owned `tests/integration/` file names) | §4 copies; collision check |
-| Current code read | `apps/web/{package.json,playwright.config.ts,vite.config.ts,tsconfig.json,eslint.config.js,.gitignore}`, `apps/web/scripts/{check-dist,check-generated,prism-smoke}.mjs`, `apps/web/tests/e2e/{smoke,sweep,journey-chat-booking-handoff}.spec.ts`, `tests/e2e/support/state.ts`, `src/main.tsx`, `src/state/theme.ts`, `src/screens/reads/{format.ts,MetricTile.tsx,MeasuresTable.tsx,ScreenTitle.tsx}`, `src/screens/scr09/Scr09.tsx`, `scr10/{Scr10,SpendBar}.tsx`, `scr11/{Scr11,EvalMeasuresTable}.tsx`, `scr12/copy.ts`, `scr07/{DemoControls.tsx,copy.ts}`, `scr01/cards/{LocatePromptCard,CodePromptCard}.tsx`, `components/shell/RoleGate.tsx`, `api/useOp.ts`; `tests/journeys/support/{server,run,env,client,db,logtap,plugin,scripted_model}.py`; `tests/conftest.py`; `pyproject.toml`; `src/meridian/web/{errors,logging}.py`, `policy/limits.py` (`WebLimits`, `IdentityLimits.code_ttl_s = 600`), `gates/gate.py` (`CODE_ENTERED`), `domain/common.py` (`HandoffReason`), `services/_case_rules.py` (`reason_label`), `adapters/sqlite/schema/{00_core,40_identity}.sql`; re-read at `c9b17ea`: `apps/web/{vite.config.ts,tsconfig.json,playwright.config.ts,package.json,.gitignore}`, `tests/e2e/support/state.ts`, `tests/journeys/support/{server,run,env,plugin,client,db,logtap,scripted_model}.py`, `src/meridian/adapters/sqlite/db.py` (`format_wall`), `services/ledger.py` (`spend_today`), `services/reset.py` (seed refs MHC-C-0005…0008; MHC-10002 / INV-204411), `adapters/sqlite/repos_identity.py` (`customers(customer_id, name, phone, email)`), the OpenAPI (no `additionalProperties: false`; `CaseDetail` has no `events.last_event_id` yet) | §4 |
+| Sibling plans read (re-read at `6b845a3`: since this plan was first written, only AEA-53's plan changed in git; AEA-60's and AEA-62's have uncommitted planner edits, and AEA-62's does not touch its journey command) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §4 C1/C2/D1/D2 (`customer_support.py`, `worked_pair_scenarios.py` public API), `AEA-53.md` §4.3–§4.4, §6.4 (wire shapes, SQL), `AEA-58.md` §2, Step 0 (worktree build rule, `MERIDIAN_WEB_DIST_DIR`), `AEA-62.md` §7 C-6 (browser journey command), `AEA-52.md` §2 (owned `tests/integration/` file names) | §4 copies; collision check |
+| Current code read | `apps/web/{package.json,playwright.config.ts,vite.config.ts,tsconfig.json,eslint.config.js,.gitignore}`, `apps/web/scripts/{check-dist,check-generated,prism-smoke}.mjs`, `apps/web/tests/e2e/{smoke,sweep,journey-chat-booking-handoff}.spec.ts`, `tests/e2e/support/state.ts`, `src/main.tsx`, `src/state/theme.ts`, `src/screens/reads/{format.ts,MetricTile.tsx,MeasuresTable.tsx,ScreenTitle.tsx}`, `src/screens/scr09/Scr09.tsx`, `scr10/{Scr10,SpendBar}.tsx`, `scr11/{Scr11,EvalMeasuresTable}.tsx`, `scr12/copy.ts`, `scr07/{DemoControls.tsx,copy.ts}`, `scr01/cards/{LocatePromptCard,CodePromptCard}.tsx`, `components/shell/RoleGate.tsx`, `api/useOp.ts`; `tests/journeys/support/{server,run,env,client,db,logtap,plugin,scripted_model}.py`; `tests/conftest.py`; `pyproject.toml`; `src/meridian/web/{errors,logging}.py`, `policy/limits.py` (`WebLimits`, `IdentityLimits.code_ttl_s = 600`), `gates/gate.py` (`CODE_ENTERED`), `domain/common.py` (`HandoffReason`), `services/_case_rules.py` (`reason_label`), `adapters/sqlite/schema/{00_core,40_identity}.sql`; re-read at `c9b17ea`: `apps/web/{vite.config.ts,tsconfig.json,playwright.config.ts,package.json,.gitignore}`, `tests/e2e/support/state.ts`, `tests/journeys/support/{server,run,env,plugin,client,db,logtap,scripted_model}.py`, `src/meridian/adapters/sqlite/db.py` (`format_wall`), `services/ledger.py` (`spend_today`), `services/reset.py` (seed refs MHC-C-0005…0008; MHC-10002 / INV-204411), `adapters/sqlite/repos_identity.py` (`customers(customer_id, name, phone, email)`), the OpenAPI (no `additionalProperties: false`; `CaseDetail` has no `events.last_event_id` yet); re-checked at `6b845a3`: no change under any of these paths except `services/_case_rules.py` being read for its `reason_label` signature (§4.3) | §4 |
 
 ### Source-contract reconciliation
 
@@ -138,7 +154,7 @@ by Innocent (no `TRACEABILITY.md`, no `QA_REPORT.md`, no Lighthouse); the second
 | `docs/testing/ui-verify-again.md` | create | The UX-5 second-run report (DAT-25) | — |
 | `docs/testing/journeys/<run-date>-AEA-55.md` | create (written by `--journey-record=AEA-55`, then edited) | AC-13 record | — |
 | `PROJECT-CHECKLIST.md` | modify **line 120 only** (§8 "Frontend: one integration step per contract …") | AC-23 tick + evidence link | — |
-| `.claude/reference/area-map.md` | modify **the *Screens* paragraph only** (line 54 today) | AC-23 | — |
+| `.claude/reference/area-map.md` | modify **the *Screens* paragraph only** (line 55 at `6b845a3`) | AC-23 | — |
 | `.claude/state/icm-progress.md` | modify: **add one** "Routes verified against code and tests" row | AC-23 | ≤ 400 chars |
 
 Temporary, never committed: the symlink `apps/web/node_modules` (Step 0.6), everything under `var/ui-verify/`,
@@ -294,7 +310,11 @@ def wp2(run, client=None) -> ScenarioResult;  def wp5(...);  def wp7(...)   # dr
 - `MetricsReader` served by `GET /api/staff/owner-metrics` (`getOwnerMetrics`, roles owner and supervisor) and
   `GET /api/monitoring` (`getMonitoring`, any signed-in role).
 - `reason_label`: import it from the **same module `src/meridian/services/metrics_reader.py` imports it from** (today
-  it is defined in `meridian.services._case_rules`; Step 0.4 greps).
+  it is defined in `meridian.services._case_rules`; Step 0.4 greps). Its signature on `main` (line 342):
+  `def reason_label(reason: HandoffReason, safety_kind: str | None = None) -> str`. AC-8 calls it **without**
+  `safety_kind`, i.e. `reason_label(HandoffReason(r))`. That is how AEA-53 labels `handoffs_by_reason` and
+  `escalations_by_reason` (AEA-53 plan §4.4). Only CON-18's `cases[]` list passes `safety_kind`, and AC-8 does not compare
+  that list.
 - Wire shapes (AEA-53 plan §4.3):
   - `Measure{id, label, numerator, denominator, unit, value, null_reason, kind, case_refs}`;
   - `Tile{id, label, value, unit, numerator, denominator, null_reason}`;
@@ -388,11 +408,22 @@ default config: they bind 5184 or 4019.
 ### Step 0 — environment and preconditions (no code)
 
 1. `export UV_LINK_MODE=hardlink`; `df -h /home` (stop and report if under 5 GB free).
-2. Blockers merged:
-   `awk -F'|' '$2 ~ /^ AEA-(51|52|53|58|62) $/ {print $2 $5}' .claude/state/build-ledger.md` must print five rows,
-   each with state `merged`. The merge step maintains the ledger; merge-commit messages vary
-   (`Merge AEA-57 …`, `Merge aea-24-…`), so do not grep `git log`. If any row is not `merged`, **stop: BLOCKED-ON**
-   that ticket.
+2. Blockers merged. Do this for each `NN` in `51 52 53 58 62`. *Invariant:* the ticket is built only on code that
+   is really on `main`, and a lagging ledger neither blocks it nor lets it through.
+   1. Ledger: `awk -F'|' -v t=" AEA-NN " '$2 == t {print $5}' .claude/state/build-ledger.md` prints ` merged `, **or**
+   2. Git: `git log --merges --format=%s main | grep -E "^Merge (AEA-NN([^0-9a-z]|$)|aea-NN-)"` prints a line. This
+      matches subjects such as `Merge AEA-36 front node` and `Merge aea-24-eval-harness`. It does not match
+      `Merge main into aea-NN-…` or `Merge AEA-35b: …` for `NN = 35`.
+   3. If neither 1 nor 2 holds, **stop: BLOCKED-ON AEA-NN**.
+   4. If either holds, these files must exist on the worktree, or **stop and report** "AEA-NN shows as merged but its
+      files are missing":
+      - AEA-51: `tests/integration/customer_support.py`, `tests/graph/worked_pair_scenarios.py`;
+      - AEA-52: `tests/integration/staff_support.py`, `tests/journeys/j7/test_aea_52.py`;
+      - AEA-53: `src/meridian/services/metrics_reader.py`, `tests/journeys/j10/test_aea_53.py`;
+      - AEA-58: `tests/journeys/browser/plugin.py`, `tests/journeys/j1/test_aea_58.py`;
+      - AEA-62: `tests/journeys/j2/test_aea_62.py`.
+   5. When 1 and 2 disagree, write the disagreement in the report to the orchestrator: ticket, ledger state, merge
+      subject. Do not edit the ledger; the merge step owns it.
 3. AEA-51's API is as §4.2 says:
    `grep -nE "^def (open_customer_run|step_overrides|build_capture_sink|finished_spans)|^class (StepScript|RunOptions|CustomerRun)" tests/integration/customer_support.py`
    and
@@ -1202,7 +1233,8 @@ in this order:
   passed. Append ` — evidence: [docs/testing/ui-verify-again.md](docs/testing/ui-verify-again.md) (AEA-55, <date>)`.
   Otherwise leave it unticked and append ` — run <date>: see [docs/testing/ui-verify-again.md](docs/testing/ui-verify-again.md) (not yet clean)`.
   **Never touch line 91 (UX-5 ★) or line 127 (UI verify again ★).**
-- `.claude/reference/area-map.md` *Screens* paragraph (line 54 today): after the sentence about AEA-49 serving
+- `.claude/reference/area-map.md` *Screens* paragraph (line 55 at `6b845a3`; find it with
+  `grep -n '^\*\*Screens\*\*' .claude/reference/area-map.md`): after the sentence about AEA-49 serving
   `dist`, insert: `AEA-55 ran the frontend against the real backend through Prism proxy (`apps/web/playwright.ui-verify.config.ts`, `tests/integration/test_ui_run_records.py`; report [ui-verify-again](../../docs/testing/ui-verify-again.md), <commit>).`
 - `.claude/state/icm-progress.md`: add one row after the last "Routes verified against code and tests" row:
   `| Routes verified against code and tests | provisional | <date>: area map *Screens* → apps/web against the real backend (AEA-55, <commit>): test_ui_run_records.py (6 tests) and the UI-verify run, report docs/testing/ui-verify-again.md | Innocent's walkthrough and ★ "UI verify again" |`
@@ -1316,12 +1348,16 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 - **R-10, AEA-58's selector contract** (`docs/plans/ux-join/selectors.md`, UX session) is still missing on `main`. If
   it is still missing at build time, AEA-58's on-screen journey steps are *blocked* and `--journeys-strict` fails
   (AC-13 not met, reported with owner "UX session").
-- **R-11, upstream holds (build ledger at `c9b17ea`).** Upstream of AEA-51 and AEA-52:
-  - AEA-35, AEA-37 and AEA-39 are held at `NEEDS-DECISION`;
-  - AEA-30, AEA-36, AEA-40 and AEA-45 are `blocked`.
+- **R-11, upstream holds (at `6b845a3`).** AEA-30, AEA-35, AEA-36 and AEA-40 are now merged on `main`, though the
+  ledger still shows AEA-35 `planned` and AEA-40 `blocked` (Step 0.2 handles this). Still open upstream of AEA-51 and
+  AEA-52:
+  - AEA-37 is `sent-back` (a merge conflict in `tests/graph/test_spine.py`; it needs a rebase);
+  - AEA-39 and AEA-45 are `blocked`; AEA-45 is upstream of AEA-52 only.
 
-  AEA-53 is held at `NEEDS-DECISION` (its plan's R-1 grant is not recorded). AEA-58 and AEA-62 wait on those. Any
-  delay there delays this ticket. None of them is a decision this ticket needs.
+  AEA-53's own plan now records its R-1 grant (DV-1, base `3725c90`), but its ledger row still reads
+  `NEEDS-DECISION`, so the orchestrator must re-dispatch it. AEA-58 waits on AEA-40, which is now merged (the ledger
+  has not caught up). AEA-62 waits on AEA-51, AEA-52 and AEA-58. Any delay there delays this ticket. None of them is a
+  decision this ticket needs.
 - **R-12, scripted-table fidelity.** WP-2's entries come from AEA-51's driver. If WP-2 still fails through the UI
   (`script.problems()` not empty, or a marker word turns out to occur in a prompt), the implementer stops and sends
   the plan back to the planner. It does not change markers ad hoc.
@@ -1345,9 +1381,13 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 
 **READY**, BLOCKED-ON **AEA-51, AEA-52, AEA-53, AEA-58, AEA-62** being merged into `main`. Step 0.2 checks this.
 
-State at `c9b17ea` (build ledger): AEA-51 `blocked` (a blocker is not merged), AEA-52 `blocked` (same), AEA-53
-`blocked` (NEEDS-DECISION: R-1 grant), AEA-58 `blocked` (a blocker is not merged), AEA-62 `blocked` (same). AEA-49
-and AEA-57, also named in the slice-plan row, are merged.
+State at `6b845a3`. None of the five is merged: there is no `Merge AEA-NN` subject on `main` and no ledger row
+reads `merged`.
+- AEA-51, AEA-52, AEA-58 and AEA-62 are `blocked` (a blocker is not merged).
+- AEA-53 is `blocked` with NEEDS-DECISION on its R-1 grant. Its refreshed plan records the grant as DV-1, so it waits
+  only on re-dispatch.
+
+AEA-49 and AEA-57, also named in the slice-plan row, are merged.
 
 | Blocker | Why it is truly needed |
 |---|---|
