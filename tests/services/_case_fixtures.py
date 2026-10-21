@@ -297,7 +297,7 @@ class FlakyUow:
 def guidance(reason: HandoffReason) -> StaffGuidance:
     text = STAFF_GUIDANCE_FOR[reason][0]
     return StaffGuidance(
-        passage_id=PassageId("internal/agent_discretion_notes.md#3"),
+        passage_id=PassageId(f"internal/agent_discretion_notes.md#{list(STAFF_GUIDANCE_FOR).index(reason)}"),
         file="internal/agent_discretion_notes.md",
         section="Agents may NOT",
         version_label="undated",

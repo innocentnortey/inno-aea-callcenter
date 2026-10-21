@@ -758,7 +758,6 @@ _DIFFERENCES = {
     "case.due_label",  # cases 3.1: policy/handoff.due_label is the producer; the example's short form is illustrative
     "case.version",  # STF-18: the example's version is illustrative
     "promise.due_label",  # same producer as case.due_label
-    "promise.text",  # the example's wording is illustrative; ours is the policy table's
     "promise.policy_row",  # the example's row name is illustrative; ours is the table's
 }
 
