@@ -239,7 +239,7 @@ src/meridian/                                    planned                        
 │   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
 │   ├── models/anthropic.py                      AnthropicAdapter: all three model ports; own failure mapping A2    1
 │   ├── models/openrouter_jev.py                 JevAdapter: ChoiceModel only; own failure mapping           A2    1
-│   ├── retrieval_fastembed.py                   FastembedIndex + relevance floor + readiness info           A3    1
+│   ├── retrieval_fastembed.py                   FastembedIndex + relevance floor + readiness info           A3    1   built AEA-33 206f802
 │   └── tracing_langfuse.py                      LangfuseTraceSink (mask hook, bounded queue), NullTraceSink A10a  1   built AEA-19 2d5b692
 ├── retrieval/
 │   ├── settings.py                              embedder, chunker and floor constants, one place            A3    1
@@ -269,7 +269,7 @@ src/meridian/                                    planned                        
 │   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
 ├── agent/
 │   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1   built AEA-20 2bcb8fb
-│   ├── tools/knowledge.py                       kb_search executor                                          A3    1
+│   ├── tools/knowledge.py                       kb_search executor                                          A3    1   built AEA-33 206f802
 │   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
                                                  request_change executors
@@ -376,7 +376,7 @@ Full signatures: [DO-4 internal-components.md](contracts/internal-components.md)
 | `adapters/sqlite/repos_core.py` | Hold the repositories for the shared tables, and the reads and the reset clearing that other tickets need (A0, AEA-10; slice plan §0 deviation 2). | Beside its tables it carries `reads.invoice`, `reads.appointment`, `reads.identity_state`, `reset.clear_demo_tables(tx)` and `settled_for(thread_id, read_at)`; signatures are in [stage7/cases.md](contracts/stage7/cases.md) §1.2–§1.3 (and `settled_for` in [stage7/graph-core.md](contracts/stage7/graph-core.md) §6), not copied here |
 | `adapters/sqlite/*` | Store and read rows; one transaction per unit of work. | WAL, `busy_timeout` 5 s [A]; the issued file opened read-only, only by `migrate.restore_working_copy` |
 | `adapters/checkpointer.py` | Build the LangGraph checkpointer; prune and clear it. | `checkpoints.sqlite`, its own file and lock (DO-1 §4); `prune(keep=2)` [Decided SDQ-10] and `clear()` are handed to A6's services as callables |
-| `adapters/retrieval_fastembed.py` | Load the built index and answer a query with a relevance floor. | Readiness: index present, dimension matches `bge-small-en-v1.5`, 17 manifest files (retrieval rule 7) |
+| `adapters/retrieval_fastembed.py` | Load the built index and answer a query with a relevance floor. | Readiness: index present, dimension matches `bge-small-en-v1.5`, 17 manifest files (retrieval rule 7). **Built** AEA-33 `206f802`: `Readiness.reasons` `index_missing`, `dimension_mismatch`, `manifest_not_17`, `record_mismatch` (stage7/data.md §4) |
 | `adapters/tracing_langfuse.py` | Export masked spans in the background, dropping when the queue is full. | Startup check that the keys belong to this app's project (DO-6 CAP-9); export goes through the ingestion-only TLS proxy [Decided SDQ-3] |
 
 **The shared promise between the two model adapters lives in a test, not in shared code** (review S-2):
