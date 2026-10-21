@@ -188,6 +188,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
 
 ```
 src/meridian/                                    planned                                                     area  wave
@@ -238,7 +239,7 @@ src/meridian/                                    planned                        
                                                  demo_state, job_runs, reset/seed records; A0 (AEA-10)
 │   ├── sqlite/repos_spend.py                    spend_ledger                                                A2    1
 │   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1
-│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1
+│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1   built AEA-28 a6d8a68
 │   ├── sqlite/repos_staff.py                    staff_sessions, flags                                       A9    2
 │   ├── sqlite/repos_ops.py                      health_events, deploy_records, eval results (read)          A10a  1
 │   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
@@ -254,7 +255,7 @@ src/meridian/                                    planned                        
 ├── services/
 │   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
 │   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1
-│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1
+│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1   built AEA-28 a6d8a68
 │   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
 │   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
                                                  BriefAssembler
@@ -277,7 +278,7 @@ src/meridian/                                    planned                        
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1   built AEA-33 206f802
 │   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
-                                                 request_change executors
+                                                 request_change executors   built AEA-28 a6d8a68
 │   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2   built AEA-21 6df4f4c
 │   ├── routers.py                               pure conditional-edge functions                             A7a   2   built AEA-21 6df4f4c
 │   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2   built AEA-21 6df4f4c
