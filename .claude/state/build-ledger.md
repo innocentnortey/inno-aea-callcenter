@@ -69,5 +69,9 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-02b | #200 | B | merged | aea-02b-case-views | 5305d57063a38a4c600cf74f997bdc5df4c6edfc | Merge conflict in .claude/state/icm-progress.md only (append-style), resolved by keeping both sides. Gates: ru | - |
 | AEA-35b | #202 | B | merged | aea-35b-specialist-types | 3725c90 (merge of 68f7f19) | ruff check/format clean; mypy clean (469 files); 760 affected tests passed; affected journeys 29 passed, 20 skipped, 1 failed (j7 test_aea_30, fails identically on pre-merge main); no shared fixture/config touched, no full suite | - |
 | FIX-W1 | #101 | B | merged | aea-fix-w1-fix-w1-driver-j7 | 38d3884 | ruff/format clean; mypy 0 errors before and after; contract+journeys 699 passed, 70 skipped, 1 xfailed; J-7 blocked on AEA-51, 0 failed | - |
+| AEA-21b | #203 | B | ready |  |  |  | - |
+| AEA-19-F1 | #204 | B | merged | aea-19-f1-aea-19-f1-trace-override | dc8d8d0 (code 6faeaac) | ruff/format clean; mypy 0 errors (548 files); web/api/capture/policy tests 652 passed, 1 failed (test_wf15_reset_script, fails identically on the pre-merge commit); affected journeys 46 passed, 38 skipped | - |
+| AEA-40-F1 | #205 | B | planned | aea-40-f1-aea-40-f1-safety-at-cap |  |  | - |
+| FU-saveFollowUp-text | #206 | B | planned | aea-fu-savefollowup-text-fu-savefollowup-text |  |  | - |
 | FU-j1-demo-state | #207 | B | merged | aea-fu-j1-demo-state-fu-j1-demo-state | dbcd8b7 (merge of f870fc0) | test-only fix to J-1 step 4; ruff/format clean; mypy 0 errors (547 files); demo/reset tests 41 passed; affected journey test_aea_57 2 passed, 4 skipped (blocked-on AEA-51) | - |
 | AEA-56 | #56 | gated | gated |  |  | human: deploy and smoke (Innocent) |  |
