@@ -22,8 +22,8 @@ from meridian.domain.common import (
 )
 from meridian.domain.common import ToolCallRecord as ToolCallRecord
 from meridian.domain.common import ToolKind as ToolKind
-from meridian.domain.specialists import AccountCapture, KnowledgeCapture, SchedulingCapture
-from meridian.domain.turn import TurnIds
+from meridian.domain.specialists import AccountCapture, KnowledgeCapture, SchedulingCapture, SchedulingSlice
+from meridian.domain.turn import PlannedTask, TurnIds
 
 
 class ToolCallScope(MeridianModel):
@@ -34,6 +34,28 @@ class ToolCallScope(MeridianModel):
     shown_slot_ids: frozenset[int]
     now: dt.datetime
     message_id: int
+
+
+class KnowledgeSlice(MeridianModel):
+    """AEA-35b: kind-only marker. The knowledge specialist sees only the customer's text (graph-tools section 2)."""
+
+    kind: Literal["knowledge"] = "knowledge"
+
+
+class AccountSlice(MeridianModel):
+    """AEA-35b: kind-only marker. Account tools get the verified customer from code (`ToolCallScope`), not from here."""
+
+    kind: Literal["account"] = "account"
+
+
+class SpecialistTask(MeridianModel):
+    """DO-4 section 5 plus `offer_quick_checks` (graph-tools section 2, GRT-8). Home: here, not `specialists` (import cycle)."""
+
+    task: PlannedTask
+    customer_text: str
+    task_messages: tuple[str, ...]
+    slice: KnowledgeSlice | AccountSlice | SchedulingSlice
+    offer_quick_checks: bool = False
 
 
 class LookupEntry(MeridianModel):
