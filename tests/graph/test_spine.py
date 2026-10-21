@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import importlib.metadata
-import inspect
 import logging
 import threading
 import time
@@ -14,7 +13,6 @@ from langgraph.types import Command
 from pydantic import SecretStr
 
 from meridian.agent import graph as graph_mod
-from meridian.agent.nodes import act
 from meridian.domain import blocks as b
 from meridian.domain.common import FailureCounters, Halt, HaltReason, Priority, TurnId
 from meridian.domain.identity import FormValues
@@ -99,27 +97,6 @@ def test_skeleton_compiles_and_runs(monkeypatch: pytest.MonkeyPatch) -> None:
     assert h.visits[4:] == ["plan_join", "facts", "responder", "checks"]
     assert [type(x) for x in out.reply.blocks] == [b.TextBlock]
     assert typing.cast(b.TextBlock, out.reply.blocks[0]).text == "Hello from the double."
-
-
-@pytest.mark.parametrize(
-    ("module", "name", "path"),
-    [
-        (act, "run_specialist", "act.py"),
-        (act, "escalation", "act.py"),
-        (act, "handoff", "act.py"),
-    ],
-)
-def test_stubs_raise_loudly(module: typing.Any, name: str, path: str) -> None:
-    fn = getattr(module, name)
-    assert list(inspect.signature(fn).parameters) == [
-        next(iter(inspect.signature(fn).parameters)),
-        "runtime",
-        "deps",
-    ]
-    with pytest.raises(
-        NotImplementedError, match=f"src/meridian/agent/nodes/{path} {name}: stub from AEA-21"
-    ):
-        fn(None, None, deps=None)
 
 
 def test_brake_runs_escalation_once(monkeypatch: pytest.MonkeyPatch) -> None:
