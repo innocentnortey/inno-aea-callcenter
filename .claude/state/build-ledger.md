@@ -59,7 +59,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-54 | #54 | D | ready |  |  |  | AEA-50 |
 | AEA-57 | #57 | B | merged | aea-57-aea-57-journey-harness | bd79a29 (merge of c37ef04) | ruff check/format clean; mypy clean (89 files); tests/journeys + skeleton + import direction + affected-journeys 47 passed, 12 skipped, 1 failed (stale test_no_journey_yet_prints_zero, pre-existing since the first journey landed); journeys 11 passed, 9 skipped; no shared fixture/config touched, no full suite; J-1 steps 3-7 blocked on AEA-30/AEA-40/AEA-51 | AEA-02,AEA-10,AEA-11,AEA-23 |
 | AEA-58 | #58 | B | ready |  |  |  | AEA-40,AEA-49,AEA-57 |
-| AEA-59 | #59 | B | sent-back | aea-59-aea-59-contract-boundary | ef4c398 | conflict: .claude/state/icm-progress.md and docs/design/code-design.md (content conflicts). Merge aborted, main unchanged | AEA-02,AEA-23 |
+| AEA-59 | #59 | B | merged | aea-59-aea-59-contract-boundary | cf74674 (code ef4c398) | ruff check/format clean; mypy clean (294 src files); tests/contract, api, journeys 486 passed, 93 skipped, 1 xfailed; J-1 contract step still skipped (wiring follow-up) | - |
 | AEA-60 | #60 | B | ready |  |  |  | AEA-20,AEA-22,AEA-35,AEA-37,AEA-38,AEA-39,AEA-17,AEA-18,AEA-27,AEA-28,AEA-33,AEA-57 |
 | AEA-61 | #61 | B | ready |  |  |  | AEA-51,AEA-57,AEA-60,AEA-06,AEA-50 |
 | AEA-62 | #62 | B | ready |  |  |  | AEA-58,AEA-51,AEA-52,AEA-29,AEA-40,AEA-57 |
