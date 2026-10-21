@@ -69,6 +69,8 @@ def test_every_register_stub_present(monkeypatch: pytest.MonkeyPatch) -> None:
     for name, ticket in EXPECTED_HUNKS:
         assert ticket in (originals[name].__doc__ or ""), name
     for name, func in originals.items():
+        if "No-op until" not in (func.__doc__ or ""):
+            continue  # filled by its ticket, whose own test covers the hunk
         fresh = Container(settings=_stand_in(), limits=Limits())
         extra = {"overrides": None} if name == "register_graph" else {}
         assert func(fresh, FastAPI(), settings=fresh.settings, limits=fresh.limits, **extra) is None

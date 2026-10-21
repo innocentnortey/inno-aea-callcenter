@@ -127,8 +127,36 @@ class Container:
 def register_storage(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-10 storage: SQLite unit of work, migrations and first boot, checkpointer (cases.md §1).
 
-    No-op until AEA-10 fills it.
+    Provides Key("uow_factory") (SqliteUnitOfWorkFactory; building it migrates the working copy, WF-16),
+    Key("checkpointer") (Checkpointer over checkpoints.sqlite, closed with the container) and
+    Key("restore_working_copy") (restore_working_copy bound to settings.issued_db_path; cases.md §1.4).
     """
+    import functools
+    from pathlib import Path
+
+    from meridian.adapters.checkpointer import CHECKPOINTS_DB_NAME, Checkpointer
+    from meridian.adapters.sqlite.db import SqliteUnitOfWorkFactory
+    from meridian.adapters.sqlite.migrate import WORKING_DB_NAME, migrate, restore_working_copy
+
+    data_dir = Path(settings.data_dir)
+    issued_path = Path(settings.issued_db_path)
+    db_path = data_dir / WORKING_DB_NAME
+
+    def make_uow_factory(_c: Container) -> SqliteUnitOfWorkFactory:
+        migrate(db_path, issued_path=issued_path)  # first boot copies the issued file; DDL every boot
+        return SqliteUnitOfWorkFactory(db_path)
+
+    def make_checkpointer(c: Container) -> Checkpointer:
+        checkpointer = Checkpointer(data_dir / CHECKPOINTS_DB_NAME)
+        c.on_close(checkpointer.close)
+        return checkpointer
+
+    container.provide(Key[SqliteUnitOfWorkFactory]("uow_factory"), make_uow_factory)
+    container.provide(Key[Checkpointer]("checkpointer"), make_checkpointer)
+    container.provide(
+        Key[Callable[..., None]]("restore_working_copy"),
+        lambda _c: functools.partial(restore_working_copy, issued_path=issued_path),
+    )
 
 
 def register_web(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
@@ -170,15 +198,81 @@ def register_ops(container: Container, app: FastAPI, *, settings: Any, limits: L
 def register_tracing(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-19 tracing: Langfuse or null trace sink and the project-key check (models.md §4, §7).
 
-    No-op until AEA-19 fills it.
+    Provides Key[TraceSink]("trace"). LangfuseTraceSink only when all four LANGFUSE_* settings are set
+    (Settings.langfuse_complete()); otherwise NullTraceSink and no alert (MOD-6 step 5, MC-24). The sink's on_alert
+    calls the container's "alert_writer".fire("trace_export_failed", reason) (AEA-32, cases.md §8); until that key
+    exists it logs a fixed line. One LangfuseTraceSink per Langfuse public key per process.
     """
+    import logging
+
+    from meridian.adapters.tracing_langfuse import (
+        LangfuseExportSettings,
+        LangfuseTraceSink,
+        NullTraceSink,
+        TraceAlertReason,
+    )
+    from meridian.config import Settings
+    from meridian.ports.runtime import TraceSink
+    from meridian.privacy.redact import redact
+
+    log = logging.getLogger("meridian.tracing")
+    trace_key = Key[TraceSink]("trace")
+    typed = cast(Settings, settings)
+    pk, sk = typed.langfuse_public_key, typed.langfuse_secret_key
+    base_url, project_id = typed.langfuse_base_url, typed.langfuse_project_id
+    if not typed.langfuse_complete() or pk is None or sk is None or base_url is None or project_id is None:
+        null_sink = NullTraceSink()
+        container.provide(trace_key, lambda _c: null_sink)
+        return
+
+    def on_alert(reason: TraceAlertReason) -> None:
+        try:
+            writer = container.get(Key[Any]("alert_writer"))
+        except ContainerError:
+            log.warning("trace_alert_unbound reason=%s", reason)
+            return
+        writer.fire("trace_export_failed", reason)
+
+    export_settings = LangfuseExportSettings(
+        public_key=pk, secret_key=sk, base_url=base_url, project_id=project_id
+    )
+    try:
+        sink = LangfuseTraceSink(export_settings, redact, on_alert)
+    except Exception as exc:
+        log.warning("trace_sink_error op=build error=%s", type(exc).__name__)
+        fallback = NullTraceSink()
+        container.provide(trace_key, lambda _c: fallback)
+        return
+    container.provide(trace_key, lambda _c: sink)
+    container.on_start(sink.start)
+    container.on_close(sink.close)
 
 
 def register_spend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-26 spend: LedgerService and the spend guard (models.md §6).
 
-    No-op until AEA-26 fills it.
+    Provides Key[LedgerService]("ledger"), the one LedgerService, built from the "uow_factory" key (AEA-10), the
+    "wall_clock" key (AEA-23, create_app's choice; MC-20, D-13) and limits.spend.daily_cap_usd (MC-22). The gateway
+    (AEA-20), the turn service (AEA-40, typed as SpendGuard), the alert evaluator (AEA-32), the metrics reader (AEA-53)
+    and GraphDeps.ledger (AEA-51) all get it with container.get(Key[LedgerService]("ledger")).
     """
+    import datetime as dt
+
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.ledger import LedgerService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+    wall_key: Key[Callable[[], dt.datetime]] = Key("wall_clock")  # = web.deps.WALL_CLOCK
+
+    def build(c: Container) -> LedgerService:
+        return LedgerService(
+            c.get(uow_key),
+            wall_clock=c.get(wall_key),
+            daily_cap_usd=limits.spend.daily_cap_usd,
+            probe_lost_after_s=float(limits.turn.deadline_s),
+        )
+
+    container.provide(Key[LedgerService]("ledger"), build)
 
 
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
