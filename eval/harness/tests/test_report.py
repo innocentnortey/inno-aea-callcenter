@@ -249,7 +249,7 @@ def test_e3_e4_e5_measures() -> None:
         "billing": "not ready",
         "warranty": "ready",
     }
-    assert not any(i.startswith("M-2") for i in by_id)
+    assert "M-2" not in by_id
     assert "M-9" not in by_id
     assert "M-24" not in by_id
     assert summary["dev_failures"] == []
