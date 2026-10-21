@@ -886,6 +886,16 @@ the attempt count stays at 2 (DO-1 §11 decision 5 is not an SDQ and is unchange
 
 > Superseded at Stage 7: `TraceSink.export_status` takes the turn's handle, `export_status(turn: SpanHandle)` ([stage7/models.md](stage7/models.md) §4, MOD-9; MC-28).
 
+> Built (AEA-16, `fe12657`): the index directory `retrieval/ingest.py` writes. `manifest.json` (17 `ManifestRow`s
+> sorted by `path`); `passages.jsonl` (one `Passage` per line without `score`, plus `embed_text` = `section + "\n" + text`;
+> row order = vector order); `vectors.npy` (float32 `[chunks, dimension]`, L2-normalised); `index_record.json` (the five
+> `IndexInfo` fields at the top level plus `settings`, every `retrieval/settings.py` constant by its Python name; read it as
+> `IndexInfo.model_validate({k: record[k] for k in IndexInfo.model_fields})`); `ingest_run.json` (`IngestRun`);
+> `staff_notes.json` (`StaffGuidance` list, one per bullet, never embedded). `manifest_hash` = SHA-256 of the canonical
+> JSON (sorted keys, separators `(",", ":")`, UTF-8) of the 17 rows' `model_dump(mode="json")` in `path` order, including
+> `source_sha256` (for the PNG: the image bytes followed by the transcription bytes) and `chunks`. Shapes:
+> [stage7/data.md](stage7/data.md) §3.
+
 ```python
 class RetrievalResult(MeridianModel):
     passages: tuple[Passage, ...]                     # top k, current files only (excluded files are never indexed)
