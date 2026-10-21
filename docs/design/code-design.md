@@ -265,7 +265,7 @@ src/meridian/                                    planned                        
                                                  (AEA-23; stage7/web.md §7)
 │   ├── person_request.py                        CON-4 person request, then HandoffService.open              A8    2   built AEA-42 55b5e7c
                                                  (AEA-42; stage7/web.md §8)
-│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2
+│   ├── live_chat.py                             join, send, hand back, close (CON-14)                       A9    2   built AEA-46 0d152ee
 │   ├── staff.py                                 StaffSessionStore (login sessions, role check, role switch) A9    2
                                                  and FlagService (AEA-44; stage7/staff.md §2)
 │   └── metrics_reader.py                        CON-18…CON-20 reads; never recomputes outcomes              A10b  3
@@ -309,7 +309,7 @@ src/meridian/                                    planned                        
 │   ├── routes/demo.py · schemas/demo.py         CON-6, CON-7, CON-8 read, CON-9 (AEA-43)                    A8    2
 │   ├── routes/staff_session.py · schemas/staff_session.py  CON-10 role switch (AEA-44)                                 A9    2
 │   ├── routes/staff_cases.py · schemas/staff_cases.py  CON-11…CON-13, CON-15…CON-17 (AEA-45)                       A9    2
-│   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2
+│   ├── routes/staff_live.py · schemas/staff_live.py  CON-14, CON-21 (async SSE per case) (AEA-46)                A9    2   built AEA-46 0d152ee
 │   ├── routes/staff_clock.py · schemas/staff_clock.py  CON-8 advance, supervisor only (AEA-47)                     A9    2
 │   └── routes/reads.py · schemas/reads.py       CON-18…CON-20 (AEA-48; reader: AEA-53)                      A10b  2–3
                                                  `web/templates/` · `static/` are NOT PLANNED: the screens are the React app apps/web/ (UX-4 built 2026-10-21, gate unsigned);
