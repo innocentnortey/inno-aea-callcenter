@@ -490,6 +490,21 @@ def test_controller_ai_without_conversation_row(store: TempStore) -> None:
     assert touched == []
 
 
+def test_ended_thread_raises_rather_than_guessing_ai(store: TempStore) -> None:
+    thread, turn = new_thread(), new_turn()
+    now = DEMO_START + MIN
+    with store.uow(write=True) as tx:
+        connection_of(tx).execute(
+            "INSERT INTO ended_threads (thread_id, demo_session, ended_wall_at, reason, reset_id) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (str(thread), "demo", "2026-10-21T00:00:00.000Z", "reset", None),
+        )
+        tx.commit()
+    deps, _ = make_deps(store.uow)
+    with pytest.raises(ValueError, match="EndedThread"):
+        run_node(make_state(thread, turn, now=now), make_ctx(thread, turn, now=now), deps)
+
+
 def test_thread_mismatch_raises_before_reading(store: TempStore) -> None:
     t, u, turn = new_thread(), new_thread(), new_turn()
     now = DEMO_START + MIN

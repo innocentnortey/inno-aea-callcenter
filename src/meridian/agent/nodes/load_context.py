@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from langgraph.runtime import Runtime
 
+from meridian.adapters.sqlite.rows import ConversationRow
 from meridian.agent.context import GraphDeps
 from meridian.domain.state import ChatLine, Controller, ConversationState, LoadContextUpdate
 from meridian.domain.turn import TurnContext
@@ -38,8 +39,7 @@ def load_context(
             for m in tx.core.messages.recent(thread_id, turns=lim.window_turns)
         ]
         timeouts = tx.core.turns.timeouts_for(thread_id)
-    stored = getattr(row, "controller", None)
-    controller = stored if isinstance(stored, Controller) else Controller(kind="ai")
+    controller = _controller_from(row)
     window = _fit_total(lines, lim.window_total_chars)
     counters = state.counters.model_copy(update={"timeouts": timeouts})
     return {
@@ -49,6 +49,20 @@ def load_context(
         "chat_window": window,
         "counters": counters,
     }
+
+
+def _controller_from(row: object) -> Controller:
+    """Who replies: the conversations row decides (C-7). No row means a thread nobody has joined, so the AI.
+
+    Any other result (an ended thread, a changed lookup contract) raises: guessing "ai" could hide a person's chat.
+    """
+    if isinstance(row, ConversationRow):
+        return row.controller
+    if row is None:
+        return Controller(kind="ai")
+    raise ValueError(
+        f"conversation lookup returned {type(row).__name__}: the thread has no live conversation row"
+    )
 
 
 def _cut_line(text: str, limit: int) -> str:
