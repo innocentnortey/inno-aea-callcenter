@@ -35,7 +35,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-30 | #30 | B | planned |  |  |  | AEA-10,AEA-11,AEA-14 |
 | AEA-31 | #31 | B | planned |  |  |  | AEA-10,AEA-14,AEA-23 |
 | AEA-32 | #32 | B | ready |  |  |  | AEA-10,AEA-23 |
-| AEA-33 | #33 | B | ready |  |  |  | AEA-16 |
+| AEA-33 | #33 | B | merged | aea-33-aea-33-retrieval-index | a45e3c2 (code 206f802) | ruff check/format clean; mypy clean (72 files); 235 affected tests passed (adapters, agent, contract, retrieval, skeleton, import direction, container); journeys 0 affected; pre-existing red test_affected_journeys (AEA-26 journey) unrelated | AEA-16 |
 | AEA-34 | #34 | B | ready |  |  |  | AEA-10,AEA-21 |
 | AEA-35 | #35 | B | ready |  |  |  | AEA-11,AEA-20,AEA-22 |
 | AEA-36 | #36 | B sec | ready |  |  |  | AEA-11,AEA-12,AEA-14,AEA-21 |
