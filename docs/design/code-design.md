@@ -690,7 +690,9 @@ tests/                                       planned
 ├── unit/             mirrors src/meridian/: unit/gates/test_rules.py, unit/test_checks.py,
 │                     unit/policy/test_handoff.py, unit/privacy/test_redact.py, unit/agent/test_routers.py, …
 ├── contract/         test_model_ports_contract.py (JevAdapter + AnthropicAdapter, recorded fixtures: same failure
-│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py
+│                     kinds), test_retrieval_contract.py, test_trace_sink_contract.py; OpenAPI boundary (AEA-59):
+│                     test_openapi_server.py over cases/<route>.py (one per route ticket), test_openapi_fixtures.py,
+│                     test_types_gen_drift.py
 ├── services/         each service over a temp SQLite working copy: booking rules, one-slot concurrency (E-7),
 │                     idempotent case creation, identity caps, reset all-or-nothing
 ├── graph/            the compiled graph with fake models and a temp DB: WP-1…WP-8, WP-4F, DANGER, NODANGER;
@@ -703,7 +705,7 @@ tests/                                       planned
 └── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
 ```
 
-**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); the rest of this tree is planned.
+**Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); the rest of this tree is planned.
 
 - **What each role runs:** `build-loop-test-scope.md`; the full suite before a deploy or when a change touches `domain/`,
   `policy/limits.py`, `repos_core.py`, `tests/fakes/` or `conftest.py`.
