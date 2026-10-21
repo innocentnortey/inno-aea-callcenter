@@ -67,7 +67,12 @@ class DemoControls(Protocol):
 
 class DemoReset(Protocol):
     def reset(
-        self, now: datetime, *, request_id: RequestId, session_id: LoginSessionId | None, role: DemoRole | None
+        self,
+        now: datetime,
+        *,
+        request_id: RequestId,
+        session_id: LoginSessionId | None,
+        role: DemoRole | None,
     ) -> object: ...
 
 
@@ -109,7 +114,9 @@ def list_demo_inbox(
 
 
 def get_staffing(demo: DemoControls = Depends(get_demo_service)) -> JSONResponse:  # noqa: B008
-    return JSONResponse(Staffing.model_validate(demo.staffing(), from_attributes=True).model_dump(mode="json"))
+    return JSONResponse(
+        Staffing.model_validate(demo.staffing(), from_attributes=True).model_dump(mode="json")
+    )
 
 
 def set_staffing(
@@ -123,7 +130,9 @@ def set_staffing(
 
 
 def get_demo_clock(demo: DemoControls = Depends(get_demo_service)) -> JSONResponse:  # noqa: B008
-    return JSONResponse(DemoClock.model_validate(demo.clock_view(), from_attributes=True).model_dump(mode="json"))
+    return JSONResponse(
+        DemoClock.model_validate(demo.clock_view(), from_attributes=True).model_dump(mode="json")
+    )
 
 
 def reset_demo(
@@ -143,7 +152,9 @@ def reset_demo(
         )
     limiter.record_reset(ctx.client_ip, stamp)
     try:
-        result = resets.reset(now, request_id=ctx.request_id, session_id=session.session_id, role=session.role)
+        result = resets.reset(
+            now, request_id=ctx.request_id, session_id=session.session_id, role=session.role
+        )
     except ResetAlreadyRunning:
         raise ApiProblem(
             409, ApiErrorCode.RESET_IN_PROGRESS, details={"retry_after_ms": RESET_RETRY_AFTER_MS}
@@ -154,7 +165,9 @@ def reset_demo(
 
 
 def build_router() -> APIRouter:
-    router = APIRouter(dependencies=[Depends(get_login_session)])  # defence in depth: 401 if the gate let one by
+    router = APIRouter(
+        dependencies=[Depends(get_login_session)]
+    )  # defence in depth: 401 if the gate let one by
     router.add_api_route(
         "/api/demo/inbox", list_demo_inbox, methods=["GET"], operation_id="listDemoInbox", response_model=None
     )
