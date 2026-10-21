@@ -698,8 +698,20 @@ def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-45 staff API: queue, case, actions, contact log, flags, oversight routes (staff.md §6).
 
-    No-op until AEA-45 fills it.
+    Includes routes/staff_cases.py's router (CON-11…13, CON-15…17) once per app. Provides nothing: CaseService (AEA-29),
+    FlagService (AEA-44) and DemoService (AEA-30) are bound by their own hunks; until a service is bound an allowed
+    request answers 500 ("not bound: <provider>") after the role check. An app that create_app did not build has no
+    web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_cases import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "staff_cases_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.staff_cases_routes_included = True
 
 
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
