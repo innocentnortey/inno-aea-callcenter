@@ -48,7 +48,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-43 | #43 | B sec | frozen-tests | aea-43-aea-43-demo-routes |  |  | AEA-23 |
 | AEA-44 | #44 | B sec | merged | aea-44-aea-44-staff-sessions | ec86bf8 (code 2fa5266) | ruff check/format clean; mypy clean (84 files); 224 passed in api/services/contract/journeys (3 skipped, blocked AEA-57/52) + 889 in adapters/unit/graph/capture; 1 stale test failing on main too (test_no_journey_yet_prints_zero); J-8 record mock-tested, blocked by AEA-57; full suite not run | AEA-10,AEA-23 |
 | AEA-45 | #45 | B | ready |  |  |  | AEA-23 |
-| AEA-46 | #46 | B | ready |  |  |  | AEA-10,AEA-23 |
+| AEA-46 | #46 | B sec | merged | aea-46-aea-46-live-takeover | 6da3818 (merge; code commit 0d152ee) | ruff check/format clean; mypy clean (87 files); 332 affected tests passed (api, services, unit/web, contract); journeys 9 passed, 4 skipped (J-7 mock-tested, blocked by AEA-57/AEA-52); no shared fixture/config touched, no full suite | AEA-10,AEA-23 |
 | AEA-47 | #47 | B sec | merged | aea-47-staff-clock-advance | 23dd4ac | ruff check/format clean; mypy clean; tests/api+contract+unit+journeys 996 passed, 1 skipped, 1 stale test failing on main too (test_no_journey_yet_prints_zero); J-6 record skipped until AEA-45/57; no full suite | AEA-23 |
 | AEA-48 | #48 | B | ready |  |  |  | AEA-23 |
 | AEA-49 | #49 | B | ready |  |  |  | AEA-23 |
