@@ -63,6 +63,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-60 | #60 | B | ready |  |  |  | AEA-20,AEA-22,AEA-35,AEA-37,AEA-38,AEA-39,AEA-17,AEA-18,AEA-27,AEA-28,AEA-33,AEA-57 |
 | AEA-61 | #61 | B | ready |  |  |  | AEA-51,AEA-57,AEA-60,AEA-06,AEA-50 |
 | AEA-62 | #62 | B | ready |  |  |  | AEA-58,AEA-51,AEA-52,AEA-29,AEA-40,AEA-57 |
+| AEA-02b | #200 | B | merged | aea-02b-case-views | 5305d57 (merge of db85ec4) | ruff check/format clean; mypy clean (92 files); 293 affected tests passed (tests/unit/domain, import direction); new module, nothing imports it, no full suite; journeys 0 affected | - |
 | AEA-09 | #9 | gated | gated |  |  | human: Railway project, variables, Langfuse (Innocent) |  |
 | AEA-55 | #55 | gated | gated |  |  | UI integration (waits UX-5 sign-off) |  |
 | AEA-56 | #56 | gated | gated |  |  | human: deploy and smoke (Innocent) |  |
