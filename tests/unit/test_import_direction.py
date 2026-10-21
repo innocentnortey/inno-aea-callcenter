@@ -94,3 +94,51 @@ def test_texts_imports_stdlib_only() -> None:
     outside = [n for n in seen if n.split(".")[0] not in sys.stdlib_module_names]
     assert not relative, f"relative imports: {relative}"
     assert not outside, f"non-stdlib imports: {outside}"
+
+
+def _aea02_scan(path: Path) -> list[tuple[str, bool, int]]:
+    """Every import in a file as (module, inside TYPE_CHECKING, relative level)."""
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    guarded: set[int] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.If) and ast.unparse(node.test) == "TYPE_CHECKING":
+            guarded.update(id(inner) for stmt in node.body for inner in ast.walk(stmt))
+    found: list[tuple[str, bool, int]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            found.extend((alias.name, id(node) in guarded, 0) for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            found.append((node.module or "", id(node) in guarded, node.level))
+    return found
+
+
+def test_domain_ports_config_imports() -> None:
+    """AEA-02 AC-18: dependency direction for domain/*, ports/* and config.py (static scan)."""
+    forbidden = {"anthropic", "httpx", "fastembed", "langfuse", "langgraph", "sqlite3"}
+    third_party = {"pydantic", "pydantic_core"}
+    stdlib = set(sys.stdlib_module_names) | {"__future__"}
+    areas: list[tuple[str, list[Path]]] = [
+        ("domain", sorted(p for p in (SRC / "domain").glob("*.py") if p.name != "__init__.py")),
+        ("ports", sorted(p for p in (SRC / "ports").glob("*.py") if p.name != "__init__.py")),
+        ("config", [SRC / "config.py"]),
+    ]
+    assert [len(files) for _, files in areas] == [11, 2, 1]
+    for area, files in areas:
+        for path in files:
+            for module, type_checking, level in _aea02_scan(path):
+                print(f"{area}/{path.name}: {'TYPE_CHECKING ' if type_checking else ''}{module}")
+                assert level == 0, f"relative import in {path.name}"
+                top = module.split(".")[0]
+                assert top not in forbidden, f"{path.name} imports {module}"
+                if top != "meridian":
+                    assert top in stdlib or top in third_party, f"{path.name} imports {module}"
+                    continue
+                if module.startswith("meridian.domain"):
+                    continue
+                if area == "ports" and type_checking and module.startswith("meridian.adapters.sqlite.repos_"):
+                    continue
+                if area == "config" and (
+                    module.startswith("meridian.ports") or module == "meridian.privacy.redact"
+                ):
+                    continue
+                raise AssertionError(f"{path.name} ({area}) must not import {module}")
