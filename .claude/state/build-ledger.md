@@ -37,7 +37,7 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-31 | #31 | B | merged | aea-31-aea-31-reset-demo-seed | 7ddc7f7 (merge of d0ab4cb) | ruff check/format clean; mypy clean (74 files); 163 affected tests passed (services, web, api, adapters, import direction); J-8 AEA-31, J-9, J-10 journeys 3 passed; no paid calls | AEA-10,AEA-14,AEA-23 |
 | AEA-32 | #32 | B | merged | aea-32-aea-32-ops-health | edf53a5 (code 20abaad) | ruff check/format clean; mypy clean (196 files); 227 affected tests passed (1 timing-flaky tracing test passed on rerun); 2 affected journeys passed (J-10, J-9); full suite not run; journey record at mock-tested, blocked by AEA-57, AEA-53 | AEA-10,AEA-23 |
 | AEA-33 | #33 | B | merged | aea-33-aea-33-retrieval-index | a45e3c2 (code 206f802) | ruff check/format clean; mypy clean (72 files); 235 affected tests passed (adapters, agent, contract, retrieval, skeleton, import direction, container); journeys 0 affected; pre-existing red test_affected_journeys (AEA-26 journey) unrelated | AEA-16 |
-| AEA-34 | #34 | B | planned |  |  |  | AEA-10,AEA-21 |
+| AEA-34 | #34 | B | merged | aea-34-load-context-node | dd31214 (merge of 4c423b7) | ruff check/format clean; mypy clean (109 files); tests/unit/agent/nodes + tests/graph 92 passed (4 test_spine reply-stub tests fail on main too, stale since AEA-38, not this diff); journeys 2 affected: 2 passed, 3 skipped (J-3 blocked by AEA-51); no shared fixture/config touched, no full suite | AEA-10,AEA-21 |
 | AEA-35 | #35 | B | blocked |  |  | NEEDS-DECISION (plan) | AEA-11,AEA-20,AEA-22 |
 | AEA-36 | #36 | B sec | ready |  |  |  | AEA-11,AEA-12,AEA-14,AEA-21 |
 | AEA-37 | #37 | B | ready |  |  |  | AEA-11,AEA-12,AEA-21 |
