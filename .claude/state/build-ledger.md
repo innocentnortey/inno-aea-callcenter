@@ -13,16 +13,16 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-07 | #7 | D | merged | main | 5073dd0 (docs, pushed to main as a fast-forward); ledger row in bc02266 | docs/technical-documentation.md: 13 sections, links resolve, figures sourced or pending, 6+1 open decisions labelled proposed; diff touches docs, SUBMISSION.md and .claude/state only | - |
 | AEA-08 | #8 | D | merged | main | c0621de (documents); ledger and ICM row in 5f2e1bb | DO-3 at revision 3 (103 modules recounted); area map has a Tickets column (01-62 except the six direct/human tickets, AEA-14 twice); stale-name greps leave only history, Superseded notes and retired-name sentences; check_context no FAIL; diff touches docs and .claude/state only | - |
 | AEA-10 | #10 | B | planned | aea-10-aea-10-storage |  |  | AEA-01,AEA-02 |
-| AEA-11 | #11 | B | built | aea-11-test-support-fakes | a0b2693 |  | AEA-01,AEA-02 |
-| AEA-12 | #12 | B sec | planned |  |  |  | AEA-01,AEA-02,AEA-04,AEA-05 |
+| AEA-11 | #11 | B | sent-back | aea-11-test-support-fakes | a0b2693 |  | AEA-01,AEA-02 |
+| AEA-12 | #12 | B sec | frozen-tests |  |  |  | AEA-01,AEA-02,AEA-04,AEA-05 |
 | AEA-13 | #13 | B | blocked |  |  | awaiting Innocent: decision AEA-13-fees | AEA-02,AEA-03 |
-| AEA-14 | #14 | B | built | aea-14-aea-14-policy-handoff | 37ee4d9 |  | AEA-02,AEA-03 |
-| AEA-15 | #15 | B | planned | aea-15-checks-completion-facts |  |  | AEA-02 |
-| AEA-16 | #16 | B | planned | aea-16-aea-16-retrieval-ingest |  |  | AEA-02 |
+| AEA-14 | #14 | B | merged | main | 551b13c (merge of 37ee4d9) | ruff check/format clean; mypy clean (47 files); 225 affected tests passed (policy, gates, import direction, affected journeys, skeleton, web container); journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
+| AEA-15 | #15 | B | merged | aea-15-checks-completion-facts | e9a8740 (merge of fef0897) | ruff check/format clean; mypy clean (118 files); unit suite 575 passed (src/meridian/checks.py and tests/unit/test_checks.py new; no shared fixture/config touched); journeys 0 affected, record mock-tested, blocked by AEA-57 | - |
+| AEA-16 | #16 | B | merged | aea-16-aea-16-retrieval-ingest | 576a4bf | ruff check/format clean; mypy clean (50 files); affected tests 25 passed (retrieval, skeleton, import direction) plus 17 affected-journey tests; journeys 0 affected, record mock-tested, blocked by AEA-57; no shared fixture/config touched, no full suite | - |
 | AEA-17 | #17 | B sec | planned | aea-17-aea-17-anthropic-adapter |  |  | AEA-02 |
 | AEA-18 | #18 | B sec | planned | aea-18-aea-18-jev-adapter |  |  | AEA-02 |
 | AEA-19 | #19 | B sec | planned | aea-19-aea-19-langfuse-sink |  |  | AEA-02,AEA-04 |
-| AEA-20 | #20 | B sec | planned | aea-20-aea-20-model-gateway |  |  | AEA-01,AEA-02,AEA-04 |
+| AEA-20 | #20 | B sec | frozen-tests | aea-20-aea-20-model-gateway |  |  | AEA-01,AEA-02,AEA-04 |
 | AEA-21 | #21 | B | planned | aea-21-graph-spine |  |  | AEA-02,AEA-03 |
 | AEA-22 | #22 | B sec | planned | aea-22-aea-22-tool-dispatch |  |  | AEA-02,AEA-04 |
 | AEA-23 | #23 | B sec | planned | aea-23-aea-23-web-shell |  |  | AEA-01,AEA-02,AEA-04 |
@@ -32,8 +32,8 @@ Maintained by the build workflow's merge step; truth if the session is compacted
 | AEA-27 | #27 | B sec | planned |  |  |  | AEA-04,AEA-10,AEA-13 |
 | AEA-28 | #28 | B | planned |  |  |  | AEA-10,AEA-13 |
 | AEA-29 | #29 | B sec | planned |  |  |  | AEA-10,AEA-11,AEA-14,AEA-16 |
-| AEA-30 | #30 | B | ready |  |  |  | AEA-10,AEA-11,AEA-14 |
-| AEA-31 | #31 | B | ready |  |  |  | AEA-10,AEA-14,AEA-23 |
+| AEA-30 | #30 | B | planned |  |  |  | AEA-10,AEA-11,AEA-14 |
+| AEA-31 | #31 | B | planned |  |  |  | AEA-10,AEA-14,AEA-23 |
 | AEA-32 | #32 | B | ready |  |  |  | AEA-10,AEA-23 |
 | AEA-33 | #33 | B | ready |  |  |  | AEA-16 |
 | AEA-34 | #34 | B | ready |  |  |  | AEA-10,AEA-21 |
