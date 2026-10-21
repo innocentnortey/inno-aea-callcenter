@@ -178,7 +178,7 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 
 Owner area and wave in the right-hand columns (§8). Sizes follow `code-structure.md`.
 
-**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`); `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py` and the five node stubs (AEA-21, `6df4f4c`).
+**Built:** `policy/texts.py` (AEA-03, `2689582`); `config.py`, `domain/{common,records,actions,identity,specialists,handoff,blocks,turn,tools,state,staff}.py`, `ports/{models,runtime}.py`, `adapters/sqlite/repos_{core,spend,identity,booking,cases,staff,ops}.py` (shells) (AEA-02, `5c367ad`), `gates/rules.py` (AEA-05, `0d443ab`) · `policy/handoff.py`, `policy/escalation.py` (AEA-14, `af848c9`); `agent/{graph,routers,context,signals}.py`, `agent/nodes/compose.py` and the five node stubs (AEA-21, `6df4f4c`) · `adapters/models/anthropic.py` (AEA-17, `79d29fe`); `adapters/models/openrouter_jev.py` (AEA-18, `64884ef`).
 **Built:** `retrieval/{settings,manifest,ingest}.py` (AEA-16, `fe12657`).
 **Built:** `adapters/sqlite/{db,migrate,rows,repos_core,repos_core_aux,repos_cases,repos_cases_state}.py`, every `adapters/sqlite/schema/*.sql`, `adapters/checkpointer.py`, `tests/fixtures/sqlite.py` (AEA-10, `ff4b9bd`).
 **Built:** `services/ledger.py`, `adapters/sqlite/repos_spend.py` body (AEA-26, `c589914`).
@@ -187,7 +187,9 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `web/routes/events.py`, `web/schemas/events.py` (AEA-41, branch `aea-41-aea-41-chat-event-stream`).
 **Built:** `services/health.py`, `adapters/sqlite/repos_ops.py` body (AEA-32, `c5d319b`).
 **Built:** `policy/booking.py` (AEA-13, `cab183b`).
+**Built:** `services/identity.py`, `adapters/sqlite/repos_identity.py` body, `agent/tools/account.py` (AEA-27, `93dfca4`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
+**Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
 **Built:** `agent/nodes/load_context.py` (AEA-34, `9c13400`).
 
 ```
@@ -238,8 +240,8 @@ src/meridian/                                    planned                        
 │   ├── sqlite/repos_cases.py                    cases, case_events, promises, followups, activities,        A0    0
                                                  demo_state, job_runs, reset/seed records; A0 (AEA-10)
 │   ├── sqlite/repos_spend.py                    spend_ledger                                                A2    1
-│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1
-│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1
+│   ├── sqlite/repos_identity.py                 identity_codes, demo_inbox, invoices (read)                 A4    1   built AEA-27 93dfca4
+│   ├── sqlite/repos_booking.py                  appointment_slots, appointments, technicians                A5    1   built AEA-28 a6d8a68
 │   ├── sqlite/repos_staff.py                    staff_sessions, flags                                       A9    2
 │   ├── sqlite/repos_ops.py                      health_events, deploy_records, eval results (read)          A10a  1
 │   ├── checkpointer.py                          SqliteSaver factory; prune(keep=2) [Decided SDQ-10]; clear() A0    0
@@ -254,8 +256,8 @@ src/meridian/                                    planned                        
 │   └── ingest.py                                chunk every format; embed; write index + index record       A3    1
 ├── services/
 │   ├── ledger.py                                cost ledger; SpendGuard; provider spend-cap circuit         A2    1
-│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1
-│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1
+│   ├── identity.py                              locate, issue, deliver to demo inbox, verify; owns its tx   A4    1   built AEA-27 93dfca4
+│   ├── scheduling.py                            windows, book, move, cancel, request_change; owns its tx    A5    1   built AEA-28 a6d8a68
 │   ├── cases.py                                 CaseService: lifecycle, versions, follow-up, activities     A6    1
 │   ├── handoff.py                               HandoffService (case + promise + action + event in one tx); A6    1
                                                  BriefAssembler
@@ -276,9 +278,9 @@ src/meridian/                                    planned                        
 ├── agent/
 │   ├── gateway.py                               ModelGateway: typed role maps; deadline, retry, ledger, span A2    1   built AEA-20 2bcb8fb
 │   ├── tools/knowledge.py                       kb_search executor                                          A3    1   built AEA-33 206f802
-│   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1
+│   ├── tools/account.py                         invoice / membership / warranty read executors              A4    1   built AEA-27 93dfca4
 │   ├── tools/scheduling.py                      window search, appointments read, book, move, cancel,       A5    1
-                                                 request_change executors
+                                                 request_change executors   built AEA-28 a6d8a68
 │   ├── graph.py                                 build_graph(deps): static skeleton, recursion_limit         A7a   2   built AEA-21 6df4f4c
 │   ├── routers.py                               pure conditional-edge functions                             A7a   2   built AEA-21 6df4f4c
 │   ├── context.py                               GraphDeps (constructor), TurnContext (per turn)             A7a   2   built AEA-21 6df4f4c
