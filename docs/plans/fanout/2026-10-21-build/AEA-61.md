@@ -6,13 +6,48 @@ files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51** (
 **Part C** (the paid run and its record) is **blocked-on AEA-51 and AEA-60**, and waits on **`gate::paid`**: Innocent's
 go with the day's spend statement (sign-off D-15, "a statement, not a choice").
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `cf8fd78` (refresh 2, 2026-10-21; refresh 1 at `ef561fc`; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `76f14f4` (refresh 3, 2026-10-21; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
 **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
 
-**Refresh 2 (2026-10-21, `main` at `cf8fd78`).** Read this box first; refresh 1 below is kept as history.
+**Refresh 3 (2026-10-21, `main` at `76f14f4`).** Read this box first; refreshes 2 and 1 below are kept as history.
+
+1. **Merged since refresh 2** (first-parent `main`):
+   - **AEA-40** at `f466ff7`: `services/session.py`, `services/turn.py`, `web/routes/chat.py`, `web/schemas/chat.py`,
+     and a real `register_chat`. The build ledger still shows AEA-40 `blocked` / NEEDS-DECISION; that row is stale
+     (`git merge-base --is-ancestor f466ff7 main` is true).
+   - The AEA-29 typing fix (`8a205b2`), **AEA-35b** (`3725c90`), **AEA-36** front node (`c378698`) and **AEA-35**
+     specialist runner (`1ce98c4`).
+   - **AEA-37** was sent back on a merge conflict. **AEA-39** is still NEEDS-DECISION.
+2. **Unchanged since `cf8fd78`, re-checked by `git diff --stat cf8fd78 76f14f4`:** `tests/journeys/support/`,
+   `eval/`, `scripts/`, `tests/fixtures/`, `tests/unit/adapters/test_retrieval_fastembed.py` and `pyproject.toml`.
+   - Every §4.1 name was grepped on `76f14f4` and holds: `ISSUED_DB`, `letters`, `build_sha_from_git`,
+     `cached_model_dir`, `KB_DIR`, `TRANSCRIPTIONS_DIR`, `SIGNAL_LOGGER`, `DEMO_START`, the three eval header constants,
+     and the `journey` / `live` markers.
+   - The first dev warranty key by name is still `T-CALL-20260723-0276`.
+3. **What AEA-40 changes for this slice:**
+   - `startChatSession` and `submitTurn` now exist on the real app.
+   - `register_chat` reads `Key("run_graph")` and `Key("reply_composer")` lazily. Until AEA-51 binds them, a turn
+     raises `RuntimeError("not bound: run_graph")`. A live run on today's `main` would therefore fail at turn 1, so
+     part C still needs AEA-51.
+   - Part A does not import AEA-40 code, so nothing in part A changes.
+   - `TurnRequest` is `{turn_id, payload}`, as §4.2 already says.
+4. **What AEA-35 adds for part B:** the specialist report models are on `main`, in `meridian.domain.specialists`:
+   - `KnowledgeReport(points: list[ReportedPoint] (≤ 5), answered: bool)`;
+   - `AccountReport(summary: str (≤ 300))`;
+   - `SchedulingReport(appointment_id: int, wanted_time: str, note: str (≤ 200))`.
+
+   The B1 table now names them in place of the earlier `<… report>` placeholders. The report tool is
+   `REPORT_FACTS_TOOL` (`"report_facts"`), which AEA-51's `report(model, **fields)` helper wraps.
+5. **Still not on `main`:** AEA-51 (ledger `blocked`, "a blocker is not merged": AEA-37 sent back, AEA-39
+   NEEDS-DECISION) and AEA-60 (same chain). `tests/integration/` holds only `__init__.py`.
+   `tests/contract/test_prompts_vs_consumers.py` does not exist. Part A is still buildable now. Parts B and C stay
+   blocked.
+6. **Blockers recorded for the orchestrator:** part A none; part B AEA-51; part C AEA-51, AEA-60 and `gate::paid`.
+
+**Refresh 2 (2026-10-21, `main` at `cf8fd78`).** History; superseded by refresh 3 above.
 
 1. **Merged since refresh 1:** AEA-24 (eval harness, `7fddbf5`), AEA-50 (`67c5ffe`, ledger now `merged`), AEA-54 (docs),
    and **AEA-30** (`cf8fd78`: `services/demo.py`, `services/scheduler.py`, the `register_demo` hunk). `src/` had no other
@@ -129,7 +164,7 @@ the same assertion the live run uses.
 | Observability (DO-6) | `docs/design/observability-contract.md` WF-1 (turn, spend, lookup, check, case, promise), WF-3 (inbox), WF-18 (login), *Status values*, `signal` record | Reads only; writes nothing new |
 | Metrics (DO-7) | M-23 (`turn.server_ms`), M-24 (`failure_kind`, `http_status`, `degrade_reason`), M-25 (cost per conversation; SP-1 B max $0.039 [M]), M-26 ($30/day, Chicago day), M-29 (`trace_export`) | Copied into the record, never compared with a line |
 | Case files | `eval/cases/FORMAT.md` §2 (schema validation recipe), §3 (`clock` is always the demo start; `$seed:` tokens; `code_from_inbox` holds no digits), §6 (held-out keys at `/home/linuxuser/.meridian-sealed/heldout/`); `eval/cases/models.py`, `eval/cases/checks.py` | Loader and custody |
-| Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`, adding `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
+| Current code (re-read at `ef561fc`; refresh 2 re-checked at `cf8fd78`; refresh 3 re-checked at `76f14f4`, adding `domain/specialists.py` report models and `web/schemas/chat.py`; refresh 2 added `services/demo.py`, `web/container.py` `register_demo`, `adapters/sqlite/repos_cases_state.py`) | `tests/journeys/support/{env,server,run,client,db,logtap,record,steps,scripted_model,plugin}.py`; `src/meridian/{config,web/app,web/container,web/middleware,web/logging,agent/signals,agent/tools/{knowledge,account,scheduling},policy/limits,policy/texts,policy/handoff,privacy/redact,retrieval/{manifest,settings,ingest},adapters/retrieval_fastembed,adapters/sqlite/repos_cases_state,domain/blocks}.py`; schema `00_core.sql`, `20_spend.sql`, `60_cases.sql`, `95_ops.sql`; `scripts/agent_version.py`; `tests/unit/adapters/test_retrieval_fastembed.py`; `tests/contract/test_retrieval_contract.py` (real-index recipe); `ui-contracts.openapi.yaml` (read only) | §4 copies |
 | Sibling plans (not on `main`) | `docs/plans/fanout/2026-10-21-build/AEA-51.md` §5 C1 (support module API, re-read at its refresh 2), D1/D2 (scenario building blocks, `TOOLS`); `AEA-60.md` (test path) | Part B names in §4.3; re-checked at part B's step B0 |
 
 ### Source-contract reconciliation
@@ -279,7 +314,7 @@ level is `mock-tested` and the part A record line says `blocked by AEA-51`.
 
 ---
 
-## 4. Shared code to use (copied from the current code at `cf8fd78`, the addenda, or the sibling plan named)
+## 4. Shared code to use (copied from the current code at `cf8fd78`, re-checked unchanged at `76f14f4`; the addenda; or the sibling plan named)
 
 ### 4.1 On `main` now (import exactly these)
 
@@ -478,6 +513,7 @@ Tables read (columns copied from `schema/*.sql`):
 | `open_customer_run(request: pytest.FixtureRequest, options: RunOptions = RunOptions(), *, monkeypatch: pytest.MonkeyPatch \| None = None) -> ContextManager[CustomerRun]`; `RunOptions(index="built", eval_key=False, trace=None, with_clock=False, deadline_s=None)`; `CustomerRun(JourneyRun)` with `.steps: StepScript`; `StepScript.set_step(default: Mapping[Role, StepEntry], *, by_marker=None)` (a single entry answers every call of its role in the step; a tuple is consumed in call order, indexed by tool round for `Role.SPECIALIST`); `INDEX_SKIP` | `tests/integration/customer_support.py` (AEA-51 plan §5 C1) | Scripted runs (PD-3) |
 | `planner(**choices) -> str`, `classifier(label) -> str`, `NORMAL`, `responder(text) -> str`, `brief(**fields) -> str`, `tool(name, args, call_id="call-1") -> RawToolCall`, `report(model, **fields) -> RawToolCall`, `step(*calls, text="") -> RawToolStep`, `TOOLS: Mapping[str, str]` (keys `"kb_search"`, `"invoice"`, `"warranty"`, `"find_windows"`, `"move"`, `"change_request"`, `"book"`, `"cancel"`); arg models such as `MoveVisitArgs(appointment_id=…, new_slot_id=…)`, `ReadInvoicesArgs(invoice_number=…)`, `FindWindowsArgs(service_type=…)`; drivers `wp1`, `wp2`, `wp4`, `wp4f`, `danger`, `warranty` | `tests/graph/worked_pair_scenarios.py` (AEA-51 plan §5 D1, D2) | The encoding of every scripted model output; the reference for argument names and report models |
 | `tests/contract/test_prompts_vs_consumers.py` | AEA-60 | Pre-paid-run check P1 (part C) |
+| `KnowledgeReport`, `AccountReport`, `SchedulingReport` (**on `main`**, `meridian.domain.specialists`, AEA-35) | AEA-35 | The `model` argument of `report(...)` in B1 |
 
 ---
 
@@ -1174,24 +1210,24 @@ semantic content is decided here:
 
 | Case | Turn (script) | Planner | Specialist rounds | Responder text |
 |---|---|---|---|---|
-| WP-1 | 1 "What does the Comfort Club membership actually include?" | `planner(knowledge="yes", topic="membership")` | r0 `step(tool(TOOLS["kb_search"], {"query": "Comfort Club membership benefits"}))`; r1 `step(report(<knowledge report>, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` with `pid1 = passage_for(run, "Comfort Club membership benefits", "membership/comfort_club_overview.md")` | `passage_text(pid1)` |
+| WP-1 | 1 "What does the Comfort Club membership actually include?" | `planner(knowledge="yes", topic="membership")` | r0 `step(tool(TOOLS["kb_search"], {"query": "Comfort Club membership benefits"}))`; r1 `step(report(KnowledgeReport, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` with `pid1 = passage_for(run, "Comfort Club membership benefits", "membership/comfort_club_overview.md")` | `passage_text(pid1)` |
 | WP-1 | 2 "And how much is it?" | same | same, with query `"Comfort Club membership price per year"` | `passage_text(pid2)` |
 | WP-1 | 3 "Does it cover plumbing?" | same | same, with query `"Comfort Club Plus plumbing coverage"` | `passage_text(pid3)` |
-| WP-1 **bad** | 1 | same | r0 `step(report(<knowledge report>, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` — **no `kb_search`** | same |
-| WP-2 (MHC-10002) | 1 text, 2 form, 3 code | `planner(account="invoice", topic="billing")` | r0 `step(tool(TOOLS["invoice"], ReadInvoicesArgs(invoice_number="INV-204411").model_dump(mode="json")))`; r1 `step(report(<account report>, summary="Invoice INV-204411 for the visit."))` | T1–T2 `"I can look at that invoice once you're verified."`; T3 `"Your invoice INV-204411 is $478: the $89 diagnostic fee, $245 for the repair and the $144 after-hours dispatch charge."` |
+| WP-1 **bad** | 1 | same | r0 `step(report(KnowledgeReport, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` — **no `kb_search`** | same |
+| WP-2 (MHC-10002) | 1 text, 2 form, 3 code | `planner(account="invoice", topic="billing")` | r0 `step(tool(TOOLS["invoice"], ReadInvoicesArgs(invoice_number="INV-204411").model_dump(mode="json")))`; r1 `step(report(AccountReport, summary="Invoice INV-204411 for the visit."))` | T1–T2 `"I can look at that invoice once you're verified."`; T3 `"Your invoice INV-204411 is $478: the $89 diagnostic fee, $245 for the repair and the $144 after-hours dispatch charge."` |
 | WP-2 | 4 (script text) | `planner(topic="billing")` | none | `"I can't email an itemized copy from this chat, but a representative can help with that."` |
 | WP-2 | 5 dispute | `planner(handoff="billing_dispute", topic="billing")`; `Role.BRIEF: brief(...)` as in AEA-51's `wp2` dispute turn (no amount that is not in the lookup log) | none | `"I've passed this to a representative to review the after-hours charge."` |
-| warranty (MHC-10001) | 1 text, 2 form, 3 code | `planner(account="warranty", topic="warranty")` | r0 `step(tool(TOOLS["warranty"], <args as AEA-51 `warranty`>))`; r1 `step(report(<account report>, summary="Install date on record."))` | T1–T2 `"I can check your warranty once you're verified."`; T3 a sentence built from the `read_warranty` result AEA-51's driver uses, citing nothing outside the lookup |
+| warranty (MHC-10001) | 1 text, 2 form, 3 code | `planner(account="warranty", topic="warranty")` | r0 `step(tool(TOOLS["warranty"], <args as AEA-51 `warranty`>))`; r1 `step(report(AccountReport, summary="Install date on record."))` | T1–T2 `"I can check your warranty once you're verified."`; T3 a sentence built from the `read_warranty` result AEA-51's driver uses, citing nothing outside the lookup |
 | WP-4F (MHC-10001) | 1 text, 2 form | `planner(scheduling="reschedule", topic="booking")` | none | `"I can help move your visit once you're verified."` |
-| WP-4F | 3 code | same | r0 `step(tool(TOOLS["find_windows"], <args as AEA-51 `wp4f` T3 that include Mon 2026-10-19>))`; r1 `step(report(<scheduling report>, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note=""))` | `"Here are the open windows for your visit."` |
-| WP-4F | 4 (script text) | same | r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=159, new_slot_id=56).model_dump()))`; r1 `step(report(<scheduling report>, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note="moved"))` | `"Done. Your visit is now Monday, October 19, 8:00 am to 12:00 pm."` |
+| WP-4F | 3 code | same | r0 `step(tool(TOOLS["find_windows"], <args as AEA-51 `wp4f` T3 that include Mon 2026-10-19>))`; r1 `step(report(SchedulingReport, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note=""))` | `"Here are the open windows for your visit."` |
+| WP-4F | 4 (script text) | same | r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=159, new_slot_id=56).model_dump()))`; r1 `step(report(SchedulingReport, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note="moved"))` | `"Done. Your visit is now Monday, October 19, 8:00 am to 12:00 pm."` |
 | WP-4F | 5 "Yes, please." | `planner(topic="booking")` | none | `"Yes, it's moved: Monday, October 19, 8:00 am to 12:00 pm."` |
-| WP-4F **bad** | 4 | same | r0 `step(report(<scheduling report>, appointment_id=159, wanted_time="…", note="moved"))` — **no `move`** | same |
+| WP-4F **bad** | 4 | same | r0 `step(report(SchedulingReport, appointment_id=159, wanted_time="…", note="moved"))` — **no `move`** | same |
 | DANGER | 1 | `planner(topic="other")`; `Role.CLASSIFIER: classifier(<the raise label AEA-51's `danger` driver uses>)` | none | `"Please follow the emergency instruction above."` |
 | DANGER **bad** | 1 | same, with `Role.CLASSIFIER: NORMAL` — **no raise** | none | same |
-| WP-4 (MHC-57204) | 1 text, 2 form, 3 code | `planner(scheduling="reschedule", topic="booking")` | T3: r0 `step(report(<scheduling report>, appointment_id=1, wanted_time="a later time", note=""))` | T1–T2 `"I can help with your visit once you're verified."`; T3 `"Your visit is today, 12:00 pm to 4:00 pm. When would you like instead?"` |
-| WP-4 | 4 (script text) | same | r0 `step(tool(TOOLS["find_windows"], <args for Mon 2026-10-19 as AEA-51 `wp4`>))`; r1 `step(report(<scheduling report>, appointment_id=1, wanted_time="Monday morning", note=""))` | `"These Monday morning windows are open, but I can't hold them."` |
-| WP-4 | 5 (script text) | same | as AEA-51's `wp4`: r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=1, new_slot_id=first_shown_slot(exchanges, date="2026-10-19")).model_dump()))`; r1 `step(tool(TOOLS["change_request"], <args as AEA-51 `wp4`: appointment 1, change "move", wanted "Monday morning", windows shown>))`; r2 `step(report(<scheduling report>, appointment_id=1, wanted_time="Monday morning", note="change request"))` | `"I've sent your change request to a representative."` |
+| WP-4 (MHC-57204) | 1 text, 2 form, 3 code | `planner(scheduling="reschedule", topic="booking")` | T3: r0 `step(report(SchedulingReport, appointment_id=1, wanted_time="a later time", note=""))` | T1–T2 `"I can help with your visit once you're verified."`; T3 `"Your visit is today, 12:00 pm to 4:00 pm. When would you like instead?"` |
+| WP-4 | 4 (script text) | same | r0 `step(tool(TOOLS["find_windows"], <args for Mon 2026-10-19 as AEA-51 `wp4`>))`; r1 `step(report(SchedulingReport, appointment_id=1, wanted_time="Monday morning", note=""))` | `"These Monday morning windows are open, but I can't hold them."` |
+| WP-4 | 5 (script text) | same | as AEA-51's `wp4`: r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=1, new_slot_id=first_shown_slot(exchanges, date="2026-10-19")).model_dump()))`; r1 `step(tool(TOOLS["change_request"], <args as AEA-51 `wp4`: appointment 1, change "move", wanted "Monday morning", windows shown>))`; r2 `step(report(SchedulingReport, appointment_id=1, wanted_time="Monday morning", note="change request"))` | `"I've sent your change request to a representative."` |
 | WP-4 **bad** | 5 | same | r0 `move` as above; r1 `step(report(...))` — **no `change_request`** | same |
 
 The scripted outputs read the script texts from the case files; never rewrite a case text in the tables.
@@ -1356,7 +1392,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (and through it AEA-40's routes and AEA-35/36/37/39's nodes; AEA-30's demo clock merged at `cf8fd78`). AEA-51 itself waits on AEA-35 and AEA-39 (NEEDS-DECISION) and AEA-36, 37, 40 (blocked) | Part A now; B0 verifies the names after AEA-51 merges |
+| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`). AEA-51 itself still waits on AEA-37 (sent back on a merge conflict) and AEA-39 (NEEDS-DECISION) | Part A now; B0 verifies the names after AEA-51 merges |
 | R-2 | Blocker (part C) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) | P1 waits |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
@@ -1378,7 +1414,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `cf8fd78` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| A | Buildable on `main` `76f14f4` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
 | B | **Blocked-on AEA-51** (test helpers, wired graph) |
 | C | **Blocked-on AEA-51 and AEA-60**, plus `gate::paid` (D-15 spend statement) |
 
