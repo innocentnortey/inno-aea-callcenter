@@ -1,12 +1,12 @@
 # Plan — [AEA-60] contract: prompt ↔ consumer checks (rendered prompts vs parsers, ToolDefs and schemas)
 
-**Status:** planned — **READY**, build **blocked-on AEA-35, AEA-37, AEA-39** (refresh 2 at `c9b17ea`: the same three as
-refresh 1; they are real imports of this test, §9). Journey level additionally waits on AEA-30, AEA-40 and AEA-51 (steps
-skip, never pass, until then).
+**Status:** planned — **READY**, build **blocked-on AEA-35, AEA-37, AEA-39** (refresh 3 at `ebca98d`: the same three;
+they are real imports of this test, §9). Journey level additionally waits on **AEA-51 only** (AEA-30 and AEA-40 are now
+merged; the steps skip, never pass, until AEA-51 binds `run_graph` and `reply_composer`).
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/60 (spec copy:
-`docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` at `c9b17ea` (refresh 2, 2026-10-21; refresh 1 at `bb9a471`; first written at `35aefdd`) · **Lane:** `lane::build-loop` ·
+`docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` at `ebca98d` (refresh 3, 2026-10-21; refresh 2 at `c9b17ea`; refresh 1 at `bb9a471`; first written at `35aefdd`) · **Lane:** `lane::build-loop` ·
 **Risk:** none (no `risk::security`: no test-writer, no wave-merge security review) · **Wave:** 3 · **Gates:** none
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (first written at `35aefdd`; refreshed at `bb9a471` and `c9b17ea`) · **Implementer:**
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (first written at `35aefdd`; refreshed at `bb9a471`, `c9b17ea` and `ebca98d`) · **Implementer:**
 `fanout-implementer` on Sonnet · **Slug / branch:** `prompt-consumer-checks` → `aea-60-prompt-consumer-checks`, worktree
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-60` (the orchestrator creates it from `main` once §9's blockers
 have merged).
@@ -15,7 +15,45 @@ Read this whole file before writing code. Every decision is made here (§5.0 lis
 disagrees with a name in this plan, the code on `main` wins: follow it and say so in your report.** If a name this plan
 needs is **missing** on `main`, stop and report `BLOCKED-ON <ticket>`; never invent it, never add product code.
 
-### Refresh 2 (2026-10-21, `main` at `c9b17ea`): what changed since `bb9a471` (read this first)
+### Refresh 3 (2026-10-21, `main` at `ebca98d`): what changed since `c9b17ea` (read this first)
+
+1. **Merged since refresh 2:** AEA-30 (demo clock, scheduler; `cf8fd78`), AEA-40 (sessions and turns, CON-1/CON-2;
+   `f466ff7`; the build ledger row still says `blocked`, which is stale), AEA-35b (`SpecialistTask`, `KnowledgeSlice`,
+   `AccountSlice` in `src/meridian/domain/tools.py`; `3725c90`), AEA-36 (front node; `c378698`). `git diff --stat
+   c9b17ea..main -- src tests` touches none of the modules this test imports except `domain/tools.py` (three new types,
+   §4.1; this test never builds them: AEA-39's `run_specialist` does) and `web/container.py` (journeys only).
+2. **AEA-35/AEA-39 decision answered.** Innocent chose option A (types in `domain/tools.py`); AEA-35b built them.
+   AEA-39's plan is now READY (refresh 3) and AEA-35 is being built in worktree
+   `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-35` (uncommitted on `aea-35-aea-35-specialists`). Its
+   work-in-progress names were read and match §4.3: `SPECS` (`knowledge`, `account`, `scheduling`),
+   `REPORT_FACTS_TOOL = "report_facts"` (defined in `meridian.agent.prompts.specialists`, re-exported by `specs`),
+   `report_facts_schema(spec)` sends `spec.report_model.model_json_schema()` **untrimmed** (PD-8's first branch),
+   `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)` with
+   `.run(task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult`. The runner ends a run on a
+   step with no non-`report_facts` tool calls, so §5.5's "one model step per kind" and §5.7's two-step specialist cases
+   hold. **`main` wins once AEA-35 merges.**
+3. **PD-5 re-checked against AEA-35's wording.** The snake_case tokens in the three prefixes are `report_facts`,
+   `kb_search`, `passage_id` (knowledge); `read_invoices`, `read_membership`, `read_warranty` (account); `hvac_repair`,
+   `hvac_tune_up`, `shown_slots`, `appointment_id`, `wanted_time` (scheduling). Each is either a tool sent with that
+   request or in the derived vocabulary (`ServiceType` is an `enum` in `FindWindowsArgs.service_type`'s schema;
+   `shown_slots` is a `SchedulingSlice` property; `appointment_id`, `wanted_time` are `SchedulingReport` properties;
+   `passage_id` is a `ReportedPoint` property under `$defs`). AC-5 is expected to pass; if it does not, that is R-3.
+4. **AC-8 fix: `tool_invoice_bad` ends `failed`.** AEA-35's `build_account_result` (its plan step 5, and the WIP code)
+   returns `status="failed"` with `failure=None` when no read was captured and no call was `not_verified`; AEA-39's
+   `run_specialist` then emits one `specialist_failed` signal with cause `tool_error` (graph-nodes §4 table), and
+   `decide_escalation` (on `main`) gives `AI.specialist_failed`. §5.8 item 10 now asserts that for this case and no
+   longer lists it under "no `specialist_failed` signal".
+5. **Journey blockers:** only AEA-51 (`run_graph`, `reply_composer`). `demo_clock`, `demo_service` (AEA-30),
+   `session_service`, `turn_service`, `startChatSession`, `submitTurn` (AEA-40), `case_service`, `handoff_service`
+   (AEA-29) and `login_sessions` (AEA-44) are bound on `main`. Copy whatever the harness prints.
+6. **AEA-37** is still unmerged: branch `aea-37-graph-plan-node` now at `65a7cd1` (main merged in); `plan.py` and
+   `prompts/routing.py` are byte-identical to `36dc321`, so §4.3's AEA-37 row stands. F-1 is still present (line 403:
+   `appointments` is cleared only when `scheduling != "none"`).
+7. **Context budget:** `.claude/state/icm-progress.md` is now 16,670 B (§7.2 G-11).
+
+Nothing else changed: the AC text, owned files, PD-1…PD-14, the rest of the case table and the checks stand.
+
+### Refresh 2 (2026-10-21, `main` at `c9b17ea`): what changed since `bb9a471`
 
 1. **Merged since refresh 1:** AEA-29 (case service, handoff service, `BriefAssembler`; merge `ef561fc`), AEA-24 (eval
    harness), AEA-50 (deploy image), AEA-54 (deployment guide). `git diff --stat bb9a471..main` over `src/`,
@@ -89,9 +127,9 @@ Deliverables: one contract test module `tests/contract/test_prompts_vs_consumers
 
 ### 1.2 Context (why now)
 
-Wave 3, Amendment 1 (slice plan §0a). On `c9b17ea` the adapters (AEA-17/18), dispatcher (AEA-22), account and
+Wave 3, Amendment 1 (slice plan §0a). On `ebca98d` the adapters (AEA-17/18), dispatcher (AEA-22), account and
 scheduling tools (AEA-27/28) and the reply node and prompt (AEA-38) and the brief assembler (AEA-29) are on `main`; routing (AEA-37) is built on its
-branch; the specialists (AEA-35) and the act node (AEA-39) are planned only; AEA-61's live smoke waits for this ticket. The
+branch; the specialists (AEA-35) are being built and the act node (AEA-39) is planned (READY); AEA-61's live smoke waits for this ticket. The
 test is data-driven from the real inventory (`Role`, `SPECS`, the registry built from the three factories), so later
 tools, options and report fields are checked without editing it.
 
@@ -108,7 +146,7 @@ tools, options and report fields are checked without editing it.
 | Observability contract | DO-6 `docs/design/observability-contract.md` WF-1 (line 76), `model_call` span = "the full rendered context and raw output **after masking**" (line 113) | AC-14 records; PD-7 (AC-10 reading) |
 | Key-metrics registry | DO-7 M-3, M-12, M-16, M-17, M-24 | Records AC-13/AC-14 assert stay computable; no target set |
 | Decisions | `docs/plans/stage7-signoff.md` D-14 (CAS-16 option A → `HandoffReason.BURNING_RULED_OUT` is on `main`; DAT-2 option B → keys outside the repo) | Code-only set includes `burning_ruled_out`; AC-12 guards `eval/cases/heldout/` and `~/.meridian-sealed/` |
-| Sibling code and plans | On `main` `c9b17ea`: the AEA-17, 18, 21, 27, 28, 29 and 38 modules (read). AEA-37 branch `aea-37-graph-plan-node` at `36dc321` (read). Plans only: `docs/plans/fanout/2026-10-21-build/AEA-35.md` §4.4–§4.6, `AEA-39.md` §5 | Exact builder and node names in §4 |
+| Sibling code and plans | On `main` `ebca98d`: the AEA-17, 18, 21, 27, 28, 29, 35b and 38 modules (read). AEA-37 branch `aea-37-graph-plan-node` at `65a7cd1` (read). AEA-35 work in progress in its worktree (read: `specs.py`, `runner.py`, `prompts/specialists.py`). Plans: `docs/plans/fanout/2026-10-21-build/AEA-35.md` §4.4–§4.6 (and `build_account_result` step 5), `AEA-39.md` §5 step 3 | Exact builder and node names in §4 |
 
 ### 1.4 Source-contract reconciliation
 
@@ -206,7 +244,7 @@ All unit tests are in `tests/contract/test_prompts_vs_consumers.py` (prefix `::`
 | AC-10 [negative] | Markers `zq-rejected-option-7731`, `…zq-rejected-query-7731` (301 chars), `zq-rejected-draft-7731` absent from every record of AC-7…AC-9 | `case_corpus` (Step 7); PD-7 for the specialist `model_call` raw output | `::test_rejected_values_absent_from_records` |
 | AC-11 [failure/refusal] | Six drifted copies fail by role, field and value; prompt modules unchanged | `pytest.raises(PromptDrift, match=…)` on the helpers | `::test_check_fails_on_drift[<case>]`; `git diff --name-only` shows no `src/` path |
 | AC-12 [negative] | Dev data only; no held-out open; no socket connect | module audit hook + socket guard + per-test check (Step 5) | `::test_no_heldout_reads_and_no_network` |
-| AC-13 [journey] | J-5 NODANGER with classifier outside options books normally (no case, one `classifier` `fallback` event); J-9 (a) both planners malformed → handoff reply, turn `degraded_handoff`/`model_error`, case `ai_failure` P3; J-9 (b) malformed draft → code-built reply, `degraded_handoff`/`model_error` | Step 8 on AEA-57's harness; level `integrated with a scripted model` once AEA-30, AEA-40 and AEA-51 bind; until then the steps report *blocked* | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
+| AC-13 [journey] | J-5 NODANGER with classifier outside options books normally (no case, one `classifier` `fallback` event); J-9 (a) both planners malformed → handoff reply, turn `degraded_handoff`/`model_error`, case `ai_failure` P3; J-9 (b) malformed draft → code-built reply, `degraded_handoff`/`model_error` | Step 8 on AEA-57's harness; level `integrated with a scripted model` once AEA-51 binds; until then the steps report *blocked* | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
 | AC-14 [capture] | Per malformed case: `CallRecord` `status="error"` + failure kind (ledger row + sink span per attempt); `signal` fields; check events; one `lookup_log` row per dispatched call | `assert_records` over `MALFORMED_CASES` (Step 7) | `::test_malformed_cases_leave_their_records[<case>]` |
 | AC-15 [regression/context] | DO-3 §9 line, ICM row, record; area map unchanged | Step 9 | `git diff --name-only` |
 | PA-1 (plan-added, in AC-3's test) | Every `HandoffReason` not in the code-only set is produced by some offered `handoff` option | §5 Step 5 | `::test_join_plan_accepts_every_offered_value[reverse_reachability]` |
@@ -215,7 +253,7 @@ All unit tests are in `tests/contract/test_prompts_vs_consumers.py` (prefix `::`
 
 ## 4. Shared code to use (copied from `main`, the addenda and the sibling plans)
 
-**Rule for this section:** names marked **(main)** were read on `main` at `c9b17ea` (refresh 2). Names marked **(branch)** were
+**Rule for this section:** names marked **(main)** were read on `main` at `ebca98d` (refresh 3). Names marked **(branch)** were
 read on a sibling's built branch; names marked **(plan)** come from a sibling's plan. When those land, the code on
 `main` wins.
 
@@ -304,6 +342,11 @@ class KnowledgeResult / AccountResult / SchedulingResult  # kind, status, …, t
 class Passage(MeridianModel): passage_id; file; section; version_label; version_date: date|None; text; score: float
 # meridian.domain.tools
 class ToolCallScope(MeridianModel): ids; customer_id; shown_slot_ids; now; message_id   # the five scope field names
+class KnowledgeSlice(MeridianModel): kind: Literal["knowledge"] = "knowledge"           # AEA-35b, on main (3725c90)
+class AccountSlice(MeridianModel): kind: Literal["account"] = "account"
+class SpecialistTask(MeridianModel): task: PlannedTask; customer_text: str; task_messages: tuple[str, ...]
+                                     slice: KnowledgeSlice | AccountSlice | SchedulingSlice; offer_quick_checks: bool = False
+#   This test never constructs these: AEA-39's run_specialist builds the task from the SpecialistSend payload.
 # meridian.ports.models
 class ChoiceField(MeridianModel): name; instructions; options: dict[str, str] (≤255)
 class ChoiceRequest(MeridianModel): system: str; state: dict[str, JsonValue]; fields: tuple[ChoiceField, ...]
@@ -353,7 +396,7 @@ from tests.fakes import (WORKED_PAIRS_NOW, FakeAnthropicChoiceModel, FakeChoiceM
 from langgraph.runtime import Runtime          # Runtime(context=ctx) is the node's `runtime` argument
 ```
 
-### 4.3 Siblings — what this test imports (status on `main` at `c9b17ea`)
+### 4.3 Siblings — what this test imports (status on `main` at `ebca98d`)
 
 | Import | From | Status | Signature this plan uses |
 |---|---|---|---|
@@ -367,11 +410,11 @@ from langgraph.runtime import Runtime          # Runtime(context=ctx) is the nod
 | `meridian.services.handoff`: `BriefAssembler` | AEA-29 | **main** (`ef561fc`) | `BriefAssembler(staff_guidance: Mapping[PassageId, StaffGuidance] \| None = None)`; `assemble(case: CaseSummary, state: ConversationState, lookups: Sequence[LookupRow]) -> Brief` (pure; `status="being_written"`; headings 2 and 4 start empty); `attach_extraction(brief: Brief, extraction: BriefExtraction \| None, check: CheckResult \| None, *, customer_messages: Mapping[int, str] \| None = None) -> Brief`: `extraction is None` → headings 2, 4, 7 `not_generated=True` and `status="failed"`; otherwise `status="ready"`. The reply node never passes `customer_messages`. `CaseService(uow, clock, *, handoff_block=None, settled_view=None)` (`meridian.services.cases`) is **not** used here (PD-9) |
 | `meridian.agent.tools.account`: `account_tools` | AEA-27 | **main** (`13adc86`) | `account_tools(uow) -> tuple[ToolDef, ...]`: `read_invoices` (`ReadInvoicesArgs.invoice_number`), `read_membership`, `read_warranty`; kind `account_read`, `requires_verified=True` |
 | `meridian.agent.tools.scheduling`: `scheduling_tools` | AEA-28 | **main** (`2c2e8c5`) | `scheduling_tools(scheduling: SchedulingService) -> tuple[ToolDef, ...]`; on `main` the names are `find_windows`, `book_visit`, `move_visit`, `cancel_visit`, `request_visit_change`. **Still read them from the registry, never hard-code them.** The factory only closes over the service, so `SchedulingDouble` (raises on any method other than `slice_inputs`) is enough |
-| `meridian.agent.prompts.routing`: `DANGER_FIELD` | AEA-37 | **branch** `aea-37-graph-plan-node` at `36dc321` (built, not merged) | `DANGER_FIELD = "danger_level"`. `planner_request(PlannerInput)` and `classifier_request(latest: str)` build the requests (system text and fields are module constants, identical every turn); the classifier system text quotes `"normal"`, the planner's quotes `"none"` and `"no"` (all are options, so `check_wording_keys` passes) |
-| `meridian.agent.nodes.plan`: `planner`, `danger_classifier`, `plan_join`, `join_plan` | AEA-37 | **branch** `36dc321`; `main` has the AEA-21 stubs that raise `NotImplementedError` | `join_plan(planner: PlannerOutcome \| None, danger: DangerAssessment \| None, gate: GateDecision, state: ConversationState, *, tasks_per_turn: int = 3) -> Plan`. Branch behaviour AC-7 asserts: a Jev failure → one `Role.PLANNER_FALLBACK` call with the same request; signal `planner_fallback` (node `"planner"`, role `"planner"`, cause = the Jev failure kind, `recovered` = the fallback parsed); outcome `fallback_used=True`, `failure` = the fallback's failure or `None`. A classifier failure or unknown label → `DangerAssessment(label="normal", raised=False, failure=<the failure, or INVALID_OUTPUT>)`, signal `classifier_fallback` (node `"danger_classifier"`, role `"classifier"`, `recovered=None`) and `check_events=(CheckEvent.from_danger(turn_id, danger),)`. `planner_failed = planner is not None and choices is None and not drafts and handoff_request is None` |
-| `meridian.agent.specialists.specs`: `SPECS`, `REPORT_FACTS_TOOL` (`"report_facts"`) | AEA-35 | **plan only** (no branch; AEA-35's plan is NEEDS-DECISION, §8 R-10) | `SPECS: Mapping[SpecialistKind, SpecialistSpec]`; `SpecialistSpec.tool_kinds: frozenset[ToolKind]`, `.report_model`; `report_facts` is sent with `spec.report_model.model_json_schema()` untrimmed (AEA-35 PD-9; PD-8 here accepts either form) |
-| `meridian.agent.specialists.runner`: `SpecialistRunner` | AEA-35 | **plan only** | `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)`; `transcript` = the SAME object as the gateway's `Role.SPECIALIST` adapter |
-| `meridian.agent.nodes.act`: `run_specialist`, `escalation` | AEA-39 | **plan only** (no branch; same NEEDS-DECISION as AEA-35); `main` has the stubs | `run_specialist(payload: SpecialistSend, runtime, *, deps)` reads `deps.scheduling.slice_inputs(customer_id)` for a verified scheduling task and emits `specialist_failed` (cause = failure kind, or `"tool_error"`); `escalation(state, runtime, *, deps) -> {"escalation": EscalationDecision}` wraps `meridian.policy.escalation.decide_escalation` (on `main`: `AI.planner_failed` / `AI.specialist_failed` → `ai_failure`, `degraded=True`, priority from `priority_for` = P3) |
+| `meridian.agent.prompts.routing`: `DANGER_FIELD` | AEA-37 | **branch** `aea-37-graph-plan-node` at `65a7cd1` (built, not merged; routing and plan identical to `36dc321`) | `DANGER_FIELD = "danger_level"`. `planner_request(PlannerInput)` and `classifier_request(latest: str)` build the requests (system text and fields are module constants, identical every turn); the classifier system text quotes `"normal"`, the planner's quotes `"none"` and `"no"` (all are options, so `check_wording_keys` passes) |
+| `meridian.agent.nodes.plan`: `planner`, `danger_classifier`, `plan_join`, `join_plan` | AEA-37 | **branch** `65a7cd1`; `main` has the AEA-21 stubs that raise `NotImplementedError` | `join_plan(planner: PlannerOutcome \| None, danger: DangerAssessment \| None, gate: GateDecision, state: ConversationState, *, tasks_per_turn: int = 3) -> Plan`. Branch behaviour AC-7 asserts: a Jev failure → one `Role.PLANNER_FALLBACK` call with the same request; signal `planner_fallback` (node `"planner"`, role `"planner"`, cause = the Jev failure kind, `recovered` = the fallback parsed); outcome `fallback_used=True`, `failure` = the fallback's failure or `None`. A classifier failure or unknown label → `DangerAssessment(label="normal", raised=False, failure=<the failure, or INVALID_OUTPUT>)`, signal `classifier_fallback` (node `"danger_classifier"`, role `"classifier"`, `recovered=None`) and `check_events=(CheckEvent.from_danger(turn_id, danger),)`. `planner_failed = planner is not None and choices is None and not drafts and handoff_request is None` |
+| `meridian.agent.specialists.specs`: `SPECS`, `REPORT_FACTS_TOOL` (`"report_facts"`) | AEA-35 | **work in progress** (uncommitted in worktree `inno-aea-callcenter-wt/AEA-35`, read at refresh 3; not on `main`) | `SPECS: Final[Mapping[SpecialistKind, SpecialistSpec]]` (a `MappingProxyType`, keys `knowledge`, `account`, `scheduling`); frozen dataclass `SpecialistSpec(kind, tool_kinds: frozenset[ToolKind], report_model: type[LLMFacing], render: Callable[[SpecialistTask, TurnContext], tuple[str, str, str]], build_result: Callable[[RunOutcome], SpecialistResult])`; `REPORT_FACTS_TOOL` is defined in `meridian.agent.prompts.specialists` and re-exported by `specs`; `report_facts_schema(spec)` sends `spec.report_model.model_json_schema()` untrimmed (AEA-35 PD-9; PD-8 here accepts either form) |
+| `meridian.agent.specialists.runner`: `SpecialistRunner` | AEA-35 | **work in progress** (same worktree) | `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)`; `.run(task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult` (called by AEA-39, never by this test); `transcript` = the SAME object as the gateway's `Role.SPECIALIST` adapter. A step with no tool call other than `report_facts` ends the run; an unparseable `report_facts` leaves `report=None` |
+| `meridian.agent.nodes.act`: `run_specialist`, `escalation` | AEA-39 | **plan only** (plan READY at refresh 3; builds after AEA-35 merges); `main` has the stubs | `run_specialist(payload: SpecialistSend, runtime, *, deps)` reads `deps.scheduling.slice_inputs(customer_id)` for a verified scheduling task and emits `specialist_failed` (cause = failure kind, or `"tool_error"`); `escalation(state, runtime, *, deps) -> {"escalation": EscalationDecision}` wraps `meridian.policy.escalation.decide_escalation` (on `main`: `AI.planner_failed` / `AI.specialist_failed` → `ai_failure`, `degraded=True`, priority from `priority_for` = P3) |
 
 On `main` and unchanged since the first plan (checked again): `ToolRegistry`, `ToolDispatcher` (incl. `_strip_titles`,
 lines 78-93, which `prompts_compare.strip_titles` mirrors), `KB_SEARCH_NAME`, `KbSearchArgs`, `ModelGateway` (the span's
@@ -420,7 +463,7 @@ journeys read.
    ```
    Expect `['account', 'knowledge', 'scheduling']`. Any `ImportError` or `NotImplementedError` stub → stop and report
    `BLOCKED-ON <owning ticket>` (map: adapters 17/18; context/signals/compose 21; plan 37; act 39; reply 38;
-   specs/runner/prompts.specialists 35; tools.account 27; tools.scheduling 28). On `c9b17ea` exactly AEA-35's, 37's and
+   specs/runner/prompts.specialists 35; tools.account 27; tools.scheduling 28). On `ebca98d` exactly AEA-35's, 37's and
    39's names fail; every other module imports.
 3. Open and read (do not edit) the §4.3 modules on `main`; note every name that differs from §4.3 for your report.
 
@@ -1069,13 +1112,13 @@ Helpers in the test file: `calls(run) = [c for c, _ in run.ledger.records]`; `si
     | `tool_args_none` | `error is BAD_ARGUMENTS`; `run.index.searches == []` |
     | `tool_extra_customer_id` | `error is BAD_ARGUMENTS`; `run.index.searches == []` *(executor never called)* |
     | `tool_query_301` | `error is BAD_ARGUMENTS`; `run.index.searches == []` |
-    | `tool_invoice_bad` | `error is BAD_ARGUMENTS`; lookup `refused:bad_arguments` |
+    | `tool_invoice_bad` | `error is BAD_ARGUMENTS`; lookup `refused:bad_arguments`; nothing was read, so `res.status == "failed"` and `res.failure is None` (AEA-35 `build_account_result` step 5); exactly one `specialist_failed` signal with `cause == "tool_error"`, `specialist == "account"`; `esc = run.updates["escalation"]["escalation"]`: `(esc.outcome, esc.reason, esc.priority, esc.rule_id, esc.degraded) == ("escalate", HandoffReason.AI_FAILURE, Priority.P3, "AI.specialist_failed", True)` (refresh 3) |
     | `report_six_points` | `res.status == "no_current_source"`, `res.points == ()`, `len(res.passages) >= 1` (captures kept); `tools[0].outcome == "ok"` |
     | `report_long_summary` | `res.status == "read"`, `res.membership is not None` *(built from captures only)* |
     | `step_unparseable` / `step_max_tokens` / `step_refusal` | `res.status == "failed"`, `res.failure.kind` is `INVALID_OUTPUT` / `MAX_TOKENS` / `REFUSAL`; exactly one `specialist_failed` signal, `cause == res.failure.kind.value`, `specialist == "knowledge"`; `esc = run.updates["escalation"]["escalation"]`: `("escalate", HandoffReason.AI_FAILURE, Priority.P3, "AI.specialist_failed", True) == (esc.outcome, esc.reason, esc.priority, esc.rule_id, esc.degraded)` |
 
     For every non-step case also: `len(run.lookups) == len([t for t in tools])` (one row per dispatched call; `report_facts`
-    is never dispatched) and no `specialist_failed` signal.
+    is never dispatched). Every non-step case **except `tool_invoice_bad`** also has no `specialist_failed` signal.
 11. `test_malformed_reply_outputs(case)` — parametrised over `REPLY`.
     - `draft_empty`, `draft_1201`, `draft_extra_promise`: `run.updates["responder"]["draft"] is None`; responder record
       `status == "error"`, kind `INVALID_OUTPUT`; one `responder_fallback` signal cause `"invalid_output"`;
@@ -1194,8 +1237,8 @@ rules standing; NODANGER books normally. API level through CON-2 with AEA-57's s
   is Role.RESPONDER][0].request`) has `output_model is ResponderDraft` and both labels in `system_prefix +
   system_dynamic + user` *(prompt ↔ consumer at the integrated level)*.
 
-Until AEA-30, AEA-40 and AEA-51 bind `demo_clock`/`demo_service`, `session_service`/`turn_service` and
-`run_graph`/`reply_composer`, each step reports `blocked-on AEA-30, AEA-40, AEA-51: …` (the harness's own wording) and skips (the
+Until AEA-51 binds `run_graph` and `reply_composer`, each step reports `blocked-on AEA-51: reply_composer not bound;
+run_graph not bound` (the harness's own wording; AEA-30, AEA-40, AEA-29 and AEA-44 are bound on `ebca98d`) and skips (the
 harness does this; never mark it passed). Run `uv run pytest -m journey tests/journeys/j5/test_aea_60.py
 tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
 
@@ -1211,7 +1254,7 @@ tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
    `SchedulingService`; journeys on AEA-57's harness; **Command** every command of §7; **Result** pass counts per
    command (from the run, not targets); **Evidence location** GitLab issue #60 comment; this file; **Remaining
    limitations** real `CaseService` storage not exercised (AEA-51); live compatibility is AEA-61; F-1 (§8);
-   **Blocked by** AEA-30, AEA-40, AEA-51 (as the harness prints them) for the integrated journey level (or "none" if they have landed); **Journeys** J-5, J-9.
+   **Blocked by** AEA-51 (as the harness prints it) for the integrated journey level (or "none" if it has landed); **Journeys** J-5, J-9.
 2. `docs/design/code-design.md` §9: on the `├── contract/` line (and its continuation line) append
    `; test_prompts_vs_consumers.py + prompts_{compare,world,render,wire,cases}.py (AEA-60, built <code sha>)` — keep the
    tree's alignment; on the `**Built on `main`:**` line add `` `tests/contract/test_prompts_vs_consumers.py` and its
@@ -1219,7 +1262,7 @@ tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
 3. `.claude/state/icm-progress.md`: add **one** row directly after the last `Routes verified against code and tests`
    row: `| Routes verified against code and tests | provisional | <run-date>: AEA-60 prompt ↔ consumer checks
    tests/contract/test_prompts_vs_consumers.py (<code sha>; <N> passed); record docs/testing/journeys/<run-date>-AEA-60.md
-   | Integrated level when AEA-30, AEA-40 and AEA-51 land |` (≤ 400 characters).
+   | Integrated level when AEA-51 lands |` (≤ 400 characters).
 4. `.claude/reference/area-map.md`: unchanged (say so in the report: no area row owns `tests/contract/`).
 
 ### 5.11 Step 10 — commit
@@ -1268,11 +1311,11 @@ more than `-n 2`; the module-scoped `rendered` fixture is per worker, so serial 
 | G-4 | Contract module | `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` | all pass, 0 skipped, 0 xfail; record the count |
 | G-5 | Collection of the folder (nothing else broke) | `uv run pytest tests/contract -q --co` | collects with no error |
 | G-6 | Journey convention + harness | `uv run pytest tests/journeys/support/test_support.py -q -k "convention"` | pass |
-| G-7 | This ticket's journeys | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` | pass, or skipped with `blocked-on AEA-30` / `AEA-40` / `AEA-51` reasons (never failed) |
+| G-7 | This ticket's journeys | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` | pass, or skipped with the `blocked-on AEA-51` reason (never failed) |
 | G-8 | Affected journeys (AEA addition; `tests/journeys/` is an always-input, so this runs all journeys) | `uv run python -m tests.journeys.affected --base main` | no failure (skips allowed with blocked reasons) |
 | G-9 | No product code touched | `git diff --name-only main...HEAD` | only the 11 owned paths of §2.1 |
 | G-10 | No sensitive literal | `grep -nE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|[0-9]{4}[ -][0-9]{4}[ -][0-9]{4}\|sk-ant\|\b[0-9]{6}\b" tests/contract/prompts_*.py tests/contract/test_prompts_vs_consumers.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py` | no output (if a 6-digit literal is a harmless number such as a token count, write it as an expression, e.g. `300`) |
-| G-11 | Context check | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no **new** FAIL. On 2026-10-21 `.claude/state/icm-progress.md` already FAILs its size budget (15,697 B > 8,192 B on `c9b17ea`); that is pre-existing, not this ticket's to fix. Keep the AEA-60 row as short as possible (≤ 250 characters) and report the before/after byte count; do not trim other tickets' rows |
+| G-11 | Context check | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no **new** FAIL. On 2026-10-21 `.claude/state/icm-progress.md` already FAILs its size budget (16,670 B > 8,192 B on `ebca98d`); that is pre-existing, not this ticket's to fix. Keep the AEA-60 row as short as possible (≤ 250 characters) and report the before/after byte count; do not trim other tickets' rows |
 
 **Full suite:** not required (test-only change; no `conftest.py`, settings, dependency or shared module changes —
 `build-loop-test-scope.md`). **Existing tests that must stay green:** everything under `tests/contract/` (G-5 collection)
@@ -1309,7 +1352,9 @@ git add docs/testing/journeys/<run-date>-AEA-60.md docs/design/code-design.md .c
 | R-7 | Runtime | Each malformed case builds a temp DB; ~30 cases × (AC-7/8/9 + AC-14) + 4 (AC-10) ≈ 64 runs | Expected well under a minute; if slower, keep correctness, report the time |
 | R-9 | Context budget | `icm-progress.md` is already over its 8 KB budget; the one-row AEA-60 addition makes it slightly worse | Orchestrator: schedule a `lane::direct` compaction of `icm-progress.md` (replace per-ticket rows with one rolling row); not in AEA-60's ownership |
 | R-8 | Audit hook | Process-wide and permanent once added | Gated by `_GUARD.active`; cheap; never raises |
-| R-10 | Blocker chain | AEA-35 and AEA-39 both wait on one NEEDS-DECISION in their own plans (§9.1 of each: where `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` live). AEA-60 has no decision of its own, but it cannot start until that is answered and AEA-35, 37 and 39 merge | Orchestrator: route that single question to Innocent (it unblocks 35, 39 and then 60); merge AEA-37 when its gates are green. Do not dispatch AEA-60's implementer before all three are on `main` |
+| R-10 | Blocker chain | (refresh 3) The type-home question is answered (option A, AEA-35b merged). Remaining order: AEA-35 (being built) → AEA-39 (plan READY) ; AEA-37 (built on `65a7cd1`, ledger `blocked` on an orchestrator NEEDS-DECISION about its earlier run). AEA-60 cannot start until all three are on `main` | Orchestrator: resolve AEA-37's ledger item and merge it when its gates are green; merge AEA-35 then AEA-39. Do not dispatch AEA-60's implementer before all three are on `main` |
+| R-11 | Ledger drift | `.claude/state/build-ledger.md` row AEA-40 says `blocked`, but `main` has `f466ff7 Merge AEA-40 sessions and turns`; row AEA-60's blockers list is the slice-plan list, most of which are merged | Orchestrator: update the ledger (not AEA-60's file). This plan treats AEA-40 as merged |
+| R-12 | WIP names | §4.3's AEA-35 names were read from an uncommitted worktree; they may change before merge | Implementer follows `main` (step 0) and reports each difference |
 
 No shared primitive is requested from the integrator. No signed contract changes. Nothing here needs Innocent.
 
@@ -1320,23 +1365,22 @@ No shared primitive is requested from the integrator. No signed contract changes
 **READY** — every decision is made (PD-1…PD-14); no product decision and no signed-contract change is needed for this
 ticket.
 
-**Blocked-on (true imports not yet on `main` at `c9b17ea`; the implementer starts only when all three are merged):**
+**Blocked-on (true imports not yet on `main` at `ebca98d`; the implementer starts only when all three are merged):**
 
 | Ticket | What this test imports from it | State on 2026-10-21 |
 |---|---|---|
-| AEA-37 | `planner`, `danger_classifier`, `plan_join`, `join_plan`, `DANGER_FIELD` and the routing wording | built on `aea-37-graph-plan-node` (`36dc321`), not merged |
-| AEA-35 | `SPECS`, `REPORT_FACTS_TOOL`, `SpecialistRunner`, the specialist wording | no branch; its plan is NEEDS-DECISION (specialist task types, its §9.1) |
-| AEA-39 | `run_specialist`, `escalation` | no branch; the same NEEDS-DECISION, and it needs AEA-35 |
+| AEA-37 | `planner`, `danger_classifier`, `plan_join`, `join_plan`, `DANGER_FIELD` and the routing wording | built on `aea-37-graph-plan-node` (`65a7cd1`), not merged; ledger `blocked` (orchestrator item) |
+| AEA-35 | `SPECS`, `REPORT_FACTS_TOOL`, `SpecialistRunner`, the specialist wording | being built (uncommitted in its worktree); ledger `planned` |
+| AEA-39 | `run_specialist`, `escalation` | plan READY (refresh 3); builds after AEA-35 merges |
 
 **Why these three are not replaced by doubles.** The slice plan's injection rule covers siblings in the same or a later
 wave; these three are wave 2, earlier than AEA-60's wave 3. And the ticket's point is to render prompts "through the real
 builders" and feed answers to the real nodes: a double of the builder or node would check the double against itself.
 
 **Now on `main` (no longer blockers):** AEA-17 (`0a85270`), AEA-18 (`900a1d8`), AEA-21 (`5531664`), AEA-27 (`13adc86`),
-AEA-28 (`2c2e8c5`), AEA-38 (`042ad35`), AEA-29 (`ef561fc`; the real `BriefAssembler`, PD-9); and, as before, AEA-20, 22, 33, 57.
-**Journey level** (`integrated with a scripted model`) waits on AEA-30 (`demo_clock`, `demo_service`; ledger
-`blocked`), AEA-40 (CON-2 route, `session_service`, `turn_service`;
-branch `aea-40-aea-40-sessions-turns`, not merged) and AEA-51 (`run_graph`, `reply_composer`); until then the steps skip
-with their blocked reasons and the record says `mock-tested`.
+AEA-28 (`2c2e8c5`), AEA-38 (`042ad35`), AEA-29 (`ef561fc`; the real `BriefAssembler`, PD-9), AEA-35b (`3725c90`),
+AEA-30 (`cf8fd78`), AEA-40 (`f466ff7`); and, as before, AEA-20, 22, 33, 57.
+**Journey level** (`integrated with a scripted model`) waits on AEA-51 only (`run_graph`, `reply_composer`); until then
+the steps skip with that blocked reason and the record says `mock-tested`.
 
 **Gates:** none (no human, paid or live gate).
