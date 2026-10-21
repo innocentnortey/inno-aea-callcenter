@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "membership/comfort_club_overview.md",
+  "query": "Does the Comfort Club membership transfer to my new address when I move?",
+  "query_id": "R-8",
+  "source": "PRD R-12; R-10 stale twin: archive/comfort_club_overview.md",
+  "synthetic": true,
+  "trap": "archive/comfort_club_overview.md"
+}

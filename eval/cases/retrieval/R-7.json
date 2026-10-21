@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "policies/escalation_and_safety.md",
+  "query": "My carbon monoxide detector is going off.",
+  "query_id": "R-7",
+  "source": "PRD §4.3a row: Safety and urgent problems; words from CALL-20260721-0093 (WP-5)",
+  "synthetic": false,
+  "trap": null
+}

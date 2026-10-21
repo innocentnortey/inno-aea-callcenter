@@ -1,0 +1,33 @@
+{
+  "case_id": "WP-6",
+  "category": "SCH-BURNING",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "worked-pair",
+  "seeded_customer": null,
+  "source_ref": "docs/data/worked-pairs.md WP-6",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Policy gap (KB silent)",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i smell something burning from the vents",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I need to schedule a service call. I smell something burning from the vents."
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I'm not sure."
+    }
+  ],
+  "varied_dimension": null
+}

@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260706-0101",
+  "category": "SCH-BURNING",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F1 New service booking",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260706-0101",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Policy gap (KB silent)",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i smell something burning from the vents",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Yeah, I need to schedule a service call. I smell something burning from the vents."
+    }
+  ],
+  "varied_dimension": null
+}

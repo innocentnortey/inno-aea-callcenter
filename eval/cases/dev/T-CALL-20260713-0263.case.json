@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260713-0263",
+  "category": "BILL-AUTOPAY",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F3 Billing information and payments",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260713-0263",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Needs a system the issued materials lack",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "i want to set up autopay for my membership",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "I want to set up autopay for my membership."
+    }
+  ],
+  "varied_dimension": null
+}

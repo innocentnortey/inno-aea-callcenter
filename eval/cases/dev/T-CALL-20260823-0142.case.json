@@ -1,0 +1,27 @@
+{
+  "case_id": "T-CALL-20260823-0142",
+  "category": "WAR-TRANSFER",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F6 Warranty",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": null,
+  "source_ref": "CALL-20260823-0142",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "KB-only",
+  "synthetic": "no",
+  "synthetic_assumption": null,
+  "synthetic_source_case": null,
+  "template": "we just bought a house and the previous owner had a system installed by you does the warranty transfer",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "We just bought a house and the previous owner had a system installed by you. Does the warranty transfer?"
+    }
+  ],
+  "varied_dimension": null
+}

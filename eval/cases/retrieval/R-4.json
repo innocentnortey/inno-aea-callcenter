@@ -1,0 +1,9 @@
+{
+  "expect_below_floor": false,
+  "expected_file": "services/technician_arrival_and_etas.md",
+  "query": "What happens if the technician misses my appointment window?",
+  "query_id": "R-4",
+  "source": "PRD §4.3a row: Booking and appointments",
+  "synthetic": true,
+  "trap": null
+}

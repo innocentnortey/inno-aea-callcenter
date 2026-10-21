@@ -1,0 +1,48 @@
+{
+  "case_id": "T-CALL-20260722-0064",
+  "category": "WAR-REPEAT",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F6 Warranty",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "issued-transcript",
+  "seeded_customer": "MHC-10004",
+  "source_ref": "CALL-20260722-0064",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "Needs a system the issued materials lack",
+  "synthetic": "partly",
+  "synthetic_assumption": "Callers cannot be matched to the DB (inventory, Limits 2); seeded customer MHC-10004 substituted. Closing line 'The earliest window works for me.' scripted: the call's own slot talk refers to its July–September calendar.",
+  "synthetic_source_case": null,
+  "template": "does the labor warranty cover a repeat repair you fixed my blower in march and its doing the same thing",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "Does the labor warranty cover a repeat repair? You fixed my blower in March and it's doing the same thing."
+    },
+    {
+      "choice": null,
+      "form": {
+        "name": "$seed:name",
+        "phone": "$seed:phone"
+      },
+      "kind": "form",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "code_from_inbox",
+      "text": null
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "The earliest window works for me."
+    }
+  ],
+  "varied_dimension": null
+}

@@ -1,0 +1,39 @@
+{
+  "case_id": "S-11",
+  "category": "MEM-INCLUDE",
+  "clock": "2026-10-16T10:00:00-05:00",
+  "family": "F5 Comfort Club membership",
+  "labelled_by": "Claude (AEA-06)",
+  "labelled_on": "2026-10-21",
+  "provenance": "synthetic",
+  "seeded_customer": null,
+  "source_ref": "hand-written variant of WP-1 (AEA-06 plan §6.3)",
+  "split": "dev",
+  "staffing": "nobody",
+  "support_level": "KB-only",
+  "synthetic": "yes",
+  "synthetic_assumption": "Written by hand to cover what the 420 calls lack (DO-5 Case provenance step 3); one dimension of the source case changed; the label follows the cited rule.",
+  "synthetic_source_case": "WP-1",
+  "template": "what does the comfort club membership actually include",
+  "turns": [
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "What does the Comfort Club membership actually include?"
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "No, that's not what I asked."
+    },
+    {
+      "choice": null,
+      "form": null,
+      "kind": "text",
+      "text": "That's still not what I asked."
+    }
+  ],
+  "varied_dimension": "failure signal: two corrections in a row"
+}
