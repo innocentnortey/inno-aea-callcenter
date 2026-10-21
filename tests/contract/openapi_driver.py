@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Final, NoReturn
 
-import anyio
+import httpx
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -34,7 +34,7 @@ from meridian.web.app import create_app
 from meridian.web.deps import RESET_GATE, UOW_FACTORY
 from meridian.web.errors import render_unhandled_error
 from tests.api.events_support import append_stored, payload
-from tests.api.openapi_check import SseFrame, assert_response_matches, assert_sse_frames_match, load_contract
+from tests.api.openapi_check import assert_response_matches, assert_sse_frames_match, load_contract
 from tests.api.web_shell_support import (
     cookie_header,
     demo_pair,
@@ -51,11 +51,11 @@ from tests.contract.openapi_cases import (
     SETUPS,
     Drive,
 )
-from tests.contract.openapi_variants import contract_strict, request_examples, sse_frames
+from tests.contract.openapi_sse import STREAM_READ_TIMEOUT_S, SseRead, as_response, read_asgi_stream
+from tests.contract.openapi_variants import contract_strict, request_examples
 from tests.fixtures.sqlite import ISSUED_DB, TempStore
 from tests.services.person_request_support import verify_thread
 
-STREAM_READ_TIMEOUT_S: Final = 5.0
 GUARD_MESSAGE: Final = "AEA-59 socket guard: non-loopback connect refused"
 _LOOPBACK: Final = ("127.", "::1", "localhost")
 
@@ -188,6 +188,38 @@ def send(
     return response
 
 
+def send_stream(
+    run: AppRun,
+    operation_id: str,
+    *,
+    path: str,
+    token: str | None,
+    extra_headers: Mapping[str, str] | None = None,
+    timeout_s: float = STREAM_READ_TIMEOUT_S,
+) -> httpx.Response:
+    """`send` for an event-stream operation, read with a time bound: a stream where an error was due fails, never hangs."""
+    spec = load_contract().operations[operation_id]
+    if (spec.method, spec.path_template) not in run.registered:
+        blocked(f"route not registered: {operation_id}")
+    headers: dict[str, str] = dict(cookie_header(token)) if token is not None else {}
+    headers.update(extra_headers or {})
+    seen = len(run.taps)
+    result = read_sse(run, path, headers, frames=1, timeout_s=timeout_s)
+    if result.status == 500 and len(run.taps) > seen:
+        exc = run.taps[-1]
+        if isinstance(exc, RuntimeError) and str(exc).startswith("not bound: "):
+            blocked(str(exc))
+        pytest.fail(f"{operation_id}: unhandled {type(exc).__name__} (500)")
+    if result.error is not None:
+        exc = result.error
+        if isinstance(exc, RuntimeError) and str(exc).startswith("not bound: "):
+            blocked(str(exc))
+        pytest.fail(f"{operation_id}: stream raised {type(exc).__name__}")
+    if result.status is None:
+        pytest.fail(f"{operation_id}: no response within {timeout_s}s")
+    return as_response(result)
+
+
 def _fill_path(template: str, values: Mapping[str, str]) -> str:
     path = template
     for name, value in values.items():
@@ -221,6 +253,10 @@ def _resolve_path_param(run: AppRun, drive: Drive, param: str, words: list[str])
     given = drive.spec.get("path", {}).get(param)
     if given is None and param == "thread_id":
         given = drive.spec.get("thread")
+    if given is None and param == "reference" and "reference" in drive.spec:
+        return str(
+            drive.spec["reference"]
+        )  # cases/README.md section 2: sent literally; `path` wins when both are given
     if given in PATH_WORDS or given is None:
         if given in ("started", "ended"):
             if run.main_thread is None:
@@ -336,11 +372,17 @@ def run_drive(run: AppRun, drive: Drive) -> str:
         )
         assert_sse_frames_match(list(result.frames), op)
         return f"{drive.id}: 200 ({len(result.frames)} frames)"
+
+    def dispatch() -> Any:
+        if spec.event_schema:
+            return send_stream(run, op, path=path, token=token, extra_headers=headers)
+        return send(run, op, path=path, token=token, body=body, extra_headers=headers)
+
     if setup == "reset_held":
         with run.app.state.container.get(RESET_GATE).hold():
-            response = send(run, op, path=path, token=token, body=body, extra_headers=headers)
+            response = dispatch()
     else:
-        response = send(run, op, path=path, token=token, body=body, extra_headers=headers)
+        response = dispatch()
     code = _code_suffix(response)
     assert response.status_code == drive.status, (
         f"{drive.id}: expected {drive.status}, got {response.status_code}{code}"
@@ -370,14 +412,6 @@ def _build_body(run: AppRun, op: str, raw: Any, pair: Mapping[str, str]) -> Mapp
     return {"json": value}
 
 
-@dataclass(frozen=True)
-class SseRead:
-    status: int | None
-    content_type: str
-    frames: tuple[SseFrame, ...]
-    error: BaseException | None
-
-
 def read_sse(
     run: AppRun,
     path: str,
@@ -389,74 +423,5 @@ def read_sse(
     """Read an SSE response on the TestClient's own event loop, for at most about 2 x timeout_s."""
     portal = run.client.portal
     assert portal is not None, "the client must be used as a context manager"
-    result: SseRead = portal.call(_read_sse, run.app, path, dict(headers), frames, timeout_s)
+    result: SseRead = portal.call(read_asgi_stream, run.app, path, dict(headers), frames, timeout_s)
     return result
-
-
-async def _read_sse(
-    app: FastAPI, path: str, headers: dict[str, str], frames: int, timeout_s: float
-) -> SseRead:
-    raw_headers = [(b"host", b"testserver")] + [(k.lower().encode(), v.encode()) for k, v in headers.items()]
-    scope: dict[str, Any] = {
-        "type": "http",
-        "asgi": {"version": "3.0", "spec_version": "2.3"},
-        "http_version": "1.1",
-        "method": "GET",
-        "scheme": "http",
-        "path": path,
-        "raw_path": path.encode(),
-        "root_path": "",
-        "query_string": b"",
-        "headers": raw_headers,
-        "client": ("198.51.100.7", 50000),
-        "server": ("testserver", 80),
-        "state": {},
-    }
-    send_side, receive_side = anyio.create_memory_object_stream[bytes](max_buffer_size=10_000)
-    disconnect = anyio.Event()
-    done = anyio.Event()
-    state: dict[str, Any] = {"status": None, "content_type": "", "error": None, "requested": False}
-
-    async def receive() -> dict[str, Any]:
-        if not state["requested"]:
-            state["requested"] = True
-            return {"type": "http.request", "body": b"", "more_body": False}
-        await disconnect.wait()
-        return {"type": "http.disconnect"}
-
-    async def send_message(message: dict[str, Any]) -> None:
-        if message["type"] == "http.response.start":
-            state["status"] = int(message["status"])
-            sent = {k.decode().lower(): v.decode() for k, v in message["headers"]}
-            state["content_type"] = sent.get("content-type", "")
-        elif message["type"] == "http.response.body":
-            chunk = message.get("body", b"")
-            if chunk:
-                send_side.send_nowait(chunk)
-            if not message.get("more_body", False):
-                send_side.close()
-
-    async def run_app() -> None:
-        try:
-            await app(scope, receive, send_message)  # type: ignore[arg-type]
-        except BaseException as exc:
-            state["error"] = exc
-        finally:
-            send_side.close()
-            done.set()
-
-    buffer = ""
-    async with anyio.create_task_group() as tg:
-        tg.start_soon(run_app)
-        with anyio.move_on_after(timeout_s):
-            async for chunk in receive_side:
-                buffer += chunk.decode()
-                complete = buffer.rsplit("\n\n", 1)[0] + "\n\n" if "\n\n" in buffer else ""
-                if len(sse_frames(complete)) >= frames:
-                    break
-        disconnect.set()
-        with anyio.move_on_after(timeout_s):
-            await done.wait()
-        tg.cancel_scope.cancel()
-    complete = buffer.rsplit("\n\n", 1)[0] + "\n\n" if "\n\n" in buffer else ""
-    return SseRead(state["status"], state["content_type"], tuple(sse_frames(complete)), state["error"])

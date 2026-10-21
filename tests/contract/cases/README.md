@@ -34,7 +34,7 @@ operation's `x-con` (a file in the wrong place fails `test_case_files_are_well_f
 | `body` | `None`; `{"example": NAME}` (a named OpenAPI request example, optionally with `credentials` or `turn_id`); `{"raw": JSON}`; `{"text": str}` (not JSON). |
 | `path` | Path-parameter values, from the path words in section 4. |
 | `thread` | Shorthand for `path["thread_id"]`. |
-| `reference` | A case reference, sent literally. |
+| `reference` | A case reference, sent literally. When `path` also names `reference`, `path` wins. |
 | `events` | Chat event types appended to the started thread's stream (`streamChatEvents` only; the last must end the stream). |
 | `last_event_id` | `None`, `{"after_event": n}` (id of the n-th seeded event), or an int sent as the header. |
 | `frames` | Number of SSE frames to read (required for a 200 on a stream). |
