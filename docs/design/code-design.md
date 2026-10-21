@@ -326,8 +326,9 @@ src/meridian/                                    planned                        
 
 eval/harness/{runner,scoring,judge,report,load}.py   frozen per scored run (DO-5); HTTP only                 A11  1
 eval/cases/{dev,heldout,retrieval}/ · eval/reports/                                                           A11  1
-Dockerfile · railway.json · scripts/{agent_version,reset}.py    image build (index built here), agent version stamp, reset command   A12  2
-                                                 (AEA-50; stage7/data.md §7, DAT-22; scripts/ is top level, not under src/meridian/)
+Dockerfile · .dockerignore · railway.json · scripts/{agent_version,serve,reset,image_check}.py · scripts/log_config.json
+                                                 image build (index built here), deploy start-up record, agent version stamp, reset command   A12  2
+                                                 (built AEA-50, 05395df; stage7/data.md §7, DAT-22; scripts/ is top level, not under src/meridian/)
 tests/                                              §9
 ```
 

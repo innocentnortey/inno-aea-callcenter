@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "disable_existing_loggers": false,
+  "formatters": { "allow_list": { "()": "meridian.web.logging.AllowListFormatter" } },
+  "handlers": {
+    "meridian-allow-list": { "class": "logging.StreamHandler", "formatter": "allow_list", "stream": "ext://sys.stderr" }
+  },
+  "loggers": {
+    "uvicorn": { "handlers": ["meridian-allow-list"], "level": "INFO", "propagate": false },
+    "uvicorn.error": { "level": "INFO", "propagate": true },
+    "uvicorn.access": { "level": "WARNING", "propagate": false },
+    "meridian": { "handlers": ["meridian-allow-list"], "level": "INFO", "propagate": false }
+  },
+  "root": { "handlers": ["meridian-allow-list"], "level": "WARNING" }
+}
