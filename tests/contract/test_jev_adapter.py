@@ -64,7 +64,7 @@ class _BrokenJson(httpx.Response):
 
 
 def _body(**changes: Any) -> dict[str, Any]:
-    body = json.loads(json.dumps(DANGER_BODY))
+    body: dict[str, Any] = json.loads(json.dumps(DANGER_BODY))
     body.update(changes)
     return body
 

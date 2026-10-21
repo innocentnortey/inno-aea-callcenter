@@ -26,7 +26,7 @@ FACTORY_KEY = Key[Callable[[str], JevAdapter]]("jev_adapter_factory")
 def _container() -> Container:
     settings = types.SimpleNamespace(openrouter_api_key=SecretStr(KEY))
     container = Container(settings=settings, limits=Limits())
-    assert register_jev(container, FastAPI(), settings=container.settings, limits=container.limits) is None
+    register_jev(container, FastAPI(), settings=container.settings, limits=container.limits)
     return container
 
 
