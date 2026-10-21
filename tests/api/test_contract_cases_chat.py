@@ -18,7 +18,8 @@ from tests.api.openapi_check import load_contract, load_document
 from tests.api.web_shell_support import assert_matches, cookie_header, make_client, reset_gate_of
 from tests.contract.cases.chat import CASES, ROUTE_FILE
 from tests.fakes import WORKED_PAIRS_NOW
-from tests.services.chat_doubles import make_cmd, seed_thread, text_payload, turn_ids_of
+from tests.services.chat_doubles import make_cmd, text_payload
+from tests.services.chat_storage import seed_thread, turn_ids_of
 
 # statuses the chat routes can produce (429 on startChatSession is AEA-23's middleware, not these routes)
 ROUTE_STATUSES = {

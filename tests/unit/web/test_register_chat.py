@@ -28,10 +28,9 @@ from tests.services.chat_doubles import (
     ScriptedRunGraph,
     make_cmd,
     new_request_id,
-    seed_thread,
     text_payload,
-    turn_row,
 )
+from tests.services.chat_storage import seed_thread, turn_row
 
 
 def _provider(value: Any) -> Callable[[Container], Any]:

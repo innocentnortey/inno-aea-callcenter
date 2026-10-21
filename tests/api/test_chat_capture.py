@@ -25,12 +25,11 @@ from tests.services.chat_doubles import (
     RaisingRunGraph,
     ScriptedRunGraph,
     answered_outcome,
-    conversation,
     fixed_wall,
     handed_off_outcome,
     new_turn_id,
-    turn_row,
 )
+from tests.services.chat_storage import conversation, turn_row
 
 
 def _call(cost: float) -> CallRecord:

@@ -2,35 +2,50 @@
 
 Level today: `mock-tested`. Real routes, real middleware and a real SQLite working copy through a TestClient; the
 `run_graph`, `SpendGuard` and `DemoService` siblings are doubles; no server process, no browser, no model adapter.
-The integrated step (real server, scripted model adapter) is blocked by AEA-57 (harness) and AEA-51 (the graph).
+The integrated tests (real server) are blocked by AEA-30 (demo clock, DemoService) and AEA-51 (reply composer,
+graph) and are reported by the harness as blocked.
 Each test asserts what the user sees (the notice and its actions) and what was stored (conversation, messages, turn).
 """
 
 from __future__ import annotations
 
 import threading
+import uuid
 from pathlib import Path
 
 import pytest
 
 from tests.api.chat_support import REFUSED, chat_env, post_turn
 from tests.api.web_shell_support import assert_matches, make_client
+from tests.journeys.support.run import JourneyRun
 from tests.services.chat_doubles import (
     BlockingRunGraph,
-    Collected,
     DeadlineRunGraph,
     ScriptedRunGraph,
+    make_cmd,
+    new_turn_id,
+    text_payload,
+)
+from tests.services.chat_storage import (
+    Collected,
     count_rows,
     customer_messages,
-    make_cmd,
     messages_of,
-    new_turn_id,
     seed_thread,
-    text_payload,
     turn_row,
 )
 
 pytestmark = pytest.mark.journey
+
+TURN_NEEDS = (
+    "login_sessions",
+    "session_service",
+    "demo_service",
+    "demo_clock",
+    "reply_composer",
+    "turn_service",
+    "run_graph",
+)
 
 
 def test_j9_turn_timeout_notice_is_shown_and_retry_runs(
@@ -123,8 +138,48 @@ def test_j9_rate_limited_notice_then_normal_turn(monkeypatch: pytest.MonkeyPatch
         assert len(env.graph.calls) == 1
 
 
+def test_j9_rate_limited_through_the_real_server(journey: JourneyRun) -> None:
+    """integrated (AC-15): the real limiter refuses the 21st turn on a thread with a RATE_LIMITED notice, never 429."""
+    with journey.step(
+        "J-9",
+        "AEA-40 RATE_LIMITED through the real limiter",
+        needs=TURN_NEEDS,
+        operations=("login", "startChatSession", "submitTurn"),
+    ):
+        signed = journey.login()
+        thread_id = signed.client.call("POST", "/api/chat/sessions", operation_id="startChatSession").json()[
+            "thread_id"
+        ]
+        limit = journey.container.limits.web.chat_turns_per_thread_per_min
+        codes: list[str | None] = []
+        last_turn = ""
+        for n in range(limit + 1):
+            last_turn = str(uuid.uuid4())
+            r = signed.client.call(
+                "POST",
+                f"/api/chat/sessions/{thread_id}/turns",
+                operation_id="submitTurn",
+                body={"turn_id": last_turn, "payload": {"kind": "text", "text": f"message {n}"}},
+            )
+            assert r.status_code == 200
+            codes.append((r.json()["notice"] or {}).get("code"))
+            if codes[-1] == "RATE_LIMITED":
+                break
+        assert codes[-1] == "RATE_LIMITED" and "RATE_LIMITED" not in codes[:-1]
+        notice = r.json()["notice"]
+        assert notice["actions"] == ["talk_to_person"] and notice["retry_turn_id"] is None
+        row = journey.db.one("SELECT * FROM turns WHERE turn_id = ?", (last_turn,))
+        assert (row["status"], row["outcome"], row["degrade_reason"]) == (
+            "failed",
+            "degraded_handoff",
+            "rate_limit",
+        )
+        assert journey.db.count("messages", "turn_id = ?", (last_turn,)) == 0
+
+
 @pytest.mark.skip(
-    reason="blocked by AEA-57 (harness) and AEA-51 (graph): integrated step, scripted model adapter"
+    reason="blocked-on AEA-51 and an AEA-57 follow-up (a scripted entry that holds a provider call): "
+    "TURN_TIMEOUT and BUSY through the real server; mock-tested above"
 )
-def test_j9_notices_through_the_real_server_with_the_scripted_model() -> None:
-    """The three notices through the real server process and the scripted model adapter (integrated level)."""
+def test_j9_timeout_and_busy_through_the_real_server() -> None:
+    """TURN_TIMEOUT and BUSY through the real server process and the scripted model adapter (integrated level)."""

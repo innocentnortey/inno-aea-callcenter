@@ -37,23 +37,25 @@ from tests.services.chat_doubles import (
     answered_outcome,
     choice_payload,
     code_payload,
+    history_text_id,
+    locate_form_payload,
+    new_turn_id,
+    synthetic,
+    text_payload,
+)
+from tests.services.chat_storage import (
     conversation,
     count_rows,
     customer_messages,
     handoff_block,
     has_person_key,
-    history_text_id,
     human_controller,
-    locate_form_payload,
     log_blob,
     messages_of,
-    new_turn_id,
     seed_case,
     seed_person_request_turn,
     seed_takeover,
     seed_thread,
-    synthetic,
-    text_payload,
     turn_row,
 )
 
@@ -324,7 +326,8 @@ def _blocks(body: dict[str, Any]) -> list[Any]:
 # -- AC-3 over the wire ------------------------------------------------------------------------------------------
 def test_running_turn_409_via_submit_turn(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """invariant (AC-3): a resend while the turn runs is 409 TURN_IN_PROGRESS with retry_after_ms 2000; nothing runs."""
-    from tests.services.chat_doubles import make_cmd, turn_ids_of
+    from tests.services.chat_doubles import make_cmd
+    from tests.services.chat_storage import turn_ids_of
 
     with chat_env(monkeypatch, tmp_path) as env, make_client(env.app) as client:
         thread = seed_thread(env.store.uow, env.demo_session)
