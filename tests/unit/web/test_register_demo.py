@@ -80,8 +80,9 @@ def test_register_demo_wires_and_runs_the_thread(tmp_path: Path, store: TempStor
     thread = c.get(Key[SchedulerThread]("scheduler_thread"))
     assert thread.alive
     deadline = time.monotonic() + 2
-    while count(store, "job_runs") < 1 and time.monotonic() < deadline:
+    while not fake.keeps and time.monotonic() < deadline:
         time.sleep(0.02)
+    assert count(store, "job_runs") >= 1
     assert rows(store, "job_runs")[0]["started_wall_at"] == "2026-10-21T19:00:00+00:00"
     assert fake.keeps == [2]
     c.close()
