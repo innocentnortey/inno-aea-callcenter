@@ -203,7 +203,7 @@ src/meridian/                                    planned                        
 │   ├── booking.py                               city/ZIP → zone; 24-hour rule; fee notes by tier            A5    1
 │   ├── handoff.py                               R-26 promise table + due rule; reason → P0–P4; D4 rows      A6    1
 │   └── escalation.py                            decide_escalation(inputs) (pure; OD-6, D4, R-21)            A7b   3
-├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0
+├── privacy/redact.py                            one redaction function; profiles STORE/SONNET/JEV/TRACE/LOG A0    0   built AEA-04 9145044
 ├── ports/
 │   ├── models.py                                ChoiceModel, StructuredModel, ToolCallingModel; attempts    A0    0
 │   └── runtime.py                               UnitOfWork(Factory), RetrievalIndex, Clock, TraceSink       A0    0
