@@ -340,3 +340,10 @@ def test_greeting_says_automated() -> None:
     assert "not a person" in greeting
     assert "Talk to a person" in greeting
     assert "Talk to a person" in render(TextId.ARE_YOU_A_PERSON)
+
+
+def test_history_row_texts() -> None:
+    assert render(TextId.HISTORY_CODE_ENTERED) == "Code entered"
+    assert render(TextId.HISTORY_DETAILS_SENT) == "Details sent"
+    assert TextId.HISTORY_CODE_ENTERED.value == "history.code_entered"
+    assert TextId.HISTORY_DETAILS_SENT.value == "history.details_sent"
