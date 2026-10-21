@@ -451,8 +451,20 @@ def register_tool_dispatch(container: Container, app: FastAPI, *, settings: Any,
 def register_identity(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-27 identity: IdentityService and the demo inbox (graph-tools §5).
 
-    No-op until AEA-27 fills it.
+    Provides Key[IdentityService]("identity_service"), the one IdentityService, built from the "uow_factory" key
+    (AEA-10), settings.session_secret (the HMAC key, graph-core §12) and limits.identity (C-9). web/deps.py resolves
+    get_identity_service from that key (AEA-23); the identity node (AEA-36), the CON-6 route (AEA-43) and GraphDeps
+    (AEA-51) all use it.
     """
+    from meridian.ports.runtime import UnitOfWorkFactory
+    from meridian.services.identity import IdentityService
+
+    uow_key: Key[UnitOfWorkFactory] = Key("uow_factory")  # = web.deps.UOW_FACTORY (keys are equal by name)
+
+    def build(c: Container) -> IdentityService:
+        return IdentityService(c.get(uow_key), session_secret=settings.session_secret, limits=limits.identity)
+
+    container.provide(Key[IdentityService]("identity_service"), build)
 
 
 def register_scheduling(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
