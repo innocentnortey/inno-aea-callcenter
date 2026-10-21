@@ -214,6 +214,8 @@ class SpecialistTask(MeridianModel):                  # DO-4 §5, plus:
     offer_quick_checks: bool = False                  # set by the act node (§6); only scheduling BOOK_NEW tasks
 ```
 
+> **Home note (AEA-35b, Innocent 2026-10-21):** `SpecialistTask`, `KnowledgeSlice` (`kind` only) and `AccountSlice` (`kind` only) live in `domain/tools.py`, not `domain/specialists.py`, because `specialists.py` cannot import `PlannedTask` from `domain/turn.py` without an import cycle; AEA-08 reconciles the file names above.
+
 **`GraphDeps` field** (graph-core §4, GRC-6: "the fields graph-tools.md … name. Their names and types win"; AEA-21
 adds it as written): `specialists: SpecialistRunner`. The dispatcher has no
 `GraphDeps` field of its own: only the runner calls it.
