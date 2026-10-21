@@ -374,8 +374,25 @@ def register_spend(container: Container, app: FastAPI, *, settings: Any, limits:
 def register_anthropic(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-17 models: the Anthropic adapter (models.md §2, §7).
 
-    No-op until AEA-17 fills it.
+    Provides Key[anthropic.Anthropic]("anthropic_client"): the one SDK client, built from settings.anthropic_api_key
+    with max_retries=0 and the SDK's own spans off, and closed on shutdown. AnthropicAdapter objects (one per model)
+    are built from it by AEA-51's adapter_for. Caps the SDK's "anthropic" logger at WARNING, because its DEBUG lines
+    carry whole request payloads.
     """
+    import logging
+
+    import anthropic
+
+    from meridian.adapters.models.anthropic import build_anthropic_client
+
+    logging.getLogger("anthropic").setLevel(logging.WARNING)
+
+    def _client(c: Container) -> anthropic.Anthropic:
+        client = build_anthropic_client(settings.anthropic_api_key)
+        c.on_close(client.close)
+        return client
+
+    container.provide(Key[anthropic.Anthropic]("anthropic_client"), _client)
 
 
 def register_jev(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
