@@ -5,7 +5,7 @@
 > As of: 2026-10-21 (Stage 6, System track; DO-3 revised after the metz review and reconciled with the UX-3 contracts, awaiting Innocent).
 > Authority: **DO-3 wins.** This file only routes; when it disagrees with DO-3, fix this file.
 
-**Every code path below is planned.** No product code exists yet; the parked `src/meridian/` is read for shapes only
+**Every code path below is planned unless its row marks it actual.** No product code exists yet; the parked `src/meridian/` is read for shapes only
 and is replaced by the planned tree (DO-3 §2.4). When a slice lands, change its row from *planned* to *actual* with
 the commit, in the same change (`rules/context-maintenance.md`).
 
@@ -22,7 +22,7 @@ and DDL file; a table with several writers lives in A0 (DO-3 §8).
 
 | Wave | Area | Responsibility | Owns (all planned) | Status |
 |---|---|---|---|---|
-| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core}.py`, empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,cases,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/sqlite/schema/00_core.sql`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/` | planned |
+| 0 | **A0 Foundation** | Shared types, shared policy, ports, SQLite core, checkpointer, composition root | `src/meridian/config.py`, `domain/*` (incl. `tools.py`), `policy/{texts,limits}.py`, `privacy/redact.py`, `ports/{models,runtime}.py`, `adapters/sqlite/{db,migrate,repos_core}.py`, empty class stubs of `adapters/sqlite/repos_{spend,identity,booking,cases,staff,ops}.py` wired into `SqliteUnitOfWork`, `adapters/sqlite/schema/00_core.sql`, `adapters/checkpointer.py`, `web/container.py` (all `register_<area>()` stubs), `tests/fakes/` | planned; `policy/texts.py` actual (AEA-03, `2689582`) |
 | 1 | **A1 Gates** | Decide the turns that never reach a model | `gates/{rules,gate}.py` | planned |
 | 1 | **A2 Models** | One adapter per provider; the role-typed gateway; the cost ledger | `adapters/models/{anthropic,openrouter_jev}.py`, `agent/gateway.py`, `services/ledger.py`, `adapters/sqlite/repos_spend.py`, `schema/20_spend.sql` | planned |
 | 1 | **A3 Retrieval** | Build the KB index at image build; answer passage searches | `retrieval/{manifest,ingest}.py`, `adapters/retrieval_fastembed.py`, `agent/tools/knowledge.py` | planned |
