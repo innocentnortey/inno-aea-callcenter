@@ -210,6 +210,13 @@ repository. They are not the YourAI keys. That holds even though the model keys 
 4. **On the pages:** the monitoring page shows aggregates only and no trace links (SCR-10); the evaluation page shows
    dev-split failure examples only, redacted.
 
+**Name-masking limit (DAT-1, Innocent 2026-10-21: option A).** `privacy/redact.py` finds names only by
+introduction patterns ("my name is …", "this is …", "I'm …" followed by capitalised words) and street lines
+only by a number, street-name and suffix pattern. Loose names in free chat ("Omar here", "my mother Jane")
+may therefore reach Jev, under `data_collection: deny`, and the project's own Langfuse. Codes, card-like
+numbers, phones, emails and customer and invoice IDs have fixed shapes and are always replaced for their
+profiles.
+
 **What leaves the environment.** (a) Model inputs to Anthropic (Sonnet 5.5: specialists, responder, brief) and to
 TypeSafe through OpenRouter (Jev: planner and danger classifier), each after the intake masks. Raw caller text goes to
 Jev only after redaction, a condition of Innocent's SP-1 decision (SP-1 §4). (b) Masked spans to the Langfuse on
