@@ -298,6 +298,10 @@ def register_tracing(container: Container, app: FastAPI, *, settings: Any, limit
     (Settings.langfuse_complete()); otherwise NullTraceSink and no alert (MOD-6 step 5, MC-24). The sink's on_alert
     calls the container's "alert_writer".fire("trace_export_failed", reason) (AEA-32, cases.md §8); until that key
     exists it logs a fixed line. One LangfuseTraceSink per Langfuse public key per process.
+
+    AEA-19-F1: when Key[TraceSink]("trace_override") is provided (only register_graph does, from the test-only
+    ContainerOverrides.trace; web.md §15, R-W-8), Key("trace") returns that sink and the Langfuse sink is never
+    started. Any ContainerError other than "not provided: trace_override" is re-raised.
     """
     import logging
 
@@ -313,12 +317,22 @@ def register_tracing(container: Container, app: FastAPI, *, settings: Any, limit
 
     log = logging.getLogger("meridian.tracing")
     trace_key = Key[TraceSink]("trace")
+    override_key = Key[TraceSink]("trace_override")
+
+    def chosen(c: Container, default: TraceSink) -> TraceSink:
+        try:
+            return c.get(override_key)
+        except ContainerError as exc:
+            if str(exc) != f"not provided: {override_key.name}":
+                raise
+            return default
+
     typed = cast(Settings, settings)
     pk, sk = typed.langfuse_public_key, typed.langfuse_secret_key
     base_url, project_id = typed.langfuse_base_url, typed.langfuse_project_id
     if not typed.langfuse_complete() or pk is None or sk is None or base_url is None or project_id is None:
         null_sink = NullTraceSink()
-        container.provide(trace_key, lambda _c: null_sink)
+        container.provide(trace_key, lambda c: chosen(c, null_sink))
         return
 
     def on_alert(reason: TraceAlertReason) -> None:
@@ -337,10 +351,15 @@ def register_tracing(container: Container, app: FastAPI, *, settings: Any, limit
     except Exception as exc:
         log.warning("trace_sink_error op=build error=%s", type(exc).__name__)
         fallback = NullTraceSink()
-        container.provide(trace_key, lambda _c: fallback)
+        container.provide(trace_key, lambda c: chosen(c, fallback))
         return
-    container.provide(trace_key, lambda _c: sink)
-    container.on_start(sink.start)
+
+    def start_if_chosen() -> None:
+        if container.get(trace_key) is sink:
+            sink.start()
+
+    container.provide(trace_key, lambda c: chosen(c, sink))
+    container.on_start(start_if_chosen)
     container.on_close(sink.close)
 
 

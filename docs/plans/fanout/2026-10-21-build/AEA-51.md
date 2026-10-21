@@ -1,15 +1,46 @@
 # Plan — [AEA-51] integration A: the customer path end to end
 
-**Status:** planned (READY as a plan). **Pass 1 is buildable now** (Parts A, B, C and four tests, §5 *Two passes*);
-**pass 2 is BLOCKED-ON** AEA-39, AEA-21b and AEA-19-F1 (and AEA-40-F1 for one test), §9.
+**Status:** planned (READY as a plan). **Pass 1 is built** (branch `aea-51-aea-51-customer-path`, `e9d07f3`, not
+merged); **pass 2a is buildable now**; **pass 2b is BLOCKED-ON** AEA-21b and AEA-19-F1 (and AEA-40-F1 for one test), §5
+*Passes*, §9.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/51 (spec copy:
-`docs/plans/tickets/AEA-51.md`) · **Base revision:** `main` at `b68df7e` (refresh 5, 2026-10-21; refresh 4 at `f466ff7`,
-refresh 3 at `c9b17ea`, refresh 2 at `2ec19ad`, first written at `0dc2ad4`)
+`docs/plans/tickets/AEA-51.md`) · **Base revision:** `main` at `9d12b8f` (refresh 6, 2026-10-21; refresh 5 at `b68df7e`,
+refresh 4 at `f466ff7`, refresh 3 at `c9b17ea`, refresh 2 at `2ec19ad`, first written at `0dc2ad4`)
 **Planner:** Opus 5.5 (`claude-opus-5-5`) · **Implementer:** `fanout-implementer` on Sonnet · **Lane:** `lane::build-loop`
 · **Risk label:** none in the slice plan (see §8 R-9 for the orchestrator's confirmation) · **Wave:** 3
 
-**Refresh 5 (2026-10-21, `main` at `b68df7e`, 63 commits after `f466ff7`).** Read this box first; everything below it
+**Refresh 6 (2026-10-21, `main` at `9d12b8f`, 11 commits after `b68df7e`).** Read this box first; everything below it
 was re-checked against `main` and kept where it still holds. Where this box and anything later differ, this box wins.
+
+1. **Merged since refresh 5:** AEA-39 (`12e46ee`, act node: `act.py` has 0 `NotImplementedError`) and AEA-60 (`0e37fad`:
+   `tests/contract/test_prompts_vs_consumers.py`, `tests/contract/_prompts_*.py`, `tests/journeys/j5/test_aea_60.py`,
+   `j9/test_aea_60.py`). AEA-39 leaves §9. In `src/`, `git diff b68df7e..9d12b8f` touches only `agent/nodes/act.py`:
+   `agent/graph.py` (`build_graph`, `bind_run_graph`, `RECURSION_LIMIT = 25`), `web/container.py`, `services/turn.py`,
+   `tests/journeys/support/` and every other surface §4 copies are unchanged.
+2. **Pass 1 is built, not merged:** branch `aea-51-aea-51-customer-path` at `e9d07f3` (worktree
+   `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-51`, base `6659403`, 6 commits behind `main`): `f5b7439` (A + B),
+   `cf678db` (C + four tests), `e9d07f3` (context rows + deviations); 31 tests passed. Its deviations are folded into §5
+   *Pass 1 as built*. The ledger row still reads `blocked`.
+3. **Still missing at `9d12b8f`** (no ticket file, GitLab issue or branch for any of them): AEA-21b (nothing in `src/`
+   constructs `SlotCardBlock`, `AccountCardBlock`, `AppointmentBlock`, `WherePromptBlock` or `UrgencyQuestionsBlock`),
+   AEA-19-F1 (`register_tracing`, `container.py` line 294, never reads `trace_override`) and AEA-40-F1 (`services/turn.py`
+   line 318 `allow_turn()` before line 322 `parse_intake`). **Request, repeated: cut AEA-21b and AEA-19-F1; they are now
+   the whole critical path of this ticket** (§8 R-1, R-13).
+4. **New: pass 2 splits into 2a (buildable now) and 2b** (§5 *Passes*, table P). With the act node real, `Key("run_graph")`
+   can be bound now, and every criterion that needs neither a card block compose does not build nor the capture sink is
+   built in 2a: 30 of the remaining test functions or parts, including J-4, J-5, J-9 and J-2 step 1. Binding `run_graph`
+   lets the journeys and contract drives that skipped as `run_graph not bound` run; they must pass (§8 R-23; the
+   `0e37fad` seam audit counted 28 skipped journeys and 30 "not bound" contract cases).
+5. **Seam findings carried in, not this ticket's to fix:** AEA-39 audit finding 1 (`_has_pending_change` always False;
+   §8 R-22); wave-3 audit findings 1 and 2 (the two known reds, §7) and 5 (browser journeys error without
+   `apps/web/dist`; check 8 points them at the main checkout's build, §7).
+6. **Changed in place:** header; §4.3 (two rows, status column); §5 *Two passes* → *Passes* with table P and *Pass 1 as
+   built*; A0's expectations; §7 known reds, browser-journey handling and pass-2a commits; §8 R-1/R-13 status, R-12, R-16,
+   R-21, new R-22, R-23; H3's line note; §9. Parts C–H keep the full instructions per test; table P says which pass builds
+   each. Disk: 14 GB free on `/` (86 %).
+
+**Refresh 5 (2026-10-21, `main` at `b68df7e`, 63 commits after `f466ff7`).** Kept as history; items 4 and 5 are
+superseded by refresh 6.
 
 1. **Merged since refresh 4:** AEA-35b (`3725c90`: `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` in `domain/tools.py`,
    Innocent's home ruling, graph-tools.md *Home note*), AEA-36 (`c378698`: front node), AEA-35 (`1ce98c4`:
@@ -163,7 +194,7 @@ never patches a sibling in place.
 | Metrics (DO-7) | `docs/design/key-metrics-registry.md` M-1, M-3, M-4, M-6…M-27, M-29 | Stay computable from the stored records; no target is set here |
 | Rules | `.claude/rules/build-loop-test-scope.md` (+ AEA addition), `integrated-journeys.md` §3–§5, `context-maintenance.md`; workspace `context-management-multi-turn.md` rule 3 | Checks, journey gate, evidence record, turn-2+ prompt test |
 | Current code | `src/meridian/web/{container,app,deps,logging}.py`, `config.py`, `agent/gateway.py`, `adapters/{checkpointer,retrieval_fastembed,tracing_langfuse}.py`, `retrieval/ingest.py`, `policy/limits.py`, `domain/turn.py`; `tests/unit/web/test_container.py`, `tests/unit/test_import_direction.py`, `tests/fakes/models.py`, `tests/unit/adapters/{_tracing_doubles,test_retrieval_fastembed}.py`, `tests/api/openapi_check.py`, `tests/journeys/affected.py`; since refresh 2 also `agent/{graph,context}.py`, `agent/tools/*.py`, `agent/nodes/compose.py`, `domain/blocks.py`, `adapters/models/{anthropic,openrouter_jev}.py`, `web/middleware.py` (`run_tag_of`), `tests/journeys/support/*.py`, `tests/contract/openapi_variants.py`; since refresh 3 also `services/{cases,handoff}.py`, `agent/nodes/{load_context,reply}.py`, `domain/handoff.py`, `adapters/sqlite/schema/{00_core,20_spend,60_cases}.sql`, `adapters/tracing_langfuse.py` (span metadata), `eval/harness/{cli,deps,freeze,cases,records,report}.py`; since refresh 4 also `services/{demo,session,turn}.py`, `web/routes/chat.py`, the `register_demo` and `register_chat` hunks; since refresh 5 also `agent/specialists/{specs,runner}.py`, `agent/prompts/{routing,specialists}.py`, `agent/nodes/{front,plan,act}.py`, `agent/graph.py` (node map), `agent/routers.py`, `tests/journeys/support/steps.py` (`NEED_OWNERS`), AEA-52's `tests/integration/staff_support.py` | §4 copies |
-| Sibling plans (not on `main` at `b68df7e`) | Plan `AEA-39` in this folder (no branch); AEA-52's plan §8 R-3 (a request to this ticket) | Act-node behaviour this ticket waits on (§9); R-19 |
+| Sibling plans | AEA-52's plan §8 R-3 (a request to this ticket); plan `AEA-39` in this folder (merged at refresh 6) | R-19 |
 | Seam audits | `.claude/state/resume.md`: second wave-2 batch, open finding 1; wave-3 findings 1, 2, 4 and 8 | PA-5; check 7's known reds; the J-1 contract steps are an AEA-59 follow-up; the `PROVIDER_KEYS` test is a proposed follow-up |
 
 ---
@@ -625,7 +656,7 @@ class GraphDeps:          # agent/context.py
 
 ### 4.3 Names from sibling branches and plans (not DO-4; re-check in step A0 after they merge)
 
-| Name | Status at `b68df7e` | Used as |
+| Name | Status at `9d12b8f` | Used as |
 |---|---|---|
 | `build_graph`, `bind_run_graph`, `GraphDeps`, `ReplyComposer` | on `main` (AEA-21, `5531664`); §4.1 | compile once; `Key("run_graph")` |
 | `Key("anthropic_client")`, `Key("jev_adapter_factory")` | on `main` (AEA-17, AEA-18); §4.1 | `adapter_for` |
@@ -634,6 +665,8 @@ class GraphDeps:          # agent/context.py
 | `Key[DemoClock]("demo_clock")`, `deps.DEMO_SERVICE` (`"demo_service"`), `Key("scheduler_job")`, `Key("scheduler_thread")` | on `main` (AEA-30, `cf8fd78`); §4.1 | `GraphDeps.demo` |
 | `deps.TURN_SERVICE`, `deps.SESSION_SERVICE`; reads `Key("run_graph")` and `Key("reply_composer")` lazily, `Key("ledger")` and `Key("trace")` **eagerly** in the `TurnService` factory | on `main` (AEA-40, `f466ff7`); §4.1 | what this hunk must provide; why §8 R-1 blocks the override |
 | `SPECS` (`agent/specialists/specs.py`); `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)` (`agent/specialists/runner.py`), constructor arguments kept as public attributes (PD-8) | on `main` (AEA-35, `1ce98c4`); §4.2 | the runner |
+| `agent/nodes/act.py` (`run_specialist`, `escalation`, `handoff`; no `NotImplementedError`) | on `main` (AEA-39, `12e46ee`) | reached by every turn that runs a specialist, escalates or hands off; why pass 2a can bind `run_graph` |
+| `bind_run_graph(graph: CompiledGraph, *, deps: GraphDeps, composer: ReplyComposer) -> RunGraph` (`agent/graph.py` line 341); `RunGraph = Callable[[TurnInput, TurnContext], GraphOutcome]` (`domain/turn.py` line 558) | on `main` (AEA-21), unchanged at `9d12b8f` | pass 2a step 2 |
 | `DANGER_FIELD = "danger_level"`, `CLASSIFIER_FIELDS` (options `normal`, `burning_unclear`, `danger`) (`agent/prompts/routing.py`); `REPORT_FACTS_TOOL = "report_facts"` (`agent/prompts/specialists.py`) | on `main` (AEA-37 `8d025b7`, AEA-35 `1ce98c4`) | D1 `classifier(...)`, `report(...)` |
 | AEA-24 runner (`eval.harness.cli.main`, `HarnessDeps`, `write_freeze`) | on `main` (AEA-24, `7fddbf5`); §4.1 | F2 (in-process) |
 | `tests/journeys/support/*` public API | on `main` (AEA-57, `bd79a29`); §4.1 | §5 C |
@@ -668,26 +701,118 @@ Build order: **A** wiring → **B** adapter contract → **C** support modules �
 restart → **F** composition, failures, relayed turn → **G** capture → **H** journeys, record, context. Each part ends
 with its own affected tests green. Commit after A+B, after C+D+E, after F+G, and the record/context commit last (§7).
 
-**Two passes (refresh 5).**
-- **Pass 1, buildable now:** Parts A, B and C, with one difference in A2: **do not provide `Key("run_graph")`** (step 10's
-  second half) and end the A1 docstring's first sentence of the second paragraph with `Key("compiled_graph") (SqliteSaver
-  from Key("checkpointer"), recursion limit 25); Key("run_graph") is provided once AEA-39's act node is on main.` in
-  place of `… recursion limit 25) and Key("run_graph").`. *Invariant: while `act.py` is a stub, every journey that needs
-  `run_graph` keeps its honest `blocked-on AEA-51` skip (AEA-57's `NEED_OWNERS` preflight) instead of turning red on a
-  `NotImplementedError`; CON-1 and CON-4 still work because `reply_composer` is bound.* Tests in pass 1: from F1, `test_login_gate` (AC-4), `test_role_maps_bound_and_guarded` with
-  parts (a) and (b) only, and `test_real_objects_bound` with part (b) plus the part (a) asserts that need neither a
-  driven turn nor the trace override (open part (a) with `RunOptions()`, no `trace`; skip its `runner.trace is sink`,
-  `graph_deps.trace is sink` and driven-WP-1 asserts for now); from D5, `test_greeting_and_demo_date` (AC-5).
-  `tests/graph/worked_pair_scenarios.py` is not created in pass 1, and pass 1 writes no skipped placeholder for a
-  pass-2 criterion. Pass-1 commits: commit 1 (A + B), then commit 1b `test(AEA-51): integration launcher, login gate,
-  greeting and role guards (pass 1)` with `tests/integration/customer_support.py`, `tests/integration/customer_api.py`,
-  `tests/integration/test_customer_composition.py` and `tests/graph/test_worked_pairs_api.py`. Run §7 checks 1, 2, 4–8
-  and 11 on pass 1 and report (check 6, strict contract mode, is pass 2 only: `submitTurn` cannot pass strict without
-  `run_graph`). Check 8 must show no journey newly red; journeys that skipped only for `reply_composer` may now run and
-  must pass (name them).
-- **Pass 2, after §9's prerequisites merge:** re-run A0, provide `Key("run_graph")` and restore A1's docstring word for
-  word, then everything else, adding to the same files (AC-2 part (c); AC-1's `run_graph` assert, driven WP-1 turn and
-  the `trace is sink` identities), then commits 2–4 of §7.
+**Passes (refresh 6).** The work is cut into three passes on one branch (`aea-51-aea-51-customer-path`, worktree
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-51`). Each pass adds to the same files; no pass writes a skipped
+placeholder for a later pass's criterion (except the one F3 skip that already exists in the design).
+
+- **Pass 1 — built** (`f5b7439`, `cf678db`, `e9d07f3`; base `6659403`; 31 tests passed). Parts A (without
+  `Key("run_graph")`), B and C; tests `test_login_gate` (AC-4), `test_role_maps_bound_and_guarded` parts (a)–(b),
+  `test_real_objects_bound` part (b) plus the structural part (a) on `RunOptions()` (no trace), and
+  `test_greeting_and_demo_date` (AC-5). See *Pass 1 as built* below.
+- **Pass 2a — buildable now** (AEA-39 merged). Steps, in order:
+  1. A0 (expectations for 2a). Then `git merge --no-edit main` (commit 2a-0 of §7; conflict rule there). Then `uv sync`.
+  2. **Bind `run_graph`** (A2 step 10's second half). In `register_graph`, add the function-local imports
+     `from meridian.agent.graph import bind_run_graph` (beside the existing `build_graph` import) and
+     `from meridian.domain.turn import RunGraph`; a typed local `run_graph_key: Key[RunGraph] = Key("run_graph")`; and,
+     **after** the `container.provide(graph_key, …)` call, exactly:
+     ```python
+     container.provide(
+         run_graph_key,
+         lambda c: bind_run_graph(c.get(graph_key), deps=c.get(deps_key), composer=c.get(deps.REPLY_COMPOSER)),
+     )
+     ```
+     *Invariant: one compiled graph per app; `TurnService`'s forwarding closure (AEA-40) now resolves a `RunGraph`
+     (graph-core §2); the composer is the same object CON-1, CON-4 and the compose node use.*
+  3. **Docstring.** Make it equal to A1's text with exactly one difference: the sentence `overrides.trace is provided as
+     Key("trace_override"), which Key("trace") (AEA-19) then returns.` reads `overrides.trace is provided as
+     Key("trace_override"); Key("trace") (AEA-19) returns it once AEA-19-F1 is on main.` (So the pass-1 sentence
+     `…recursion limit 25); Key("run_graph") is provided once AEA-39's act node is on main.` becomes A1's `…recursion
+     limit 25) and Key("run_graph").`) Reflow to the file's line length; keep "AEA-51"; do not write "No-op until".
+  4. Check 1 (`tests/unit/web`, import direction) green, then build every table-P row marked **2a**, in the table's order.
+  5. §7 checks 3–8 and 11 (check 6 report-only in 2a: name any red strict drive and its cause; it is a hard gate in 2b),
+     then H2 over j2, j4, j5, j9 with the record's *Blocked by* filled as `J-3 and J-2 step 2: AEA-21b (compose cards);
+     capture spans (AC-17, AC-18, AC-20, AC-21, AC-46, AC-47, AC-49…AC-51): AEA-19-F1`, and H3 as table P says. Commits
+     2a-1 … 2a-4 of §7.
+- **Pass 2b — after AEA-21b and AEA-19-F1 merge** (§9). A0 (2b expectations); `git merge --no-edit main`; restore A1's
+  docstring word for word; build every table-P row marked **2b** (whole tests and the "2b adds" parts); all §7 checks
+  including check 6 as a hard gate; H2 over all five journey folders; H3's remaining rows; commits 2–4 of §7 suffixed
+  `(pass 2b)`. If AEA-40-F1 has merged by then, unskip `test_spend_cap_safety_still_answered` (A0 exception).
+
+**Table P — what each pass builds** (the Parts below hold the full instructions for every test; this table only says
+when). "Whole" = the full test as its Part describes it.
+
+| File :: test | AC | Pass | 2a writes | 2b adds |
+|---|---|---|---|---|
+| `tests/contract/test_model_ports_contract.py` (all) | AC-3 | 1 | — | — |
+| `test_customer_composition.py::test_login_gate` | AC-4 | 1 | — | — |
+| `::test_role_maps_bound_and_guarded` | AC-2, PA-1 | 1 + 2a | part (c) (driven WP-1 turn; `spend_ledger` role → (provider, model)) | — |
+| `::test_real_objects_bound` | AC-1, PA-2, PA-3 | 1 + 2a + 2b | in part (a): `callable(c.get(Key("run_graph")))`; one driven `wp1` T1 turn and a `turns` row with `plan_mode` not null; `graph_deps.specialists is runner` | part (a) reopened with `RunOptions(trace=sink)` (`sink, exporter = build_capture_sink(registry)`) and the asserts `runner.trace is c.get(Key("trace")) is sink`, `graph_deps.trace is sink` |
+| `::test_run_id_honoured_only_with_eval_key` | AC-41 | 2a | whole | — |
+| `::test_real_adapters_through_con2` | AC-44 | 2a | whole | — |
+| `::test_twenty_concurrent_conversations` | AC-43 | 2b | — | whole |
+| `::test_eval_runner_against_app_wf9`, `::test_load_runner_against_app_wf10`, `::test_experiment_run_spend_wf12` | AC-49…AC-51 | 2b | — | whole (F2) |
+| `tests/graph/worked_pair_scenarios.py` | — | 2a + 2b | D1, D2 (`ScenarioResult`), D3's ambiguous-locator helper, and drivers `wp1`, `wp2`, `wp4`, `wp4_cancel`, `wp5`, `wp6_yes`, `wp6_not_sure`, `wp7`, `danger`, `nodanger`, `nodanger_classifier_fails`, `planner_fallback`, `planners_fail`, `person_words`, `identity_failures`, `three_tasks` | drivers `wp3`, `wp4f` (+ D3's WP-4F SQL), `wp6_no`, `wp8`, `estimate`, `quick_checks`, `no_source`, `warranty`; D4 `run_dev_set` |
+| `test_worked_pairs_api.py::test_greeting_and_demo_date` | AC-5 | 1 | — | — |
+| `::test_wp1_membership_stale_twin` | AC-6 | 2a | whole | — |
+| `::test_wp2_invoice_after_code` | AC-7 | 2b | — | whole |
+| `::test_wp3_booking_and_one_slot_concurrency` | AC-8 | 2b | — | whole |
+| `::test_wp4_fee_bearing_never_written` | AC-9 | 2a | whole | — |
+| `::test_wp4f_move_carries_to_next_turn` | AC-10 | 2b | — | whole |
+| `::test_wp5_co_alarm_safety_first` | AC-11 | 2a | whole | — |
+| `::test_wp6_burning_three_branches` | AC-12 | 2a + 2b | the `yes` and `not_sure` branches | the `no` branch |
+| `::test_wp7_refund_handoff_and_brief` | AC-13, PA-5 | 2a | whole | — |
+| `::test_wp8_no_false_completion` | AC-14 | 2b | — | whole |
+| `::test_danger_emergency_first` | AC-15 | 2a | whole | — |
+| `::test_nodanger_and_model_fallbacks` | AC-16 | 2a | whole | — |
+| `::test_restart_between_write_and_checkpoint` | AC-26 | 2b | — | whole (E2) |
+| `::test_turn_two_plus_prompt_and_state` | AC-27 | 2a + 2b | E1 turns 1–5: prefixes per role, window caps, no tool output in `messages` | E1 turn 6 "what about Monday?" (the Monday `slot_card`) |
+| `::test_three_task_turn_under_recursion_limit` | AC-29 | 2a | whole (if the turn fails only because a slot card is missing, move it to 2b and report) | — |
+| `::test_wf1_identity_failure_reveals_nothing` | AC-34 | 2a | whole | — |
+| `::test_wp4_fee_bearing_cancel_never_written` | AC-35 | 2a | whole | — |
+| `::test_estimate_books_comfort_advisor` | AC-36 | 2b | — | whole |
+| `::test_wf1_quick_checks_offered_never_required` | AC-37 | 2b | — | whole |
+| `::test_wf1_no_source_and_warranty` | AC-38 | 2b | — | whole |
+| `::test_wf1_staffing_and_no_live_queue` | AC-39 | 2b | — | whole (uses `run_dev_set`) |
+| `::test_wf3_code_expiry_follows_demo_clock` | AC-40 | 2a | whole | — |
+| `test_customer_failures.py::test_spend_caps` | AC-24 | 2a | whole | — |
+| `::test_spend_cap_safety_still_answered` | AC-24 (safety) | 2a | whole, with F3's skip while A0 shows `allow_turn` first | unskip once AEA-40-F1 is on `main` |
+| `::test_brake_and_deadline` | AC-25 | 2a + 2b | sub-cases (a)–(d) | sub-case (e) (WP-4F idempotency) |
+| `::test_no_transaction_across_model_calls` | AC-28 | 2b | — | whole (uses `run_dev_set`) |
+| `::test_person_request_never_limited` | AC-45 | 2a | whole | — |
+| `tests/integration/test_relayed_turn.py` | AC-23 | 2a | whole (F4) | — |
+| `test_cap1_customer_chat.py::test_required_records_present` | AC-17 | 2b | — | whole |
+| `::test_forbidden_values_absent` | AC-18 | 2b | — | whole |
+| `::test_model_requests_redacted` | AC-19 | 2a | whole, **without** a capture sink (`open_customer_run(request)`; it scans `run.script.calls` only); `wp2` runs T1–T5 and nothing asserts an account card | — |
+| `::test_intake_never_in_state` | AC-20 | 2b | — | whole |
+| `::test_record_consistency_over_dev_set` | AC-30 | 2b | — | whole |
+| `::test_wf3_inbox_records_and_scope` | AC-31 | 2a | whole, without a capture sink (no span is read) | — |
+| `::test_status_values_within_lists` | AC-42 | 2b | — | whole |
+| `tests/capture/test_cap2_safety_first.py` (both tests) | AC-21 | 2b | — | whole |
+| `test_cap3_handoff.py::test_cap3_records` | AC-22 | 2a | whole, without a capture sink | — |
+| `::test_wf1_person_words_first_ask` | AC-33 | 2a + 2b | the rows and `script.calls_since(mark)` holding no SPECIALIST call before the handoff | a capture sink and "no `model_call:specialist` span" |
+| `::test_wf2_turn_records` | AC-46 | 2b | — | whole |
+| `::test_wf2_forbidden_values_absent` | AC-47 | 2b | — | whole |
+| `::test_con4_event_in_handoff_commit` | AC-48 | 2a | whole | — |
+| `tests/journeys/j2/test_aea_51.py` | AC-32 (J-2) | 2a + 2b | step `1 membership answer` | step `2 invoice after code` |
+| `tests/journeys/j3/test_aea_51.py` | AC-32 (J-3) | 2b | — | whole |
+| `tests/journeys/j4/test_aea_51.py`, `j5/…`, `j9/…` | AC-32 (J-4, J-5, J-9) | 2a | whole | — |
+| H2 record | AC-32 | 2a + 2b | over j2, j4, j5, j9, *Blocked by* as step 5 above | over all five; *Blocked by* `none` (or what is still missing) |
+| H3 context | AC-52 | 1 + 2a + 2b | area map: append `; integrated (AEA-51 pass 2a, <sha>; cards and capture spans wait on AEA-21b, AEA-19-F1)` to the A7a and A8 rows (both copies); **append** a new ICM row for pass 2a; DO-3 §6 `Proven:` notes for S-1, S-2, S-3, S-4, S-6, S-7, S-8, S-12, S-13, S-15, S-20, S-24 | area map: replace that 2a note with H3's `; integrated (AEA-51, <sha>)`; a new ICM row; `Proven:` notes for S-9 and S-10 |
+
+*Invariant of the split: a 2a test asserts nothing that needs a card block compose does not build, or a span the capture
+sink cannot see until AEA-19-F1; everything else the ticket asks is proven on the real path now.*
+
+**Pass 1 as built** (the implementer's deviations at `e9d07f3`; they hold, keep them):
+1. **The Anthropic mock transport is `httpx2`, not `httpx`.** In this repository the Anthropic SDK sits on `httpx2`
+   (AEA-17's `tests/contract/_anthropic_fixtures.py` uses `httpx2.MockTransport`). `test_model_ports_contract.py` uses
+   `httpx2` for the Anthropic rows and `httpx` for the Jev rows; the client keeps `max_retries=2`, so the test also proves
+   one attempt. **The same holds for F1 `test_real_adapters_through_con2` (AC-44):** build the Anthropic client on
+   `httpx2.Client(transport=httpx2.MockTransport(handler))` exactly as `test_model_ports_contract.py` does on the branch,
+   and the Jev client on `httpx.Client(transport=httpx.MockTransport(handler))`.
+2. **`open_customer_run`'s default is a module constant** `DEFAULT_OPTIONS = RunOptions()` (ruff B008 forbids a call in an
+   argument default): `open_customer_run(request, options=DEFAULT_OPTIONS, *, monkeypatch=None)`. Same behaviour.
+3. Check 6 (strict contract mode) was not run in pass 1.
+4. The hunk on the branch is 158 lines (target ≤ 150, R-3); 2a adds about 8. Do not compress it to meet the target.
 
 Design interfaces respected (rule `code-design-solid-modularity`): the slice **consumes** the ports (`ChoiceModel`,
 `StructuredModel`, `ToolCallingModel`, `ToolTranscript`, `TraceSink`, `RetrievalIndex`, `UnitOfWorkFactory`) and the
@@ -696,7 +821,7 @@ place concrete classes meet (DO-3 §2.1).
 
 ### Part A — the `register_graph` hunk
 
-**A0. Pre-flight (at the start of each pass; §5 *Two passes*).**
+**A0. Pre-flight (at the start of each pass; §5 *Passes*).**
 ```bash
 export UV_LINK_MODE=hardlink
 df -h /home                       # need ≥ 5 GB free; else stop and report
@@ -707,17 +832,19 @@ grep -n "def build_graph\|def bind_run_graph" src/meridian/agent/graph.py
 grep -c "SlotCardBlock(\|AccountCardBlock(\|AppointmentBlock(" src/meridian/agent/nodes/compose.py   # expect 3 or more (§8 R-13)
 grep -n "allow_turn\|parse_intake" src/meridian/services/turn.py   # the safety gate must run before allow_turn (§8 R-14)
 ls src/meridian/agent/specialists/specs.py src/meridian/agent/specialists/runner.py
-grep -c NotImplementedError src/meridian/agent/nodes/act.py   # 3 at b68df7e; pass 2 expects 0 (AEA-39 merged)
+grep -c NotImplementedError src/meridian/agent/nodes/act.py   # 0 at 9d12b8f (AEA-39 merged); 2a and 2b expect 0
 ls src/meridian/services/session.py src/meridian/web/routes/chat.py src/meridian/web/routes/demo.py tests/journeys/support/run.py
 ```
-**Pass 1** expects `imports ok`, every key name of §4.3 present in its owner's hunk and every file listed; the
-`trace_override`, compose-card and `act.py` greps may show the known values (absent, 0, 3). **Pass 2** expects
-`imports ok`, every key name of §4.3 present in its owner's hunk, `Key("trace_override")` read inside
-`register_tracing` (the AEA-19-F1 follow-up, §8 R-1), compose building the slot, account and appointment blocks (the
-AEA-21b follow-up, §8 R-13), and every file listed. **Any difference → stop, report the exact mismatch on issue #51;
-do not adapt the wiring to a guessed name.** One exception: the `allow_turn`/`parse_intake` grep (AEA-40-F1, §8 R-14).
-If `allow_turn` still comes first, carry on: AC-24's safety half stays skipped as §5 F3 says. If `parse_intake` (or a
-safety check) now comes first, remove that skip and the test must pass.
+**Pass 1** (built) expected `imports ok`, every key name of §4.3 present in its owner's hunk and every file listed, with
+the `trace_override`, compose-card and `act.py` greps at their known values (absent, 0, 3). **Pass 2a** expects `imports
+ok`, every key name of §4.3 present in its owner's hunk, every file listed, `act.py` at **0**, and allows the two known
+2b values: `trace_override` absent from `register_tracing` and the compose-card count 0. **Pass 2b** expects all of 2a
+plus `Key("trace_override")` read inside `register_tracing` (the AEA-19-F1 follow-up, §8 R-1) and compose building the
+slot, account and appointment blocks (count ≥ 3; the AEA-21b follow-up, §8 R-13). **Any other difference → stop, report
+the exact mismatch on issue #51; do not adapt the wiring to a guessed name.** One exception: the
+`allow_turn`/`parse_intake` grep (AEA-40-F1, §8 R-14). If `allow_turn` still comes first, carry on: AC-24's safety half
+stays skipped as §5 F3 says. If `parse_intake` (or a safety check) now comes first, remove that skip and the test must
+pass.
 
 **A1. Docstring.** Replace the `register_graph` docstring with exactly:
 ```
@@ -1400,7 +1527,7 @@ name>", needs=(...), operations=(...))`, `needs` from AEA-57's `NEED_OWNERS` nam
 factory in the test" (append that sentence by hand if AEA-57's fixed wording lacks it).
 
 **H3. Context rows (AC-52).** Area map: append `; integrated (AEA-51, <sha>)` to the last cell of **every** row whose
-second cell is `**A7a Graph spine**` or `**A8 Customer API**` (each appears twice at `b68df7e`, lines 35/37 and 39/41;
+second cell is `**A7a Graph spine**` or `**A8 Customer API**` (each appears twice at `9d12b8f`, lines 35/37 and 39/41;
 change both copies, delete neither, R-20); row `3+` → append `; AEA-51 integrated <sha>`. ICM: **append one new**
 *Routes verified against code and tests* row (status `provisional`, the same columns as the rows above it) whose evidence is `2026-10-2x: AEA-51 register_graph (<sha>): tests/integration, tests/graph/test_worked_pairs_api.py,
 tests/capture/test_cap{1,2,3}_*.py, journeys J-2…J-5, J-9 (<n> passed); record docs/testing/journeys/<date>-AEA-51.md`
@@ -1433,7 +1560,7 @@ Run from the worktree with `export UV_LINK_MODE=hardlink`. Cheapest first; stop 
 |---|---|---|---|
 | 1 | Iterating, Part A | `uv run pytest tests/unit/web tests/unit/test_import_direction.py -q` | green; `test_every_register_stub_present` still green |
 | 2 | Iterating, Part B | `uv run pytest tests/contract/test_model_ports_contract.py -q` | every case passed, 0 skipped |
-| 3 | Iterating, Parts C–G | `uv run pytest tests/graph/test_worked_pairs_api.py tests/integration tests/capture/test_cap1_customer_chat.py tests/capture/test_cap2_safety_first.py tests/capture/test_cap3_handoff.py -q -rs` | green; skips only `INDEX_SKIP` (none on the VPS) |
+| 3 | Iterating, Parts C–G | `uv run pytest tests/graph/test_worked_pairs_api.py tests/integration tests/capture/test_cap1_customer_chat.py tests/capture/test_cap2_safety_first.py tests/capture/test_cap3_handoff.py -q -rs` | green; skips only `INDEX_SKIP` (none on the VPS) and the F3 `blocked-on AEA-40-F1` skip. **Pass 2a:** omit `tests/capture/test_cap2_safety_first.py` (2b creates it; a missing path is a pytest error) |
 | 4 | Before the final commit: lint and format | `uv run ruff check src tests && uv run ruff format --check src tests` | no findings |
 | 5 | Before the final commit: types | `uv run mypy` | `Success: no issues found` (AEA-52 and AEA-53 report 0 errors on `main`) |
 | 6 | Before the final commit: contract boundary, strict (PA-4) | `CONTRACT_STRICT=1 uv run pytest tests/contract -rs` | green; no `route not registered` / `not bound` for a customer-path operation |
@@ -1443,19 +1570,21 @@ Run from the worktree with `export UV_LINK_MODE=hardlink`. Cheapest first; stop 
 | 10 | Context | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no FAIL in an owned row |
 | 11 | Diff scope | `git diff --name-only main...HEAD` | only §2.1 paths |
 
-**Known reds on `main` at `b68df7e` (not this ticket's; never fixed or skipped here):**
-`tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (stale since journeys exist),
-`tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script` (red on `main` before AEA-45, its ledger row), and under
-`-n 2` only `tests/unit/adapters/test_tracing_langfuse.py::test_export_never_blocks_hanging_exporter` (timing flake). The
-AEA-58 ledger row also saw the contract drives `liveChatAction/unknown_case` fail and `streamCaseEvents/unknown_case` hang;
-FIX-W1 (`38d3884`) changed that driver afterwards, so both may now pass. **Expected to turn green with this ticket:**
-`tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` (red because `startChatSession` answers 500
-without `reply_composer`); if it stays red, quote its failure line for its owner. Handling: re-run any red alone with
-`uv run pytest <nodeid> -q`; if it is listed here and red alone too, run it once on the main checkout (`cd
-/home/linuxuser/workspaces/inno-aea-callcenter && uv run pytest <nodeid> -q`, read-only) and quote both results. If check 7
-is ended by `timeout`, re-run it with `-v` to find the node that stopped progressing, run that node alone on the main
-checkout under `timeout 120`, and re-run check 7 with `--deselect <nodeid>`; name it in the report. Any other red is this
-ticket's.
+**Known reds on `main` at `9d12b8f` (not this ticket's; never fixed or skipped here; wave-3 seam audit at `0e37fad`,
+findings 1 and 2):** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (prints
+`40 journeys affected`) and `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script` (`2 == 1` at line 494);
+under `-n 2` only, `tests/unit/adapters/test_tracing_langfuse.py::test_export_never_blocks_hanging_exporter` (timing
+flake). **Browser journeys** (`tests/journeys/j1/test_aea_58.py`, `tests/journeys/j9/test_aea_58.py`, AEA-58; finding 5):
+in a backend-only worktree they error with `BrowserPrerequisiteError` (no `apps/web/dist`). Check 8 therefore runs with
+`MERIDIAN_WEB_DIST_DIR=/home/linuxuser/workspaces/inno-aea-callcenter/apps/web/dist` (the main checkout's build, read
+only; this ticket changes nothing under `apps/web/`); if they still error, re-run check 8 with `--ignore` of those two
+files and name them in the report as "not run: web build prerequisite". **Expected to turn green with this ticket:**
+`tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` (pass 1) and the R-23 list (pass 2a); if one
+stays red, quote its failure line for its owner (R-23). Handling: re-run any red alone with `uv run pytest <nodeid> -q`;
+if it is listed here and red alone too, run it once on the main checkout (`cd /home/linuxuser/workspaces/inno-aea-callcenter
+&& uv run pytest <nodeid> -q`, read-only) and quote both results. If check 7 is ended by `timeout`, re-run it with `-v` to
+find the node that stopped progressing, run that node alone on the main checkout under `timeout 120`, and re-run check 7
+with `--deselect <nodeid>`; name it in the report. Any other red is this ticket's.
 
 The WP-N worked pairs this ticket owns are WP-1…WP-8 + WP-4F + DANGER + NODANGER (AC-6…AC-16); the single `[journey]`
 criterion is AC-32 at level `integrated with a scripted model`. No test calls a paid model; no test is marked `live`.
@@ -1465,11 +1594,25 @@ on the controller).
 **Commits** (explicit paths, never `git add -A`; each message ends with `Co-Authored-By: Claude Sonnet 5.5
 <noreply@anthropic.com>`; commit only on the ticket branch; never push or force-push, the merge step pushes `main`):
 1. `feat(AEA-51): register_graph binds the real graph; cross-adapter port contract` — container + contract test.
-1b. (pass 1 only, §5 *Two passes*) `test(AEA-51): integration launcher, login gate, greeting and role guards (pass 1)`.
+1b. (pass 1, built as `cf678db`) `test(AEA-51): integration launcher, login gate, greeting and role guards (pass 1)`.
 2. `test(AEA-51): worked pairs through the HTTP API on the real graph` — `tests/integration/customer_support.py`,
    `tests/integration/customer_api.py`, `tests/graph/worked_pair_scenarios.py`, `tests/graph/test_worked_pairs_api.py`.
 3. `test(AEA-51): composition, failures, relayed turn, CAP-1…3, journeys J-2…J-5, J-9` — the remaining test files.
 4. `docs(AEA-51): journey record and context rows` — the record, area map, ICM row, DO-3 §6.
+
+**Pass 2a commits** (in this order; §5 *Passes*): **2a-0** `git merge --no-edit main` in the worktree (message
+`Merge main into aea-51-aea-51-customer-path (pass 2a base)` plus the Co-Authored-By line; conflicts: the plan file →
+`git checkout --theirs docs/plans/fanout/2026-10-21-build/AEA-51.md` (main's copy is this refresh; the branch's
+*Deviations* are folded into §5 *Pass 1 as built*); `.claude/reference/area-map.md` and `.claude/state/icm-progress.md` →
+keep both sides' rows; any other conflict → stop and report). **2a-1** `feat(AEA-51): bind run_graph on the real graph
+(pass 2a)` — `src/meridian/web/container.py`, `tests/integration/test_customer_composition.py`. **2a-2** `test(AEA-51):
+worked pairs, failures, relayed turn and CAP-3 through the HTTP API (pass 2a)` — `tests/graph/worked_pair_scenarios.py`,
+`tests/graph/test_worked_pairs_api.py`, `tests/integration/customer_support.py` and `customer_api.py` (only if a helper
+was added), `tests/integration/test_customer_failures.py`, `tests/integration/test_relayed_turn.py`,
+`tests/capture/test_cap1_customer_chat.py`, `tests/capture/test_cap3_handoff.py`. **2a-3** `test(AEA-51): journeys J-2
+(step 1), J-4, J-5, J-9 (pass 2a)` — `tests/journeys/j2/test_aea_51.py`, `j4/…`, `j5/…`, `j9/test_aea_51.py`. **2a-4**
+`docs(AEA-51): pass 2a journey record and context rows` — the record, area map, ICM row, DO-3 §6 (H3 as table P says).
+**Pass 2b** then adds commits 2–4 above for what remains (messages suffixed `(pass 2b)`).
 
 **What the implementer must NOT do**
 - Edit any file outside §2.1, another `register_*` hunk, the module imports of `container.py`, `tests/journeys/support/`,
@@ -1491,9 +1634,9 @@ on the controller).
 
 | # | Kind | Item | Request / handling |
 |---|---|---|---|
-| R-1 | **Shared-primitive request (blocks AC-1, AC-17, AC-18, AC-21, AC-46, AC-47)** | `register_tracing` (AEA-19, merged) already provides `Key("trace")`, and `TurnService` (AEA-40) and `PersonRequestService` (AEA-42) read that key. `register_graph` runs later and the container refuses a second `provide`, so `overrides.trace` cannot reach the turn span from this hunk: AC-17's "one trace per turn with nested spans" would fail | **AEA-19-F1** (small follow-up on AEA-19's hunk, merged before AEA-51): `register_tracing` keeps its sink choice exactly as now but provides `Key[TraceSink]("trace")` through a factory that returns `c.get(Key[TraceSink]("trace_override"))` when that key is provided (`ContainerError` with message `not provided: trace_override` → the existing choice; any other error re-raised). Its own test adds one case. `register_graph` stays the only reader of `overrides` (R-W-8); no consumer key changes; no gap on `main`. **Status at `b68df7e` (re-checked): still not cut.** `register_tracing` (`container.py` lines 294–344) still provides `Key("trace")` itself, and the merged `register_chat` reads it eagerly in the `TurnService` factory (line 804); AEA-42's `register_person_request` reads it too. The need is unchanged. Because every `provide` runs before `container.build()`, the F1 factory sees `trace_override` when it is built |
+| R-1 | **Shared-primitive request (blocks AC-1, AC-17, AC-18, AC-21, AC-46, AC-47)** | `register_tracing` (AEA-19, merged) already provides `Key("trace")`, and `TurnService` (AEA-40) and `PersonRequestService` (AEA-42) read that key. `register_graph` runs later and the container refuses a second `provide`, so `overrides.trace` cannot reach the turn span from this hunk: AC-17's "one trace per turn with nested spans" would fail | **AEA-19-F1** (small follow-up on AEA-19's hunk, merged before AEA-51): `register_tracing` keeps its sink choice exactly as now but provides `Key[TraceSink]("trace")` through a factory that returns `c.get(Key[TraceSink]("trace_override"))` when that key is provided (`ContainerError` with message `not provided: trace_override` → the existing choice; any other error re-raised). Its own test adds one case. `register_graph` stays the only reader of `overrides` (R-W-8); no consumer key changes; no gap on `main`. **Status at `9d12b8f` (re-checked, refresh 6): still not cut; it is now the critical path for pass 2b.** `register_tracing` (`container.py` lines 294–344) still provides `Key("trace")` itself, and the merged `register_chat` reads it eagerly in the `TurnService` factory (line 804); AEA-42's `register_person_request` reads it too. The need is unchanged. Because every `provide` runs before `container.build()`, the F1 factory sees `trace_override` when it is built |
 | R-2 | Collision | `web/container.py` is shared; this hunk is the last large one | Edit only `register_graph`; module imports untouched |
-| R-3 | Code size | `container.py` is 1,134 lines at `b68df7e` and grows by ~150 here (AEA-45 adds more); above the 700-line orchestrator cap of `code-structure.md` | Request to the integrator: a later AEA-01 follow-up may move the hunks into per-area wiring modules; not this ticket (the slice plan gives 3+ no `src/` file) |
+| R-3 | Code size | `container.py` is 1,134 lines on `main` at `9d12b8f` and grows by ~166 here (158 built in pass 1) (AEA-45 adds more); above the 700-line orchestrator cap of `code-structure.md` | Request to the integrator: a later AEA-01 follow-up may move the hunks into per-area wiring modules; not this ticket (the slice plan gives 3+ no `src/` file) |
 | R-4 | Sibling names not in DO-4 | §4.3 names come from sibling plans/branches | Step A0 verifies them after merge; any difference stops the build |
 | R-5 | Start-up cost | Every app-level test now builds the real graph, the registry and a readiness read | Measured by check 7; if the full suite slows by more than 30 %, report it (no lazy-loading hack here) |
 | R-6 | Index build time | The session index build embeds 17 files once per process | `functools.cache`; with `-n 2`, twice. Fine on this machine |
@@ -1502,16 +1645,18 @@ on the controller).
 | R-9 | Label | graph-core §2 rule 4 calls the intake test "(AEA-51, `risk::security`)"; the slice plan has no Sec label | Recommendation to the orchestrator: keep the label off. This ticket adds wiring with start-up guards and proves AEA-04/12/19/20's redaction at the entry point; the redaction code itself is in those `risk::security` tickets. If the orchestrator adds the label, AC-17…AC-20, AC-31, AC-47 become frozen tests written first by `test-writer-agent` |
 | R-10 | Readiness policy | PA-2 lets the app start on an empty index | Matches data.md (readiness "never raises"); AEA-50's image builds the index, so production never runs empty; recorded as a plan-added criterion for Innocent's visibility in the issue comment |
 | R-11 | `Limits` replacement in tests | PD-9 replaces the container's `Limits` factory for a short deadline | The only way to reach `TURN_TIMEOUT` without a 60 s wait; no Settings field or env name added (web.md §15 forbids test seams in Settings) |
-| R-12 | Disk | 15 GB free on `/` (84 %) at refresh 5, 2026-10-21 | One worktree, hardlinked venv, temp index removed at exit; check `df -h /home` in A0 |
-| R-13 | **Missing prerequisite (new at refresh 2)** | `agent/nodes/compose.py` (AEA-21's file) builds no `SlotCardBlock`, `AccountCardBlock`, `AppointmentBlock`, `WherePromptBlock` or `UrgencyQuestionsBlock`, and no `ErrorBlock SLOT_TAKEN` with fresh windows. AEA-21's plan §8.2 R-2 asked for an "AEA-21b compose cards" follow-up before AEA-51 (its blocker, AEA-13's fee note, merged as `dc1f4da`); it was never cut and no open branch builds the blocks. Without them the customer cannot pick a window or see account facts | **Request to the orchestrator: cut AEA-21b** (owner: AEA-21's area, `agent/nodes/compose.py` and its tests) and merge it before this ticket. Blocks AC-7, AC-8, AC-10, AC-12 (`no` branch), AC-14, AC-25(e), AC-26, AC-27 (Monday follow-up), AC-36, AC-37, AC-38, AC-43 and J-2 step 2, J-3. This ticket never builds a block. **Status at `b68df7e` (re-checked): still not cut;** `grep -c` of the five constructors in `compose.py` is 0 |
+| R-12 | Disk | 14 GB free on `/` (86 %) at refresh 6, 2026-10-21 | One worktree, hardlinked venv, temp index removed at exit; check `df -h /home` in A0 (need ≥ 5 GB) |
+| R-13 | **Missing prerequisite (new at refresh 2)** | `agent/nodes/compose.py` (AEA-21's file) builds no `SlotCardBlock`, `AccountCardBlock`, `AppointmentBlock`, `WherePromptBlock` or `UrgencyQuestionsBlock`, and no `ErrorBlock SLOT_TAKEN` with fresh windows. AEA-21's plan §8.2 R-2 asked for an "AEA-21b compose cards" follow-up before AEA-51 (its blocker, AEA-13's fee note, merged as `dc1f4da`); it was never cut and no open branch builds the blocks. Without them the customer cannot pick a window or see account facts | **Request to the orchestrator: cut AEA-21b** (owner: AEA-21's area, `agent/nodes/compose.py` and its tests) and merge it before this ticket. Blocks AC-7, AC-8, AC-10, AC-12 (`no` branch), AC-14, AC-25(e), AC-26, AC-27 (Monday follow-up), AC-36, AC-37, AC-38, AC-43 and J-2 step 2, J-3. This ticket never builds a block. **Status at `9d12b8f` (re-checked, refresh 6): still not cut, now the critical path for pass 2b;** `grep -c` of the five constructors in `compose.py` is 0 |
 | R-14 | **Missing prerequisite (the ticket's own clause), now a follow-up** | AEA-40 merged (`f466ff7`) with `TurnService._run` checking `self._spend.allow_turn()` (`services/turn.py` line 318) before `parse_intake` (line 322). So at our cap a CO-alarm message gets `SPEND_CAP_REACHED`, not the WP-5 instruction. DO-4 §14 step 2 and stage7 web.md give that order; DO-4 §11's failure table says "safety and CON-4 still work". The ticket's *Agent handoff* settles which wins here: AC-24's safety half is `blocked-on AEA-40` | **Request to the orchestrator: cut AEA-40-F1** (owner: AEA-40's `services/turn.py` and its tests). Its outcome: at our cap, a message the deterministic safety gate catches (CO alarm, gas, smoke words; R-6) still gets the WP-5 instruction and its P0 case, with no model call; every other message keeps `SPEND_CAP_REACHED`. The mechanism is F1's planner's to choose. AEA-51 builds AC-24's notice and CON-4 halves now, and keeps the safety half in `test_spend_cap_safety_still_answered`, skipped as `blocked-on AEA-40-F1` until F1 lands (§5 F3). If the orchestrator reads F1 as changing the signed DO-4 §14 order rather than resolving a contradiction the ticket already ruled on, it goes to Innocent as a decision; this plan changes nothing in either case |
 | R-15 | Typing follow-up, not a blocker | `agent/context.py` (AEA-21's file) types seven `GraphDeps` fields as `TypeAlias = Any`; AEA-21's R-3 offers the swap to "AEA-51 or a follow-up". That file is not in this ticket's owned list | Not done here. mypy passes either way, and AC-1 asserts the real classes at run time. Request a one-line-per-type follow-up on AEA-21's file after AEA-29, 30 and 35 merge |
-| R-16 | Upstream | AEA-35 merged (`1ce98c4`) after Innocent's AEA-35b home ruling. AEA-39 (act node) is `blocked` in the ledger only because it ran before AEA-35 landed (`scope_for` missing); its re-run is pending, and no branch exists | Pass 2 waits for AEA-39 (§9). Nothing here depends on how AEA-39 is built beyond its graph-tools/graph-nodes node contracts |
+| R-16 | Upstream (resolved at refresh 6) | AEA-39 merged (`12e46ee`): `run_specialist`, `escalation` and `handoff` are real; `route_after_gates` → `handoff` now opens the person-request case | Pass 2a binds `Key("run_graph")`. Nothing here depends on how AEA-39 is built beyond its graph-tools/graph-nodes node contracts |
 | R-17 | Seam finding carried in | AEA-38's `reply.checks` calls `attach_extraction` without `customer_messages`, so the assembler's own quote check is off; `check_quotes` runs first | PA-5 proves the end result on the real path. Red → `blocked-on AEA-38 follow-up`, reported on #51, never patched here |
 | R-18 | Pre-existing reds | Two tests on `main` are red or flaky for reasons outside this ticket (§7 check 7) | Named in check 7; quoted in the report; not fixed or skipped |
 | R-19 | Request received from AEA-52 | AEA-52's plan §8 R-3 asks for the WP-7 and WP-4 conversations as importable functions in a proposed `tests/integration/customer_scripts.py` returning AEA-52's `Actor` | Met differently: a new file outside §2.1, typed by AEA-52's helpers, would make AEA-51 import AEA-52's test helpers. The published drivers are `tests/graph/worked_pair_scenarios.py::wp7(run, client=None) -> ScenarioResult` and `::wp4(...)`, with `ScenarioResult.case_refs` (D2), on `tests.integration.customer_support.open_customer_run(request, RunOptions(...))`; AEA-52 builds its `Actor` from `result.thread_id` and `result.case_refs[-1]`. Keep those names and signatures stable; say so in the issue comment on #51 and #52 |
-| R-20 | Context defect (not ours) | `.claude/reference/area-map.md` holds the A7a row twice (lines 35 and 37) and the A8 row twice (39 and 41) at `b68df7e`, from append-style merges | H3 edits both copies so neither is stale; request a `lane::direct` clean-up from the orchestrator |
-| R-21 | Recommendation to the orchestrator | Pass 1 binds `reply_composer`, so CON-1 answers 201 instead of 500 on the real app; `j7/test_aea_30.py` (red on `main`), AEA-52 pass 2's CON-1 legs and J-1's CON-1 step wait on that | Merge pass 1 as soon as its checks are green and keep #51 open for pass 2. The orchestrator's call; the plan works either way |
+| R-20 | Context defect (not ours) | `.claude/reference/area-map.md` holds the A7a row twice (lines 35 and 37) and the A8 row twice (39 and 41) at `9d12b8f`, from append-style merges | H3 edits both copies so neither is stale; request a `lane::direct` clean-up from the orchestrator |
+| R-21 | Recommendation to the orchestrator | Pass 1 (built, `e9d07f3`) binds `reply_composer`, so CON-1 answers 201 instead of 500; pass 2a binds `run_graph`, so the 28 journeys and 30 contract drives the `0e37fad` seam audit counted as skipped for AEA-51 can run | Merge pass 1 + 2a as one batch once 2a's checks are green, and keep #51 open for 2b. The orchestrator's call; the plan works either way |
+| R-22 | Seam finding carried in (AEA-39 audit, finding 1) | `act.py` `_has_pending_change` reads `getattr(state, 'pending_change', None)`, which `ConversationState` lacks, so `SchedulingSlice.pending_change` is always `False` | No criterion here reads the flag (AC-9 opens the P2 through `request_visit_change`, not through it). Not fixed here; the proposed ticket is the orchestrator's. If a 2a scenario fails on it, report `blocked-on` that follow-up on #51 |
+| R-23 | Newly running sibling tests | Binding `run_graph` (2a) lets other tickets' journeys and contract drives that skipped as `run_graph not bound` run: `j1/test_aea_40.py`, `j1/test_aea_57.py` (turn steps), `j5/test_aea_36.py`, `j5/test_aea_37.py`, `j5/test_aea_60.py`, `j9/test_aea_60.py`, `j7/test_aea_30.py`, the `submitTurn` drives of `tests/contract/test_openapi_server.py` and the 3 AEA-51 skips of `tests/contract/test_prompts_vs_consumers.py` | They must pass (check 8 names each). A red one is run alone; if its cause is in a sibling's code (or a missing AEA-21b card), report `blocked-on <owner>` on #51 with the failing line; never edit, skip or deselect it. Tests skipped by their own unconditional `pytest.skip`/`mark.skip` (`j2/test_aea_38.py`, `j3/test_aea_27.py`, `j3/test_aea_43.py`, `j3/test_aea_28.py`, `j4/test_aea_28.py`, `j3/test_aea_34.py`, `j9/test_aea_40.py` line 180, `j10/test_aea_53.py` line 171) stay skipped: their owners write them |
 
 Design decisions taken here (engineering; recorded so the reviewer can check them): **PD-1** reuse `Key("ledger")` and
 `Key("trace")`; **PD-2** = R-1; **PD-3** = PA-1; **PD-4** = PA-2; **PD-5** one adapter per (provider, model) through
@@ -1531,22 +1676,22 @@ reads from do; **PD-16** AC-49…AC-51 run AEA-24's runner in-process through `H
 ## 9. Readiness
 
 **READY** as a plan (no product decision is needed: D-14 settles CAS-16, GRC-3 and DAT-1 on option A; every other choice
-above is engineering and made). **Pass 1 is buildable now; pass 2 is BLOCKED-ON** the rows below (status at `b68df7e`):
+above is engineering and made). **Pass 1 is built** (branch `aea-51-aea-51-customer-path`, `e9d07f3`, not merged).
+**Pass 2a is buildable now.** **Pass 2b is BLOCKED-ON** the follow-ups below (status at `9d12b8f`, refresh 6):
 
-| Prerequisite | Status | Why this ticket needs its result (not only its signature) | Waiting |
+| Prerequisite | Status | Why this ticket needs its result (not only its signature) | Waiting (pass 2b only) |
 |---|---|---|---|
-| **AEA-39** act node | ledger `blocked`, re-run pending (AEA-35 has merged); no branch | `run_specialist`, `escalation` and `handoff` raise `NotImplementedError`; every turn that runs a specialist, escalates, or hands off (including the chat-words person request: `route_after_gates` → `handoff`) reaches them | every pass-2 criterion that drives a CON-2 turn |
-| **AEA-21b** compose cards | follow-up, not cut (§8 R-13) | slot, account and appointment blocks; `SLOT_TAKEN` with fresh windows | AC-7, AC-8, AC-10, AC-12, AC-14, AC-25, AC-26, AC-27, AC-36, AC-37, AC-38, AC-43, J-2, J-3 |
-| **AEA-19-F1** trace override | follow-up, not cut (§8 R-1) | `overrides.trace` reaching `Key("trace")` | AC-1 (trace identities), AC-17, AC-18, AC-21, AC-46, AC-47, AC-49 |
-| **AEA-40-F1** safety at our cap | follow-up, not cut (§8 R-14) | a safety message at our cap gets the instruction | AC-24's safety half only (`test_spend_cap_safety_still_answered`, skipped until it lands) |
+| **AEA-21b** compose cards | follow-up, **not cut** (no ticket file, issue or branch; §8 R-13) | slot, account and appointment blocks; `SLOT_TAKEN` with fresh windows; nothing in `src/` constructs them | AC-7, AC-8, AC-10, AC-12 `no`, AC-14, AC-25(e), AC-26, AC-27 turn 6, AC-28, AC-30, AC-36, AC-37, AC-38, AC-39, AC-42, AC-43 (the last four through `run_dev_set`), J-2 step 2, J-3 |
+| **AEA-19-F1** trace override | follow-up, **not cut** (§8 R-1) | `overrides.trace` reaching `Key("trace")`, so the capture sink sees the turn, node, model-call and tool spans | AC-1 (trace identities), AC-17, AC-18, AC-20, AC-21, AC-33 (span half), AC-46, AC-47, AC-49, AC-50, AC-51 |
+| **AEA-40-F1** safety at our cap | follow-up, **not cut** (§8 R-14) | a safety message at our cap gets the instruction | AC-24's safety half only (`test_spend_cap_safety_still_answered`, written in 2a with its skip) |
 
-Already on `main`: every other ticket in the issue's *Blocked by* (AEA-02, 11, 12, 17, 18, 19, 20, 22, 23, 24, 26, 27, 28,
-29, 30, 33, 34, 35, 36, 37, 38, 40, 42, 43, 44, 46, 57, 59), plus AEA-35b, 45, 52 (pass 1), 53 and 58.
+**No longer blocking:** AEA-39 (merged `12e46ee`; `act.py` has no `NotImplementedError`). Already on `main`: every
+ticket in the issue's *Blocked by* (AEA-02, 11, 12, 17, 18, 19, 20, 22, 23, 24, 26, 27, 28, 29, 30, 33, 34, 35, 36, 37,
+38, 39, 40, 42, 43, 44, 46, 57, 59), plus AEA-35b, 45, 52 (pass 1), 53, 58 and 60.
 
-**Startable now (pass 1, §5 *Two passes*):** Part A (its imports are all on `main`; the act stubs run only when a turn
-reaches them), Part B (AC-3), Part C, and `test_login_gate` (AC-4), `test_greeting_and_demo_date` (AC-5),
-`test_role_maps_bound_and_guarded` parts (a)–(b) (AC-2) and `test_real_objects_bound` part (b) plus the structural part (a)
-(AC-1, PA-1…PA-3). Pass 1 binds everything except `Key("run_graph")`. The orchestrator may merge pass 1 early (R-21).
+**Startable now (pass 2a, §5 *Passes*, table P):** merge `main` into the branch, bind `Key("run_graph")`, then every
+table-P row marked 2a. The orchestrator may merge pass 1 + 2a and keep #51 open for 2b (§8 R-21). **Critical path for
+2b:** cutting AEA-21b and AEA-19-F1 (requested since refresh 2; still not cut).
 
 **Gates:** none human; no paid call; the wave-3 merge runs `seam-audit-agent` across AEA-50…53 with all journeys
 (integrated-journeys §5).

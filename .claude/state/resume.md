@@ -374,3 +374,82 @@ the `pending: AEA-56` lines (URL, redeploy downtime).
 5. **Low (`lane::direct`):** area-map drift: `.claude/reference/area-map.md` has duplicate, contradictory rows (A6 three times, A8, A11, A12 twice). Acceptance: each area exactly once with the latest status. (Same as wave-3 finding 3.)
 
 **Next action:** land AEA-45, 51, 52 and 53 (AEA-51 unblocks J-2 to J-5 and most skips), then re-run the seams audit. Cut tickets for findings 1, 2, 4 and 5 (5 is `lane::direct`) and identify the two failing tests and the hanging test from the audit report before the next wave-merge gate. Earlier open findings (wave 0, wave 1 AEA-24, wave 3) remain above. Modified plan files `AEA-61.md` and `AEA-62.md` belong to planners; do not sweep them in.
+
+## Stage 8: wave 2 context upkeep, AEA-39 act node (2026-10-21, VPS)
+
+**Merged in wave 2:** AEA-39 (act node, `agent/nodes/act.py`), merge commit `12e46ee`; ledger row in `build-ledger.md` (`6659403`). Audited at `12e46ee` in a separate
+detached worktree (since removed). The pre-existing `audit-W2` (at `b9be4dc`, not `12e46ee`) and `audit-W3` worktrees were left untouched. Scripted model only, no paid calls.
+
+**Security audit: n/a** (no `risk::security` ticket in this batch).
+
+**Seams audit: FAIL (no blocker; one medium, four low).** The act node connects to its dependencies: `GraphDeps`, `SchedulingService.slice_inputs`,
+`SpecialistRunner.run`, `HandoffService.open` and `ModelsStatus.models_disabled` all match; mypy strict is clean. Checks, all on `12e46ee`:
+1. `pytest tests/journeys tests/contract -n 2`: 704 passed, 56 skipped, 1 xfailed, 15 errors. All 15 errors are the AEA-58 browser journeys (`j1/test_aea_58.py`,
+   `j9/test_aea_58.py`) with `BrowserPrerequisiteError` because `apps/web/dist` is not built (no node_modules here), so their result is unknown, not green.
+2. `pytest tests/graph tests/integration tests/api tests/services tests/deploy -n 2`: 654 passed, 10 skipped.
+3. `ruff check` and `mypy`: clean.
+Most journeys skip as "blocked-on AEA-51" (`reply_composer` / `run_graph` unbound). Live exercise on the real assembled app, in-process: `POST /api/login` with the
+demo pair 200 (AEA-30's `demo_clock` is bound on main, so wave-2 finding 1 no longer reproduces); wrong password 401 `LOGIN_FAILED`; a customer on
+`GET /api/staff/queue` 403 `ROLE_NOT_ALLOWED`; a turn on an unknown session 404 `SESSION_NOT_FOUND`.
+
+**Open findings (this audit):**
+1. **Medium:** the planner and the scheduling specialist disagree on `pending_change`. `plan.py:252` computes it from `settled.current_visit().change_request is not None`;
+   `act.py` `_has_pending_change` (lines 95-97, used at 141) does `getattr(state, 'pending_change', None)`, and `ConversationState` has no such field, so the slice is always
+   False. `graph.py` lists it in `DURABLE_KEYS` but nothing writes it. No wrong behaviour today (nothing reads the flag yet). **Proposed ticket:** derive
+   `SchedulingSlice.pending_change` from the planner's source (or add the field and have act write it); AC: a unit test with a settled visit holding a `change_request`
+   gives True, none gives False, and the `getattr` fallback is gone.
+2. **Low:** `POST /api/chat/sessions` returns 500 (body `{request_id}` only) because `Key('reply_composer')` is unbound and `register_graph` is an empty body
+   (`web/container.py:1071`) until AEA-51. It is the only unbound key in `web/deps.py`; the 500 is the designed unhandled-error shape. Existing ticket AEA-51; AC: the probe
+   returns 200 and a scripted turn completes through `run_graph`.
+3. **Low (docs):** `area-map.md` still has duplicate "planned" rows for A6, A8, A7a, A11 and A12 and cites `f4aa2cb`; AEA-30 is on main as `5f4e879`. **Proposed `lane::direct`
+   ticket:** one row per area, every cited hash resolves in `git log main`.
+4. **Low:** the person-request rule id is defined three times (`agent/nodes/act.py:59` `PERSON_RULE_ID`, `gates/rules.py:35` `RULE_ID_PERSON`, `policy/escalation.py:99`
+   literal `R2.person`). Values agree today. **Proposed ticket:** import `gates.rules.RULE_ID_PERSON`; AC: grep for `R2.person` in `src` outside `gates/rules.py` returns nothing.
+5. **Low:** browser journeys (AEA-58) error in a backend-only worktree without `apps/web/dist` (`tests/journeys/browser/build.py:47`). **Proposed ticket:** the gate builds dist
+   first, or the browser fixtures skip with "blocked: no dist"; AC: `pytest tests/journeys -m journey` in a backend-only worktree reports 0 errors.
+
+**Carried, still open:** earlier wave-2 findings 2 to 9 and the wave-0 findings 1 and 3 (see the sections above); finding 1 of the first wave-2 audit (login 500) is now resolved by AEA-30.
+
+**Next action:** continue wave 3 per `build-ledger.md` (AEA-40 and AEA-51 have worktrees under `inno-aea-callcenter-wt/`; `docs/plans/fanout/2026-10-21-build/AEA-60.md` is an
+uncommitted planner edit, not swept in). Cut tickets for findings 1, 3, 4 and 5 above; build dist (or add the skip) before the next merge gate so the 15 browser errors do not mask a real failure.
+
+## Stage 8: wave 3 context upkeep, AEA-60 prompt consumer checks (2026-10-21, VPS)
+
+**Merged in wave 3:** AEA-60 (prompt <-> consumer checks and J-5/J-9 malformed-output legs; merge `0e37fad`, ledger `84d826f`). Audits are second-hand reports of the auditors, not re-run here.
+
+**Security audit: n/a** (no `risk::security` ticket in this wave).
+
+**Seams audit: FAIL, no blocker or high finding (2 medium test-vs-contract defects, 3 low).** Audited `0e37fad` in a detached worktree (`audit-W3-0e37fad`, since removed). A worktree path `audit-W3` already existed at stale `55d9adf`; it is not the auditor's and was left untouched.
+- Ruff, ruff format and `mypy src` clean.
+- Journeys: 56 passed, 28 skipped, 15 errors (all in the browser journeys, finding 5). Contract boundary: 738 passed, 31 skipped, 1 xfailed. Rest (non-journey, no live or browser): 2899 passed, 2 failed (findings 1 and 2), 57 skipped, 3 xfailed.
+- Seams that connect (assembled app via `create_app` and `TestClient`, harness environment, scripted, no paid calls): real login 200, wrong password 401 `LOGIN_FAILED`; role switch works; staff queue, demo clock, staffing, inbox, owner-metrics, monitoring, eval, oversight and flags return 200 for the right role. Negative cases hold: customer on staff or owner routes 403 `ROLE_NOT_ALLOWED`, missing case 404 `CASE_NOT_FOUND`, no cookie 401 `UNAUTHENTICATED`, bad clock-advance step 400 `VALIDATION_ERROR`. Reset 200, then `role_reset` 403 until the role is picked again. Container registrations for AEA-27/28/29/30/31/44-47/53 resolve against their imports. Prompts vs consumers pass (`tests/contract/test_prompts_vs_consumers.py`). `register_gateway`, `register_retrieval`, `register_tool_dispatch` and `register_graph` are still no-op stubs by design until AEA-51.
+
+**Open findings (wave 3 re-audit; supersedes the same items above where they overlap):**
+1. **Medium, red test:** `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script` (line 494 `assert len(reset) == 1`) fails with `2 == 1`. It was skipped (`BLOCKED_AEA_29_30`) until AEA-29/30 merged. `tests/services/reset_support.py:265` (`make_dirty_demo`) inserts a `reset_events` row, which the reset service correctly keeps (`docs/design/contracts/stage7/cases.md:222`); the service is right, the test contradicts the addendum. **Fix ticket:** assert on the row whose `request_id` equals the script's printed one (or after minus before) and keep the assertion that the earlier fixture row survives. Acceptance: that test and `test_wf15_reset_holds_no_values` pass.
+2. **Medium, red test (same as the wave-3 AEA-50 finding 1):** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (line 61) now prints `40 journeys affected`. It will fail every full-suite or deploy gate. **Fix ticket:** run against a temp tree with no journeys (or monkeypatch the discovery root). Acceptance: passes with 40 journeys present and still covers "zero journeys exits 0".
+3. **Low, expected until AEA-51:** `POST /api/chat/sessions` on the assembled app raises `RuntimeError('not bound: reply_composer')` (`web/container.py` `register_chat`, around lines 430-450 and 1071) and returns a bare 500 `{request_id}`. The whole J-1 turn path and the J-2 to J-5 and J-9 integrated legs are skipped, not proven (28 skipped journeys, 30 "not bound" contract cases). No new ticket; AEA-51 acceptance must show them run and pass (branch `aea-51-aea-51-customer-path` exists).
+4. **Low, known item dropped:** "demo clock unbound, real login returns 500" does not reproduce at `0e37fad` (AEA-30 merged as `cf8fd78`; `register_demo` provides `demo_clock`; J-1 `test_j1_guards_and_login` passes). The earlier wave-3 finding 7 is stale.
+5. **Low:** the browser journeys (`tests/journeys/browser`, AEA-58: j1 and j9 `test_aea_58.py`) error with `BrowserPrerequisiteError` (`tests/journeys/browser/build.py:47`) in a worktree without `apps/web/dist`, instead of skipping with a named blocker; gates report 15 errors rather than "not run". **Fix ticket:** when `MERIDIAN_WEB_DIST_DIR` has no `index.html` and no opt-in is set, skip with "blocked: web build missing", or have the audit build into a shared dist path. Acceptance: `pytest -m journey` with no dist exits 0 with a named skip; with dist present they run.
+
+**Next action:** land AEA-51 (customer path; unblocks the 28 skipped journeys), then 40, 45, 52 and 53 as still open in the ledger. Cut fix tickets for findings 1, 2 and 5 (the area-map `lane::direct` ticket and earlier open wave findings stay pending). Run the `deploy`-marked tests and the full suite before deploy; the full suite is red until findings 1 and 2 are fixed. Stale worktree `audit-W3` (at `55d9adf`) is not ours; ask its owner before removing it. Modified plan files `AEA-61.md` and `AEA-62.md` belong to planners; do not sweep them in.
+
+## Stage 8: wave 3 context upkeep, AEA-21b and follow-ups (2026-10-21, VPS)
+
+**Merged in wave 3:** AEA-21b (compose cards; merge `9b3824e`), AEA-19-F1, AEA-40-F1, FU-saveFollowUp-text, FU-j1-demo-state. Audits are second-hand reports of the auditors, not re-run here.
+
+**Security audit: n/a** (no `risk::security` ticket in this wave).
+
+**Seams audit: FAIL, no blocker or high finding.** Audited `9b3824e` in a fresh detached worktree (`audit-W3-seam`, since removed). The requested path `audit-W3` already existed as a stale worktree at `55d9adf`; it is not ours and was left alone for its owner to remove. Container registrations, imports and lazy sibling lookups (BriefAssembler, format_clock, demo_clock, METRICS_READS) all connect. A real login on the assembled app returns 200 with `demo_clock` bound.
+- Journeys: 100 collected; 56 passed, 29 skipped, 15 errors (all browser journeys, `j1/test_aea_58.py` and `j9/test_aea_58.py`, no `apps/web/dist`).
+- Contract (`tests/contract`): 738 passed, 31 skipped, 1 xfailed. Every skip is blocked on AEA-51 (reply_composer and run_graph unbound), as expected.
+- Full suite excluding live and browser journeys: 3013 passed, 86 skipped, 3 xfailed, 2 failed (findings 3 and 4 below; both reproduce serially).
+
+**Open findings (supersede the wave-3 AEA-60 list where they overlap):**
+1. **Medium, AEA-40-F1 vs the graph gate at the spend cap.** `TurnService.answered_without_model` (`src/meridian/services/turn.py`, with `_STATELESS_FLAGS`) calls `decide_gate` with `burning_card_id=None`, while the real gate (`src/meridian/gates/gate.py:decide_gate`, line ~191) sees the open burning card. A typed "not sure" with a burning card open is a no-model `BURNING_ANSWER` in the graph, but the pre-check gets `free_text` and refuses the turn with `SPEND_CAP_REACHED`. This contradicts R-14 (yes or not-sure on the burning card works at the cap). Direction is a refusal, not a leak; no test covers it. **Fix ticket:** pass the real `burning_card_id` into the pre-check (read-only conversation lookup). Acceptance: at the cap with a burning card open, a typed "not sure" is answered; a test in `tests/services/test_turn_spend_cap.py` covers it.
+2. **Medium (cause unconfirmed), red test.** `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script` (line 494) now runs (its `BLOCKED_AEA_29_30` skip lifted) and finds 2 `reset_events` rows, expecting 1; the extra row has `request_id` None, `restored_json` `{}`, `open_chats_ended` 0. It may be the `demo_store` fixture's row (the AEA-60 audit traced a fixture row, which the service correctly keeps per `docs/design/contracts/stage7/cases.md:222`) or a boot/first-boot seed write; not traced here. **Fix ticket:** find the second row; fix the writer or the test's expectation. Acceptance: the test passes and the tests under `tests/capture` and `tests/deploy` gated on AEA-29/30 run green.
+3. **Low, expected until AEA-51.** `startChatSession` returns an undocumented HTTP 500 on the assembled app (`reply_composer` unbound). `SessionService.open` commits the conversation row (`services/session.py:204`) and only then calls `settled_view` (`:214`), which raises, leaving an orphan `conversations` row per failed start. Goes away when AEA-51 binds `reply_composer`; the commit-before-view order stays fragile. **Fix ticket, optional:** compute `settled_view` before `tx.commit()`, or give the unbound case a typed 503. Acceptance: a failing `settled_view` leaves zero new rows.
+4. **Low, stale note.** "Login returns 500, expected until AEA-30" does not reproduce at `9b3824e` (`register_demo` binds the clock; `test_j1_guards_and_login` passes). Drop the stale note and the `SIGN_IN_NEEDS` `demo_clock` expectation in `tests/journeys/j1/test_aea_57.py`. Docs only.
+5. **Low, stale blocked tests.** (a) `tests/journeys/j1/test_aea_59.py:17` is an unconditional skip ("support/ is not on main") though the harness has existed since AEA-57, so the J-1 every-response-matches-contract step (AC-16) never runs. Fix ticket: implement it; acceptance: runs and passes with every J-1 response checked by operationId. (b) `tests/unit/test_affected_journeys.py:61` (`test_no_journey_yet_prints_zero_and_exits_0`) asserts "0 journeys affected" while the tool lists 41. Fix ticket: assert N > 0 or run against a temp tree with no journeys; acceptance: passes on main. It will fail every full-suite or deploy gate until fixed.
+6. **Low, environment.** The 15 browser-journey errors are `BrowserPrerequisiteError` (no `index.html` in `apps/web/dist`, `tests/journeys/browser/build.py`); no node build in the audit worktree by design. Not a code seam gap. Run the browser journeys where `npm --prefix apps/web run build` is available.
+
+**Next action:** land AEA-51 (customer path; unblocks the skipped journeys and contract cases), then the remaining open tickets in the ledger. Cut fix tickets for findings 1, 2 and 5. The full suite stays red until the two failing tests (findings 2 and 5b) are fixed, so fix them before the pre-deploy full run. Stale worktree `audit-W3` (at `55d9adf`) is not ours; ask its owner before removing it.

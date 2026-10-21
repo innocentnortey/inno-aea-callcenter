@@ -170,7 +170,7 @@ def apply_in(
 def set_followup_in(
     tx: UnitOfWork, thread_id: ThreadId, choice: FollowUpChoice, now: dt.datetime
 ) -> FollowUp | CaseActionRejected:
-    """Saves how and when the customer wants to be reached; only the phone on record is built so far."""
+    """Saves how and when the customer wants to be reached; phone on record and email general are built."""
     row = tx.cases.cases.get_for_thread_open(thread_id)
     if row is None:
         return rejected(ApiErrorCode.NOT_ALLOWED_IN_STATE, state="no_open_case")
@@ -178,16 +178,21 @@ def set_followup_in(
     on_record = choice.destination == "on_record"
     if on_record and identity.status != "verified":
         return rejected(ApiErrorCode.NOT_ALLOWED_IN_STATE, state="not_verified")
-    if not (choice.channel == "phone" and on_record):
+    if choice.channel == "email" and not on_record:
+        # FU-saveFollowUp-text, provisional wording pending the UX session. No contact value is read or stored.
+        label = "a general contact"
+        saved = render(TextId.FOLLOWUP_SAVED_EMAIL_GENERAL, window=WINDOW_WORD[choice.window])
+    elif choice.channel == "phone" and on_record:
+        customer = tx.core.reads.customer(identity.customer_id) if identity.customer_id else None
+        if customer is None:
+            return rejected(ApiErrorCode.NOT_ALLOWED_IN_STATE, state="not_verified")
+        digits = re.sub(r"[^0-9]", "", customer.phone)[-2:]
+        label = f"the number ending in {digits}"
+        saved = render(TextId.FOLLOWUP_SAVED_PHONE, digits=digits, window=WINDOW_WORD[choice.window])
+    else:
         raise NotImplementedError(
-            "follow-up text for email/general: blocked-on AEA-03 follow-up (UX wording)"
+            "follow-up text for email/on_record and phone/general: blocked-on a UX wording follow-up"
         )
-    customer = tx.core.reads.customer(identity.customer_id) if identity.customer_id else None
-    if customer is None:
-        return rejected(ApiErrorCode.NOT_ALLOWED_IN_STATE, state="not_verified")
-    digits = re.sub(r"[^0-9]", "", customer.phone)[-2:]
-    label = f"the number ending in {digits}"
-    saved = render(TextId.FOLLOWUP_SAVED_PHONE, digits=digits, window=WINDOW_WORD[choice.window])
     tx.cases.followups.upsert(
         FollowupRow(
             case_ref=row.case_ref,

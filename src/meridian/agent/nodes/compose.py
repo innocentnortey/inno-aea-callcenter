@@ -1,7 +1,7 @@
 """The compose node and ReplyComposer: what the customer sees at the end of a turn (graph-core section 13).
 
 Stateless, no I/O, no model call, no clock read. Every sentence comes from `policy/texts.py`; the labels that are not
-sentences are copied from the OpenAPI CON-2 examples (plan PD-9). Compose never reads `staff_notes`, the turn's
+sentences are copied from the OpenAPI CON-2 examples (plan PD-9). Compose never reads the staff-only notes, the turn's
 `intake` or the stored message text (AC-13): the main text arrives only through `state.checked.text`.
 """
 
@@ -11,11 +11,27 @@ import datetime as dt
 import re
 from collections.abc import Mapping, Sequence
 from types import MappingProxyType
-from typing import Literal, TypedDict, cast
+from typing import Literal, cast
 
 from langgraph.runtime import Runtime
 
 from meridian.agent.context import GraphDeps
+from meridian.agent.nodes.compose_cards import (
+    ASSISTANT,
+    DOW3,
+    MON3,
+    BlockIds,
+    BlockKw,
+    ErrCode,
+    account_cards,
+    appointment_block,
+    error_block,
+    make_notice,
+    notice_block,
+    offer_block,
+    scheduling_cards,
+    window_label,
+)
 from meridian.domain import blocks as b
 from meridian.domain import identity as idn
 from meridian.domain import turn as tn
@@ -23,7 +39,6 @@ from meridian.domain.actions import ActionKind, CompletedAction, OpenCase, Settl
 from meridian.domain.common import Halt, HaltReason, TurnId
 from meridian.domain.handoff import CaseSummary, HandoffResult, Priority
 from meridian.domain.records import Passage
-from meridian.domain.specialists import SchedulingResult
 from meridian.domain.staff import STAFF_PERSONAS, StaffRole
 from meridian.domain.state import ComposeUpdate, Controller, ConversationState
 from meridian.gates.gate import burning_card_id
@@ -31,18 +46,6 @@ from meridian.policy.texts import TEXTS, TextId, render
 
 __all__ = ["ReplyComposer", "compose", "turn_trace"]
 
-# --- labels that are not sentences (plan 4.3; copied from the OpenAPI CON-2 examples) ---
-_ASSISTANT = b.Speaker(kind="assistant", display_name="Meridian assistant")
-_WINDOW_LABELS: Mapping[str, str] = MappingProxyType(
-    {
-        "08:00-12:00": "8:00 am – 12:00 pm",
-        "12:00-16:00": "12:00 pm – 4:00 pm",
-        "13:00-17:00": "1:00 pm – 5:00 pm",
-        "16:00-19:00": "4:00 pm – 7:00 pm",
-    }
-)
-_DOW3 = ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-_MON3 = ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 _SAFETY_CALL_KEY = b.CallKey(label="Call 911 (from outside)", number="911")
 _BURNING_OPTIONS = (
     b.Option(option="yes", label="Yes", disabled=False, reason=None),
@@ -94,19 +97,12 @@ _BRAKES = frozenset(
 _DEGRADE_BY_RULE: Mapping[str, tn.DegradeReason] = MappingProxyType(
     {"AI.planner_failed": "model_error", "AI.models_disabled": "spend_cap", "AI.halt": "brake"}
 )
-_ErrCode = Literal[
-    "OUT_OF_AREA", "CODE_WRONG", "CODE_EXPIRED", "CODE_LOCKED", "CODE_CAP_REACHED", "NOT_VERIFIED"
-]
-_NoticeCode = Literal["AI_PAUSED", "BOOKING_CAP", "SPEND_CAP_REACHED", "TURN_TIMEOUT"]
+_VISIT_INTENTS = frozenset({tn.TaskIntent.CONFIRM, tn.TaskIntent.READ_APPOINTMENTS})
 IdentityViewStatus = Literal["not_checked", "code_sent", "verified", "not_verified", "locked"]
 
 
-def _window_label(window: str) -> str:
-    return _WINDOW_LABELS.get(window, window)
-
-
 def _day(d: dt.date) -> str:
-    return f"{_DOW3[d.weekday()]} {_MON3[d.month - 1]} {d.day}"
+    return f"{DOW3[d.weekday()]} {MON3[d.month - 1]} {d.day}"
 
 
 def _date_in(*sources: Mapping[str, str] | None) -> dt.date | None:
@@ -144,7 +140,7 @@ def _write_summary(a: CompletedAction, settled: Settled) -> str:
             ("Booked", "Booked a visit") if a.kind is ActionKind.BOOKED else ("Moved to", "Moved a visit")
         )
         date, window = _date_in(a.after), (a.after or {}).get("window")
-        return fallback if date is None or not window else f"{word} {_day(date)}, {_window_label(window)}"
+        return fallback if date is None or not window else f"{word} {_day(date)}, {window_label(window)}"
     if a.kind is ActionKind.CANCELLED:
         date = _date_in(a.before, a.after)
         return f"Cancelled {_day(date)} visit" if date else "Cancelled a visit"
@@ -189,58 +185,11 @@ def _effective_settled(state: ConversationState, ctx: tn.TurnContext) -> Settled
     return base
 
 
-class _Base(TypedDict):
-    block_id: str
-    speaker: b.Speaker
-    at: dt.datetime
-
-
-class _Ids:
-    """Block ids for one reply: the k-th block gets `blk-<turn>-<k>`."""
-
-    def __init__(self, ctx: tn.TurnContext) -> None:
-        self.turn_id = str(ctx.ids.turn_id)
-        self._at = ctx.now
-        self._n = 0
-
-    def kw(self) -> _Base:
-        self._n += 1
-        return {"block_id": f"blk-{self.turn_id}-{self._n}", "speaker": _ASSISTANT, "at": self._at}
-
-
 def _emergency_number() -> tuple[str, str]:
     m = re.search(r"(\(\d{3}\) \d{3}-\d{4}) (\(demo number\))", TEXTS[TextId.EMERGENCY_NUMBER_LINE])
     if m is None:
         raise RuntimeError("emergency number line changed shape")
     return m.group(1), m.group(2)
-
-
-def _offer(ids: _Ids) -> b.FailureOfferBlock:
-    return b.FailureOfferBlock(**ids.kw(), text=TEXTS[TextId.FAILURE_OFFER], person_key=True)
-
-
-def _error(ids: _Ids, code: _ErrCode, text: str, tries_left: int | None = None) -> b.ErrorBlock:
-    return b.ErrorBlock(
-        **ids.kw(),
-        code=code,
-        text=text,
-        tries_left=tries_left,
-        fresh_windows=None,
-        person_key=tries_left is None,
-    )
-
-
-def _notice_block(ids: _Ids, code: _NoticeCode, text: str) -> b.NoticeBlock:
-    return b.NoticeBlock(**ids.kw(), code=code, text=text, person_key=True)
-
-
-def _notice(
-    code: _NoticeCode,
-    actions: tuple[Literal["try_again", "talk_to_person"], ...],
-    retry: str | None = None,
-    to_rep: bool = False,
-) -> b.Notice:
-    return b.Notice(code=code, actions=actions, retry_turn_id=retry, delivered_to_representative=to_rep)
 
 
 def _reply(
@@ -268,7 +217,7 @@ class ReplyComposer:
 
     # ----- public -----
     def compose(self, state: ConversationState, ctx: tn.TurnContext) -> tn.ComposedReply:
-        ids = _Ids(ctx)
+        ids = BlockIds(ctx)
         settled = _effective_settled(state, ctx)
         writes = tuple(a for a in settled.actions if a.key.turn_id == ctx.ids.turn_id)
         view = self.settled_view(settled, state.identity, state.controller)
@@ -279,16 +228,18 @@ class ReplyComposer:
             return _reply(lead[0], view, writes, lead[1], "safety_reply")
         if gate is not None and gate.kind is tn.GateKind.AI_PAUSED:  # B
             name = state.controller.representative_name or STAFF_PERSONAS[StaffRole.REPRESENTATIVE].name
-            paused = _notice_block(ids, "AI_PAUSED", render(TextId.AI_PAUSED_NOTICE, rep_name=name))
-            return _reply([paused], view, writes, "paused", "to_staff", _notice("AI_PAUSED", (), to_rep=True))
+            paused = notice_block(ids, "AI_PAUSED", render(TextId.AI_PAUSED_NOTICE, rep_name=name))
+            return _reply(
+                [paused], view, writes, "paused", "to_staff", make_notice("AI_PAUSED", (), to_rep=True)
+            )
         if state.halt is not None:  # C
             halt_blocks, halt_notice, degrade = self._halt_parts(state.halt, state.handoff, ctx, ids)
             return _reply(halt_blocks, view, writes, "degraded", "degraded_handoff", halt_notice, degrade)
-        return self._answer(state, ids, writes, view)  # D
+        return self._answer(state, ids, settled, writes, view)  # D
 
     def halt_reply(self, halt: Halt, settled: Settled, ctx: tn.TurnContext) -> tn.ComposedReply:
         """Works with no graph state (AC-12): the settled record is all it has (PD-14)."""
-        blocks, notice, degrade = self._halt_parts(halt, None, ctx, _Ids(ctx))
+        blocks, notice, degrade = self._halt_parts(halt, None, ctx, BlockIds(ctx))
         status: IdentityViewStatus = "verified" if settled.has(ActionKind.VERIFIED) else "not_checked"
         view = self._view(settled, status=status, hint=None, controller=Controller(kind="ai"))
         writes = tuple(a for a in settled.actions if a.key.turn_id == ctx.ids.turn_id)
@@ -297,8 +248,8 @@ class ReplyComposer:
     def handoff_block(self, result: HandoffResult) -> b.HandoffBlock | b.LiveQueuedBlock:
         """Promise text, reference and due label come only from the HandoffResult (R-26)."""
         p, case = result.case.promise, result.case
-        base = _Base(
-            block_id=f"blk-{result.action.key.turn_id}-handoff", speaker=_ASSISTANT, at=result.action.at
+        base = BlockKw(
+            block_id=f"blk-{result.action.key.turn_id}-handoff", speaker=ASSISTANT, at=result.action.at
         )
         if p.live_queued:
             return b.LiveQueuedBlock(**base, reference=case.case_ref, promise_text=p.text)
@@ -330,7 +281,7 @@ class ReplyComposer:
         v, oc = settled.current_visit(), settled.open_case
         visit = None
         if v is not None:
-            visit = b.SettledVisit.model_validate({**v.model_dump(), "window_label": _window_label(v.window)})
+            visit = b.SettledVisit.model_validate({**v.model_dump(), "window_label": window_label(v.window)})
         request = None
         if oc is not None:
             request = b.SettledRequest(
@@ -363,23 +314,23 @@ class ReplyComposer:
         )
 
     def _halt_parts(
-        self, halt: Halt, handoff: HandoffResult | None, ctx: tn.TurnContext, ids: _Ids
+        self, halt: Halt, handoff: HandoffResult | None, ctx: tn.TurnContext, ids: BlockIds
     ) -> tuple[list[b.ReplyBlock], b.Notice | None, tn.DegradeReason]:
         reason = halt.reason
         if reason is HaltReason.DEADLINE:
-            block = _notice_block(ids, "TURN_TIMEOUT", TEXTS[TextId.TURN_TIMEOUT])
-            notice = _notice("TURN_TIMEOUT", ("try_again", "talk_to_person"), str(ctx.ids.turn_id))
+            block = notice_block(ids, "TURN_TIMEOUT", TEXTS[TextId.TURN_TIMEOUT])
+            notice = make_notice("TURN_TIMEOUT", ("try_again", "talk_to_person"), str(ctx.ids.turn_id))
             return [block], notice, "timeout"
         if reason in (HaltReason.SPEND_CAP, HaltReason.PROVIDER_SPEND_CAP):
-            cap = _notice_block(ids, "SPEND_CAP_REACHED", TEXTS[TextId.SPEND_CAP_REACHED])
-            notice = _notice("SPEND_CAP_REACHED", ("talk_to_person",))
+            cap = notice_block(ids, "SPEND_CAP_REACHED", TEXTS[TextId.SPEND_CAP_REACHED])
+            notice = make_notice("SPEND_CAP_REACHED", ("talk_to_person",))
             return [cap], notice, "spend_cap"
         if reason in _BRAKES and handoff is not None:
             return [self.handoff_block(handoff)], None, "brake"
-        return [_offer(ids)], None, "brake"
+        return [offer_block(ids)], None, "brake"
 
     def _safety_lead(
-        self, state: ConversationState, ids: _Ids
+        self, state: ConversationState, ids: BlockIds
     ) -> tuple[list[b.ReplyBlock], tn.TurnPath] | None:
         """Step A: the fixed safety card for this gate or classifier result, or None."""
         gate, danger, handoff = state.gate, state.danger, state.handoff
@@ -438,19 +389,25 @@ class ReplyComposer:
         return None
 
     def _answer(
-        self, state: ConversationState, ids: _Ids, writes: tuple[CompletedAction, ...], view: b.SettledView
+        self,
+        state: ConversationState,
+        ids: BlockIds,
+        settled: Settled,
+        writes: tuple[CompletedAction, ...],
+        view: b.SettledView,
     ) -> tn.ComposedReply:
         """Step D: assemble the blocks of an ordinary turn, then name its path and outcome."""
         step, facts, handoff, plan = state.identity_step, state.facts, state.handoff, state.plan
         blocks: list[b.ReplyBlock] = []
-        notice: b.Notice | None = None
         # 1-2. identity error, verified line
         if isinstance(step, idn.NotVerified | idn.CodeLocked | idn.CodeCapReached | idn.CodeExpired):
             text = TEXTS[TextId.CODE_EXPIRED if step.kind == "code_expired" else TextId.NOT_VERIFIED]
-            blocks.append(_error(ids, cast(_ErrCode, step.kind.upper()), text))
+            blocks.append(error_block(ids, cast(ErrCode, step.kind.upper()), text))
         elif isinstance(step, idn.CodeWrong):
             blocks.append(
-                _error(ids, "CODE_WRONG", render(TextId.CODE_WRONG, n=str(step.tries_left)), step.tries_left)
+                error_block(
+                    ids, "CODE_WRONG", render(TextId.CODE_WRONG, n=str(step.tries_left)), step.tries_left
+                )
             )
         elif isinstance(step, idn.Verified):
             blocks.append(b.TextBlock(**ids.kw(), text=TEXTS[TextId.VERIFIED], sources=()))
@@ -460,10 +417,11 @@ class ReplyComposer:
         if checked is not None and not fallback and checked.text.strip():
             blocks.append(b.TextBlock(**ids.kw(), text=checked.text, sources=_chips(facts)))
         if fallback:
-            blocks.append(_offer(ids))
+            blocks.append(offer_block(ids))
         # 4. no source
         if facts is not None and facts.no_source_tasks:
             blocks.append(b.NoInfoBlock(**ids.kw(), text=TEXTS[TextId.NO_INFORMATION], person_key=True))
+        blocks.extend(account_cards(ids, state.specialist_results))  # 4a. account cards (AEA-21b)
         # 5. code prompt
         prompt = self._code_prompt(state, ids)
         if prompt is not None:
@@ -483,32 +441,41 @@ class ReplyComposer:
             )
         # 7. write cards
         blocks.extend(card for card in (self._write_card(a, ids) for a in writes) if card is not None)
+        # 7a. the booked visit for a visit question, unless a write card already shows it (AEA-21b)
+        wrote = any(isinstance(x, b.ConfirmationBlock | b.CancelledBlock) for x in blocks)
+        if (
+            plan is not None
+            and any(t.intent in _VISIT_INTENTS for t in plan.tasks)
+            and not wrote
+            and view.visit
+        ):
+            blocks.append(appointment_block(ids, view.visit))
         # 8. quick checks
         quick = self._quick_checks(state, ids)
         if quick is not None:
             blocks.append(quick)
-        # 9. scheduling results
-        for result in state.specialist_results:
-            if isinstance(result, SchedulingResult) and result.status == "out_of_area":
-                blocks.append(_error(ids, "OUT_OF_AREA", TEXTS[TextId.OUT_OF_AREA]))
-            elif isinstance(result, SchedulingResult) and result.status == "booking_cap" and notice is None:
-                notice = _notice("BOOKING_CAP", ("talk_to_person",))
-                blocks.append(_notice_block(ids, "BOOKING_CAP", TEXTS[TextId.BOOKING_CAP]))
+        # 9. scheduling results: errors, booking cap, slot card, SLOT_TAKEN, no fit, where prompt (AEA-21b)
+        scheduled, notice = scheduling_cards(state, settled, ids)
+        blocks.extend(scheduled)
         # 10. change request replaces the handoff card (PD-12)
         change_shown = facts is not None and facts.change_request is not None and handoff is not None
         if change_shown:
             blocks.append(self._change_request_block(state, writes, ids))
         # 11. offer
         escalation = state.escalation
-        if escalation is not None and escalation.outcome == "offer" and not fallback:
-            blocks.append(_offer(ids))
+        if (
+            escalation is not None
+            and escalation.outcome == "offer"
+            and not any(isinstance(x, b.FailureOfferBlock) for x in blocks)
+        ):
+            blocks.append(offer_block(ids))
         # 12. the handoff card is the last block (R-26)
         if handoff is not None and not change_shown:
             blocks.append(self.handoff_block(handoff))
         path, outcome, degrade = self._path(state, fallback)
         return _reply(blocks, view, writes, path, outcome, notice, degrade)
 
-    def _code_prompt(self, state: ConversationState, ids: _Ids) -> b.CodePromptBlock | None:
+    def _code_prompt(self, state: ConversationState, ids: BlockIds) -> b.CodePromptBlock | None:
         step, ident = state.identity_step, state.identity
         if isinstance(step, idn.CodeSent):
             shown: tuple[Literal["sent", "wrong", "expired"], str, int | None, dt.datetime | None] = (
@@ -540,7 +507,7 @@ class ReplyComposer:
             inbox_link="/demo/inbox",
         )
 
-    def _write_card(self, a: CompletedAction, ids: _Ids) -> b.ConfirmationBlock | b.CancelledBlock | None:
+    def _write_card(self, a: CompletedAction, ids: BlockIds) -> b.ConfirmationBlock | b.CancelledBlock | None:
         """PA-3: a card for a booking, move or cancel; an action missing a needed key gets no card."""
         appointment = a.records.get("appointment")
         after = a.after or {}
@@ -555,7 +522,7 @@ class ReplyComposer:
                 **ids.kw(),
                 appointment_id=int(appointment),
                 date=date,
-                window_label=_window_label(after["window"]),
+                window_label=window_label(after["window"]),
                 technician=after["technician"],
                 fee_line=after["fee_line"],
                 timeline=(word, *_TIMELINE_TAIL),
@@ -573,7 +540,7 @@ class ReplyComposer:
             )
         return None
 
-    def _quick_checks(self, state: ConversationState, ids: _Ids) -> b.QuickChecksBlock | None:
+    def _quick_checks(self, state: ConversationState, ids: BlockIds) -> b.QuickChecksBlock | None:
         facts = state.facts
         if facts is None or not facts.quick_checks:
             return None
@@ -587,7 +554,7 @@ class ReplyComposer:
         )
         return b.QuickChecksBlock(
             **ids.kw(),
-            card_id=f"{task.task_id}.1",
+            card_id=ids.task_card(task.task_id),
             options=_QUICK_CHECK_OPTIONS,
             answered=None,
             offer_text=TEXTS[TextId.QUICK_CHECKS_OFFER],
@@ -595,7 +562,7 @@ class ReplyComposer:
         )
 
     def _change_request_block(
-        self, state: ConversationState, writes: Sequence[CompletedAction], ids: _Ids
+        self, state: ConversationState, writes: Sequence[CompletedAction], ids: BlockIds
     ) -> b.ChangeRequestBlock:
         facts, handoff = state.facts, state.handoff
         if facts is None or facts.change_request is None or handoff is None:
@@ -611,7 +578,7 @@ class ReplyComposer:
             "",
         )
         shown = tuple(
-            b.ShownWindow(slot_id=str(s.slot_id), window_label=_window_label(s.window), date=s.date)
+            b.ShownWindow(slot_id=str(s.slot_id), window_label=window_label(s.window), date=s.date)
             for s in state.shown_slots
             if s.slot_id in draft.windows_shown
         )

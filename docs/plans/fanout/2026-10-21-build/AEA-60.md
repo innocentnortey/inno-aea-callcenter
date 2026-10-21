@@ -1,1386 +1,577 @@
 # Plan — [AEA-60] contract: prompt ↔ consumer checks (rendered prompts vs parsers, ToolDefs and schemas)
 
-**Status:** planned — **READY**, build **blocked-on AEA-35, AEA-37, AEA-39** (refresh 3 at `ebca98d`: the same three;
-they are real imports of this test, §9). Journey level additionally waits on **AEA-51 only** (AEA-30 and AEA-40 are now
-merged; the steps skip, never pass, until AEA-51 binds `run_graph` and `reply_composer`).
-**Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/60 (spec copy:
-`docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` at `ebca98d` (refresh 3, 2026-10-21; refresh 2 at `c9b17ea`; refresh 1 at `bb9a471`; first written at `35aefdd`) · **Lane:** `lane::build-loop` ·
-**Risk:** none (no `risk::security`: no test-writer, no wave-merge security review) · **Wave:** 3 · **Gates:** none
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (first written at `35aefdd`; refreshed at `bb9a471`, `c9b17ea` and `ebca98d`) · **Implementer:**
-`fanout-implementer` on Sonnet · **Slug / branch:** `prompt-consumer-checks` → `aea-60-prompt-consumer-checks`, worktree
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-60` (the orchestrator creates it from `main` once §9's blockers
-have merged).
+**Status: BUILT AND MERGED.** Code commit `5f7725b`, merge `0e37fad`, ledger `84d826f` (row: `merged`). Do **not**
+dispatch an implementer to rebuild it. The one step left (step 14, section 5a below) is **blocked on AEA-51** and only
+upgrades AC-13's evidence level; AC-13 is already met as written (its evidence clause allows `mock-tested` + *Blocked by*
+AEA-57, AEA-51 until those land).
+**Issue:** GitLab `innocentnortey/inno-aea-callcenter#60` (copy: `docs/plans/tickets/AEA-60.md`) · **Base revision:** `main` `dbcd8b7` (refresh 1)
+**Lane / risk:** `lane::build-loop`, no `risk::security` (tests only). Plan → implement (code and tests together) → affected tests → `code-review-agent`.
+**Planner model:** claude-opus-5-5. **Implementer:** Sonnet.
 
-Read this whole file before writing code. Every decision is made here (§5.0 lists them as PD-n). **If the code on `main`
-disagrees with a name in this plan, the code on `main` wins: follow it and say so in your report.** If a name this plan
-needs is **missing** on `main`, stop and report `BLOCKED-ON <ticket>`; never invent it, never add product code.
+**Refresh 1 (2026-10-21, `main` at `dbcd8b7`).** Read this box first. Where it and anything below differ, this box wins.
+Sections 1–8 and *Deviations* are kept unchanged as the record of what was planned and built.
 
-### Refresh 3 (2026-10-21, `main` at `ebca98d`): what changed since `c9b17ea` (read this first)
+1. **What is on `main`** (from `git show --stat 5f7725b`): `tests/contract/test_prompts_vs_consumers.py` (448 lines),
+   `tests/contract/_prompts_render.py`, `_prompts_checks.py`, `_prompts_malformed.py`, `_prompts_expect.py`,
+   `_prompts_drift.py` (the last two are implementer deviations, see *Deviations*), `tests/journeys/j5/test_aea_60.py`,
+   `tests/journeys/j9/test_aea_60.py`, `docs/testing/journeys/2026-10-21-AEA-60.md`, `docs/design/code-design.md` §9 line,
+   `.claude/state/icm-progress.md` line 60. Steps 0–13 of section 5 are **done**.
+2. **Result as recorded** (evidence record and ledger; numbers from the implementer's and merge agent's runs, not re-run by
+   this planner): contract module 104 passed, 0 skipped, 0 xfailed; the three journey tests skipped, each
+   `blocked-on AEA-51: reply_composer not bound`; ruff, format and mypy clean. The wave-3 seam audit at `0e37fad`
+   (`.claude/state/resume.md`, *Stage 8: wave 3 context upkeep, AEA-60*) reports "Prompts vs consumers pass" and no
+   AEA-60 finding.
+3. **Nothing it depends on has moved.** `git diff --stat 0e37fad..dbcd8b7 -- src tests/journeys/support
+   tests/journeys/j5/test_aea_37.py tests/unit/agent tests/contract tests/fakes tests/fixtures` is empty; the commits since
+   the merge are the ledger, the context upkeep and FU-j1-demo-state (J-1 only).
+4. **The journey legs will run, not skip forever, once AEA-51 lands.** Every name in their `needs` is a real container key
+   (`web/deps.py` lines 77–78 `Key("handoff_service")`, `Key("case_service")`; `web/container.py` lines 767, 770
+   `Key("run_graph")`, `Key("reply_composer")`), and `tests/journeys/support/steps.py` `missing_needs` raises `KeyError` on
+   an unknown name, so the recorded skips prove the names resolve. The schema columns the legs read exist
+   (`src/meridian/adapters/sqlite/schema/00_core.sql`: `degrade_reason` line 53, `plan_intents` 59, `planner_failed` 62,
+   `danger_raised` 63; `check_events.check_kind` 106, `result` 108, `codes` 111).
+5. **AEA-51 already runs these legs.** Its plan (`AEA-51.md`, refresh 6 item 4 and §8 R-23) binds `run_graph` in its pass
+   2a and names `j5/test_aea_60.py` and `j9/test_aea_60.py` among the sibling tests that must pass at its check 8; a red
+   one whose cause is in a sibling's code is reported `blocked-on <owner>`, never skipped. AEA-51's branch
+   `aea-51-aea-51-customer-path` (`e9d07f3`, pass 1) touches no AEA-60 file (`git diff --stat main...e9d07f3 --
+   tests/journeys tests/contract src/meridian/agent/prompts src/meridian/agent/nodes` adds only
+   `tests/contract/test_model_ports_contract.py`).
 
-1. **Merged since refresh 2:** AEA-30 (demo clock, scheduler; `cf8fd78`), AEA-40 (sessions and turns, CON-1/CON-2;
-   `f466ff7`; the build ledger row still says `blocked`, which is stale), AEA-35b (`SpecialistTask`, `KnowledgeSlice`,
-   `AccountSlice` in `src/meridian/domain/tools.py`; `3725c90`), AEA-36 (front node; `c378698`). `git diff --stat
-   c9b17ea..main -- src tests` touches none of the modules this test imports except `domain/tools.py` (three new types,
-   §4.1; this test never builds them: AEA-39's `run_specialist` does) and `web/container.py` (journeys only).
-2. **AEA-35/AEA-39 decision answered.** Innocent chose option A (types in `domain/tools.py`); AEA-35b built them.
-   AEA-39's plan is now READY (refresh 3) and AEA-35 is being built in worktree
-   `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-35` (uncommitted on `aea-35-aea-35-specialists`). Its
-   work-in-progress names were read and match §4.3: `SPECS` (`knowledge`, `account`, `scheduling`),
-   `REPORT_FACTS_TOOL = "report_facts"` (defined in `meridian.agent.prompts.specialists`, re-exported by `specs`),
-   `report_facts_schema(spec)` sends `spec.report_model.model_json_schema()` **untrimmed** (PD-8's first branch),
-   `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)` with
-   `.run(task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult`. The runner ends a run on a
-   step with no non-`report_facts` tool calls, so §5.5's "one model step per kind" and §5.7's two-step specialist cases
-   hold. **`main` wins once AEA-35 merges.**
-3. **PD-5 re-checked against AEA-35's wording.** The snake_case tokens in the three prefixes are `report_facts`,
-   `kb_search`, `passage_id` (knowledge); `read_invoices`, `read_membership`, `read_warranty` (account); `hvac_repair`,
-   `hvac_tune_up`, `shown_slots`, `appointment_id`, `wanted_time` (scheduling). Each is either a tool sent with that
-   request or in the derived vocabulary (`ServiceType` is an `enum` in `FindWindowsArgs.service_type`'s schema;
-   `shown_slots` is a `SchedulingSlice` property; `appointment_id`, `wanted_time` are `SchedulingReport` properties;
-   `passage_id` is a `ReportedPoint` property under `$defs`). AC-5 is expected to pass; if it does not, that is R-3.
-4. **AC-8 fix: `tool_invoice_bad` ends `failed`.** AEA-35's `build_account_result` (its plan step 5, and the WIP code)
-   returns `status="failed"` with `failure=None` when no read was captured and no call was `not_verified`; AEA-39's
-   `run_specialist` then emits one `specialist_failed` signal with cause `tool_error` (graph-nodes §4 table), and
-   `decide_escalation` (on `main`) gives `AI.specialist_failed`. §5.8 item 10 now asserts that for this case and no
-   longer lists it under "no `specialist_failed` signal".
-5. **Journey blockers:** only AEA-51 (`run_graph`, `reply_composer`). `demo_clock`, `demo_service` (AEA-30),
-   `session_service`, `turn_service`, `startChatSession`, `submitTurn` (AEA-40), `case_service`, `handoff_service`
-   (AEA-29) and `login_sessions` (AEA-44) are bound on `main`. Copy whatever the harness prints.
-6. **AEA-37** is still unmerged: branch `aea-37-graph-plan-node` now at `65a7cd1` (main merged in); `plan.py` and
-   `prompts/routing.py` are byte-identical to `36dc321`, so §4.3's AEA-37 row stands. F-1 is still present (line 403:
-   `appointments` is cleared only when `scheduling != "none"`).
-7. **Context budget:** `.claude/state/icm-progress.md` is now 16,670 B (§7.2 G-11).
+## 5a. Remaining step (refresh 1)
 
-Nothing else changed: the AC text, owned files, PD-1…PD-14, the rest of the case table and the checks stand.
+**Step 14 — upgrade AC-13's evidence after AEA-51 merges.** Start only when the ledger row for AEA-51 reads `merged`.
+Branch from `main` (`aea-60-f1-journey-level` or the orchestrator's name), `export UV_LINK_MODE=hardlink`, no venv copy.
 
-### Refresh 2 (2026-10-21, `main` at `c9b17ea`): what changed since `bb9a471`
+1. Run `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs`.
+2. **All three pass** (`test_j5_malformed_classifier_reply_books_normally`, `test_j9_both_planners_malformed_hand_off_degraded`,
+   `test_j9_malformed_responder_draft_falls_back`): edit only these two docs.
+   - `docs/testing/journeys/2026-10-21-AEA-60.md`: replace the *Level* field's journey half with `integrated with a scripted
+     model` (the contract module stays `mock-tested`); *Tested revision* = the `main` commit you ran on; *Command* unchanged;
+     *Result* = the pass counts from step 1 plus the contract module's count from
+     `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` (expect 104 passed); *Blocked by* = `none`. Keep *Claim*
+     and *Remaining limitations* (C-1, C-2, no live model: AEA-61).
+   - `.claude/state/icm-progress.md` line 60 (the AEA-60 row): replace `J-5/J-9 test_aea_60.py blocked-on AEA-51` with
+     `J-5/J-9 test_aea_60.py 3 passed (integrated, scripted model)`. Replace in place; add no row.
+   This is docs only (nothing code or tests read), so the orchestrator may do it as `lane::direct` (`ticket-lanes.md`):
+   one agent, no worktree, commit straight to the working branch between merges.
+3. **A leg is red.** Run it alone with `-x -rs`. Then:
+   - If the leg's own expectation contradicts the signed contract (DO-4 §10 failure offer and handoff block; graph-nodes §4
+     signal table; cases.md §3.4 rule 6, `ai_failure` P3; web.md §9–§10), fix only that leg in
+     `tests/journeys/j5/test_aea_60.py` or `tests/journeys/j9/test_aea_60.py`, citing the contract line in the commit
+     body. This is `lane::build-loop` (a `fanout-implementer` with this plan).
+   - If the product code contradicts the contract, leave the leg red, do not edit it, and report `blocked-on <owner>` with
+     the failing assertion line on #60 and on the owner's issue (graph wiring, turn service, composer → AEA-51; act node,
+     escalation → AEA-39; reply nodes → AEA-38; plan nodes → AEA-37; case and handoff services → AEA-29).
+   - A missing harness capability (raw bodies, `stop_reason`, a `NEED_OWNERS` entry) is a follow-up on AEA-57, never an
+     edit to `tests/journeys/support/`.
+   - Known: J-9(a)'s brief raw quotes `message_id: 1`; if that is not the customer's message id, `check_quotes` trims the
+     quote and nothing the leg asserts changes (R-2). Do not "fix" it.
+4. Checks before the commit (cheapest first): if a leg changed, `uv run ruff check` and `uv run ruff format --check` on
+   the changed leg, then `uv run mypy` on it; then step 1's command (all pass); then
+   `uv run python -m tests.journeys.affected --base main --list-only` and confirm both legs are listed. No full suite
+   (docs and journey files only; nothing shared changed). `pytest -n 2` at most if you parallelise. Do not bind ports 4019
+   or 5184 (the harness picks its own).
+5. Commit with explicit paths (`git add docs/testing/journeys/2026-10-21-AEA-60.md .claude/state/icm-progress.md` plus any
+   changed leg), never `-A`; message `docs(AEA-60): J-5/J-9 legs at integrated level after AEA-51` (or `test(AEA-60): …`
+   when a leg changed); last line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do not push; the merge step
+   pushes `main`.
 
-1. **Merged since refresh 1:** AEA-29 (case service, handoff service, `BriefAssembler`; merge `ef561fc`), AEA-24 (eval
-   harness), AEA-50 (deploy image), AEA-54 (deployment guide). `git diff --stat bb9a471..main` over `src/`,
-   `tests/fakes/`, `tests/fixtures/`, `tests/journeys/support/`, `tests/unit/agent/_gateway_doubles.py`,
-   `tests/conftest.py`, `tests/contract/` and `pyproject.toml` touches only `src/meridian/services/{cases,handoff,
-   _case_actions,_case_rules,_case_views}.py` and `src/meridian/web/container.py`. Every other §4 name is unchanged
-   (re-read on `c9b17ea`: `agent/nodes/reply.py` `brief` / `checks` / `_store_brief`, `agent/prompts/reply.py`,
-   `nodes/compose.py`, `context.py`, `gateway.py`, the AEA-11 fakes, the AEA-57 harness and `NEED_OWNERS`).
-2. **PD-9 changed: the brief consumer is now real.** `GraphDeps.brief` is `RecordingBriefAssembler`, a subclass of the
-   real `meridian.services.handoff.BriefAssembler` (pure: no I/O, no clock) that records each `attach_extraction` call
-   and delegates to `super()` (§5.2). AC-9's "headings 2, 4 and 7 `not_generated`" and `status == "failed"` are now
-   asserted on the real assembler's output (§5.8 item 11). `GraphDeps.cases` stays `CasesDouble`: the real
-   `CaseService` needs a case opened through `HandoffService`, which is AEA-51's integration, and storing the brief is
-   not what AC-9 checks.
-3. **Build blockers unchanged.** In `.claude/state/build-ledger.md`, AEA-35 and AEA-39 are still `blocked` on the same
-   NEEDS-DECISION (where the specialist task types live; §9.1 of each plan), and AEA-37 is still `blocked` with its
-   build on `aea-37-graph-plan-node` at `36dc321`, not merged. `stage7-signoff.md` D-4…D-15 do not touch this ticket.
-4. **Journey blockers moved.** AEA-29 and AEA-44 are merged, so `case_service`, `handoff_service` and
-   `login_sessions` are bound. The steps now skip on AEA-30 (`demo_clock`, `demo_service`; ledger `blocked`), AEA-40
-   (`session_service`, `turn_service`, the CON-2 operations) and AEA-51 (`run_graph`, `reply_composer`). Copy whatever
-   the harness prints.
-5. **Context budget:** `.claude/state/icm-progress.md` is now 15,697 B (§7.2 G-11).
-
-Nothing else changed: the AC text, owned files, PD-1…PD-8 and PD-10…PD-14, the case table and the checks stand.
-
-### Refresh 1 (2026-10-21, `main` at `bb9a471`): what changed since `35aefdd`
-
-1. **Merged since the first plan:** AEA-17 (Anthropic adapter), AEA-18 (Jev adapter), AEA-21 (spine: `GraphDeps`,
-   signals, `ReplyComposer`, node stubs), AEA-27 (account tools), AEA-28 (scheduling tools), AEA-38 (reply nodes and
-   reply prompt). Every name this plan takes from them was re-read on `main`; §4.3 now marks each row **main**,
-   **branch** or **plan only**. No name the plan uses changed. Blockers drop from nine to three: AEA-35, AEA-37, AEA-39 (§9).
-2. **AEA-38 detail that matters here:** the `brief` and `checks` nodes build the brief's `shown` mapping themselves with
-   `brief_shown(...)` over the customer rows of `messages.recent(...)`, and `check_quotes` is imported into
-   `meridian.agent.nodes.reply` by name, so the Step 4 spy works as written. The labels are public constants in
-   `meridian.agent.prompts.reply`: import them (Step 2 `LABELS`).
-3. **AEA-37 is built on its branch (`36dc321`), not merged.** Its planner and classifier behaviour matches what AC-7
-   asserts (§4.3 row). F-1 is still true there (§8).
-4. **AEA-35 and AEA-39 have no branch;** both plans are NEEDS-DECISION on one question (where the specialist task types
-   live). That is not AEA-60's decision, but it gates this ticket (§8 R-10).
-5. **Journeys:** use the harness's own `journey.login()` / `journey.client()` (on `main`), as J-1 does (§5.9).
-6. **Context budget:** `.claude/state/icm-progress.md` is now 14,555 B (§7.2 G-11).
-
-Nothing else changed: the AC text, owned files, PD-1…PD-14, the case table and the checks are as first planned.
+**Must not do in step 14:** re-create or edit any `tests/contract/_prompts_*.py` or `test_prompts_vs_consumers.py`
+(they pass on `main`); edit `src/`, `agent/prompts/`, `tests/journeys/support/`, `tests/journeys/j5/test_aea_37.py` or any
+other ticket's file; add `skip`/`xfail`/`live`; put a phone, card-like number, code or real name anywhere.
 
 ---
 
 ## 1. Goal and sources
 
-### 1.1 Goal (from the issue's *What to build*)
+**Goal (ticket "What to build").** One default-suite contract module, `tests/contract/test_prompts_vs_consumers.py`, that
+(1) renders every prompt the graph sends through the real builders and nodes on turns 1, 2 and 5 of one fixture
+conversation, (2) compares what each prompt offers the model with what its consumer accepts, in both directions,
+(3) feeds malformed and unsupported provider output through the real adapters (stubbed HTTP), the real `ModelGateway` and
+the real node / runner / dispatcher and asserts the documented fallback, and (4) proves each check fails on a drifted copy.
+Plus two journey files that extend J-5 and J-9 through CON-2 with the scripted model. It writes no product code.
 
-> On Riverside every unit test passed while real turns failed, partly because a prompt told the model it could answer
-> with a value the parsing code did not accept. Each prompt ticket (AEA-35, 37, 38) tests its own wording, and each
-> consumer ticket (AEA-17, 18, 20, 22, 27, 28, 33) tests its own parser, but nothing yet puts a **rendered** prompt next
-> to the code that reads the answer. This ticket does, and it also feeds each consumer the broken answers a real model
-> can send, and checks that the documented fallback happens.
+**Worked pairs (the ticket's WP-N pair, named so the reviewer can find them):**
+- *Example pair 1 (drift caught)*: `test_routing_fields_match_planner_choices_and_danger_label` (pass on today's
+  `routing.py`) and `test_check_fails_on_drift[planner-handoff-added]` (adding `cancel_membership` fails with
+  `routing.planner.handoff offers 'cancel_membership'; PlannerChoices.handoff does not accept it`).
+- *Example pair 2 (malformed answer)*: `test_malformed_routing_outputs[e1-classifier-emergency]` (NODANGER, Jev body
+  `{"danger_level": "emergency"}` → `DangerAssessment(label="normal", raised=False, failure=invalid_output)`, one
+  `classifier` event `fallback` with codes `("fallback", "invalid_output")`, one `classifier_fallback` signal, the turn
+  continues to `plan_join` and books).
 
-Deliverables: one contract test module `tests/contract/test_prompts_vs_consumers.py` (AC-1…AC-12, AC-14, level
-`mock-tested`), its helper modules (§2), two journey files `tests/journeys/j5/test_aea_60.py` and
-`tests/journeys/j9/test_aea_60.py` (AC-13), the evidence record and two context edits (AC-15). **No product code.**
-
-**WP pair (ticket's worked examples).**
-- *Example pair 1 (drift caught):* the planner request's `handoff` options equal `PlannerChoices.handoff`'s `Literal`
-  set (incl. `late_technician`); each maps through `join_plan` to a `HandoffReason`. A drifted copy offering
-  `cancel_membership` fails with `routing.planner.handoff offers 'cancel_membership'; PlannerChoices.handoff does not
-  accept it` → tests `::test_routing_fields_match_planner_choices_and_danger_label`, `::test_check_fails_on_drift[planner_extra_option]`.
-- *Example pair 2 (malformed answer):* NODANGER + raw Jev classifier body choosing `emergency` → real `JevAdapter`
-  `INVALID_OUTPUT`, one attempt → `DangerAssessment(label="normal", raised=False, failure=invalid_output)`, one
-  `classifier` event `fallback` codes `("fallback", "invalid_output")`, one `classifier_fallback` signal, `plan_join`
-  still builds the booking plan → `::test_malformed_routing_outputs[classifier_emergency]`; integrated:
-  `tests/journeys/j5/test_aea_60.py::test_j5_classifier_outside_options_books_normally`.
-
-### 1.2 Context (why now)
-
-Wave 3, Amendment 1 (slice plan §0a). On `ebca98d` the adapters (AEA-17/18), dispatcher (AEA-22), account and
-scheduling tools (AEA-27/28) and the reply node and prompt (AEA-38) and the brief assembler (AEA-29) are on `main`; routing (AEA-37) is built on its
-branch; the specialists (AEA-35) are being built and the act node (AEA-39) is planned (READY); AEA-61's live smoke waits for this ticket. The
-test is data-driven from the real inventory (`Role`, `SPECS`, the registry built from the three factories), so later
-tools, options and report fields are checked without editing it.
-
-### 1.3 Sources checked
-
-| Source | Location | What it obliges here |
-|---|---|---|
-| Ticket | `docs/plans/tickets/AEA-60.md` | AC-1…AC-15 verbatim (§3); owned files; reviewer commands |
-| Slice plan | `docs/plans/slice-plan.md` §0a (journey map J-5, J-9; AEA-60 wave 3), §1 row AEA-60 (blockers 20, 22, 35, 37, 38, 39, 17, 18, 27, 28, 33, 57), §3 collision map (`tests/contract/` prompt files: "60 (`test_prompts_vs_consumers`) … one file each"; `tests/journeys/`: one file per ticket per journey, `support/` is AEA-57's) | Ownership; one-file-per-journey convention |
-| Rules | `.claude/rules/integrated-journeys.md` §3 rule 4–6, §4 (levels, record fields); `build-loop-test-scope.md` + *AEA addition*; `context-maintenance.md` rule 6; workspace `context-management-multi-turn.md` rule 3 (turns 1, 2, 5) | Rendered prompts through real builders; malformed outputs; evidence record; ICM row |
-| Requirements | `docs/prd/inno-aea-callcenter-prd.md` R-46 (line 235), R-47 (line 157); HP-1, HP-4 | Fallback when the model is malformed; rules stand on a classifier failure |
-| Component contracts | DO-4 `docs/design/contracts/internal-components.md` §0 (`LLMFacing`, errors never carry values), §3–§5, §7, §9, §11, §12; addenda win (§16): `stage7/models.md` §1, §3, §5; `stage7/graph-tools.md` §1, §2, §4, §6; `stage7/graph-nodes.md` §1, §2, §4, §5, §9.4–§9.6; `stage7/graph-core.md` §2, §4, §11, closing table A-6; `stage7/cases.md` §3.3, §3.4, §4, §5; `stage7/data.md` §4, §5, §8a | Every type, signature and failure mapping in §4 |
-| Evaluation plan | DO-5 `docs/design/evaluation-plan.md` (E-1 dev set WP-1…WP-8, WP-4F, DANGER, NODANGER, line 58–62) | Fixture texts; adds no E-n case, runs no eval |
-| Observability contract | DO-6 `docs/design/observability-contract.md` WF-1 (line 76), `model_call` span = "the full rendered context and raw output **after masking**" (line 113) | AC-14 records; PD-7 (AC-10 reading) |
-| Key-metrics registry | DO-7 M-3, M-12, M-16, M-17, M-24 | Records AC-13/AC-14 assert stay computable; no target set |
-| Decisions | `docs/plans/stage7-signoff.md` D-14 (CAS-16 option A → `HandoffReason.BURNING_RULED_OUT` is on `main`; DAT-2 option B → keys outside the repo) | Code-only set includes `burning_ruled_out`; AC-12 guards `eval/cases/heldout/` and `~/.meridian-sealed/` |
-| Sibling code and plans | On `main` `ebca98d`: the AEA-17, 18, 21, 27, 28, 29, 35b and 38 modules (read). AEA-37 branch `aea-37-graph-plan-node` at `65a7cd1` (read). AEA-35 work in progress in its worktree (read: `specs.py`, `runner.py`, `prompts/specialists.py`). Plans: `docs/plans/fanout/2026-10-21-build/AEA-35.md` §4.4–§4.6 (and `build_account_result` step 5), `AEA-39.md` §5 step 3 | Exact builder and node names in §4 |
-
-### 1.4 Source-contract reconciliation
-
-| Obligation | Governing source | In ticket | Disposition | Plan step or owner |
-|---|---|---|---|---|
-| Render every role's request through the real builder, turns 1, 2, 5 | integrated-journeys rule 4; ctx-mgmt rule 3 | AC-1 | in-ticket | Step 4 (`prompts_render.py`) |
-| Offered option sets equal consumer `Literal` sets both ways | integrated-journeys rule 4 | AC-2 | in-ticket | Step 2, 5 |
-| Every offered planner value has a consumer path | DO-4 §4, cases §3.4 | AC-3 | in-ticket | Step 5 |
-| Every consumer-accepted `HandoffReason` (minus code-only) is reachable from some offered option | ticket "What to build" 2, bullet 2 | partly (AC-3 lists one direction) | **added** to AC-3's test (PA-1) | Step 5 |
-| Code-only values never offered; no tool/report field sets priority, case ref, promise, customer id | DO-4 §7, §5 | AC-4 | in-ticket; scope decided in PD-6 | Step 5 |
-| Tools sent = dispatcher schemas + `report_facts`; scope fields never in a schema | graph-tools §1–§2 | AC-5 | in-ticket | Step 2, 5 |
-| Responder/brief output models; labelled blocks; brief ids = `check_quotes` shown keys | DO-4 §7, §9; graph-nodes §2–§3 | AC-6 | in-ticket | Step 4, 5 |
-| Malformed routing/specialist/reply outputs reach documented fallback through real adapters + gateway + nodes | models.md §3, §5; graph-nodes §4, §5; cases §3.4 | AC-7, AC-8, AC-9 | in-ticket | Steps 3, 6, 7 |
-| Rejected values never travel | DO-4 §0 | AC-10 | in-ticket; reading of "trace span" per DO-6 line 113 decided in PD-7 | Step 7 |
-| Drifted copies fail by role, field and value | ticket step 4 | AC-11 | in-ticket | Step 5 |
-| Dev data only; no network | data.md §5 (DAT-2) | AC-12 | in-ticket | Step 5 (module guard) |
-| J-5, J-9 extended through CON-2 | slice plan §0a | AC-13 | in-ticket | Step 8 |
-| WF-1 records per malformed case, codes only | DO-6 WF-1 | AC-14 | in-ticket | Step 7 |
-| Docs: DO-3 §9 line, ICM row, record; area map unchanged | context-maintenance | AC-15 | in-ticket | Step 9 |
-| `account="appointments"` with `scheduling="none"` yields `READ_APPOINTMENTS` on the **account** specialist, whose tools (`read_invoices`, `read_membership`, `read_warranty`) cannot read appointments | graph-tools §4 vs AEA-37 join step 5 | no | **other-ticket**: finding F-1 (§8) for AEA-37 / AEA-27; not asserted here (no AC owns it; a red-by-design test would block the merge) | orchestrator posts F-1 |
-| Live compatibility of the same prompts | integrated-journeys rule 4 | no (moved) | other-ticket: AEA-61 | — |
-| OpenAPI/fixture validation; browser; redaction beyond AC-10 | — | no | other-ticket: AEA-59, AEA-58, AEA-04/35/37 + CAP-1 (AEA-51) | — |
-
-### 1.5 Entry-point registration
-
-| Entry point | Workflow | Registered in contract | Inherits |
-|---|---|---|---|
-| None (test-only; AC-13 drives the existing CON-2 route owned by AEA-40 and changes nothing in it) | — | — | — |
-
----
+**Sources (all read for this plan):**
+- Ticket `docs/plans/tickets/AEA-60.md` (AC-1…AC-15), slice plan `docs/plans/slice-plan.md` §0a (Amendment 1, journey map
+  J-5, J-9), §1 row AEA-60, §3 collision map rows `tests/contract/` (prompt and OpenAPI files) and `tests/journeys/`.
+- Rules: `.claude/rules/integrated-journeys.md` §3 rules 4–6, §4 (levels, evidence record fields), §5, §6;
+  `.claude/rules/build-loop-test-scope.md` incl. *AEA addition*.
+- DO-4 `docs/design/contracts/internal-components.md` §0 ("Errors never carry values"), §4, §5, §7, §9, §11, §12; addenda
+  `docs/design/contracts/stage7/models.md` §1, §3, §5 (the gateway's `model_call(…, masked_input, masked_output)` per
+  attempt, MOD-10), `graph-tools.md` §1, §2 (PD-9 `report_facts` schema untrimmed), `graph-nodes.md` §1, §4 (signal table),
+  §5 (GRN-7), §9.4–§9.6, `cases.md` §3.4 rule 6, `data.md` §5 (DAT-2), §8a (`FixedClock`).
+- Decisions: `docs/plans/stage7-signoff.md` D-14 (CAS-16 option A → `HandoffReason.BURNING_RULED_OUT` exists in code;
+  DAT-2 option B → held-out keys outside the repo, `/home/linuxuser/.meridian-sealed/heldout/`).
+- Current code on `main` (`b68df7e`): every module listed in section 4.
 
 ## 2. Boundary
 
-### 2.1 Owned files (the only files you may create or edit)
+**Owned files (the only files the implementer creates or edits):**
 
-| File | Create / modify | Role (size target / hard cap) |
+| File | Action | Purpose |
 |---|---|---|
-| `tests/contract/test_prompts_vs_consumers.py` | create | the 12 named tests + the module guard (≤ 500 lines, hard cap 500) |
-| `tests/contract/prompts_compare.py` | create | `PromptDrift` and the pure comparison helpers (≤ 300) |
-| `tests/contract/prompts_world.py` | create | ids, fixture conversation, DB seeding, doubles, state/context builders, `GraphDeps` builder (≤ 400) |
-| `tests/contract/prompts_render.py` | create | `Rendered`, `render_turn` through the real nodes with AEA-11 recording fakes (≤ 300) |
-| `tests/contract/prompts_wire.py` | create | raw provider bodies, `Wire` (stubbed HTTP transports), real adapters, real gateway (≤ 300) |
-| `tests/contract/prompts_cases.py` | create | `RawWorld`, the malformed-case table and its runners, the record corpus (≤ 450) |
-| `tests/journeys/j5/test_aea_60.py` | create | J-5 step (AC-13) |
-| `tests/journeys/j9/test_aea_60.py` | create | J-9 (a) and (b) steps (AC-13) |
-| `docs/testing/journeys/<run-date>-AEA-60.md` | create | evidence record (AC-15; `<run-date>` = the America/Chicago date you run the final checks, `YYYY-MM-DD`) |
-| `docs/design/code-design.md` | modify | **only** the §9 `contract/` tree line and the `**Built on `main`:**` line under it (AC-15) |
-| `.claude/state/icm-progress.md` | modify | **add one** `Routes verified against code and tests` row for AEA-60 after the last such row (AC-15) |
+| `tests/contract/test_prompts_vs_consumers.py` | create | the 12 test functions named in section 7 (thin; ≤ 500 lines) |
+| `tests/contract/_prompts_render.py` | create | private helper: ids/ctx, `RecordingGateway`, the fixture conversation, render functions, offered sets, inventory (≤ 500 lines) |
+| `tests/contract/_prompts_checks.py` | create | private helper: `Drift`, every comparison helper, the code-only set, the held-out/socket guard (≤ 500 lines) |
+| `tests/contract/_prompts_malformed.py` | create | private helper: real adapters on stubbed transports, gateway builder, raw bodies, case runners, `CaseRun` records (≤ 500 lines) |
+| `tests/journeys/j5/test_aea_60.py` | create | AC-13 J-5 leg |
+| `tests/journeys/j9/test_aea_60.py` | create | AC-13 J-9 legs (a) and (b) |
+| `docs/testing/journeys/<YYYY-MM-DD>-AEA-60.md` | create | evidence record (date = the day you write it, `date +%F`) |
+| `docs/design/code-design.md` | modify | §9 tree `contract/` entry and the "Built on `main`" line only (AC-15) |
+| `.claude/state/icm-progress.md` | modify | append one *Routes verified against code and tests* row (append-style) |
 
-The five `prompts_*.py` helper modules follow AEA-59's precedent on `main` (`tests/contract/openapi_cases.py`,
-`openapi_driver.py`, `openapi_variants.py` beside their tests). No other ticket touches them (orchestrator: please
-accept them as AEA-60's in the collision map; §8 R-1).
+The three `_prompts_*.py` helpers are a plan decision: the project keeps files under a 500-line cap (AEA-17 and AEA-40
+split files for it) and the ticket's content will not fit in one module. They follow AEA-17's precedent of a private
+`tests/contract/_anthropic_fixtures.py`. No other ticket names these paths (collision map §3).
 
-### 2.2 Shared surfaces: read only, never edit
+**Shared surfaces, read only (import, never edit):** everything under `src/meridian/`; `tests/fakes/`;
+`tests/fixtures/sqlite.py`; `tests/unit/agent/_gateway_doubles.py`; `tests/unit/agent/nodes/plan_fixtures.py`;
+`tests/unit/agent/nodes/reply_fixtures.py`; `tests/unit/agent/specialists/_doubles.py`;
+`tests/contract/_anthropic_fixtures.py`; `tests/journeys/support/**`; `tests/conftest.py`.
 
-`src/meridian/**` (all of it), `tests/fakes/**` (AEA-11), `tests/fixtures/sqlite.py` (AEA-10),
-`tests/unit/agent/_gateway_doubles.py` (AEA-20), `tests/journeys/support/**` (AEA-57), `tests/conftest.py` (AEA-01),
-every other `tests/contract/*` file (AEA-17/18/59/…), `docs/ux/**`, `apps/web/**`, the OpenAPI and `UI_CONTRACTS.md`,
-`docs/data/issued/**`, `docs/archive/**`, `eval/**`, `.claude/reference/area-map.md` (AC-15: unchanged).
-
-**The prompt modules are never edited** (AC-11): drift is tested on *copies* passed to the comparison helpers. Spying
-on `meridian.agent.nodes.reply.check_quotes` with `MonkeyPatch.setattr` inside a context is allowed (it edits no file).
-
-### 2.3 What you must not do
-
-- Do not write or change product code, a prompt, a `ToolDef`, an adapter or a consumer type. A mismatch the test finds
-  is reported as a defect on the owning ticket and the test stays red (ticket *Scope boundary*).
-- No paid or live call, no `live` marker, no socket (AC-12). No `.env` read. No port 4019 or 5184.
-- No secret, verification code, card-like number or full phone number in code, fixtures, logs or test ids. Placeholder
-  API keys are generated: `"sk-test-" + secrets.token_hex(8)` and `"or-test-" + secrets.token_hex(8)`.
-- Do not read anything under `eval/cases/heldout/` or `~/.meridian-sealed/` (AC-12).
-- Do not edit `tests/journeys/support/` (a missing harness capability is a follow-up on AEA-57, merged first — none is
-  needed by this plan, PD-10).
-- `git add` explicit paths only (§7.4), never `-A`. Never force-push. Only the merge step pushes `main`.
-- Do not add a `conftest.py` anywhere (a shared fixture would make every test "affected").
-
----
+**Never touch:** `src/**` (a mismatch you find is a defect on the owning ticket; leave the test red and report it),
+`agent/prompts/*.py` (AC-11 drifts are monkeypatched copies), other tickets' tests and helpers, `tests/journeys/support/`
+(a missing harness capability is a follow-up on AEA-57), `pyproject.toml`, `uv.lock`, `tests/conftest.py`, `apps/web/**`,
+`docs/ux/**`, the OpenAPI / `UI_CONTRACTS.md`, the briefing, `docs/data/issued/**`, `docs/archive/`, `docs/parked/`,
+`.claude/reference/area-map.md` (no area row owns `tests/contract/`; say so in the MR), `eval/cases/heldout/`.
 
 ## 3. Requirements table
 
-Every AC is verbatim in the ticket; the "How" column is this plan's implementation; "Verify" names the test or command.
-All unit tests are in `tests/contract/test_prompts_vs_consumers.py` (prefix `::` below) at level `mock-tested`.
-
-| ID | Requirement (short; ticket text wins) | How (step) | Verify |
+| Req | What (ticket AC, short) | How it is implemented | Verified by |
 |---|---|---|---|
-| AC-1 [invariant] | Every `Role` and every `SPECS` kind has a rendered request through its real builder on turns 1, 2, 5; offered sets identical on all three turns; a missing role/kind fails by name; a fake extra role fails with its name | `rendered` module fixture renders turns 1, 2, 5 via the real nodes (Step 4); `check_inventory`, `offered_sets` (Step 2) | `::test_every_role_and_spec_has_a_rendered_case` |
-| AC-2 [invariant] | Planner field names = `PlannerChoices` fields; options = `Literal` sets both ways (incl. `late_technician`), ≤ 255; fallback carries the same fields; classifier offers exactly `normal, burning_unclear, danger`; quoted option keys in wording are options | `check_choice_fields`, `check_wording_keys` | `::test_routing_fields_match_planner_choices_and_danger_label` |
-| AC-3 [invariant] | Every offered planner option has a consumer path through `join_plan`, `priority_for`, `decide_escalation`, `SPECS`, `Plan.topic`; (PA-1) every non-code-only `HandoffReason` is reachable | parametrised over every `(field, option)` | `::test_join_plan_accepts_every_offered_value[<field>=<option>]` (+ `[reverse_reachability]`) |
-| AC-4 [invariant] | Code-only set ∩ every offered planner/fallback option = ∅; no tool/report/reply field named priority/case ref/promise/customer id | `check_code_only`, `check_no_forbidden_fields` (PD-6) | `::test_no_prompt_offers_a_code_only_value` |
-| AC-5 [invariant] | Specialist tools = `dispatcher.schemas(spec.tool_kinds)` + `report_facts`; names resolve, match `[a-z_]{1,64}`, kind in spec; no registry `report_facts`; `check_covers`; schemas = trimmed args schema, strict, no scope fields; `report_facts` = report model's; wording mentions only sent tools | `check_specialist` (PD-5, PD-8) | `::test_specialist_tools_match_registry_and_report_models` |
-| AC-6 [invariant] | Responder `output_model is ResponderDraft`, wire schema = `anthropic.transform_schema(ResponderDraft)` with only `text` (1–1200); both labels present; brief `output_model is BriefExtraction`; brief ids = `check_quotes` shown keys, customer messages only, byte-identical | `check_reply_schema`, `check_brief_ids`, wire capture through real `AnthropicAdapter` | `::test_reply_schemas_and_brief_message_ids_match_checks` |
-| AC-7 [failure/refusal] | Malformed Jev planner (a outside, b missing, c unparseable) → `INVALID_OUTPUT`, one attempt, one fallback; recovered plan `fallback_used=True`, signal `invalid_output` / `recovered=True`; (d) both malformed → `planner_failed` plan, `recovered=False`; (e) classifier `emergency` / `{}` → rules stand, `classifier` event `fallback`, `classifier_fallback` signal, plan built | `run_routing` (Step 6) on real `JevAdapter`/`AnthropicAdapter` + real gateway + real `plan.py` nodes | `::test_malformed_routing_outputs[<case>]` |
-| AC-8 [failure/refusal] | Unknown tool, not-allowed, `args=None`, extra `customer_id`, 301-char query, `INV-12`, invalid `report_facts` (6 points; 301-char summary), unparseable / `max_tokens` / `refusal` step → documented codes, records, lookup rows; failed result → `specialist_failed` + rule 6 `AI.specialist_failed` P3 degraded | `run_specialist_case` (Step 6) on real registry, dispatcher, runner, act node | `::test_malformed_specialist_outputs[<case>]` |
-| AC-9 [failure/refusal] | Responder `""`, 1,201 chars, extra `promise`, `refusal` → `fallback_used`, code-built reply + person offer, `responder_fallback`; brief 0/3 needs, 6 claims, 201-char decision → `brief_extraction=None`, `brief_failed`, headings 2/4/7 `not_generated`; AI/staff/paraphrase quote → removed `quote_not_found`, `brief_quote` `trimmed` | `run_reply_case` (Step 6) on real `AnthropicAdapter`, gateway, `reply.py` nodes, `ReplyComposer` | `::test_malformed_reply_outputs[<case>]` |
-| AC-10 [negative] | Markers `zq-rejected-option-7731`, `…zq-rejected-query-7731` (301 chars), `zq-rejected-draft-7731` absent from every record of AC-7…AC-9 | `case_corpus` (Step 7); PD-7 for the specialist `model_call` raw output | `::test_rejected_values_absent_from_records` |
-| AC-11 [failure/refusal] | Six drifted copies fail by role, field and value; prompt modules unchanged | `pytest.raises(PromptDrift, match=…)` on the helpers | `::test_check_fails_on_drift[<case>]`; `git diff --name-only` shows no `src/` path |
-| AC-12 [negative] | Dev data only; no held-out open; no socket connect | module audit hook + socket guard + per-test check (Step 5) | `::test_no_heldout_reads_and_no_network` |
-| AC-13 [journey] | J-5 NODANGER with classifier outside options books normally (no case, one `classifier` `fallback` event); J-9 (a) both planners malformed → handoff reply, turn `degraded_handoff`/`model_error`, case `ai_failure` P3; J-9 (b) malformed draft → code-built reply, `degraded_handoff`/`model_error` | Step 8 on AEA-57's harness; level `integrated with a scripted model` once AEA-51 binds; until then the steps report *blocked* | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
-| AC-14 [capture] | Per malformed case: `CallRecord` `status="error"` + failure kind (ledger row + sink span per attempt); `signal` fields; check events; one `lookup_log` row per dispatched call | `assert_records` over `MALFORMED_CASES` (Step 7) | `::test_malformed_cases_leave_their_records[<case>]` |
-| AC-15 [regression/context] | DO-3 §9 line, ICM row, record; area map unchanged | Step 9 | `git diff --name-only` |
-| PA-1 (plan-added, in AC-3's test) | Every `HandoffReason` not in the code-only set is produced by some offered `handoff` option | §5 Step 5 | `::test_join_plan_accepts_every_offered_value[reverse_reachability]` |
+| AC-1 | Every `Role` and `SPECS` kind has a rendered case through its real builder on turns 1, 2, 5; offered sets identical on the three turns; a missing role/kind fails by name | `_prompts_render.RENDERERS` maps every role value and `specialist:<kind>` to a render function that drives the real node/runner with `RecordingGateway`; `_prompts_checks.missing_cases(names, renderers)`; `offered_set(role, request)` compared across turns | `::test_every_role_and_spec_has_a_rendered_case` (one param per role and kind, plus the extra-name bite `["triage"]`) |
+| AC-2 | Planner field names = `PlannerChoices` fields; option keys = `Literal` set both ways (incl. `late_technician`), ≤ 255 each; fallback request = planner request; classifier offers exactly `normal, burning_unclear, danger` = `DangerAssessment.label`; quoted option keys in system/instructions exist in the request | `check_choice_fields(role, request, consumer_model)`, `check_quoted_keys(role, request)` in `_prompts_checks` | `::test_routing_fields_match_planner_choices_and_danger_label` |
+| AC-3 | Every offered planner value has a consumer path through `join_plan`, `HandoffReason` mapping, `priority_for`, `decide_escalation`, `SPECS`, `Plan.topic` | parametrised over every (field, option) of the rendered planner request | `::test_join_plan_accepts_every_offered_value` |
+| AC-4 | No prompt offers a code-only value; no tool/report/output field lets the model set priority, case reference, promise or customer id | `CODE_ONLY` set ∩ offered handoff-bearing sets = ∅; `FORBIDDEN_FIELDS` ∩ property names of every sent schema = ∅ (see clarification C-1) | `::test_no_prompt_offers_a_code_only_value` |
+| AC-5 | Specialist tools = `dispatcher.schemas(spec.tool_kinds)` + `report_facts`; names resolve, match `[a-z_]{1,64}`, kind ∈ `spec.tool_kinds`; no registry name `report_facts`; `check_covers` passes; schema = trimmed `args_model` schema, `strict=True`, no `ToolCallScope` field; `report_facts` schema = `spec.report_model.model_json_schema()`; tool names in the wording are sent | `check_specialist_request(kind, request, registry, task)` | `::test_specialist_tools_match_registry_and_report_models` (per kind) |
+| AC-6 | Responder `output_model is ResponderDraft`, schema sent = trimmed schema (`text` 1–1200, no promise/reference), both labelled blocks present; brief `output_model is BriefExtraction`; brief message ids rendered = keys of `shown` given to `check_quotes` (customer messages only), byte-identical text | `check_responder_request(request)`, `check_brief_ids(rendered, shown, customer_ids)`; `check_quotes` wrapped (spy) via `monkeypatch.setattr(reply, "check_quotes", spy)` | `::test_reply_schemas_and_brief_message_ids_match_checks` (WP-7 refund turn) |
+| AC-7 | Malformed routing outputs (a–e) → documented fallback | `run_routing_case(case_id, caplog)` in `_prompts_malformed` | `::test_malformed_routing_outputs` (7 params) |
+| AC-8 | Malformed specialist outputs through the real dispatcher and runner; step failures at the act node → `specialist_failed` + rule 6 | `run_specialist_case`, `run_act_case` | `::test_malformed_specialist_outputs` (11 params; 3 go through the act node, step 9) |
+| AC-9 | Malformed reply outputs (responder, brief, quotes) → documented fallback | `run_reply_case`, `run_brief_case` | `::test_malformed_reply_outputs` (11 params) |
+| AC-10 | Markers never appear in failures, call records, signals, check events, tool errors, tool records, lookup rows, logs, trace spans (clarification C-2), stored brief | substring search over the `CaseRun` of four marker cases | `::test_rejected_values_absent_from_records` |
+| AC-11 | Six drifted copies fail with role, field, value | `monkeypatch` copies + `pytest.raises(Drift, match=…)` on the same helpers AC-2/5/6 use | `::test_check_fails_on_drift` (6 params); `git diff --stat src/` empty |
+| AC-12 | Dev data only; no held-out open; no socket | `sys.addaudithook` guard (installed once, switched on by a module-scoped autouse fixture) | `::test_no_heldout_reads_and_no_network` + module teardown assertion |
+| AC-13 | J-5 and J-9 through CON-2 with raw provider bodies | two journey files on AEA-57's harness (`journey.step(..., needs=...)`; blocked steps are reported `blocked-on`, never passed) | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` |
+| AC-14 | Every malformed case leaves its WF-1 records, codes only | assertions over `CaseRun` per case of AC-7…AC-9 | `::test_malformed_cases_leave_their_records` (29 params) |
+| AC-15 | Docs in the same change | section 5 step 12 | `git diff --name-only` |
 
----
+**Clarifications this plan makes (engineering, within the signed contracts; the orchestrator posts them on issue #60 as a comment):**
+- **C-1 (AC-4 vs AC-2).** AC-4's code-only list includes `danger` and `burning_unclear`, which are also the classifier's
+  `danger_level` options that AC-2 requires. The code-only list is a list of `HandoffReason` values ("values only code may
+  set", DO-4 §7). The classifier's options feed `DangerAssessment.label` (raise-only, R-47), never `HandoffReason`. So AC-4
+  is checked against every **handoff-bearing** offered set: all five planner fields (and the identical `planner_fallback`
+  request), every specialist tool and `report_facts` enum value, and the responder/brief output schemas. The classifier's
+  `danger_level` set is exempt, and the test asserts that exemption by name (`EXEMPT = {("classifier", "danger_level")}`).
+  `CODE_ONLY` includes `burning_ruled_out` (CAS-16 option A, D-14; `HandoffReason.BURNING_RULED_OUT` is on `main`).
+- **C-2 (AC-10 vs models.md §5).** The gateway writes each attempt's model output, masked with the TRACE profile, into the
+  `model_call` span's `masked_output` (models.md §5 rule 7, MOD-10, signed). For values the **adapter** rejects (the choice
+  marker, the 1,201-char draft) the attempt has no value, so `masked_output == ""` and the marker must be absent from every
+  span field. For values a **downstream** consumer rejects (the 301-char query refused by the dispatcher; the paraphrased
+  quote removed by `check_quotes`) the adapter accepted the output, so the contract puts it in that one span's
+  `masked_output`. For those two markers the test asserts: absent from every record, log, lookup row, tool error, the
+  next request's tool results and the stored brief, and, in the trace sink, absent from every field **except** the
+  `masked_output` of the single `model_call` span whose attempt produced it. Changing that would change a signed
+  contract, which this ticket may not do.
 
-## 4. Shared code to use (copied from `main`, the addenda and the sibling plans)
+## 4. Shared code to use (copied from `main` `b68df7e`)
 
-**Rule for this section:** names marked **(main)** were read on `main` at `ebca98d` (refresh 3). Names marked **(branch)** were
-read on a sibling's built branch; names marked **(plan)** come from a sibling's plan. When those land, the code on
-`main` wins.
-
-### 4.1 Domain and ports (main)
-
-```python
-# meridian.domain.common
-class LLMFacing(MeridianModel)                       # extra="forbid", frozen
-class Role(StrEnum): PLANNER="planner"; CLASSIFIER="classifier"; PLANNER_FALLBACK="planner_fallback"
-                     SPECIALIST="specialist"; RESPONDER="responder"; BRIEF="brief"
-class ProviderFailureKind(StrEnum): …; REFUSAL="refusal"; MAX_TOKENS="max_tokens"; INVALID_OUTPUT="invalid_output"
-class ProviderFailure(MeridianModel): kind; provider: Literal["anthropic","openrouter_jev"]; http_status: int|None
-                                      retry_after_s: float|None; retryable: bool; provider_request_id: str|None
-class CallRecord(ProviderCall): role: Role; attempt: int (1..2)   # ProviderCall: provider, model, latency_ms, *_tokens,
-                                      # cost_usd, cost_source, status: Literal["ok","error"], failure, provider_request_id, stop_reason
-class HandoffReason(StrEnum): SAFETY, DANGER, BURNING_UNCLEAR, CUSTOMER_REQUESTED_PERSON, REFUND, BILLING_DISPUTE,
-    COMPLAINT_OR_MANAGER, LEGAL_OR_CHARGEBACK, COMMERCIAL, LATE_TECHNICIAN, FEE_BEARING_CHANGE, MEMBERSHIP_CANCEL,
-    UNSUPPORTED_ACTION, IDENTITY_UNVERIFIED, AI_FAILURE, BURNING_RULED_OUT          # 16 values (D-14)
-class Priority(StrEnum): P0..P4
-class ToolErrorCode(StrEnum): NOT_ALLOWED="not_allowed"; BAD_ARGUMENTS="bad_arguments"; UNKNOWN_TOOL="unknown_tool"; …
-class ToolKind(StrEnum): KB_SEARCH="kb_search"; ACCOUNT_READ="account_read"; SLOT_SEARCH; BOOK; MOVE; CANCEL; CHANGE_REQUEST
-class ToolCallRecord(MeridianModel): tool_call_id; name (≤64); kind: ToolKind|None; outcome: Literal["ok","refused","failed"]
-                                     error: ToolErrorCode|None; record_ids; passage_ids; lookup_id: int|None; elapsed_ms
-ThreadId, TurnId, RequestId (UUID4 str subclasses), CustomerId ("MHC-\d{5}"), CaseRef ("^MHC-C-[0-9]{4}$"),
-PassageId ("^[^#\s]+#[0-9]+$")
-# meridian.domain.turn
-class TurnIds(MeridianModel): thread_id; turn_id; request_id; run_tag: Literal["live","eval","load"]; run_id: str|None; agent_version: str
-@dataclass(frozen=True) class TurnBudget: started: float; deadline: float
-@dataclass(frozen=True) class TurnContext: ids; budget; now; demo_session: str; span: SpanHandle; intake: Intake|None = None
-class TurnInput(MeridianModel): turn_id; message_id: int; kind: Literal["text","choice","code","form"]; text_store: str
-                                card_id=None; choice=None; card_number_seen=False; received_at: datetime
-class RuleMatches(MeridianModel): safety; burning_unclear; danger_words; person; policy_trigger; rule_ids; correction
-class GateKind(StrEnum): …FREE_TEXT="free_text"
-class GateDecision(MeridianModel): kind; rules; burning_answer=None; resume_task_id=None
-class TaskIntent(StrEnum): ANSWER_QUESTION, READ_INVOICE, READ_MEMBERSHIP, READ_APPOINTMENTS, READ_WARRANTY,
-                           BOOK_NEW, RESCHEDULE, CANCEL, CONFIRM
-class PlannerChoices(LLMFacing):
-    knowledge: Literal["no","yes"]; account: Literal["none","invoice","membership","appointments","warranty"]
-    scheduling: Literal["none","book_new","reschedule","cancel","confirm"]
-    handoff: Literal["none","refund","billing_dispute","membership_cancel","unsupported_other",
-                     "complaint_or_manager","late_technician"]
-    topic: Topic   # Topic = Literal["booking","membership","billing","warranty","other"]
-class PlannerOutcome(MeridianModel): choices; probabilities; model: str; fallback_used: bool; failure
-class DangerAssessment(MeridianModel): label: Literal["normal","burning_unclear","danger"]; raised; confidence=None; failure
-class PlannedTask(MeridianModel): order (1..3); specialist: SpecialistKind; intent; needs_identity; resumes_task_id=None
-class Plan(MeridianModel): mode; tasks (≤3); handoff_request: HandoffReason|None; topic: Topic; source; planner_failed=False
-class EscalationInputs(MeridianModel): gate; plan; results; counters; identity; halt; models_disabled; now
-class EscalationDecision(MeridianModel): outcome: Literal["none","offer","escalate"]; reason; priority; rule_id; degraded=False
-class CheckEvent(MeridianModel): check; turn_id; result; removed=0; claim_kinds=(); codes=()
-class SignalRecord(MeridianModel): record="signal"; name: SignalName; turn_id; thread_id; request_id; run_tag; node: str
-                                   cause=None; role=None; specialist=None; attempt=None; recovered=None
-class TurnFacts(MeridianModel): turn_id; gate_kind; plan_mode; points; passages; no_source_tasks; windows_shown;
-                                writes_this_turn; change_request; handoff; escalation; identity_step; quick_checks=()
-class ResponderDraft(LLMFacing): text: str = Field(min_length=1, max_length=1200)
-class CheckedReply(MeridianModel): text; removals; fallback_used: bool; events: tuple[CheckEvent, ...]
-class ComposedReply(MeridianModel): blocks; settled_view; writes; notice; path; outcome; degrade_reason
-# meridian.domain.state
-class ChatLine(MeridianModel): speaker: Literal["customer","assistant","representative","event"]; text; turn_id; at
-class ConversationState(MeridianModel): thread_id; settled=None; controller; identity; open_tasks; shown_slots; counters;
-    burning_card_id=None; turn_input: TurnInput; chat_window; gate; planner; danger; plan; identity_step;
-    specialist_results; escalation; handoff; facts; draft; brief_extraction; checked; reply; halt; check_events
-class SpecialistSend(TypedDict): planned: PlannedTask; state: ConversationState
-# meridian.domain.identity
-class IdentityState(MeridianModel): status; customer_id; masked_hint; code_expires_at; tries_left (0..3); codes_sent (0..3); verified_at
-# meridian.domain.actions
-class ActionKind(StrEnum): …CASE_OPENED="case_opened"…
-class ActionKey(MeridianModel): thread_id; turn_id; kind; record_id: str
-class CompletedAction(MeridianModel): key; kind; records: dict[Literal["appointment","slot","old_slot","case","customer","promise"], str]; before=None; after=None; at
-class Settled(MeridianModel): actions; open_case; read_at
-# meridian.domain.handoff
-class CaseSummary(MeridianModel): case_ref; reason; priority; state: CaseState; created_at; promise; followup; version: int; seed=False; due_at
-class HandoffResult(MeridianModel): case; created: bool; action: CompletedAction; alert: Literal["supervisor_now"]|None
-class Quote(LLMFacing): message_id: int; text: str = Field(max_length=300)
-class BriefExtraction(LLMFacing): needs: list[Quote] (1..2); claims: list[Quote] (≤5); open_decision: str (≤200)
-class Brief(MeridianModel): case_ref; thread_id; assembled_at; status: Literal["ready","being_written","failed"]; headings
-class BriefHeading(MeridianModel): number; key; title; origin; checked; items; trimmed; trim_note; not_generated
-BRIEF_TITLES, BRIEF_KEYS, BRIEF_ORIGINS   # tuples of 8; heading index 3 ("says") has checked=False
-# meridian.domain.specialists
-class KnowledgeReport(LLMFacing): points: list[ReportedPoint] (≤5); answered: bool   # ReportedPoint: text ≤500, passage_id
-class AccountReport(LLMFacing): summary: str (≤300)
-class SchedulingReport(LLMFacing): appointment_id: int; wanted_time: str; note: str (≤200)
-class SchedulingSlice(MeridianModel): customer_zone; member; appointments; shown_slots; pending_change; bookings_left
-class SchedulingSliceInputs(MeridianModel): zone: Zone|None; member: bool; appointments=()
-class KnowledgeResult / AccountResult / SchedulingResult  # kind, status, …, tools: tuple[ToolCallRecord,...], calls, brake, failure
-# meridian.domain.records
-class Passage(MeridianModel): passage_id; file; section; version_label; version_date: date|None; text; score: float
-# meridian.domain.tools
-class ToolCallScope(MeridianModel): ids; customer_id; shown_slot_ids; now; message_id   # the five scope field names
-class KnowledgeSlice(MeridianModel): kind: Literal["knowledge"] = "knowledge"           # AEA-35b, on main (3725c90)
-class AccountSlice(MeridianModel): kind: Literal["account"] = "account"
-class SpecialistTask(MeridianModel): task: PlannedTask; customer_text: str; task_messages: tuple[str, ...]
-                                     slice: KnowledgeSlice | AccountSlice | SchedulingSlice; offer_quick_checks: bool = False
-#   This test never constructs these: AEA-39's run_specialist builds the task from the SpecialistSend payload.
-# meridian.ports.models
-class ChoiceField(MeridianModel): name; instructions; options: dict[str, str] (≤255)
-class ChoiceRequest(MeridianModel): system: str; state: dict[str, JsonValue]; fields: tuple[ChoiceField, ...]
-class ChoiceAnswer(MeridianModel): choices: dict[str, str]; probabilities: dict[str, dict[str, float]] | None
-class StructuredRequest[T](MeridianModel): system_prefix; system_dynamic; user; output_model: type[T]; max_tokens; effort
-class ToolSchema(MeridianModel): name; description; input_schema: dict[str, JsonValue]; strict: bool = True
-class ToolStepRequest(MeridianModel): system_prefix; system_dynamic; messages: ProviderMessages; tools: tuple[ToolSchema,...]; max_tokens; effort
-class ToolStep(MeridianModel): text; tool_calls: tuple[ToolCall,...]; raw: JsonValue; stop_reason: str|None
-```
-
-### 4.2 Policy, storage, gateway, dispatch (main)
+**Imports to use (exact paths).** Use module aliases for the two fixture modules because both define `TURN_1…TURN_5`
+with different values: `from tests.unit.agent.nodes import plan_fixtures as pf` and
+`from tests.unit.agent.nodes import reply_fixtures as rf`.
 
 ```python
-from meridian.policy.limits import Limits, Brakes        # Brakes(tasks_per_turn=3, tool_rounds=2, sonnet_calls=6)
-from meridian.policy.handoff import priority_for, promise_for
-#   priority_for(reason, *, promise_due: datetime|None = None, renewal_date: date|None = None) -> Priority (ValueError if no row)
-#   promise_for(reason, presence: Literal["nobody_online","simulated_on_shift"], now, window_start=None) -> Promise
-from meridian.policy.escalation import decide_escalation  # (inputs: EscalationInputs) -> EscalationDecision
-from meridian.privacy.redact import RedactionProfile, redact   # redact(text, profile).text; profiles STORE, SONNET, JEV, TRACE, LOG
-from meridian.adapters.sqlite.rows import ConversationRow
-#   ConversationRow(thread_id, demo_session, run_tag, agent_version, started_at, …defaults)
-# tx.core.conversations.insert(row); tx.core.messages.append(thread_id, role, text_redacted, at, *, turn_id=None, kind=None) -> int
-# tx.core.lookup_log.for_thread(thread_id) -> tuple[LookupRow, ...]   (LookupRow: id, thread_id, turn_id, message_id, tool,
-#   record_ids, passage_ids, result_seen); lookup_log.append needs a real messages row (FK).
-from tests.fixtures.sqlite import TempStore, temp_sqlite      # with temp_sqlite() as store: store.uow, store.db_path
-from meridian.agent.gateway import ModelGateway, ModelOutcome
-#   ModelGateway(*, choice, structured, tools, ledger, trace, redact, limits)
-#   choice: Mapping[ChoiceRole, (ChoiceModel, RoleSpec)]; structured / tools likewise (structured/tools adapters must be "anthropic";
-#   a Jev role's RoleSpec.redaction must be RedactionProfile.JEV).
+# product code (read only)
+from meridian.agent.prompts import routing as routing_prompts            # PLANNER_FIELDS, CLASSIFIER_FIELDS (monkeypatch targets)
+from meridian.agent.prompts import specialists as specialist_prompts     # ACCOUNT_PREFIX (monkeypatch target)
+from meridian.agent.prompts.routing import DANGER_FIELD                  # "danger_level"
+from meridian.agent.prompts.reply import LABEL_SETTLED, LABEL_THIS_TURN, trimmed_schema
+from meridian.agent.nodes.plan import danger_classifier, join_plan, plan_join, planner
+from meridian.agent.nodes import reply                                   # reply.responder / reply.brief / reply.checks; reply.check_quotes (spy target)
+from meridian.agent.nodes import act                                     # act.run_specialist / act.escalation (AEA-39; step 9 only)
+from meridian.agent.nodes.compose import ReplyComposer
+from meridian.agent.routers import route_after_plan_join
+from meridian.agent.specialists.specs import REPORT_FACTS_TOOL, SPECS, RunOutcome, SpecialistSpec
+from meridian.agent.specialists.runner import SpecialistRunner
 from meridian.agent.tools.dispatch import ToolDispatcher, ToolRegistry
-#   ToolRegistry(defs).get(name) -> ToolDef|None; .for_kinds(kinds) sorted by name; .check_covers(kinds) raises ValueError
-#   ToolDispatcher(registry, uow).schemas(kinds) -> tuple[ToolSchema, ...]  (input_schema = args schema with every
-#   "title" key removed, recursion rule of dispatch._strip_titles lines 78-93; strict=True)
-from meridian.agent.tools.knowledge import KB_SEARCH_NAME, KbSearchArgs, knowledge_tools   # "kb_search"; query 1..300
-from tests.unit.agent._gateway_doubles import RecordingLedger, spec
-#   RecordingLedger().records: list[(CallRecord, TurnIds)]; admit_call → ALLOW; models_disabled() → False
-#   spec(*, cap_s, redaction, model="model-test", max_tokens=500, effort="low") -> RoleSpec
-from tests.fakes import (WORKED_PAIRS_NOW, FakeAnthropicChoiceModel, FakeChoiceModel, FakeIndex, FakeStructuredModel,
-                         FakeToolModel, InMemoryTraceSink, ScriptedFailure)
-#   FakeChoiceModel(script, *, model=None).requests: list[ChoiceRequest]   (records BEFORE answering, failures included)
-#   FakeStructuredModel(script).requests; FakeToolModel(script).requests: list[ToolStepRequest]
-#   ScriptedFailure(kind=ProviderFailureKind.INVALID_OUTPUT)
-#   InMemoryTraceSink(): `with sink.turn(ids) as span:`; sink.spans_for(span).model_calls: list[RecordedModelCall(record,
-#   masked_input, masked_output)]; .nodes: list[RecordedNode(name, elapsed_ms, status)]. model_call/node raise ValueError for
-#   a span the sink did not open → ALWAYS build TurnContext.span inside sink.turn(ids).
-#   FakeIndex(passages).searches: list[(query, k, min_score)]
-from langgraph.runtime import Runtime          # Runtime(context=ctx) is the node's `runtime` argument
+from meridian.agent.tools.knowledge import knowledge_tools
+from meridian.agent.tools.account import account_tools
+from meridian.agent.tools.scheduling import scheduling_tools
+from meridian.agent.gateway import ModelGateway, ModelOutcome
+from meridian.agent.context import GraphDeps
+from meridian.adapters.models.openrouter_jev import JevAdapter
+from meridian.adapters.models.anthropic import AnthropicAdapter
+from meridian.checks import check_quotes
+from meridian.policy.escalation import decide_escalation
+from meridian.policy.handoff import priority_for
+from meridian.policy.limits import Brakes, Limits
+from meridian.services.handoff import BriefAssembler
+from meridian.domain.common import FailureCounters, HandoffReason, LLMFacing, Priority, ProviderFailure, ProviderFailureKind, Role, ToolErrorCode
+from meridian.domain.turn import (CheckEvent, DangerAssessment, EscalationInputs, Plan, PlannedTask, PlannerChoices,
+    PlannerOutcome, ResponderDraft, SignalName, SpanHandle, TaskIntent, TurnBudget, TurnContext, TurnIds)
+from meridian.domain.handoff import BriefExtraction, Quote
+from meridian.domain.state import ConversationState, SpecialistSend
+from meridian.domain.tools import SpecialistTask, ToolCallScope
+from meridian.ports.models import ChoiceAnswer, ChoiceRequest, StructuredRequest, ToolStep, ToolStepRequest
+# test support (read only)
+from tests.fakes import WORKED_PAIRS_NOW, FakeIndex, FixedClock, InMemoryTraceSink
+from tests.fixtures.sqlite import TempStore, temp_sqlite
+from tests.unit.agent._gateway_doubles import RecordingLedger, default_doubles, gateway_kwargs
+from tests.unit.agent.specialists._doubles import WP1_INCLUDES, WP1_MINIMUM, WP1_PRICE, make_task, scheduling_slice
+from tests.contract._anthropic_fixtures import MODEL as SONNET_MODEL, Recorder, adapter_for, ok, respond, sequence
 ```
 
-### 4.3 Siblings — what this test imports (status on `main` at `ebca98d`)
+**Signatures you call (from the code, not the contracts):**
 
-| Import | From | Status | Signature this plan uses |
-|---|---|---|---|
-| `meridian.adapters.models.openrouter_jev`: `JevAdapter`, `DECISIONS_URL` | AEA-18 | **main** (`900a1d8`) | `JevAdapter(http: httpx.Client, *, api_key: SecretStr, model: str)`; `model` needs a `JEV_PRICES` row (else `ValueError`): use `"typesafe/jev-1.13"`. Request: POST `DECISIONS_URL`, JSON `{"model", "state": {"instructions": req.system, **req.state}, "questions": {name: {"type": "choice", "instructions", "criteria": {options}}}, "provider": {"data_collection": "deny"}}`. A 2xx body with `"error"` → `BODY_ERROR`; no `answers` dict, a field missing, a choice that is not a str or not in the options, or a non-JSON body → `INVALID_OUTPUT`, `retryable=False`, `http_status=200` |
-| `meridian.adapters.models.anthropic`: `AnthropicAdapter` | AEA-17 | **main** (`0a85270`) | `AnthropicAdapter(client: anthropic.Anthropic, *, model: str)`, `model="claude-sonnet-5-5"`. Test client: `anthropic.Anthropic(api_key=<placeholder>, max_retries=0, open_telemetry=False, http_client=httpx2.Client(transport=httpx2.MockTransport(handler)))` (the shape of `tests/contract/_anthropic_fixtures.adapter_for`, which uses `max_retries=2`; use 0 here). `structured` sends `output_config.format = {"type": "json_schema", "schema": anthropic.transform_schema(req.output_model)}` and reads the text with `output_model.model_validate_json`; `stop_reason` `"refusal"` / `"max_tokens"` → `REFUSAL` / `MAX_TOKENS` before any parsing; any parse or validation error after the response arrived → `INVALID_OUTPUT` (catch-all; nothing bound or logged); `choose` needs a text block whose JSON keys equal the field names exactly; `tool_step` sends each `ToolSchema` with `"strict": True` and maps `tool_use` blocks to `ToolCall(id, name, args)` with `args=None` when `input` is not a dict; `start(user)` / `append(...)` make it the `ToolTranscript` |
-| `meridian.agent.context`: `GraphDeps` | AEA-21 | **main** (`5531664`) | frozen dataclass, fields in order `gateway, retrieval, uow, identity, scheduling, handoff, brief, demo, limits, trace, specialists, cases, ledger` (the service fields are typed `Any` until AEA-51) |
-| `meridian.agent.signals`: `SIGNAL_LOGGER` | AEA-21 | **main** | `SIGNAL_LOGGER = "meridian.signal"`; `emit_signal` logs `logging.getLogger(SIGNAL_LOGGER).info("signal", extra={"signal": record.model_dump(mode="json")})`, so the `LogRecord` carries attribute `signal` (a dict) |
-| `meridian.agent.nodes.compose`: `ReplyComposer` | AEA-21 | **main** | `ReplyComposer().compose(state, ctx) -> ComposedReply`; with `state.checked.fallback_used` → path `"degraded"`, outcome `"degraded_handoff"`, `degrade_reason="model_error"`, and a `FailureOfferBlock` (`type="failure_offer"`, `person_key=True`) |
-| `meridian.agent.nodes.reply`: `responder`, `brief`, `checks`; module attribute `check_quotes` | AEA-38 | **main** (`042ad35`) | `fn(state, runtime, *, deps) -> update`. `responder` raises `RuntimeError` unless `state.facts` and `state.settled` are set; on a failure it returns `{"draft": None}` and emits `responder_fallback` (node `"responder"`, role `"responder"`, cause = failure kind, `attempt=len(outcome.calls)`). `brief`: `deps.cases.open_case_for_thread(thread_id)` returning `None` → `{"brief_extraction": None}`; else, in one `deps.uow()`, `tx.core.lookup_log.for_thread(thread_id)` and `tx.core.messages.recent(thread_id, turns=deps.limits.context.window_turns)`; then `deps.cases.attach_brief(case.case_ref, deps.brief.assemble(case, state, lookups))`; `shown = brief_shown([(r.id, r.text) for r in rows if r.role == "customer"], deps.limits.context.window_line_chars)`; `Role.BRIEF` call; a failure → `brief_failed` (node `"brief"`, cause = failure kind) and `{"brief_extraction": None}`. `checks`: brief path only when `state.handoff is not None and state.handoff.created`; `state.draft is None` → `CheckedReply(text="", fallback_used=True)` with `completion` and `fact` events `result="fallback"`; extraction `None` → `deps.brief.attach_extraction(draft_brief, None, None)`; else it rebuilds the same `shown`, calls `check_quotes(ext, shown)` (imported into this module by name, so `MonkeyPatch.setattr(meridian.agent.nodes.reply, "check_quotes", spy)` intercepts it), then `attach_extraction(draft_brief, kept, facts_check)` and adds `brief_quote` and `brief_fact` events (`CheckEvent.from_check`: `"trimmed"` when there are removals, `removed=len`, `claim_kinds` = sorted removal kinds, `codes=()`). `attach_brief` is called once in `brief` and once in `checks` (so `CasesDouble.attached` has 2 entries on a brief turn) |
-| `meridian.agent.prompts.reply`: `LABEL_THIS_TURN`, `LABEL_SETTLED`, `brief_shown` | AEA-38 | **main** | `LABEL_THIS_TURN = "WHAT HAPPENED THIS TURN"`, `LABEL_SETTLED = "ALREADY DONE IN THIS CONVERSATION"` (both rendered in the responder's `system_dynamic`); `brief_request(case, shown).user == "CUSTOMER MESSAGES:\n" + "\n".join(f"[message {mid}] {text}" for mid, text in shown.items())`, which `prompts_compare.BRIEF_LINE` parses; `output_model` is `ResponderDraft` / `BriefExtraction`. `brief_shown` applies `RedactionProfile.SONNET` and cuts each line to `window_line_chars` |
-| `meridian.services.handoff`: `BriefAssembler` | AEA-29 | **main** (`ef561fc`) | `BriefAssembler(staff_guidance: Mapping[PassageId, StaffGuidance] \| None = None)`; `assemble(case: CaseSummary, state: ConversationState, lookups: Sequence[LookupRow]) -> Brief` (pure; `status="being_written"`; headings 2 and 4 start empty); `attach_extraction(brief: Brief, extraction: BriefExtraction \| None, check: CheckResult \| None, *, customer_messages: Mapping[int, str] \| None = None) -> Brief`: `extraction is None` → headings 2, 4, 7 `not_generated=True` and `status="failed"`; otherwise `status="ready"`. The reply node never passes `customer_messages`. `CaseService(uow, clock, *, handoff_block=None, settled_view=None)` (`meridian.services.cases`) is **not** used here (PD-9) |
-| `meridian.agent.tools.account`: `account_tools` | AEA-27 | **main** (`13adc86`) | `account_tools(uow) -> tuple[ToolDef, ...]`: `read_invoices` (`ReadInvoicesArgs.invoice_number`), `read_membership`, `read_warranty`; kind `account_read`, `requires_verified=True` |
-| `meridian.agent.tools.scheduling`: `scheduling_tools` | AEA-28 | **main** (`2c2e8c5`) | `scheduling_tools(scheduling: SchedulingService) -> tuple[ToolDef, ...]`; on `main` the names are `find_windows`, `book_visit`, `move_visit`, `cancel_visit`, `request_visit_change`. **Still read them from the registry, never hard-code them.** The factory only closes over the service, so `SchedulingDouble` (raises on any method other than `slice_inputs`) is enough |
-| `meridian.agent.prompts.routing`: `DANGER_FIELD` | AEA-37 | **branch** `aea-37-graph-plan-node` at `65a7cd1` (built, not merged; routing and plan identical to `36dc321`) | `DANGER_FIELD = "danger_level"`. `planner_request(PlannerInput)` and `classifier_request(latest: str)` build the requests (system text and fields are module constants, identical every turn); the classifier system text quotes `"normal"`, the planner's quotes `"none"` and `"no"` (all are options, so `check_wording_keys` passes) |
-| `meridian.agent.nodes.plan`: `planner`, `danger_classifier`, `plan_join`, `join_plan` | AEA-37 | **branch** `65a7cd1`; `main` has the AEA-21 stubs that raise `NotImplementedError` | `join_plan(planner: PlannerOutcome \| None, danger: DangerAssessment \| None, gate: GateDecision, state: ConversationState, *, tasks_per_turn: int = 3) -> Plan`. Branch behaviour AC-7 asserts: a Jev failure → one `Role.PLANNER_FALLBACK` call with the same request; signal `planner_fallback` (node `"planner"`, role `"planner"`, cause = the Jev failure kind, `recovered` = the fallback parsed); outcome `fallback_used=True`, `failure` = the fallback's failure or `None`. A classifier failure or unknown label → `DangerAssessment(label="normal", raised=False, failure=<the failure, or INVALID_OUTPUT>)`, signal `classifier_fallback` (node `"danger_classifier"`, role `"classifier"`, `recovered=None`) and `check_events=(CheckEvent.from_danger(turn_id, danger),)`. `planner_failed = planner is not None and choices is None and not drafts and handoff_request is None` |
-| `meridian.agent.specialists.specs`: `SPECS`, `REPORT_FACTS_TOOL` (`"report_facts"`) | AEA-35 | **work in progress** (uncommitted in worktree `inno-aea-callcenter-wt/AEA-35`, read at refresh 3; not on `main`) | `SPECS: Final[Mapping[SpecialistKind, SpecialistSpec]]` (a `MappingProxyType`, keys `knowledge`, `account`, `scheduling`); frozen dataclass `SpecialistSpec(kind, tool_kinds: frozenset[ToolKind], report_model: type[LLMFacing], render: Callable[[SpecialistTask, TurnContext], tuple[str, str, str]], build_result: Callable[[RunOutcome], SpecialistResult])`; `REPORT_FACTS_TOOL` is defined in `meridian.agent.prompts.specialists` and re-exported by `specs`; `report_facts_schema(spec)` sends `spec.report_model.model_json_schema()` untrimmed (AEA-35 PD-9; PD-8 here accepts either form) |
-| `meridian.agent.specialists.runner`: `SpecialistRunner` | AEA-35 | **work in progress** (same worktree) | `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)`; `.run(task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult` (called by AEA-39, never by this test); `transcript` = the SAME object as the gateway's `Role.SPECIALIST` adapter. A step with no tool call other than `report_facts` ends the run; an unparseable `report_facts` leaves `report=None` |
-| `meridian.agent.nodes.act`: `run_specialist`, `escalation` | AEA-39 | **plan only** (plan READY at refresh 3; builds after AEA-35 merges); `main` has the stubs | `run_specialist(payload: SpecialistSend, runtime, *, deps)` reads `deps.scheduling.slice_inputs(customer_id)` for a verified scheduling task and emits `specialist_failed` (cause = failure kind, or `"tool_error"`); `escalation(state, runtime, *, deps) -> {"escalation": EscalationDecision}` wraps `meridian.policy.escalation.decide_escalation` (on `main`: `AI.planner_failed` / `AI.specialist_failed` → `ai_failure`, `degraded=True`, priority from `priority_for` = P3) |
+```python
+# agent/prompts/routing.py
+PLANNER_FIELDS: Final[tuple[ChoiceField, ...]]   # knowledge(no,yes) account(none,invoice,membership,appointments,warranty)
+                                                 # scheduling(none,book_new,reschedule,cancel,confirm)
+                                                 # handoff(none,refund,billing_dispute,membership_cancel,unsupported_other,complaint_or_manager,late_technician)
+                                                 # topic(booking,membership,billing,warranty,other)
+CLASSIFIER_FIELDS: Final[tuple[ChoiceField, ...]]  # danger_level(normal,burning_unclear,danger)
+def planner_request(planner_input: PlannerInput) -> ChoiceRequest   # reads module-global PLANNER_FIELDS at call time
+def classifier_request(latest_message: str) -> ChoiceRequest       # reads module-global CLASSIFIER_FIELDS at call time
+# agent/nodes/plan.py
+def planner(state: ConversationState, runtime: Runtime[TurnContext], *, deps: GraphDeps) -> PlannerUpdate
+def danger_classifier(state, runtime, *, deps) -> DangerUpdate      # {"danger": DangerAssessment, "check_events": (CheckEvent,)}
+def plan_join(state, runtime, *, deps) -> PlanJoinUpdate
+def join_plan(planner: PlannerOutcome | None, danger: DangerAssessment | None, gate: GateDecision,
+              state: ConversationState, *, tasks_per_turn: int = 3) -> Plan
+# agent/nodes/reply.py
+def responder(state, runtime, *, deps) -> ResponderUpdate          # draft None + responder_fallback signal on failure
+def brief(state, runtime, *, deps) -> BriefUpdate                  # needs deps.cases.open_case_for_thread, deps.brief, deps.uow
+def checks(state, runtime, *, deps) -> ChecksUpdate                # calls the module-global check_quotes(ext, shown)
+# agent/nodes/act.py (AEA-39 fills the bodies; signatures already on main)
+def run_specialist(payload: SpecialistSend, runtime: Runtime[TurnContext], *, deps: GraphDeps) -> SpecialistUpdate
+def escalation(state: ConversationState, runtime: Runtime[TurnContext], *, deps: GraphDeps) -> EscalationUpdate
+# agent/nodes/compose.py
+class ReplyComposer:  def compose(self, state: ConversationState, ctx: TurnContext) -> ComposedReply
+# agent/specialists
+@dataclass(frozen=True) class SpecialistSpec: kind; tool_kinds: frozenset[ToolKind]; report_model: type[LLMFacing];
+    render: Callable[[SpecialistTask, TurnContext], tuple[str, str, str]]; build_result: Callable[[RunOutcome], SpecialistResult]
+@dataclass(frozen=True) class RunOutcome: task; captured; passages_returned; report: LLMFacing | None; quick_checks; tools; calls; brake; failure
+class SpecialistRunner:
+    def __init__(self, *, gateway: ModelGateway, transcript: ToolTranscript, dispatcher: ToolDispatcher,
+                 specs: Mapping[SpecialistKind, SpecialistSpec], brakes: Brakes, trace: TraceSink) -> None
+    def run(self, task: SpecialistTask, scope: ToolCallScope, ctx: TurnContext) -> SpecialistResult
+# agent/tools
+class ToolRegistry:  def __init__(self, defs: Iterable[ToolDef]); def get(self, name) -> ToolDef | None;
+                     def for_kinds(self, kinds) -> tuple[ToolDef, ...]; def check_covers(self, kinds) -> None  # raises ValueError
+class ToolDispatcher: def __init__(self, registry: ToolRegistry, uow: UnitOfWorkFactory);
+                      def schemas(self, kinds: frozenset[ToolKind]) -> tuple[ToolSchema, ...]
+def knowledge_tools(retrieval: RetrievalIndex) -> tuple[ToolDef, ...]        # kb_search (KbSearchArgs.query 1..300)
+def account_tools(uow: UnitOfWorkFactory) -> tuple[ToolDef, ...]           # read_invoices, read_membership, read_warranty
+def scheduling_tools(scheduling: SchedulingService) -> tuple[ToolDef, ...] # book_visit, cancel_visit, find_windows, move_visit, request_visit_change
+# gateway: constructor keyword arguments come from gateway_kwargs(d, limits) (returns dict[str, Any]); override "trace"
+class ModelGateway:
+    def choose(self, role: ChoiceRole, req: ChoiceRequest, ctx: TurnContext) -> ModelOutcome[ChoiceAnswer]
+    def structured[T](self, role: StructuredRole, req: StructuredRequest[T], ctx: TurnContext) -> ModelOutcome[T]
+    def tool_step(self, role: ToolRole, req: ToolStepRequest, ctx: TurnContext) -> ModelOutcome[ToolStep]
+class ModelOutcome[T](MeridianModel): value: T | None; calls: tuple[CallRecord, ...]; failure: ProviderFailure | None; halt: Halt | None
+# adapters
+JevAdapter(http: httpx.Client, *, api_key: SecretStr, model: str)   # model must be "typesafe/jev-1.13"
+AnthropicAdapter(client: anthropic.Anthropic, *, model: str)        # model must be "claude-sonnet-5-5"; build via adapter_for(handler)
+# policy / checks / services
+def decide_escalation(inputs: EscalationInputs) -> EscalationDecision
+def priority_for(reason: HandoffReason, *, promise_due=None, renewal_date=None) -> Priority  # raises ValueError if unknown
+def check_quotes(extraction: BriefExtraction, shown: Mapping[int, str]) -> QuoteCheck
+class BriefAssembler: def __init__(self, staff_guidance=None); assemble(case, state, lookups) -> Brief;
+                      attach_extraction(brief, extraction, check, *, customer_messages=None) -> Brief  # None → headings 2,4,7 not_generated, status "failed"
+```
 
-On `main` and unchanged since the first plan (checked again): `ToolRegistry`, `ToolDispatcher` (incl. `_strip_titles`,
-lines 78-93, which `prompts_compare.strip_titles` mirrors), `KB_SEARCH_NAME`, `KbSearchArgs`, `ModelGateway` (the span's
-`masked_output` for a tool step holds the tool-call args; its `masked_input` holds only the system text and tool names,
-never the transcript, so PD-7 stands), `RecordingLedger`, `spec`, `default_specs`, the AEA-11 fakes, `decide_escalation`,
-`priority_for`, `promise_for`, and the `turns`, `cases` (`rule_id` column present) and `check_events` table columns the
-journeys read.
+**Fixture helpers you reuse (read only):**
+- `pf.make_state(text, *, turn_id, gate=None, chat=(), tasks=(), identity=None, settled=None, planner=None, danger=None, halt=None, shown_slots=())`,
+  `pf.line(speaker, text, turn_id)`, `pf.open_task(task_id="t-1", *, specialist, intent, status="open")`, `pf.free_text_gate()`,
+  `pf.runtime(ctx)`, `pf.choices(**kw)` (base `{"knowledge":"no","account":"none","scheduling":"none","handoff":"none","topic":"other"}`),
+  texts `pf.WP1, pf.WP3, pf.WP3_PICK, pf.WP4F, pf.WP7, pf.WP8, pf.DANGER, pf.NODANGER`, ids `pf.TURN_1…pf.TURN_5`.
+  `make_state` sets `thread_id` to the spine thread: always `.model_copy(update={"thread_id": rf.THREAD})`.
+- `rf.THREAD`, `rf.TURN_4`, `rf.state(**overrides)`, `rf.turn_input(*, turn, message_id, text)`, `rf.facts(**overrides)`,
+  `rf.settled(*actions)`, `rf.case_summary()`, `rf.handoff_result(case)`, `rf.FakeCaseService(case)` (`.attached`),
+  `rf.seed(store, *, customer=[(turn_id, text)], lookups=(), actions=())` → message ids (writes into `rf.THREAD`),
+  `rf.deps(*, uow, gw, cases=None, brief=None, limits=None)` → `GraphDeps`, `rf.WP7_MESSAGE`.
+- `default_doubles(**adapters)` with keywords `planner, classifier, fallback, responder, brief, specialist`;
+  `gateway_kwargs(d, limits=None)`; `RecordingLedger` (`.records: list[tuple[CallRecord, TurnIds]]`, `.models_disabled()`).
+- `adapter_for(handler) -> (AnthropicAdapter, Recorder)`; `ok(content, *, stop_reason="end_turn")`;
+  `respond(status, *, json=None, content=None)`; `sequence(*handlers)`; `Recorder.requests`, `Recorder.bodies()`.
+- `make_task(specialist, intent, text, *, messages=(), offer_quick_checks=False, slice_=None) -> SpecialistTask`.
+- `InMemoryTraceSink().turn(ids)` (context manager yielding the `SpanHandle` the gateway must use), `.turns[i].model_calls`
+  (`RecordedModelCall(record, masked_input, masked_output)`), `.turns[i].nodes`.
+- Messages table roles are only `'customer'`, `'assistant'`, `'representative'`; append extra roles with
+  `tx.core.messages.append(rf.THREAD, role, text, WORKED_PAIRS_NOW, turn_id=turn, kind="text")` inside
+  `with store.uow(write=True) as tx: …; tx.commit()`. Lookup rows: `tx.core.lookup_log.for_thread(rf.THREAD)` (`LookupRow`, field `result_seen`).
+- Signals: `caplog.set_level(logging.INFO, logger="meridian.signal")`; records `r.__dict__["signal"]` where `r.name == "meridian.signal"`.
 
----
+**Raw provider bodies.**
+- Jev (HTTP 200 JSON): `{"id": "gen-test-0060", "model": "typesafe/jev-1.13", "answers": {<field>: {"type": "choice", "choice": <value>}}, "usage": {"input_tokens": 300, "output_tokens": 20}}`.
+  Missing field = omit the key from `answers`; unparseable = `httpx.Response(200, content=b"{not json", headers={"content-type": "application/json"})`.
+  The Jev adapter rejects a choice not in the field's options or a missing field with `INVALID_OUTPUT`, `retryable=False`.
+- Anthropic: `ok([{"type": "text", "text": json.dumps(obj)}], stop_reason="end_turn")` for choose/structured;
+  tool step: `ok([{"type": "tool_use", "id": "toolu_01", "name": <name>, "input": <dict or a str for args=None>}], stop_reason="tool_use")`;
+  unparseable: `respond(200, content=b"{not json")`; `stop_reason="max_tokens"` / `"refusal"` → `MAX_TOKENS` / `REFUSAL`
+  (neither retryable in `anthropic.py` `_RETRYABLE`, so one attempt).
 
 ## 5. Steps
 
-### 5.0 Decisions made here (PD-n)
-
-| ID | Decision | Basis |
-|---|---|---|
-| PD-1 | Helper modules `tests/contract/prompts_{compare,world,render,wire,cases}.py` beside the test, no sub-package, no conftest | AEA-59 precedent; test hard cap 500 lines (`code-structure.md`) |
-| PD-2 | Rendering = run the **real nodes** with a **real `ModelGateway`** whose adapters are AEA-11 recording fakes; the request captured is the one the model port receives (after the gateway's redaction). One fresh `temp_sqlite()` per rendered turn (1, 2, 5); computed once per module (`scope="module"` fixture) | ticket step 1 ("captured from a recording gateway double that honours DO-4 §12") |
-| PD-3 | The rendering world uses `Limits(brakes=Brakes(sonnet_calls=12))` because one rendered turn makes 6 Sonnet calls (fallback, 3 specialists, responder, brief) in one `TurnContext`; the brake is not under test here. The malformed-case worlds use `Limits()` unchanged | gateway rule 3 (models.md §5) |
-| PD-4 | An "option key named in the wording" = a double-quoted lowercase token `"[a-z][a-z_]*"` in `ChoiceRequest.system` or a field's `instructions` (SP-1 wording quotes keys: `Choose "none" or "no"`, `Choose "normal"`) | AC-2 |
-| PD-5 | A "tool name the specialist wording mentions" = any snake_case token (`\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b`) in that specialist's `system_prefix + "\n" + system_dynamic` that is **not** in the specialist vocabulary (property names and enum/const strings of `SchedulingSlice`, the three report models and every registry args model, all depths incl. `$defs`). Each such token must be a tool sent with that request. The user message (task text + slice JSON) is data, not wording, and is not scanned | AC-5; vocabulary is derived from code, so it grows with the types |
-| PD-6 | AC-4's code-only check applies to every option of the **planner** and **planner_fallback** requests. The classifier's `danger_level` options are `DangerAssessment.label` values (AC-2 requires exactly `normal, burning_unclear, danger`), not `HandoffReason`s, so they are excluded. Forbidden field names for tools, `report_facts` and reply output models: `{"priority", "case_ref", "case_reference", "reference", "promise", "promise_text", "due_at", "customer_id"}` | AC-2 vs AC-4 literal overlap |
-| PD-7 | AC-10: markers are placed **only** in values a consumer rejects. `zq-rejected-option-7731` and `zq-rejected-draft-7731` are rejected by the adapter (value `None`), so they must be absent from **every** record incl. trace spans. The 301-char query is rejected later by **dispatch**, after a schema-valid tool step; DO-6 line 113 requires the specialist `model_call` span to hold "the raw output after masking", so `…zq-rejected-query-7731` is asserted **present** in exactly that span's `masked_output` and absent from everything else (incl. `ToolError.message`, `ToolCallRecord`, lookup rows, logs, signals, node spans, the DB). The brief marker goes in the schema-invalid 6-claims extraction | DO-4 §0 ("errors never carry values") vs DO-6 (signed); ticket's expected-answer authority is the signed contracts |
-| PD-8 | `report_facts` schema passes when it equals `spec.report_model.model_json_schema()` **or** its title-stripped form (AEA-35 PD-9 sends the untrimmed one; both are generated from the report model) | AC-5 |
-| PD-9 | (refresh 2) `GraphDeps.brief` = `RecordingBriefAssembler`: the **real** AEA-29 `BriefAssembler` (on `main`, pure), subclassed only to record `attach_extraction` calls. AC-9's headings 2, 4, 7 `not_generated` and `status="failed"` are asserted on its real output. `GraphDeps.cases` = `CasesDouble` (the two methods the reply node calls, DO-4 §13; it must never raise, because `_store_brief` would turn that into a `brief_failed` `write_error` signal): the real `CaseService` needs a case opened through `HandoffService`, which is AEA-51's integration. `identity`, `handoff`, `demo` are `Unused` sentinels that fail loudly if touched | the ticket's `brief` row names `BriefAssembler.attach_extraction` as a consumer; AEA-29 merged at `ef561fc`; slice plan rule 1 for `CaseService` |
-| PD-10 | Unit tests feed raw **HTTP** bodies through `httpx.MockTransport` (Jev) and `httpx2.MockTransport` (Anthropic). Journeys use AEA-57's scripted adapter, which takes the raw **output text** per role and parses it like the adapters (`tests/journeys/support/scripted_model.py`), so no AEA-57 follow-up is needed | ticket AC-13; AEA-57 docstring |
-| PD-11 | One case table `MALFORMED_CASES` (in `prompts_cases.py`) feeds AC-7, AC-8, AC-9 (outcomes), AC-14 (records) and AC-10 (markers). Each test re-runs its cases in a fresh world (cheap: the issued DB is 115 KB) | one source of truth for cases |
-| PD-12 | AC-12: one process-wide audit hook added once and gated by a module flag (audit hooks cannot be removed); a module-scoped autouse fixture turns it on and patches `socket.socket.connect`/`connect_ex`; a function-scoped autouse fixture fails any test that added a held-out open or a connect; the named test proves both guards are live | `sys.addaudithook` semantics; xdist splits a module across workers |
-| PD-13 | J-5 scripts the planner as a booking (`scheduling="book_new"`) and asserts invariants that do not depend on the identity path's later wording (no safety block, no case, `gate_result="clear"`, the one `classifier` `fallback` event, plan intent `book_new` stored) | "books normally" while identity is AEA-36's |
-| PD-14 | Fixture conversation (dev data only): turns 1–2 WP-3, 3–4 WP-1, 5 WP-7 (exact texts §6.1). Rendered turns are 1, 2 and 5 | ctx-mgmt rule 3; AC-6 "WP-7's refund turn" |
-
-### 5.1 Step 0 — setup and blocker check (stop if red)
-
-1. In the worktree: `export UV_LINK_MODE=hardlink && uv sync` (never copy a venv; no `node_modules`).
-2. Run exactly:
-   ```bash
-   uv run python -c "import meridian.adapters.models.openrouter_jev, meridian.adapters.models.anthropic, \
-   meridian.agent.context, meridian.agent.signals, meridian.agent.nodes.compose, meridian.agent.nodes.plan, \
-   meridian.agent.nodes.act, meridian.agent.nodes.reply, meridian.agent.prompts.routing, meridian.agent.prompts.reply, \
-   meridian.agent.prompts.specialists, meridian.agent.specialists.specs, meridian.agent.specialists.runner, \
-   meridian.agent.tools.account, meridian.agent.tools.scheduling, meridian.services.handoff; \
-   from meridian.agent.nodes.plan import planner, danger_classifier, plan_join, join_plan; \
-   from meridian.agent.nodes.act import run_specialist, escalation; \
-   from meridian.agent.nodes.reply import responder, brief, checks; \
-   from meridian.agent.specialists.specs import SPECS; print(sorted(SPECS))"
-   ```
-   Expect `['account', 'knowledge', 'scheduling']`. Any `ImportError` or `NotImplementedError` stub → stop and report
-   `BLOCKED-ON <owning ticket>` (map: adapters 17/18; context/signals/compose 21; plan 37; act 39; reply 38;
-   specs/runner/prompts.specialists 35; tools.account 27; tools.scheduling 28). On `ebca98d` exactly AEA-35's, 37's and
-   39's names fail; every other module imports.
-3. Open and read (do not edit) the §4.3 modules on `main`; note every name that differs from §4.3 for your report.
-
-### 5.2 Step 1 — `tests/contract/prompts_world.py` (ids, conversation, seeding, doubles, builders)
-
-Module docstring: "AEA-60 shared world: fixture conversation (WP-3, WP-1, WP-7, NODANGER), DB seeding, doubles for
-AEA-29/28 services and context builders. Development data only."
-
-Constants (exact):
-```python
-NOW = WORKED_PAIRS_NOW                                   # Fri 2026-10-16 10:00 America/Chicago
-THREAD = ThreadId("6f1c2d3e-4b5a-4c6d-8e7f-0a1b2c3d4e50")
-REQUEST = RequestId("3c4d5e6f-7a8b-4c9d-8e0f-2a3b4c5d6e50")
-TURN_IDS: Mapping[int, TurnId] = MappingProxyType({n: TurnId(f"7d2e3f40-5b6c-4d7e-9f80-1a2b3c4d5e{n:02d}") for n in range(1, 6)})
-#   letters in every group: no 13–19 digit run, so the SONNET card rule never fires on an id (AEA-35 lesson)
-AGENT_VERSION = "test-aea60"; DEMO_SESSION = "demo-aea60"
-VERIFIED_CUSTOMER = CustomerId("MHC-10001")              # issued DB: Standard member (WP-3, WP-8)
-TURNS: tuple[str, ...] = (                                # PD-14; index 0 = turn 1
-    "I need to schedule a service call. My AC isn't cooling.",                                     # WP-3
-    "This Saturday if possible, 4 to 7, after work.",                                              # WP-3
-    "What does the Comfort Club membership actually include?",                                     # WP-1
-    "And how much is it?",                                                                         # WP-1
-    "I want a full refund on the repair. It didn't fix anything and I had to call another company.",  # WP-7
-)
-REPLIES: tuple[str, ...] = (                              # assistant lines after turns 1..4 (generated in the test)
-    "I can help book a visit. Which days and times work for you?",
-    "Let me check the open windows for you.",
-    "The Comfort Club includes two tune-ups a year.",
-    "Let me look that up.",
-)
-NODANGER = "my AC isn't cooling"                         # DO-5 line 61
-STAFF_LINE = "Riley here, I am looking at your repair notes now."
-WP1_PASSAGES: tuple[Passage, ...] = (
-    Passage(passage_id=PassageId("membership/comfort_club_overview.md#0"), file="membership/comfort_club_overview.md",
-            section="What's included", version_label="Effective 2026-01-01", version_date=date(2026, 1, 1),
-            text="Comfort Club members get two seasonal tune-ups a year and priority scheduling.", score=0.82),
-    Passage(passage_id=PassageId("membership/comfort_club_overview.md#1"), file="membership/comfort_club_overview.md",
-            section="Price", version_label="Effective 2026-01-01", version_date=date(2026, 1, 1),
-            text="The Comfort Club costs a monthly fee with a 12-month minimum.", score=0.78),
-)
-UNVERIFIED = IdentityState(status="not_checked", customer_id=None, masked_hint=None, code_expires_at=None,
-                           tries_left=3, codes_sent=0, verified_at=None)
-VERIFIED = IdentityState(status="verified", customer_id=VERIFIED_CUSTOMER, masked_hint="the phone ending in 01",
-                         code_expires_at=None, tries_left=3, codes_sent=1, verified_at=NOW)
-```
-
-Functions and classes (exact signatures; bodies as described):
-
-```python
-@dataclass(frozen=True)
-class Seeded:
-    customer_ids: Mapping[int, int]      # turn number → messages.id of the customer line
-    assistant_ids: Mapping[int, int]     # turn number → messages.id of the assistant line after it
-    staff_id: int | None                 # the representative line, when seeded
-
-def seed_conversation(store: TempStore, texts: Sequence[str], *, upto: int, staff_after: int | None = None) -> Seeded:
-    # One write tx: conversations.insert(ConversationRow(thread_id=THREAD, demo_session=DEMO_SESSION, run_tag="live",
-    #   agent_version=AGENT_VERSION, started_at=NOW)); for n in 1..upto: customer line
-    #   messages.append(THREAD, "customer", redact(texts[n-1], RedactionProfile.STORE).text, at_of(n), turn_id=TURN_IDS[n], kind="text");
-    #   for n < upto: assistant line messages.append(THREAD, "assistant", REPLIES[n-1], at_of(n) + 30 s, turn_id=TURN_IDS[n]);
-    #   when staff_after == n: messages.append(THREAD, "representative", STAFF_LINE, at_of(n) + 40 s)  (turn_id None).
-    #   tx.commit(). Invariant: the DB holds exactly the conversation up to turn `upto` (no future lines), so
-    #   messages.recent() and the brief's shown mapping see what turn `upto` would see.
-
-def at_of(n: int) -> datetime: return NOW + timedelta(minutes=n)
-
-def chat_window(texts: Sequence[str], upto: int) -> list[ChatLine]:
-    # customer + assistant ChatLines for turns 1..upto-1, in order (texts STORE-redacted as stored); never turn `upto`.
-
-def free_text_gate() -> GateDecision:
-    return GateDecision(kind=GateKind.FREE_TEXT, rules=RuleMatches(safety=None, burning_unclear=False, danger_words=False,
-                        person=False, policy_trigger=None, rule_ids=(), correction=False))
-
-def make_state(texts: Sequence[str], seeded: Seeded, n: int, *, identity: IdentityState = UNVERIFIED,
-               **update: Any) -> ConversationState:
-    # ConversationState(thread_id=THREAD, settled=Settled(actions=(), open_case=None, read_at=at_of(n)), identity=identity,
-    #   turn_input=TurnInput(turn_id=TURN_IDS[n], message_id=seeded.customer_ids[n], kind="text",
-    #   text_store=redact(texts[n-1], RedactionProfile.STORE).text, received_at=at_of(n)),
-    #   chat_window=chat_window(texts, n), gate=free_text_gate()).model_copy(update=update)
-
-@contextmanager
-def open_turn(sink: InMemoryTraceSink, n: int) -> Iterator[TurnContext]:
-    # ids = TurnIds(thread_id=THREAD, turn_id=TURN_IDS[n], request_id=REQUEST, run_tag="live", run_id=None, agent_version=AGENT_VERSION)
-    # with sink.turn(ids) as span: t0 = time.monotonic(); yield TurnContext(ids=ids, budget=TurnBudget(started=t0,
-    #   deadline=t0 + 60.0), now=at_of(n), demo_session=DEMO_SESSION, span=span, intake=None)
-
-def runtime(ctx: TurnContext) -> Runtime[TurnContext]: return Runtime(context=ctx)
-
-def facts_for(n: int, *, handoff: HandoffResult | None) -> TurnFacts:
-    # TurnFacts(turn_id=TURN_IDS[n], gate_kind=GateKind.FREE_TEXT, plan_mode="talk", points=(), passages=(),
-    #   no_source_tasks=(), windows_shown=(), writes_this_turn=(), change_request=None, handoff=handoff, escalation=None,
-    #   identity_step=None)   # if main's TurnFacts gained required fields, pass their empty values and report it
-
-def refund_case(n: int) -> CaseSummary:
-    # CaseSummary(case_ref=CaseRef("MHC-C-0001"), reason=HandoffReason.REFUND, priority=Priority.P3, state="unassigned",
-    #   created_at=at_of(n), promise=promise_for(HandoffReason.REFUND, "nobody_online", at_of(n)), followup=None,
-    #   version=1, due_at=None)
-
-def refund_handoff(n: int) -> HandoffResult:
-    # HandoffResult(case=refund_case(n), created=True, action=CompletedAction(key=ActionKey(thread_id=THREAD,
-    #   turn_id=TURN_IDS[n], kind=ActionKind.CASE_OPENED, record_id="MHC-C-0001"), kind=ActionKind.CASE_OPENED,
-    #   records={"case": "MHC-C-0001"}, at=at_of(n)), alert=None)
-
-class CasesDouble:            # GraphDeps.cases (AEA-29 CaseService): the two methods the reply node calls (DO-4 §13)
-    def __init__(self, case: CaseSummary | None) -> None: self.case = case; self.attached: list[Brief] = []
-    def open_case_for_thread(self, thread_id: ThreadId) -> CaseSummary | None: return self.case
-    def attach_brief(self, case_ref: CaseRef, brief: Brief) -> None: self.attached.append(brief)
-
-class RecordingBriefAssembler(BriefAssembler):   # GraphDeps.brief: the REAL AEA-29 assembler (refresh 2, PD-9)
-    """The real BriefAssembler; records each attach_extraction call and adds no behaviour."""
-    def __init__(self) -> None:
-        super().__init__(None)
-        self.attach_calls: list[tuple[Brief, BriefExtraction | None, CheckResult | None]] = []
-    def attach_extraction(self, brief: Brief, extraction: BriefExtraction | None, check: CheckResult | None, *,
-                          customer_messages: Mapping[int, str] | None = None) -> Brief:
-        self.attach_calls.append((brief, extraction, check))
-        return super().attach_extraction(brief, extraction, check, customer_messages=customer_messages)
-    # assemble(...) is inherited unchanged. Imports: BriefAssembler from meridian.services.handoff; CheckResult from
-    # meridian.domain.turn; Brief, BriefExtraction from meridian.domain.handoff. The override signature is copied from
-    # main; keep it identical so mypy accepts the override.
-
-class SchedulingDouble:       # GraphDeps.scheduling + scheduling_tools(...) argument (AEA-28, cases.md §4)
-    def slice_inputs(self, customer_id: CustomerId) -> SchedulingSliceInputs:
-        return SchedulingSliceInputs(zone="north", member=True, appointments=())
-    def __getattr__(self, name: str) -> Any: raise AssertionError(f"SchedulingService.{name} is not called by AEA-60")
-
-class Unused:                 # GraphDeps.identity / handoff / demo
-    def __init__(self, label: str) -> None: self._label = label
-    def __getattr__(self, name: str) -> Any: raise AssertionError(f"GraphDeps.{self._label}.{name} is not used by AEA-60")
-
-def build_registry(index: FakeIndex, store: TempStore) -> ToolRegistry:
-    return ToolRegistry((*knowledge_tools(index), *account_tools(store.uow), *scheduling_tools(SchedulingDouble())))
-
-def build_deps(*, gateway: ModelGateway, index: FakeIndex, store: TempStore, sink: InMemoryTraceSink,
-               runner: SpecialistRunner, cases: CasesDouble, brief: RecordingBriefAssembler, ledger: RecordingLedger,
-               limits: Limits) -> GraphDeps:
-    # GraphDeps(gateway=gateway, retrieval=index, uow=store.uow, identity=Unused("identity"), scheduling=SchedulingDouble(),
-    #   handoff=Unused("handoff"), brief=brief, demo=Unused("demo"), limits=limits, trace=sink, specialists=runner,
-    #   cases=cases, ledger=ledger)
-
-def signals(records: Sequence[logging.LogRecord]) -> list[dict[str, Any]]:
-    return [cast(dict[str, Any], getattr(r, "signal")) for r in records if r.name == SIGNAL_LOGGER and hasattr(r, "signal")]
-
-@contextmanager
-def capture_logs() -> Iterator[list[logging.LogRecord]]:
-    # a logging.Handler subclass appending every record to a list, added to the ROOT logger with level DEBUG; the root
-    # logger's level set to INFO for the block and restored in `finally` (handler removed in `finally` too).
-```
-
-Check: `uv run ruff check tests/contract/prompts_world.py && uv run mypy tests/contract/prompts_world.py`.
-
-### 5.3 Step 2 — `tests/contract/prompts_compare.py` (pure; no I/O)
-
-```python
-class PromptDrift(AssertionError):
-    """A rendered prompt and its consumer disagree. Messages name role, field and value; never customer text."""
-
-CODE_ONLY: Final[frozenset[str]] = frozenset({"safety", "danger", "burning_unclear", "customer_requested_person",
-    "legal_or_chargeback", "commercial", "fee_bearing_change", "identity_unverified", "ai_failure", "burning_ruled_out"})
-FORBIDDEN_FIELDS: Final[frozenset[str]] = frozenset({"priority", "case_ref", "case_reference", "reference", "promise",
-    "promise_text", "due_at", "customer_id"})
-SCOPE_FIELDS: Final[frozenset[str]] = frozenset(ToolCallScope.model_fields)     # ids, customer_id, shown_slot_ids, now, message_id
-TOOL_NAME: Final = re.compile(r"[a-z_]{1,64}")
-QUOTED_KEY: Final = re.compile(r'"([a-z][a-z_]*)"')
-SNAKE: Final = re.compile(r"\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b")
-BRIEF_LINE: Final = re.compile(r"^\[message (\d+)\] (.*)$", re.M)
-LABELS: Final = (LABEL_THIS_TURN, LABEL_SETTLED)   # imported from meridian.agent.prompts.reply (AEA-38, on main)
-
-def literal_values(model: type[BaseModel], field: str) -> tuple[str, ...]:
-    return tuple(str(v) for v in typing.get_args(model.model_fields[field].annotation))
-
-def strip_titles(node: Any) -> Any:
-    # EXACT mirror of meridian.agent.tools.dispatch._strip_titles (main lines 78-93): drop key "title" when its value is
-    # a str; recurse into the values of "properties" and "$defs" by name; copy "default", "examples", "const", "enum"
-    # unchanged; recurse into every other dict value and list item.
-
-def schema_names(schema: Any) -> set[str]:        # every key under any "properties" mapping, all depths (incl. $defs)
-def schema_vocabulary(*schemas: Mapping[str, Any]) -> set[str]:
-    # schema_names(each) ∪ every str in any "enum" list ∪ every str "const" value, all depths
-
-def check_choice_fields(role: str, request: ChoiceRequest, consumer: type[BaseModel],
-                        field_map: Mapping[str, str] | None = None) -> None:
-    # 1. mapping = field_map or {name: name for name in consumer.model_fields}
-    # 2. sent = [f.name for f in request.fields]; if set(sent) != set(mapping):
-    #      raise PromptDrift(f"routing.{role} fields {sorted(sent)} differ from {consumer.__name__} fields {sorted(mapping)}")
-    # 3. for f in request.fields: cfield = mapping[f.name]; accepted = literal_values(consumer, cfield)
-    #      if len(f.options) > 255: raise PromptDrift(f"routing.{role}.{f.name} offers {len(f.options)} options; Jev allows 255")
-    #      for key in f.options (insertion order): if key not in accepted:
-    #          raise PromptDrift(f"routing.{role}.{f.name} offers '{key}'; {consumer.__name__}.{cfield} does not accept it")
-    #      for value in accepted: if value not in f.options:
-    #          raise PromptDrift(f"{consumer.__name__}.{cfield} accepts '{value}'; routing.{role}.{f.name} does not offer it")
-    #    Invariant: forward direction is checked before the reverse one (the ticket's example message).
-
-def check_wording_keys(role: str, request: ChoiceRequest) -> None:
-    # keys = set().union(*(f.options for f in request.fields)); for text in (request.system, *(f.instructions for f in request.fields)):
-    #   for k in QUOTED_KEY.findall(text): if k not in keys:
-    #     raise PromptDrift(f"routing.{role} wording names option '{k}'; no field of the request offers it")
-
-def check_code_only(role: str, request: ChoiceRequest) -> None:
-    # for f in request.fields: for key in f.options: if key in CODE_ONLY:
-    #   raise PromptDrift(f"routing.{role}.{f.name} offers code-only value '{key}'")
-
-def check_no_forbidden_fields(where: str, schema: Mapping[str, Any]) -> None:
-    # bad = sorted(schema_names(schema) & FORBIDDEN_FIELDS); if bad: raise PromptDrift(f"{where} lets the model set '{bad[0]}'")
-
-def check_specialist(kind: str, request: ToolStepRequest, *, registry: ToolRegistry, expected_tools: Sequence[ToolSchema],
-                     tool_kinds: frozenset[ToolKind], report_model: type[BaseModel], vocabulary: set[str]) -> None:
-    # 1. names = [t.name for t in request.tools]; want = [t.name for t in expected_tools] + ["report_facts"]
-    #    names != want → PromptDrift(f"specialist.{kind} sends tools {names}; expected {want}")
-    # 2. registry.get("report_facts") is not None → PromptDrift("registry holds a tool named 'report_facts'")
-    # 3. registry.check_covers(tool_kinds)  (ValueError propagates as a test failure)
-    # 4. for t in request.tools[:-1]: d = registry.get(t.name)
-    #    d is None → PromptDrift(f"specialist.{kind} sends '{t.name}'; ToolRegistry.get does not resolve it")
-    #    not TOOL_NAME.fullmatch(t.name) → PromptDrift(f"specialist.{kind} tool '{t.name}' is not [a-z_]{{1,64}}")
-    #    d.kind not in tool_kinds → PromptDrift(f"specialist.{kind} sends '{t.name}' of kind {d.kind.value}, not in its tool kinds")
-    #    t.strict is not True → PromptDrift(f"specialist.{kind} tool '{t.name}' is not strict")
-    #    t.input_schema != strip_titles(d.args_model.model_json_schema()) →
-    #        PromptDrift(f"specialist.{kind} tool '{t.name}' schema differs from {d.args_model.__name__}")
-    #    schema_names(t.input_schema) & SCOPE_FIELDS → PromptDrift(f"specialist.{kind} tool '{t.name}' exposes scope field '{x}'")
-    #    check_no_forbidden_fields(f"specialist.{kind} tool '{t.name}'", t.input_schema)
-    # 5. rf = request.tools[-1]; full = report_model.model_json_schema()
-    #    rf.input_schema not in (full, strip_titles(full)) → PromptDrift(f"specialist.{kind} report_facts schema differs from {report_model.__name__}")   (PD-8)
-    #    check_no_forbidden_fields(f"specialist.{kind} report_facts", rf.input_schema)
-    # 6. wording = request.system_prefix + "\n" + request.system_dynamic; sent = set(names)
-    #    for token in sorted(set(SNAKE.findall(wording)) - vocabulary): if token not in sent:
-    #        raise PromptDrift(f"specialist.{kind} wording names '{token}'; it is not a tool sent with it")
-
-def check_reply_schema(role: str, request: StructuredRequest[Any], expected: type[BaseModel]) -> None:
-    # got = request.output_model
-    # extra = sorted(set(got.model_fields) - set(expected.model_fields)) → first: PromptDrift(f"{role}.output_model has field '{extra[0]}'; {expected.__name__} does not")
-    # got is not expected → PromptDrift(f"{role}.output_model is {got.__name__}; expected {expected.__name__}")
-    # check_no_forbidden_fields(f"{role}.output_model", got.model_json_schema())
-
-def parse_brief_user(user: str) -> dict[int, str]: return {int(m.group(1)): m.group(2) for m in BRIEF_LINE.finditer(user)}
-
-def check_brief_ids(rendered: Mapping[int, str], shown: Mapping[int, str], customer_ids: AbstractSet[int]) -> None:
-    # for mid in rendered: mid not in customer_ids → PromptDrift(f"brief shows message {mid} that is not a customer message of this thread")
-    # set(rendered) != set(shown) → PromptDrift(f"brief shows messages {sorted(rendered)}; check_quotes compares {sorted(shown)}")
-    # for mid in rendered: rendered[mid] != shown[mid] → PromptDrift(f"brief message {mid} text differs from what check_quotes compares")
-
-def check_inventory(roles: Iterable[str], kinds: Iterable[str], have_roles: AbstractSet[str], have_kinds: AbstractSet[str]) -> None:
-    # role not in have_roles → PromptDrift(f"role '{role}' has no rendered case"); kind → f"specialist kind '{kind}' has no rendered case"
-```
-
-Check: `uv run ruff check tests/contract/prompts_compare.py && uv run mypy tests/contract/prompts_compare.py`.
-
-### 5.4 Step 3 — `tests/contract/prompts_wire.py` (raw bodies, stubbed transports, real adapters, real gateway)
-
-```python
-JEV_MODEL: Final = "typesafe/jev-1.13"; SONNET_MODEL: Final = "claude-sonnet-5-5"
-Body = dict[str, Any] | bytes          # dict → HTTP 200 JSON; bytes → HTTP 200 with that raw content (non-JSON allowed)
-
-@dataclass
-class Wire:
-    bodies: list[Body]
-    requests: list[dict[str, Any]] = field(default_factory=list)   # json.loads(request.content) of each request
-    exhausted: int = 0
-    def _next(self, content: bytes) -> tuple[int, bytes, dict[str, str]]:
-        # append json.loads(content); if no body left: exhausted += 1 and return (500, b'{"error":"aea60 script exhausted"}', h)
-        # dict → (200, json.dumps(body).encode(), h); bytes → (200, body, h); h = {"content-type": "application/json",
-        #   "request-id": "req_aea60test01"}
-    def httpx_handler(self, request: httpx.Request) -> httpx.Response: status, content, h = self._next(request.content); return httpx.Response(status, content=content, headers=h)
-    def httpx2_handler(self, request: httpx2.Request) -> httpx2.Response: same with httpx2.Response
-
-def jev_adapter(wire: Wire) -> JevAdapter:
-    return JevAdapter(httpx.Client(transport=httpx.MockTransport(wire.httpx_handler)),
-                      api_key=SecretStr("or-test-" + secrets.token_hex(8)), model=JEV_MODEL)
-def anthropic_adapter(wire: Wire) -> AnthropicAdapter:
-    client = anthropic.Anthropic(api_key="sk-test-" + secrets.token_hex(8), max_retries=0, open_telemetry=False,
-                                 http_client=httpx2.Client(transport=httpx2.MockTransport(wire.httpx2_handler)))
-    return AnthropicAdapter(client, model=SONNET_MODEL)
-
-def jev_body(choices: Mapping[str, str]) -> dict[str, Any]:
-    return {"id": "gen-aea60", "answers": {k: {"type": "choice", "choice": v} for k, v in choices.items()},
-            "usage": {"input_tokens": 300, "output_tokens": 0, "cost": 1.26e-05}}
-def message(content: list[dict[str, Any]], *, stop_reason: str = "end_turn") -> dict[str, Any]:
-    return {"id": "msg_aea60", "type": "message", "role": "assistant", "model": SONNET_MODEL, "content": content,
-            "stop_reason": stop_reason, "stop_sequence": None, "usage": {"input_tokens": 100, "output_tokens": 20}}
-def text_message(text: str, *, stop_reason: str = "end_turn") -> dict[str, Any]: return message([{"type": "text", "text": text}], stop_reason=stop_reason)
-def tool_use(call_id: str, name: str, args: object) -> dict[str, Any]: return {"type": "tool_use", "id": call_id, "name": name, "input": args}
-def tool_message(*blocks: dict[str, Any]) -> dict[str, Any]: return message(list(blocks), stop_reason="tool_use")
-
-VALID_PLAN: Final[Mapping[str, str]] = MappingProxyType({"knowledge": "no", "account": "none", "scheduling": "book_new",
-                                                          "handoff": "none", "topic": "booking"})   # NODANGER booking
-def raw_specs() -> dict[Role, RoleSpec]:
-    # PLANNER, CLASSIFIER: spec(cap_s=3.0, redaction=RedactionProfile.JEV, model=JEV_MODEL, effort=None)
-    # PLANNER_FALLBACK: spec(cap_s=8.0, redaction=RedactionProfile.SONNET, model=SONNET_MODEL)
-    # RESPONDER, BRIEF: spec(cap_s=12.0, redaction=RedactionProfile.SONNET, model=SONNET_MODEL)
-    # SPECIALIST: spec(cap_s=8.0, redaction=RedactionProfile.SONNET, model=SONNET_MODEL, max_tokens=3000)
-
-ROLE_WIRES: Final = ("planner", "classifier", "planner_fallback", "responder", "brief", "specialist")
-
-@dataclass
-class Adapters:
-    wires: dict[str, Wire]
-    jev: dict[str, JevAdapter]                 # "planner", "classifier"
-    sonnet: dict[str, AnthropicAdapter]        # "planner_fallback", "responder", "brief", "specialist"
-
-def build_adapters(bodies: Mapping[str, Sequence[Body]]) -> Adapters:
-    # one Wire per name in ROLE_WIRES (empty list when not given); one adapter object per role (separate queues so a
-    # planner body is never consumed by the classifier)
-
-def real_gateway(a: Adapters, *, ledger: RecordingLedger, sink: InMemoryTraceSink, limits: Limits) -> ModelGateway:
-    # s = raw_specs(); ModelGateway(choice={Role.PLANNER: (a.jev["planner"], s[Role.PLANNER]), Role.CLASSIFIER:
-    #   (a.jev["classifier"], s[Role.CLASSIFIER]), Role.PLANNER_FALLBACK: (a.sonnet["planner_fallback"], s[...])},
-    #   structured={Role.RESPONDER: (a.sonnet["responder"], …), Role.BRIEF: (a.sonnet["brief"], …)},
-    #   tools={Role.SPECIALIST: (a.sonnet["specialist"], …)}, ledger=ledger, trace=sink, redact=redact, limits=limits)
-
-def tool_result_texts(wire: Wire) -> list[str]:
-    # every "content" of every block with "type" == "tool_result" in every recorded request's "messages" items
-    # (this is what the model received as ToolError / tool output)
-```
-
-Check: a 6-line scratch check in the REPL is enough: `jev_adapter(Wire([jev_body({"danger_level": "emergency"})]))
-.choose(<a 1-field request>, timeout_s=3).failure.kind` prints `invalid_output`. Then ruff + mypy on the file.
-
-### 5.5 Step 4 — `tests/contract/prompts_render.py` (AC-1, AC-2, AC-4, AC-5, AC-6 inputs)
-
-```python
-@dataclass(frozen=True)
-class Rendered:
-    turn: int
-    planner: ChoiceRequest; planner_fallback: ChoiceRequest; classifier: ChoiceRequest
-    specialists: Mapping[str, ToolStepRequest]             # kind → the first ToolStepRequest of that kind's run
-    expected_tools: Mapping[str, tuple[ToolSchema, ...]]   # kind → dispatcher.schemas(SPECS[kind].tool_kinds)
-    responder: StructuredRequest[Any]; brief: StructuredRequest[Any]
-    brief_shown: Mapping[int, str]                         # the `shown` the checks node passed to check_quotes
-    customer_ids: frozenset[int]; assistant_ids: frozenset[int]
-    registry: ToolRegistry
-    def roles(self) -> frozenset[str]: return frozenset({"planner", "planner_fallback", "classifier", "specialist", "responder", "brief"} if self.specialists else …)
-
-def offered_sets(r: Rendered) -> dict[str, object]:
-    # {"planner": tuple((f.name, tuple(f.options)) for f in r.planner.fields), "planner_fallback": same for fallback,
-    #  "classifier": same, **{f"specialist.{k}": tuple((t.name, json.dumps(t.input_schema, sort_keys=True)) for t in req.tools)
-    #  for k, req in sorted(r.specialists.items())}, "responder": (r.responder.output_model.__name__,
-    #  json.dumps(r.responder.output_model.model_json_schema(), sort_keys=True)), "brief": same for r.brief}
-
-def render_turn(n: int) -> Rendered:
-```
-
-`render_turn(n)` algorithm (each step's invariant in italics):
-1. `with temp_sqlite() as store, pytest.MonkeyPatch.context() as mp:` → `seeded = seed_conversation(store, TURNS, upto=n)`.
-   *The DB holds the conversation up to turn n only.*
-2. Fakes: `planner_fake = FakeChoiceModel([ScriptedFailure(kind=ProviderFailureKind.INVALID_OUTPUT)])` (so the node
-   also renders the fallback); `fallback_fake = FakeAnthropicChoiceModel([ChoiceAnswer(choices=dict(VALID_PLAN),
-   probabilities=None)])`; `classifier_fake = FakeChoiceModel([ChoiceAnswer(choices={DANGER_FIELD: "normal"},
-   probabilities=None)])`; `tool_fake = FakeToolModel([ToolStep(text="Nothing to look up.", tool_calls=(), raw={"role":
-   "assistant", "content": []}, stop_reason="end_turn")] * 3)`; `responder_fake = FakeStructuredModel([ResponderDraft(
-   text="Thanks for your message. A person will look at the repair.")])`; `brief_fake = FakeStructuredModel(
-   [BriefExtraction(needs=[Quote(message_id=seeded.customer_ids[n], text=<first 20 chars of the STORE-redacted turn-n
-   text>)], claims=[], open_decision="Decide whether the repair needs a follow-up visit.")])`.
-   *Every fake records the request it receives, after the gateway's redaction.*
-3. Gateway: `ModelGateway(choice={PLANNER: (planner_fake, default_specs()[PLANNER]), CLASSIFIER: (classifier_fake, …),
-   PLANNER_FALLBACK: (fallback_fake, …)}, structured={RESPONDER: (responder_fake, …), BRIEF: (brief_fake, …)},
-   tools={SPECIALIST: (tool_fake, …)}, ledger=RecordingLedger(), trace=sink, redact=redact, limits=RENDER_LIMITS)` where
-   `RENDER_LIMITS = Limits(brakes=Brakes(sonnet_calls=12))` (PD-3) and `default_specs` from `_gateway_doubles`.
-4. `index = FakeIndex(WP1_PASSAGES)`; `registry = build_registry(index, store)`; `dispatcher = ToolDispatcher(registry,
-   store.uow)`; `runner = SpecialistRunner(gateway=gw, transcript=tool_fake, dispatcher=dispatcher, specs=SPECS,
-   brakes=RENDER_LIMITS.brakes, trace=sink)`; `cases = CasesDouble(refund_case(n))`; `brief_double = RecordingBriefAssembler()`;
-   `deps = build_deps(...)` with `limits=RENDER_LIMITS`.
-5. Spy: `shown_seen: list[dict[int, str]] = []`; `real = reply_nodes.check_quotes`;
-   `mp.setattr(reply_nodes, "check_quotes", lambda ext, shown: (shown_seen.append(dict(shown)), real(ext, shown))[1])`
-   (write it as a small named function for mypy). *We observe exactly the mapping the consumer compares.*
-6. `with open_turn(sink, n) as ctx:` `rt = runtime(ctx)`; `base = make_state(TURNS, seeded, n, identity=VERIFIED)`.
-   - `planner(base, rt, deps=deps)`; then `planner_req = planner_fake.requests[-1]`, `fallback_req = fallback_fake.requests[-1]`.
-   - `danger_classifier(base, rt, deps=deps)`; `classifier_req = classifier_fake.requests[-1]`.
-   - For `kind, intent in (("knowledge", TaskIntent.ANSWER_QUESTION), ("account", TaskIntent.READ_MEMBERSHIP),
-     ("scheduling", TaskIntent.BOOK_NEW))` in that order: `planned = PlannedTask(order=1, specialist=kind, intent=intent,
-     needs_identity=kind != "knowledge")`; `state = base.model_copy(update={"plan": Plan(mode="act", tasks=(planned,),
-     handoff_request=None, topic="other", source="planner")})`; `run_specialist({"planned": planned, "state": state}, rt,
-     deps=deps)`; the request is `tool_fake.requests[i]` (i = 0, 1, 2). *One model step per kind: the final-answer
-     branch; the scheduling quick check is a dispatch, not a model step.*
-   - `facts_state = base.model_copy(update={"facts": facts_for(n, handoff=refund_handoff(n)), "handoff":
-     refund_handoff(n), "plan": Plan(mode="talk", tasks=(), handoff_request=None, topic="other", source="planner")})`;
-     `r_up = responder(facts_state, rt, deps=deps)`; `b_up = brief(facts_state, rt, deps=deps)`;
-     `checks(facts_state.model_copy(update={"draft": r_up["draft"], "brief_extraction": b_up["brief_extraction"]}),
-     rt, deps=deps)`. Requests: `responder_fake.requests[-1]`, `brief_fake.requests[-1]`; `brief_shown = shown_seen[-1]`.
-7. Return `Rendered(turn=n, …, expected_tools={k: dispatcher.schemas(SPECS[k].tool_kinds) for k in SPECS},
-   customer_ids=frozenset(seeded.customer_ids.values()), assistant_ids=frozenset(seeded.assistant_ids.values()),
-   registry=registry)`. Assert inside nothing; the tests assert.
-
-Check: `uv run python -c "from tests.contract.prompts_render import render_turn; r = render_turn(1); print(sorted(r.specialists))"`
-prints `['account', 'knowledge', 'scheduling']`.
-
-### 5.6 Step 5 — `tests/contract/test_prompts_vs_consumers.py`, the render-side tests + guard (AC-1…AC-6, AC-11, AC-12)
-
-Module docstring: one paragraph naming AEA-60, level `mock-tested`, "no network, no paid call, development data only".
-No `pytestmark` (default suite).
-
-**Module guard (AC-12; PD-12)** — at module top:
-```python
-REPO_ROOT = Path(__file__).resolve().parents[2]
-_HELD_OUT = (str(REPO_ROOT / "eval" / "cases" / "heldout"), str(Path.home() / ".meridian-sealed"))
-@dataclass
-class _Guard:
-    active: bool = False; opens: int = 0
-    heldout: list[str] = field(default_factory=list); connects: list[str] = field(default_factory=list)
-_GUARD = _Guard(); _HOOKED: list[bool] = []
-def _audit(event: str, args: tuple[Any, ...]) -> None:          # must never raise
-    if not _GUARD.active or event != "open" or not args or not isinstance(args[0], (str, bytes, os.PathLike)): return
-    path = os.path.abspath(os.fsdecode(args[0])); _GUARD.opens += 1
-    if any(path == root or path.startswith(root + os.sep) for root in _HELD_OUT): _GUARD.heldout.append(path)
-@pytest.fixture(scope="module", autouse=True)
-def _module_guard() -> Iterator[None]:
-    if not _HOOKED: sys.addaudithook(_audit); _HOOKED.append(True)
-    def refuse(self: socket.socket, address: Any) -> None: _GUARD.connects.append(repr(address)); raise OSError("AEA-60: network refused")
-    def refuse_ex(self: socket.socket, address: Any) -> int: _GUARD.connects.append(repr(address)); return 111
-    with pytest.MonkeyPatch.context() as mp:
-        mp.setattr(socket.socket, "connect", refuse); mp.setattr(socket.socket, "connect_ex", refuse_ex)
-        _GUARD.active = True
-        try: yield
-        finally: _GUARD.active = False
-@pytest.fixture(autouse=True)
-def _no_heldout_or_network() -> Iterator[None]:
-    before = (len(_GUARD.heldout), len(_GUARD.connects)); yield
-    assert (len(_GUARD.heldout), len(_GUARD.connects)) == before, "held-out read or network connect during this test"
-```
-
-**Rendered fixture:** `@pytest.fixture(scope="module") def rendered() -> dict[int, Rendered]: return {n: render_turn(n) for n in (1, 2, 5)}`.
-
-**Tests** (names exact; parametrise ids exact):
-
-1. `test_every_role_and_spec_has_a_rendered_case(rendered)` (AC-1) —
-   for each `r` in `rendered.values()`: `check_inventory([x.value for x in Role], SPECS, have_roles=r.roles(),
-   have_kinds=set(r.specialists))`; `offered_sets(rendered[1]) == offered_sets(rendered[2]) == offered_sets(rendered[5])`;
-   then `with pytest.raises(PromptDrift, match="role 'triage' has no rendered case"): check_inventory([*(x.value for x
-   in Role), "triage"], SPECS, have_roles=rendered[1].roles(), have_kinds=set(rendered[1].specialists))` and the same for
-   kind `"warranty"` → `"specialist kind 'warranty' has no rendered case"`. `Rendered.roles()` returns exactly
-   `{"planner", "planner_fallback", "classifier", "specialist", "responder", "brief"}` minus any whose request is absent.
-2. `test_routing_fields_match_planner_choices_and_danger_label(rendered)` (AC-2) — per turn:
-   `check_choice_fields("planner", r.planner, PlannerChoices)`; `check_choice_fields("planner_fallback",
-   r.planner_fallback, PlannerChoices)`; `r.planner_fallback.fields == r.planner.fields`;
-   `check_choice_fields("classifier", r.classifier, DangerAssessment, field_map={DANGER_FIELD: "label"})`;
-   `tuple(r.classifier.fields[0].options) == ("normal", "burning_unclear", "danger")` (set equality is enough if `main`
-   orders them otherwise — use `set(...)`); `"late_technician" in r.planner.fields[...handoff].options`;
-   `check_wording_keys("planner", r.planner)`; `check_wording_keys("classifier", r.classifier)`.
-3. `test_join_plan_accepts_every_offered_value(rendered, field, option)` (AC-3), parametrised:
-   `pytest.mark.parametrize(("field", "option"), [(f, o) for f in PlannerChoices.model_fields for o in literal_values(PlannerChoices, f)], ids=lambda …: f"{field}={option}")`
-   (build the list at module level as `_PLANNER_OPTIONS` and `ids=[f"{f}={o}" for f, o in _PLANNER_OPTIONS]`). Body:
-   - `assert option in {f.name: f.options for f in rendered[1].planner.fields}[field]` *(offered — AC-2 proved equality)*.
-   - `choices = PlannerChoices(**{**BASE_CHOICES, field: option})` with `BASE_CHOICES = {"knowledge": "no", "account":
-     "none", "scheduling": "none", "handoff": "none", "topic": "other"}`; `outcome = PlannerOutcome(choices=choices,
-     probabilities=None, model=JEV_MODEL, fallback_used=False, failure=None)`.
-   - `with temp_sqlite() as store: seeded = seed_conversation(store, TURNS, upto=1); state = make_state(TURNS, seeded, 1)`;
-     `plan = join_plan(outcome, None, free_text_gate(), state)` (must not raise).
-   - `all(t.specialist in SPECS for t in plan.tasks)`; `isinstance(t.intent, TaskIntent)`.
-   - `field == "topic"` → `plan.topic == option`; `option in literal_values(Plan, "topic")`.
-   - `field == "handoff"`: `option == "none"` → `plan.handoff_request is None`; else `reason = plan.handoff_request`,
-     `reason is not None`, `reason.value not in CODE_ONLY`, expected = `{"unsupported_other": "unsupported_action"}.get(option, option)`,
-     `reason.value == expected`; `priority_for(reason, promise_due=NOW, renewal_date=None)` is a `Priority`;
-     `d = decide_escalation(EscalationInputs(gate=free_text_gate(), plan=plan, results=(), counters=FailureCounters(),
-     identity=UNVERIFIED, halt=None, models_disabled=False, now=NOW))` → `d.outcome == "escalate"`, `d.reason is reason`,
-     `d.priority is not None`.
-   - Plus one extra parametrised id `reverse_reachability` (use a separate test function
-     `test_join_plan_accepts_every_offered_value_reverse(rendered)` if mixing ids complicates the parametrisation — the
-     verify command covers both via `-k test_join_plan_accepts_every_offered_value`): `reached = {join_plan(PlannerOutcome(
-     choices=PlannerChoices(**{**BASE_CHOICES, "handoff": o}), …), None, free_text_gate(), state).handoff_request for o in
-     <offered handoff options>} - {None}`; `{r.value for r in reached} == {h.value for h in HandoffReason} - CODE_ONLY` (PA-1).
-4. `test_no_prompt_offers_a_code_only_value(rendered)` (AC-4) — `CODE_ONLY <= {h.value for h in HandoffReason}`; per
-   turn: `check_code_only("planner", r.planner)`, `check_code_only("planner_fallback", r.planner_fallback)`; for each
-   kind and each tool in `r.specialists[kind].tools`: `check_no_forbidden_fields(f"specialist.{kind} tool '{t.name}'",
-   t.input_schema)`; `check_no_forbidden_fields("responder.output_model", ResponderDraft.model_json_schema())`; same for
-   `BriefExtraction`.
-5. `test_specialist_tools_match_registry_and_report_models(rendered)` (AC-5) — `vocabulary = schema_vocabulary(
-   SchedulingSlice.model_json_schema(), *(SPECS[k].report_model.model_json_schema() for k in SPECS),
-   *(d.args_model.model_json_schema() for d in <every ToolDef in r.registry>))` — get every def with
-   `r.registry.for_kinds(frozenset(ToolKind))`; per turn and kind: `check_specialist(kind, r.specialists[kind],
-   registry=r.registry, expected_tools=r.expected_tools[kind], tool_kinds=SPECS[kind].tool_kinds,
-   report_model=SPECS[kind].report_model, vocabulary=vocabulary)`.
-6. `test_reply_schemas_and_brief_message_ids_match_checks(rendered)` (AC-6) — per turn: `check_reply_schema("responder",
-   r.responder, ResponderDraft)`; `r.responder.output_model is ResponderDraft`; `props =
-   ResponderDraft.model_json_schema()["properties"]`; `set(props) == {"text"}`; `props["text"]["minLength"] == 1` and
-   `props["text"]["maxLength"] == 1200`; `text = r.responder.system_prefix + r.responder.system_dynamic + r.responder.user`;
-   `all(label in text for label in LABELS)`; `check_reply_schema("brief", r.brief, BriefExtraction)`; `rendered_ids =
-   parse_brief_user(r.brief.user)`; `check_brief_ids(rendered_ids, r.brief_shown, r.customer_ids)`; `set(rendered_ids) ==
-   set(r.customer_ids)` (all customer lines are within the 10-turn window). **Wire check (once):** `wire =
-   Wire([text_message('{"text": "Thanks."}')])`; `anthropic_adapter(wire).structured(rendered[5].responder,
-   timeout_s=5.0)`; `sent = wire.requests[0]["output_config"]["format"]["schema"]`; `sent ==
-   anthropic.transform_schema(ResponderDraft)`; `set(sent["properties"]) == {"text"}`.
-7. `test_check_fails_on_drift(rendered, case)` (AC-11), `@pytest.mark.parametrize("case", ["planner_extra_option",
-   "planner_missing_late_technician", "classifier_extra_option", "specialist_names_unknown_tool",
-   "responder_extra_promise_field", "brief_shows_staff_message"])`. `r = rendered[1]` (`rendered[5]` for the brief case).
-   Build the drifted copy and the expected message:
-   - `planner_extra_option`: replace the `handoff` field with `f.model_copy(update={"options": {**f.options,
-     "cancel_membership": "Cancel"}})` in a `r.planner.model_copy(update={"fields": …})` →
-     `check_choice_fields("planner", drifted, PlannerChoices)`; match
-     `re.escape("routing.planner.handoff offers 'cancel_membership'; PlannerChoices.handoff does not accept it")`.
-   - `planner_missing_late_technician`: options without `late_technician` → `"PlannerChoices.handoff accepts
-     'late_technician'; routing.planner.handoff does not offer it"`.
-   - `classifier_extra_option`: add `"emergency"` → `check_choice_fields("classifier", drifted, DangerAssessment,
-     field_map={DANGER_FIELD: "label"})` → `"routing.classifier.danger_level offers 'emergency'; DangerAssessment.label
-     does not accept it"`.
-   - `specialist_names_unknown_tool`: `req = r.specialists["account"]`; drifted = `req.model_copy(update={"system_prefix":
-     req.system_prefix + " If asked, call refund_invoice."})` → `check_specialist("account", drifted, …)` →
-     `"specialist.account wording names 'refund_invoice'; it is not a tool sent with it"`.
-   - `responder_extra_promise_field`: module-level `class _DraftWithPromise(LLMFacing): text: str = Field(min_length=1,
-     max_length=1200); promise: str` (defined in the test file, not in product code); drifted =
-     `r.responder.model_copy(update={"output_model": _DraftWithPromise})` → `"responder.output_model has field
-     'promise'; ResponderDraft does not"`.
-   - `brief_shows_staff_message`: `aid = min(rendered[5].assistant_ids)`; drifted ids = `{**parse_brief_user(
-     rendered[5].brief.user), aid: "Let me look that up."}` → `check_brief_ids(drifted, rendered[5].brief_shown,
-     rendered[5].customer_ids)` → `f"brief shows message {aid} that is not a customer message of this thread"`.
-   Every case: `with pytest.raises(PromptDrift, match=<re.escape(message)>):` and assert no customer text in
-   `str(excinfo.value)` (check `TURNS[4] not in str(excinfo.value)`).
-8. `test_no_heldout_reads_and_no_network(rendered)` (AC-12) — `assert _HOOKED and _GUARD.active`; `before =
-   _GUARD.opens`; `(tmp_path / "probe.txt").write_text("x")` then `open(...)`/read it → `_GUARD.opens > before` *(hook
-   live)*; `socket.socket.connect.__name__ == "refuse"` *(guard installed)*; `_GUARD.heldout == []`; `_GUARD.connects ==
-   []`; also every fixture text is one of `TURNS`, `REPLIES`, `NODANGER`, `STAFF_LINE` or generated (assert
-   `all(t in TURNS for t in <the turn texts rendered>)` is enough). Use `tmp_path` (function fixture) for the probe.
-
-Check while iterating: `uv run pytest tests/contract/test_prompts_vs_consumers.py -q -k "rendered_case or routing_fields or join_plan or code_only or specialist_tools or reply_schemas or drift or heldout"`.
-
-### 5.7 Step 6 — `tests/contract/prompts_cases.py` (malformed cases: AC-7, AC-8, AC-9)
-
-```python
-OPTION_MARKER: Final = "zq-rejected-option-7731"
-QUERY_MARKER_301: Final = "q" * (301 - len("zq-rejected-query-7731")) + "zq-rejected-query-7731"   # exactly 301 chars
-DRAFT_MARKER: Final = "zq-rejected-draft-7731"
-
-@dataclass(frozen=True)
-class Case:
-    id: str
-    group: Literal["routing", "specialist", "reply"]
-    bodies: Callable[[Seeded], Mapping[str, Sequence[Body]]]   # role-wire name → bodies (built after seeding: quotes need ids)
-    kind: Literal["knowledge", "account", "scheduling"] | None = None    # specialist group
-    intent: TaskIntent | None = None
-    text: str = NODANGER                                        # the turn text seeded as turn 1 (routing / specialist)
-    brief_turn: bool = False                                    # reply group: run the brief path (handoff created)
-
-@dataclass
-class RawRun:
-    case: Case; seeded: Seeded; adapters: Adapters; ledger: RecordingLedger; sink: InMemoryTraceSink
-    index: FakeIndex; cases: CasesDouble; brief: RecordingBriefAssembler; ctx: TurnContext
-    updates: dict[str, Mapping[str, Any]]          # node name → its returned update
-    logs: list[logging.LogRecord]; lookups: tuple[LookupRow, ...]; db_dump: str
-    quote_calls: list[tuple[dict[int, str], QuoteCheck]]
-    reply: ComposedReply | None = None
-
-def run_case(case: Case) -> RawRun:
-```
-
-`run_case` algorithm:
-1. `with temp_sqlite() as store, pytest.MonkeyPatch.context() as mp, capture_logs() as logs:`
-2. Seed: routing/specialist → `seeded = seed_conversation(store, (case.text,), upto=1)`; reply → `seeded =
-   seed_conversation(store, TURNS, upto=5, staff_after=4)`. Turn number `n = 1` or `5` accordingly.
-3. `adapters = build_adapters(case.bodies(seeded))`; `ledger = RecordingLedger()`; `sink = InMemoryTraceSink()`;
-   `limits = Limits()`; `gw = real_gateway(adapters, ledger=ledger, sink=sink, limits=limits)`; `index =
-   FakeIndex(WP1_PASSAGES)`; `registry = build_registry(index, store)`; `dispatcher = ToolDispatcher(registry, store.uow)`;
-   `runner = SpecialistRunner(gateway=gw, transcript=adapters.sonnet["specialist"], dispatcher=dispatcher, specs=SPECS,
-   brakes=limits.brakes, trace=sink)`; `cases = CasesDouble(refund_case(n) if case.brief_turn else None)`; `bd =
-   RecordingBriefAssembler()`; `deps = build_deps(...)`.
-4. Spy `check_quotes` as in Step 4 step 5 but recording `(dict(shown), result)` into `quote_calls`.
-5. `with open_turn(sink, n) as ctx:` `rt = runtime(ctx)`; `updates = {}`;
-   - **routing:** `state = make_state((case.text,), seeded, 1)`; `updates["planner"] = planner(state, rt, deps=deps)`;
-     `updates["danger"] = danger_classifier(state, rt, deps=deps)`; `joined = state.model_copy(update={"planner":
-     updates["planner"].get("planner"), "danger": updates["danger"].get("danger")})`; `updates["plan_join"] =
-     plan_join(joined, rt, deps=deps)`; `updates["escalation"] = escalation(joined.model_copy(update={"plan":
-     updates["plan_join"]["plan"]}), rt, deps=deps)`.
-   - **specialist:** `planned = PlannedTask(order=1, specialist=case.kind, intent=case.intent, needs_identity=case.kind !=
-     "knowledge")`; `plan = Plan(mode="act", tasks=(planned,), handoff_request=None, topic="other", source="planner")`;
-     `state = make_state((case.text,), seeded, 1, identity=VERIFIED, plan=plan)`; `updates["specialist"] =
-     run_specialist({"planned": planned, "state": state}, rt, deps=deps)`; `updates["escalation"] = escalation(
-     state.model_copy(update={"specialist_results": list(updates["specialist"]["specialist_results"])}), rt, deps=deps)`.
-   - **reply:** `handoff = refund_handoff(5) if case.brief_turn else None`; `state = make_state(TURNS, seeded, 5,
-     facts=facts_for(5, handoff=handoff), handoff=handoff, plan=Plan(mode="talk", tasks=(), handoff_request=None,
-     topic="other", source="planner"))`; `updates["responder"] = responder(state, rt, deps=deps)`; if `case.brief_turn`:
-     `updates["brief"] = brief(state, rt, deps=deps)`; `after = state.model_copy(update={"draft":
-     updates["responder"].get("draft"), "brief_extraction": updates.get("brief", {}).get("brief_extraction")})`;
-     `updates["checks"] = checks(after, rt, deps=deps)`; `reply = ReplyComposer().compose(after.model_copy(update=
-     {"checked": updates["checks"]["checked"]}), ctx)`.
-6. After the turn: `with store.uow() as tx: lookups = tx.core.lookup_log.for_thread(THREAD)`; `conn =
-   sqlite3.connect(store.db_path)`; `db_dump = "\n".join(conn.iterdump())`; `conn.close()`. Return `RawRun(...)`.
-   *Everything a later assertion needs is copied out before the temp directory is removed.*
-
-**The case table** `MALFORMED_CASES: tuple[Case, ...]` (ids exact; `jb = jev_body`, `tm = text_message`,
-`tl = tool_message`, `tu = tool_use`, `VP = dict(VALID_PLAN)`, `FB_OK = tm(json.dumps(VP))`):
-
-| id | group | bodies (role-wire → list) | kind / intent / text |
-|---|---|---|---|
-| `planner_choice_outside` | routing | planner `[jb({**VP, "handoff": OPTION_MARKER})]`; planner_fallback `[FB_OK]`; classifier `[jb({DANGER_FIELD: "normal"})]` | text NODANGER |
-| `planner_missing_field` | routing | planner `[jb({k: v for k, v in VP.items() if k != "topic"})]`; fallback `[FB_OK]`; classifier normal | |
-| `planner_unparseable` | routing | planner `[b'{"answers": {']`; fallback `[FB_OK]`; classifier normal | |
-| `both_planners_fallback_extra_field` | routing | planner `[jb({k: v for k, v in VP.items() if k != "topic"})]`; fallback `[tm(json.dumps({**VP, "extra": "x"}))]`; classifier normal | |
-| `both_planners_fallback_outside` | routing | planner `[b'{"answers": {']`; fallback `[tm(json.dumps({**VP, "handoff": "cancel_membership"}))]`; classifier normal | |
-| `classifier_emergency` | routing | planner `[jb(VP)]`; classifier `[jb({DANGER_FIELD: "emergency"})]` | |
-| `classifier_empty` | routing | planner `[jb(VP)]`; classifier `[{"id": "gen-aea60", "answers": {}, "usage": {"input_tokens": 300, "output_tokens": 0}}]` | |
-| `tool_unknown` | specialist | specialist `[tl(tu("toolu_1", "issue_refund", {})), tl(tu("toolu_2", "report_facts", {"points": [], "answered": False}))]` | knowledge / ANSWER_QUESTION / TURNS[2] |
-| `tool_not_allowed` | specialist | `[tl(tu("toolu_1", "read_invoices", {})), tl(tu("toolu_2", "report_facts", {"points": [], "answered": False}))]` | knowledge / ANSWER_QUESTION / TURNS[2] |
-| `tool_args_none` | specialist | `[tl(tu("toolu_1", "kb_search", "not-json{")), <report as above>]` | knowledge |
-| `tool_extra_customer_id` | specialist | `[tl(tu("toolu_1", "kb_search", {"query": "comfort club", "customer_id": "MHC-10001"})), <report>]` | knowledge |
-| `tool_query_301` | specialist | `[tl(tu("toolu_1", "kb_search", {"query": QUERY_MARKER_301})), <report>]` | knowledge |
-| `tool_invoice_bad` | specialist | `[tl(tu("toolu_1", "read_invoices", {"invoice_number": "INV-12"})), tl(tu("toolu_2", "report_facts", {"summary": "No invoice read."}))]` | account / READ_INVOICE / "I got an invoice and I'm not sure what it's for." (WP-2) |
-| `report_six_points` | specialist | `[tl(tu("toolu_1", "kb_search", {"query": "comfort club"})), tl(tu("toolu_2", "report_facts", {"points": [{"text": "Two tune-ups a year.", "passage_id": "membership/comfort_club_overview.md#0"}] * 6, "answered": True}))]` | knowledge |
-| `report_long_summary` | specialist | `[tl(tu("toolu_1", "read_membership", {})), tl(tu("toolu_2", "report_facts", {"summary": "s" * 301}))]` | account / READ_MEMBERSHIP / "I want to cancel my Comfort Club membership." (WP-8) |
-| `step_unparseable` | specialist | `[b"{not json"]` | knowledge |
-| `step_max_tokens` | specialist | `[tm("partial", stop_reason="max_tokens")]` | knowledge |
-| `step_refusal` | specialist | `[message([], stop_reason="refusal")]` | knowledge |
-| `draft_empty` | reply | responder `[tm(json.dumps({"text": ""}))]` | |
-| `draft_1201` | reply | responder `[tm(json.dumps({"text": DRAFT_MARKER + "d" * (1201 - len(DRAFT_MARKER))}))]` | |
-| `draft_extra_promise` | reply | responder `[tm(json.dumps({"text": "Done.", "promise": "Someone will call you today."}))]` | |
-| `draft_refusal` | reply | responder `[message([], stop_reason="refusal")]` | |
-| `brief_zero_needs` | reply, brief_turn | responder `[tm('{"text": "A person will look at this."}')]`; brief `[tm(json.dumps({"needs": [], "claims": [], "open_decision": "Decide on the refund."}))]` | |
-| `brief_three_needs` | reply, brief_turn | brief: `needs` = 3 × `{"message_id": s.customer_ids[5], "text": "I want a full refund"}` | |
-| `brief_six_claims` | reply, brief_turn | brief: `needs` 1 valid, `claims` = 6 × `{"message_id": s.customer_ids[5], "text": DRAFT_MARKER}` | |
-| `brief_long_decision` | reply, brief_turn | brief: 1 valid need, `open_decision` = `"o" * 201` | |
-| `quote_ai_message` | reply, brief_turn | brief valid: need `{"message_id": s.customer_ids[5], "text": "I want a full refund"}`, claims `[{"message_id": s.assistant_ids[4], "text": "Let me look that up."}]`, decision "Decide on the refund." | |
-| `quote_staff_message` | reply, brief_turn | claims `[{"message_id": s.staff_id, "text": "Riley here"}]` | |
-| `quote_paraphrase` | reply, brief_turn | claims `[{"message_id": s.customer_ids[5], "text": "The repair did not work at all"}]` | |
-
-`ROUTING = [c for c in MALFORMED_CASES if c.group == "routing"]`, same for `SPECIALIST`, `REPLY`; `MARKER_CASES =
-("planner_choice_outside", "tool_query_301", "draft_1201", "brief_six_claims")`.
-
-Check: `uv run python -c "from tests.contract.prompts_cases import MALFORMED_CASES, run_case; r = run_case(MALFORMED_CASES[0]); print(sorted(r.updates))"`.
-
-### 5.8 Step 7 — the malformed-output tests in the test file (AC-7, AC-8, AC-9, AC-10, AC-14)
-
-Helpers in the test file: `calls(run) = [c for c, _ in run.ledger.records]`; `sig(run) = signals(run.logs)`;
-`spans(run) = run.sink.spans_for(run.ctx.span)`.
-
-9. `test_malformed_routing_outputs(case)` — `@pytest.mark.parametrize("case", ROUTING, ids=[c.id for c in ROUTING])`;
-   `run = run_case(case)`. Assertions by id:
-   - (a)(b)(c) `planner_choice_outside`, `planner_missing_field`, `planner_unparseable`: `[(c.role, c.attempt,
-     c.status) for c in calls(run) if c.role in (Role.PLANNER, Role.PLANNER_FALLBACK)] == [(Role.PLANNER, 1, "error"),
-     (Role.PLANNER_FALLBACK, 1, "ok")]`; the planner record's `failure.kind is INVALID_OUTPUT` and `failure.retryable is
-     False`; `po = run.updates["planner"]["planner"]`: `po.fallback_used is True`, `po.failure is None`, `po.choices is
-     not None`; `run.updates["plan_join"]["plan"].source == "fallback_planner"`; signals named `planner_fallback`: exactly
-     one, `cause == "invalid_output"`, `recovered is True`, `role == "planner"`, `node == "planner"`.
-   - (d) `both_planners_fallback_extra_field`, `both_planners_fallback_outside`: both records `status == "error"`, kinds
-     `INVALID_OUTPUT`; `run.updates["plan_join"]["plan"] == Plan(mode="act", tasks=(), handoff_request=None,
-     topic="other", source="rules_only", planner_failed=True)`; one `planner_fallback` signal `recovered is False`, cause
-     `"invalid_output"`; `run.updates["escalation"]["escalation"]` → `outcome == "escalate"`, `reason is
-     HandoffReason.AI_FAILURE`, `priority is Priority.P3`, `rule_id == "AI.planner_failed"`, `degraded is True`.
-   - (e) `classifier_emergency`, `classifier_empty`: `d = run.updates["danger"]["danger"]`: `d.label == "normal"`,
-     `d.raised is False`, `d.failure.kind is INVALID_OUTPUT`; classifier records: exactly one, `attempt == 1`;
-     `run.updates["danger"]["check_events"] == (CheckEvent(check="classifier", turn_id=TURN_IDS[1], result="fallback",
-     codes=("fallback", "invalid_output")),)`; exactly one `classifier_fallback` signal (cause `invalid_output`);
-     `plan = run.updates["plan_join"]["plan"]`: `plan.mode == "act"`, `[t.intent for t in plan.tasks] ==
-     [TaskIntent.BOOK_NEW]` *(the turn goes on to plan_join; the rules stand)*.
-10. `test_malformed_specialist_outputs(case)` — parametrised over `SPECIALIST`. `res =
-    run.updates["specialist"]["specialist_results"][0]`; `tools = res.tools`. Expectations table (in the test as a dict):
-
-    | id | assertion |
-    |---|---|
-    | `tool_unknown` | `tools[0].kind is None`, `outcome == "refused"`, `error is ToolErrorCode.UNKNOWN_TOOL`; one lookup row `tool == "issue_refund"`, `result_seen == "refused:unknown_tool"`; `run.index.searches == []`; `len(run.adapters.wires["specialist"].requests) == 2` (the run went on); `res.status != "failed"` |
-    | `tool_not_allowed` | `tools[0].error is ToolErrorCode.NOT_ALLOWED`; lookup `refused:not_allowed` |
-    | `tool_args_none` | `error is BAD_ARGUMENTS`; `run.index.searches == []` |
-    | `tool_extra_customer_id` | `error is BAD_ARGUMENTS`; `run.index.searches == []` *(executor never called)* |
-    | `tool_query_301` | `error is BAD_ARGUMENTS`; `run.index.searches == []` |
-    | `tool_invoice_bad` | `error is BAD_ARGUMENTS`; lookup `refused:bad_arguments`; nothing was read, so `res.status == "failed"` and `res.failure is None` (AEA-35 `build_account_result` step 5); exactly one `specialist_failed` signal with `cause == "tool_error"`, `specialist == "account"`; `esc = run.updates["escalation"]["escalation"]`: `(esc.outcome, esc.reason, esc.priority, esc.rule_id, esc.degraded) == ("escalate", HandoffReason.AI_FAILURE, Priority.P3, "AI.specialist_failed", True)` (refresh 3) |
-    | `report_six_points` | `res.status == "no_current_source"`, `res.points == ()`, `len(res.passages) >= 1` (captures kept); `tools[0].outcome == "ok"` |
-    | `report_long_summary` | `res.status == "read"`, `res.membership is not None` *(built from captures only)* |
-    | `step_unparseable` / `step_max_tokens` / `step_refusal` | `res.status == "failed"`, `res.failure.kind` is `INVALID_OUTPUT` / `MAX_TOKENS` / `REFUSAL`; exactly one `specialist_failed` signal, `cause == res.failure.kind.value`, `specialist == "knowledge"`; `esc = run.updates["escalation"]["escalation"]`: `("escalate", HandoffReason.AI_FAILURE, Priority.P3, "AI.specialist_failed", True) == (esc.outcome, esc.reason, esc.priority, esc.rule_id, esc.degraded)` |
-
-    For every non-step case also: `len(run.lookups) == len([t for t in tools])` (one row per dispatched call; `report_facts`
-    is never dispatched). Every non-step case **except `tool_invoice_bad`** also has no `specialist_failed` signal.
-11. `test_malformed_reply_outputs(case)` — parametrised over `REPLY`.
-    - `draft_empty`, `draft_1201`, `draft_extra_promise`: `run.updates["responder"]["draft"] is None`; responder record
-      `status == "error"`, kind `INVALID_OUTPUT`; one `responder_fallback` signal cause `"invalid_output"`;
-      `checked = run.updates["checks"]["checked"]`: `checked.fallback_used is True`, `checked.text == ""`, events
-      completion/fact with `result == "fallback"`; `run.reply` has a block with `type == "failure_offer"` and
-      `person_key is True`, no block with `type == "text"` whose text came from the model; `run.reply.outcome ==
-      "degraded_handoff"`, `run.reply.degrade_reason == "model_error"`.
-    - `draft_refusal`: same, kind/cause `"refusal"`.
-    - `brief_zero_needs`, `brief_three_needs`, `brief_six_claims`, `brief_long_decision`:
-      `run.updates["brief"]["brief_extraction"] is None`; `"halt" not in run.updates["brief"]`; one `brief_failed`
-      signal cause `"invalid_output"`; `run.brief.attach_calls[-1][1] is None`; `stored = run.cases.attached[-1]`:
-      `[h.not_generated for h in stored.headings] == [False, True, False, True, False, False, True, False]` and
-      `stored.status == "failed"` *(real `BriefAssembler`, PD-9)*;
-      `len(run.cases.attached) == 2` (draft brief, then final); `run.updates["checks"]["checked"]` exists *(turn not
-      failed)*; no `brief_quote` event.
-    - `quote_ai_message`, `quote_staff_message`, `quote_paraphrase`: `shown, q = run.quote_calls[-1]`; `q.removals[0].reason
-      == "quote_not_found"`; `len(q.removals) == 1`; `ev = [e for e in run.updates["checks"]["checked"].events if
-      e.check == "brief_quote"]`: `ev == [CheckEvent(check="brief_quote", turn_id=TURN_IDS[5], result="trimmed",
-      removed=1, claim_kinds=("quote",))]`; `kept = run.brief.attach_calls[-1][1]`: `kept.claims == []`, `len(kept.needs)
-      == 1`; for `quote_staff_message` also `run.seeded.staff_id not in shown`; for `quote_ai_message`
-      `run.seeded.assistant_ids[4] not in shown`.
-12. `test_rejected_values_absent_from_records()` (AC-10) — for each id in `MARKER_CASES`: `run = run_case(<case>)`;
-    `marker = {"planner_choice_outside": OPTION_MARKER, "tool_query_301": "zq-rejected-query-7731", "draft_1201":
-    DRAFT_MARKER, "brief_six_claims": DRAFT_MARKER}[id]`; `corpus = case_corpus(run, exclude_specialist_output=(id ==
-    "tool_query_301"))`; `assert marker not in corpus`. For `tool_query_301` additionally assert the PD-7 exception
-    explicitly: `outs = [m.masked_output for m in spans(run).model_calls if m.record.role is Role.SPECIALIST]`;
-    `any("zq-rejected-query-7731" in o for o in outs)` *(DO-6 line 113: the model_call span holds the masked raw
-    output)*. Put `case_corpus` in `prompts_cases.py`:
-    ```python
-    def case_corpus(run: RawRun, *, exclude_specialist_output: bool = False) -> str:
-        parts: list[str] = []
-        parts += [c.model_dump_json() for c, _ in run.ledger.records]                 # CallRecord, ProviderFailure
-        for t in run.sink.turns:
-            parts += [m.record.model_dump_json() + m.masked_input for m in t.model_calls]
-            parts += [m.masked_output for m in t.model_calls
-                      if not (exclude_specialist_output and m.record.role is Role.SPECIALIST)]
-            parts += [f"{n.name} {n.status}" for n in t.nodes]                        # node / tool spans
-        parts += [json.dumps(s, sort_keys=True) for s in signals(run.logs)]           # SignalRecord
-        parts += [r.getMessage() + repr(r.args) + json.dumps(getattr(r, "signal", None), default=str) for r in run.logs]
-        for upd in run.updates.values():                                              # CheckEvent, ToolCallRecord, ProviderFailure
-            parts.append(repr(upd))
-        parts += [r.model_dump_json() for r in run.lookups]                           # lookup_log rows
-        parts.append(run.db_dump)                                                     # the whole DB copy
-        for wire in run.adapters.wires.values(): parts += tool_result_texts(wire)     # ToolError.message as the model saw it
-        return "\n".join(parts)
-    ```
-    Note: `repr(upd)` of the planner update holds `PlannerOutcome` (no rejected value: the adapter returned `None`);
-    the specialist update holds `SpecialistResult` with `ToolCallRecord`s (no args). If a marker is found, the failure
-    message must name the record type, not print the corpus: assert per part with `next((i for i, p in enumerate(parts)
-    if marker in p), None) is None` and report the index's source label (keep a parallel list of labels).
-13. `test_malformed_cases_leave_their_records(case)` (AC-14) — parametrised over `MALFORMED_CASES`. For each run:
-    - `recs = calls(run)`; every failed call has `status == "error"` and `failure is not None` with the kind the group
-      table expects; `spans(run).model_calls` has the same length as `recs` and `[m.record for m in
-      spans(run).model_calls] == recs` *(one ledger row and one model_call span per attempt)*;
-    - every signal dict has keys `{"record", "name", "turn_id", "thread_id", "request_id", "run_tag", "node", "cause",
-      "role", "specialist", "attempt", "recovered"}` with `turn_id == str(run.ctx.ids.turn_id)`, `thread_id == str(THREAD)`,
-      `request_id == str(REQUEST)`, `run_tag == "live"`, and `cause` a code (matches `^[a-z_]+$`);
-    - routing classifier cases: the `classifier` check event present; quote cases: the `brief_quote` event present;
-    - specialist cases: `len(run.lookups)` equals the number of `ToolCallRecord`s in the result, and each lookup row's
-      `turn_id == TURN_IDS[1]` and `message_id == run.seeded.customer_ids[1]`.
-
-Check while iterating: `uv run pytest tests/contract/test_prompts_vs_consumers.py -q -k "malformed or rejected or records"`.
-
-### 5.9 Step 8 — journeys (AC-13)
-
-Both files start with the J-1 pattern (`tests/journeys/j1/test_aea_57.py`): `pytestmark = pytest.mark.journey`, the
-`journey` fixture, `journey.step(J, name, needs=…, operations=…)`, `client.call(..., operation_id=...)` (validates every
-response against the OpenAPI). Constants:
-```python
-LOGIN_NEEDS = ("login_sessions", "demo_clock")
-CHAT_NEEDS = ("login_sessions", "session_service", "demo_service", "demo_clock", "reply_composer")
-TURN_NEEDS = (*CHAT_NEEDS, "turn_service", "run_graph")
-CASE_NEEDS = (*TURN_NEEDS, "handoff_service", "case_service")
-VALID_PLANNER = json.dumps({"knowledge": "no", "account": "none", "scheduling": "none", "handoff": "none", "topic": "other"})
-CLASSIFIER_NORMAL = json.dumps({DANGER_FIELD: "normal"})          # from meridian.agent.prompts.routing
-```
-Helpers (the J-1 shapes on `main`, `tests/journeys/j1/test_aea_57.py`; copy them into each file, never import from
-another ticket's journey file): inside each step, `signed = journey.login()` (`LoginResult`; `signed.client` is the
-signed-in `JourneyClient`); `start = signed.client.call("POST", "/api/chat/sessions", operation_id="startChatSession")`,
-assert `start.status_code == 201`, `thread_id = start.json()["thread_id"]`; `turn_id = str(uuid.uuid4())`;
-`submit(client, thread_id, turn_id, text)` → `client.call("POST", f"/api/chat/sessions/{thread_id}/turns",
-operation_id="submitTurn", body={"turn_id": turn_id, "payload": {"kind": "text", "text": text}})`. Because login and
-start happen inside the step, every step's `operations` is `("login", "startChatSession", "submitTurn")`.
-
-**`tests/journeys/j5/test_aea_60.py`** — docstring: "J-5 (AEA-60): a classifier answer outside its options leaves the
-rules standing; NODANGER books normally. API level through CON-2 with AEA-57's scripted model (raw output text)."
-`test_j5_classifier_outside_options_books_normally(journey)`: step `"J-5 NODANGER, classifier outside its options"`,
-`needs=TURN_NEEDS`, `operations=("login", "startChatSession", "submitTurn")`:
-1. `journey.script.add(Role.PLANNER, json.dumps({"knowledge": "no", "account": "none", "scheduling": "book_new",
-   "handoff": "none", "topic": "booking"}))`; `journey.script.add(Role.CLASSIFIER, json.dumps({DANGER_FIELD:
-   "emergency"}))`; `journey.script.add(Role.RESPONDER, json.dumps({"text": "I can help book a visit for your AC."}))`.
-2. `resp = submit(client, thread_id, turn_id, NODANGER_TEXT)` with `NODANGER_TEXT = "my AC isn't cooling"`; `resp.status_code == 200`.
-3. User sees: no block with `type in {"safety", "conditional_safety", "emergency_line"}`.
-4. Stored: `turn = journey.db.one("SELECT * FROM turns WHERE turn_id = ?", (turn_id,))` → `gate_result == "clear"`,
-   `outcome != "safety_reply"`, `danger_raised in (0, None)`, `"book_new" in json.loads(turn["plan_intents"] or "[]")`;
-   `journey.db.count("cases", "thread_id = ?", (thread_id,)) == 0`; `rows = journey.db.rows("SELECT * FROM check_events
-   WHERE turn_id = ? AND check_kind = 'classifier'", (turn_id,))` → exactly one, `result == "fallback"`,
-   `json.loads(rows[0]["codes"]) == ["fallback", "invalid_output"]`.
-5. Adapter calls: `[(c.role, c.result) for c in journey.script.problems()] == [(Role.CLASSIFIER, "invalid_output")]`.
-
-**`tests/journeys/j9/test_aea_60.py`** — docstring names J-9 (a) and (b).
-- `test_j9a_both_planners_malformed_hand_off(journey)`: step `"J-9a planner and fallback malformed"`, `needs=CASE_NEEDS`,
-  ops `("login", "startChatSession", "submitTurn")`. Script: PLANNER `'{"knowledge": "maybe"}'`; PLANNER_FALLBACK `json.dumps({**json.loads(VALID_PLANNER),
-  "extra": "x"})`; CLASSIFIER `CLASSIFIER_NORMAL`; RESPONDER `json.dumps({"text": "I'm passing this to a person."})`.
-  Submit `"Can you help me with my account?"` (generated). Assert: 200; a block with `type in {"handoff", "live_queued"}`
-  whose `reference` matches `^MHC-C-\d{4}$` and `promise_text` is non-empty; turn row `outcome == "degraded_handoff"`,
-  `degrade_reason == "model_error"`, `planner_failed == 1`; `case = journey.db.one("SELECT * FROM cases WHERE thread_id
-  = ?", (thread_id,))` → `reason == "ai_failure"`, `priority == "P3"`, `rule_id == "AI.planner_failed"`;
-  `[(c.role, c.result) for c in journey.script.problems()] == [(Role.PLANNER, "invalid_output"),
-  (Role.PLANNER_FALLBACK, "invalid_output")]`.
-- `test_j9b_malformed_draft_code_built_reply(journey)`: step `"J-9b malformed responder draft"`, `needs=TURN_NEEDS`,
-  ops `("login", "startChatSession", "submitTurn")`. Script: PLANNER `VALID_PLANNER`; CLASSIFIER `CLASSIFIER_NORMAL`; RESPONDER `json.dumps({"text": ""})`. Submit `"Hi, what
-  can you help me with?"`. Assert: 200; a block `type == "failure_offer"` with `person_key is True`; no `type == "text"`
-  block; turn `outcome == "degraded_handoff"`, `degrade_reason == "model_error"`; no case row; problems ==
-  `[(Role.RESPONDER, "invalid_output")]`; the recorded responder request (`[c for c in journey.script.calls if c.role
-  is Role.RESPONDER][0].request`) has `output_model is ResponderDraft` and both labels in `system_prefix +
-  system_dynamic + user` *(prompt ↔ consumer at the integrated level)*.
-
-Until AEA-51 binds `run_graph` and `reply_composer`, each step reports `blocked-on AEA-51: reply_composer not bound;
-run_graph not bound` (the harness's own wording; AEA-30, AEA-40, AEA-29 and AEA-44 are bound on `ebca98d`) and skips (the
-harness does this; never mark it passed). Run `uv run pytest -m journey tests/journeys/j5/test_aea_60.py
-tests/journeys/j9/test_aea_60.py -rs` and copy the skip reasons into the record.
-
-### 5.10 Step 9 — evidence record and context (AC-15)
-
-1. `docs/testing/journeys/<run-date>-AEA-60.md`, the `integrated-journeys.md` §4 table (format of
-   `docs/testing/journeys/2026-10-21-AEA-48.md`): **Claim** "AEA-60 prompt ↔ consumer checks: AC-1…AC-12 and AC-14 in
-   `tests/contract/test_prompts_vs_consumers.py`; AC-13 J-5 and J-9 steps"; **Level** `mock-tested` for the contract
-   module; for the journeys `integrated with a scripted model` only if every step passed, else `mock-tested` with the
-   blocked steps listed; **Tested revision** the commit adding the record (code commit SHA); **Environment** VPS,
-   Python 3.12, real adapters on `httpx`/`httpx2` `MockTransport`, real `ModelGateway`, real nodes, temp SQLite copy of
-   the issued DB, `FakeIndex`, `InMemoryTraceSink`, the real AEA-29 `BriefAssembler`, doubles for AEA-29 `CaseService` and AEA-28
-   `SchedulingService`; journeys on AEA-57's harness; **Command** every command of §7; **Result** pass counts per
-   command (from the run, not targets); **Evidence location** GitLab issue #60 comment; this file; **Remaining
-   limitations** real `CaseService` storage not exercised (AEA-51); live compatibility is AEA-61; F-1 (§8);
-   **Blocked by** AEA-51 (as the harness prints it) for the integrated journey level (or "none" if it has landed); **Journeys** J-5, J-9.
-2. `docs/design/code-design.md` §9: on the `├── contract/` line (and its continuation line) append
-   `; test_prompts_vs_consumers.py + prompts_{compare,world,render,wire,cases}.py (AEA-60, built <code sha>)` — keep the
-   tree's alignment; on the `**Built on `main`:**` line add `` `tests/contract/test_prompts_vs_consumers.py` and its
-   `prompts_*.py` helpers (AEA-60, `<code sha>`) `` before "the rest of this tree is planned". Change nothing else.
-3. `.claude/state/icm-progress.md`: add **one** row directly after the last `Routes verified against code and tests`
-   row: `| Routes verified against code and tests | provisional | <run-date>: AEA-60 prompt ↔ consumer checks
-   tests/contract/test_prompts_vs_consumers.py (<code sha>; <N> passed); record docs/testing/journeys/<run-date>-AEA-60.md
-   | Integrated level when AEA-51 lands |` (≤ 400 characters).
-4. `.claude/reference/area-map.md`: unchanged (say so in the report: no area row owns `tests/contract/`).
-
-### 5.11 Step 10 — commit
-
-Two commits on `aea-60-prompt-consumer-checks` (explicit paths, §7.4): `test(AEA-60): prompt ↔ consumer contract checks
-and J-5/J-9 journeys` (the eight test files), then `docs(AEA-60): journey record and context rows` (record, DO-3,
-ICM). Last line of each message: `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do not push.
-
----
+Build in this order; run the module after each step (`uv run pytest tests/contract/test_prompts_vs_consumers.py -q`).
+
+**Step 0 — preconditions.** On your branch: `grep -c NotImplementedError src/meridian/agent/nodes/act.py` must print `0`
+(AEA-39 merged). If it prints more, stop and report `BLOCKED-ON AEA-39` without writing code. `export UV_LINK_MODE=hardlink`.
+
+**Step 1 — `_prompts_render.py`: ids, context, recording gateway.**
+1. Constants: `THREAD = rf.THREAD`; `NOW = FixedClock().now()` (== `WORKED_PAIRS_NOW`); `JEV_MODEL = "typesafe/jev-1.13"`.
+2. `@contextmanager def case_ctx(sink: InMemoryTraceSink, turn_id: TurnId) -> Iterator[TurnContext]`: `ids = TurnIds(thread_id=THREAD, turn_id=turn_id, request_id=RequestId(str(uuid.uuid4())), run_tag="live", run_id=None, agent_version="test")`; inside `with sink.turn(ids) as span:` yield `TurnContext(ids=ids, budget=TurnBudget(started=t, deadline=t + 60.0), now=NOW, demo_session="demo-test", span=span)` with `t = time.monotonic()`. Invariant: the span is opened by the same sink the gateway writes to (`InMemoryTraceSink._own` raises otherwise).
+3. `class RecordingGateway` with DO-4 §12 method signatures `choose(role, req, ctx)`, `structured(role, req, ctx)`, `tool_step(role, req, ctx)`; constructor `(outcomes: Mapping[Role, Sequence[ModelOutcome[Any]]])`; each call appends `(role, req)` to `self.requests` and pops the next outcome for that role (raise `AssertionError(f"unexpected {role.value} call")` when empty). Builders: `ok_choice(picks) -> ModelOutcome[ChoiceAnswer]`, `ok_value(value) -> ModelOutcome[Any]`, `failed(kind, provider) -> ModelOutcome[Any]` (a `ProviderFailure` with `http_status=None, retry_after_s=None, retryable=False, provider_request_id=None`), `end_step() -> ModelOutcome[ToolStep]` (`ToolStep(text="", tool_calls=(), raw={"role": "assistant", "content": []}, stop_reason="end_turn")`). Pass it where `ModelGateway` is typed with `cast("ModelGateway", gw)`.
+4. `class NoScheduling`: `__getattr__` raises `AssertionError("AEA-60 never executes a scheduling tool")`. The registry factory only closes over it.
+5. `def build_registry(store: TempStore, index: FakeIndex) -> ToolRegistry`: `ToolRegistry((*knowledge_tools(index), *account_tools(store.uow), *scheduling_tools(cast(Any, NoScheduling()))))` (exactly AEA-51's wiring order, graph-tools §1).
+
+**Step 2 — the fixture conversation and render functions (`_prompts_render.py`).**
+1. `CONVERSATION: tuple[tuple[TurnId, str, str], ...]` = (turn id, customer text, assistant reply), synthetic, from WP-3/WP-4F:
+   `(pf.TURN_1, pf.WP3, "I can help book a visit for that.")`, `(pf.TURN_2, pf.WP3_PICK, "Saturday 16:00-19:00 is open.")`,
+   `(pf.TURN_3, "Saturday afternoon works best.", "Here are two windows.")`, `(pf.TURN_4, "Yes, the 4 to 7 window.", "Shall I book it?")`,
+   `(pf.TURN_5, pf.WP4F, "")`. `RENDER_TURNS = (0, 1, 4)` (turns 1, 2, 5).
+2. `def routing_state(k: int) -> ConversationState`: `pf.make_state(text_k, turn_id=turn_k, chat=[pf.line("customer", t, id), pf.line("assistant", a, id) for earlier turns], tasks=[] if k == 0 else [pf.open_task("t-1", specialist="scheduling", intent=TaskIntent.BOOK_NEW)]).model_copy(update={"thread_id": THREAD})`.
+3. `def seed_conversation(store) -> dict[str, list[int]]`: write every customer line (role `customer`), every non-empty assistant line (role `assistant`) and one `("representative", "A team member is checking the schedule.")` on `pf.TURN_4`; return ids by role.
+4. Render functions, each returning `list[tuple[Role, ChoiceRequest | StructuredRequest[Any] | ToolStepRequest]]` for one turn index `k`, all through the real node or runner:
+   - `render_planner(k)`: `planner(routing_state(k), pf.runtime(ctx), deps=pf.make_deps(gw))` with `gw = RecordingGateway({Role.PLANNER: [failed(INVALID_OUTPUT, "openrouter_jev")], Role.PLANNER_FALLBACK: [ok_choice(pf.choices())]})`. This yields both the `planner` and the `planner_fallback` request. (`pf.make_deps(gateway)` is the plan fixture's builder.)
+   - `render_classifier(k)`: `danger_classifier(...)` with `{Role.CLASSIFIER: [ok_choice({"danger_level": "normal"})]}`.
+   - `render_specialist(kind, k)`: a `SpecialistRunner(gateway=cast(ModelGateway, gw), transcript=<AnthropicAdapter from adapter_for(handler that raises AssertionError)>, dispatcher=ToolDispatcher(registry, store.uow), specs=SPECS, brakes=Brakes(), trace=sink)`, `gw = RecordingGateway({Role.SPECIALIST: [end_step()]})`; task `make_task(kind, intent, text_k, messages=<earlier customer texts>)` with intent `ANSWER_QUESTION` / `READ_INVOICE` / `BOOK_NEW` and `slice_=scheduling_slice()` for scheduling; scope `ToolCallScope(ids=ctx.ids, customer_id=None, shown_slot_ids=frozenset(), now=ctx.now, message_id=<seeded customer id of turn k>)`. Return the recorded `ToolStepRequest` and keep the task (AC-5 reads its slice).
+   - `render_responder(k)`: `reply.responder(rf.state(turn_input=rf.turn_input(turn=turn_k, message_id=id_k, text=text_k), facts=rf.facts(turn_id=turn_k), chat_window=<lines>), runtime, deps=rf.deps(uow=store.uow, gw=cast(ModelGateway, gw)))`, `gw` scripted `{Role.RESPONDER: [ok_value(ResponderDraft(text="I can help with that."))]}`.
+   - `render_brief(k)`: `reply.brief(rf.state(turn_input=…, handoff=rf.handoff_result(rf.case_summary()), facts=rf.facts(turn_id=turn_k)), runtime, deps=rf.deps(uow=store.uow, gw=…, cases=rf.FakeCaseService(rf.case_summary()), brief=BriefAssembler()))`, `gw` scripted `{Role.BRIEF: [ok_value(<valid BriefExtraction quoting the seeded WP3 message>)]}`.
+5. `RENDERERS: Mapping[str, Callable[...]]` keyed `"planner"`, `"planner_fallback"`, `"classifier"`, `"responder"`, `"brief"`, `"specialist:knowledge"`, `"specialist:account"`, `"specialist:scheduling"`. The role `"specialist"` is covered when every `specialist:<kind>` key for `SPECS` exists.
+6. `def offered_set(role: str, request) -> object`: choice → `{f.name: frozenset(f.options) for f in request.fields}`; tool step → `(tuple((t.name, json.dumps(t.input_schema, sort_keys=True), t.strict) for t in request.tools))`; structured → `json.dumps(request.output_model.model_json_schema(), sort_keys=True)`.
+
+**Step 3 — `_prompts_checks.py`: `Drift` and the comparison helpers.** Every helper raises `class Drift(AssertionError)` with a message naming role, field and value, never customer text. Message forms (exact; AC-11 matches them):
+- `f"{role}.{field} offers '{value}'; {consumer} does not accept it"`
+- `f"{role}.{field} does not offer '{value}'; {consumer} accepts it"`
+- `f"{role} has no rendered case"` (inventory)
+- `f"specialist.{kind} wording names '{token}'; no tool sent with it"`
+- `f"responder.output_model offers '{name}'; ResponderDraft does not accept it"`
+- `f"brief.shown offers message {mid} which is not a customer message of this thread"`
+
+Helpers (signatures are decisions of this plan):
+1. `def literal_values(model: type[BaseModel], field: str) -> frozenset[str]`: `frozenset(typing.get_args(model.model_fields[field].annotation))` (works for `Topic` and the inline `Literal`s; verified on `main`).
+2. `def check_choice_fields(role: str, request: ChoiceRequest, consumer: type[BaseModel], *, fields: Mapping[str, str] | None = None, code_only: frozenset[str] = frozenset()) -> None`. For the planner: field names must equal `set(PlannerChoices.model_fields)` (raise `Drift(f"{role} sends field '{name}'; PlannerChoices has no such field")` / the reverse); for each field compare option keys with `literal_values` both ways, ignoring `code_only` in the reverse direction; assert `len(options) <= 255`. For the classifier call it with `consumer=DangerAssessment, fields={DANGER_FIELD: "label"}` (request field → consumer field) and the consumer name `"DangerAssessment.label"`.
+3. `def check_quoted_keys(role: str, request: ChoiceRequest) -> None`: every `re.findall(r'"([a-z_]+)"', text)` over `request.system` and each `field.instructions` must be in the union of the request's option keys (today: planner `none`, `no`; classifier `normal`).
+4. `CODE_ONLY: frozenset[str] = frozenset({"safety", "danger", "burning_unclear", "customer_requested_person", "legal_or_chargeback", "commercial", "fee_bearing_change", "identity_unverified", "ai_failure", "burning_ruled_out"})`; assert at import that `CODE_ONLY <= {r.value for r in HandoffReason}`. `FORBIDDEN_FIELDS = frozenset({"priority", "case_ref", "case_reference", "reference", "promise", "promise_text", "customer_id"})`. `EXEMPT = frozenset({("classifier", "danger_level")})` (clarification C-1).
+5. `def property_names(schema: object) -> set[str]` (recursive over `properties` and `$defs`) and `def enum_values(schema) -> set[str]` (recursive over `enum` lists).
+6. `def trimmed(args_model: type[LLMFacing]) -> dict[str, Any]`: an independent copy of the title-stripping rule (drop every `"title"` key whose value is a `str`, except names directly under `properties` / `$defs`, never recurse into `default`, `examples`, `const`, `enum`). Do **not** import `dispatch._trimmed_schema` (comparing a function with itself proves nothing).
+7. `def check_specialist_request(kind: str, request: ToolStepRequest, registry: ToolRegistry, dispatcher: ToolDispatcher, task: SpecialistTask) -> None`, the AC-5 list, in this order (each failure is a `Drift` naming kind, tool, field):
+   1. `names = [t.name for t in request.tools]`; `names == [s.name for s in dispatcher.schemas(spec.tool_kinds)] + [REPORT_FACTS_TOOL]` (order as sent);
+   2. each non-report name: `re.fullmatch(r"[a-z_]{1,64}", name)`, `registry.get(name) is not None`, `registry.get(name).kind in spec.tool_kinds`;
+   3. `registry.get(REPORT_FACTS_TOOL) is None`; `registry.check_covers(spec.tool_kinds)` does not raise;
+   4. each tool: `strict is True`; `input_schema == trimmed(defn.args_model)`; `set(input_schema.get("properties", {})) == set(defn.args_model.model_fields)`; `input_schema["additionalProperties"] is False`; `property_names(input_schema) & set(ToolCallScope.model_fields) == set()`;
+   5. the `report_facts` tool: `input_schema == spec.report_model.model_json_schema()` (PD-9, untrimmed);
+   6. wording: tokens `re.findall(r"\b[a-z]+(?:_[a-z0-9]+)+\b", request.system_prefix + "\n" + request.system_dynamic)`; each token must be in `allowed = set(names) | property_names(all sent schemas) | enum_values(all sent schemas) | json_keys(task.slice.model_dump(mode="json"))`. Today's tokens (measured on `main`): knowledge `kb_search, passage_id, report_facts`; account `read_invoices, read_membership, read_warranty, report_facts`; scheduling `appointment_id, hvac_repair, hvac_tune_up, report_facts, shown_slots, wanted_time` — all allowed.
+8. `def check_responder_request(request: StructuredRequest[Any]) -> None`: `request.output_model is ResponderDraft` else `Drift` naming each extra property (`property_names(model_json_schema) - {"text"}`); `json.loads(trimmed_schema(ResponderDraft)) == {"additionalProperties": False, "properties": {"text": {"maxLength": 1200, "minLength": 1, "type": "string"}}, "required": ["text"], "type": "object"}`; `trimmed_schema(ResponderDraft) in request.system_prefix`; `LABEL_THIS_TURN in request.system_dynamic and LABEL_SETTLED in request.system_dynamic`; `property_names(...) & FORBIDDEN_FIELDS == set()`.
+9. `def parse_brief_lines(user: str) -> dict[int, str]`: lines matching `^\[message (\d+)\] (.*)$`.
+   `def check_brief_ids(rendered: Mapping[int, str], shown: Mapping[int, str], customer_ids: set[int]) -> None`: every rendered id in `customer_ids` (else the `brief.shown …` Drift); `dict(rendered) == dict(shown)` (ids and byte-identical text).
+10. `def missing_cases(names: Iterable[str], renderers: Mapping[str, object]) -> None`: raise `Drift(f"{name} has no rendered case")` for the first name with no key (`specialist` is satisfied by the `specialist:<kind>` keys of every `SPECS` kind).
+11. The held-out / socket guard (AC-12):
+    - `HELD_OUT_PREFIXES: list[str] = [str(REPO_ROOT / "eval" / "cases" / "heldout"), str(Path.home() / ".meridian-sealed")]` where `REPO_ROOT = Path(__file__).resolve().parents[2]`.
+    - `@dataclass class Guard: active: bool = False; opens: list[str]; connects: list[str]`; `GUARD = Guard()`.
+    - `def _hook(event: str, args: tuple[object, ...]) -> None`: return at once unless `GUARD.active`; on `"open"` with a `str | bytes | os.PathLike` first arg, `os.path.abspath(os.fsdecode(arg))` starting with any prefix → append; on `"socket.connect"` or `"socket.getaddrinfo"` → append the event name. Wrap the body in `try/except Exception: pass` (an audit hook must never raise).
+    - `def install_guard() -> None`: `sys.addaudithook(_hook)` once (module flag). Invariant: audit hooks cannot be removed, so the hook is inert unless `GUARD.active`.
+
+**Step 4 — tests AC-1 to AC-6** in `test_prompts_vs_consumers.py` (each opens its own `temp_sqlite()` and `InMemoryTraceSink()`):
+- `test_every_role_and_spec_has_a_rendered_case(name)` parametrised over `[r.value for r in Role] + [f"specialist:{k}" for k in SPECS]`: run the renderer for k in `RENDER_TURNS`; assert one request per turn for that role; assert `offered_set` equal on the three turns; for `planner_fallback` assert its request `==` the planner request of the same turn. Inside the same test (one extra param `"triage"` is not possible on `Role`, so do it once, in the `name == "planner"` param): `with pytest.raises(Drift, match="triage has no rendered case"): missing_cases([*(r.value for r in Role), "triage"], RENDERERS)`.
+- `test_routing_fields_match_planner_choices_and_danger_label()`: render turn 1; `check_choice_fields("routing.planner", planner_req, PlannerChoices)`; same for the fallback request; `check_choice_fields("routing.classifier", classifier_req, DangerAssessment, fields={DANGER_FIELD: "label"})`; `[f.name for f in classifier_req.fields] == [DANGER_FIELD]`; `check_quoted_keys` on both; assert `"late_technician"` in the handoff options.
+- `test_join_plan_accepts_every_offered_value(field, option)`: parametrise at import over `[(f.name, o) for f in routing_prompts.PLANNER_FIELDS for o in f.options]` (data-driven). Build `PlannerOutcome(choices=PlannerChoices.model_validate(pf.choices(**{field: option})), probabilities=None, model=JEV_MODEL, fallback_used=False, failure=None)`; `plan = join_plan(outcome, None, pf.free_text_gate(), pf.make_state(pf.NODANGER))`. Then: every `t.specialist in SPECS`; if `field == "topic"`: `plan.topic == option`; if `field == "handoff" and option != "none"`: `plan.handoff_request is EXPECTED_HANDOFF[option]` with `EXPECTED_HANDOFF = {"refund": REFUND, "billing_dispute": BILLING_DISPUTE, "membership_cancel": MEMBERSHIP_CANCEL, "unsupported_other": UNSUPPORTED_ACTION, "complaint_or_manager": COMPLAINT_OR_MANAGER, "late_technician": LATE_TECHNICIAN}` (cases.md §3.4; written out in the test, never imported from `plan._HANDOFF_REASON`), `priority_for(plan.handoff_request)` returns a `Priority`, and `decide_escalation(EscalationInputs(gate=pf.free_text_gate(), plan=plan, results=(), counters=FailureCounters(), identity=state.identity, halt=None, models_disabled=False, now=NOW))` has `outcome == "escalate"`, `reason is plan.handoff_request`, `priority is not None`.
+- `test_no_prompt_offers_a_code_only_value()`: for every rendered choice request except `EXEMPT` pairs, `set(options) & CODE_ONLY == set()` (message names role, field, value); assert the exemption exists by name (`("classifier", "danger_level") in EXEMPT`); for every specialist request, `(property_names ∪ enum_values of every tool schema) & CODE_ONLY == set()` and `property_names & FORBIDDEN_FIELDS == set()`; same `FORBIDDEN_FIELDS` check on `ResponderDraft` and `BriefExtraction` schemas.
+- `test_specialist_tools_match_registry_and_report_models(kind)` parametrised over `list(SPECS)`: `check_specialist_request(...)` on the turn-1 request.
+- `test_reply_schemas_and_brief_message_ids_match_checks(monkeypatch)`: WP-7 refund turn: seed `rf.WP7_MESSAGE` (customer, `rf.TURN_4`), one assistant and one representative line; `check_responder_request(<rendered responder request>)`; brief: `request.output_model is BriefExtraction`; spy `seen: list[dict[int, str]]`, `monkeypatch.setattr(reply, "check_quotes", lambda ext, shown: (seen.append(dict(shown)), check_quotes(ext, shown))[1])`; run `reply.brief` then `reply.checks` on the state with `brief_extraction` set to the brief node's value; `check_brief_ids(parse_brief_lines(brief_req.user), seen[0], customer_ids)` where `customer_ids` = ids of rows with `role == "customer"` from `tx.core.messages.all_for_thread(THREAD)`.
+
+**Step 5 — `_prompts_malformed.py`: real adapters and the gateway.**
+1. `def jev_adapter(handler: Callable[[httpx.Request], httpx.Response]) -> tuple[JevAdapter, list[httpx.Request]]`: records requests; `JevAdapter(httpx.Client(transport=httpx.MockTransport(recording)), api_key=SecretStr("test-key-" + secrets.token_hex(8)), model=JEV_MODEL)`.
+2. `def jev_body(answers: Mapping[str, str]) -> dict[str, Any]` and `def jev_ok(answers) -> handler` per section 4.
+3. `def real_gateway(*, sink: InMemoryTraceSink, ledger: RecordingLedger, **adapters: object) -> ModelGateway`: `d = default_doubles(ledger=ledger, **adapters)`; `return ModelGateway(**{**gateway_kwargs(d), "trace": sink})`. Unused roles keep the scripted doubles from `default_doubles`.
+4. `@dataclass class CaseRun`: `case_id`, `ledger: RecordingLedger`, `sink: InMemoryTraceSink`, `signals: list[dict[str, Any]]`, `log_records: list[logging.LogRecord]`, `check_events: list[CheckEvent]`, `lookup_rows: list[LookupRow]`, `tool_records: list[ToolCallRecord]`, `failures: list[ProviderFailure]`, `requests: dict[str, int]` (HTTP requests per adapter), `next_request_bodies: list[dict]` (Anthropic bodies after the first), `stored_briefs: list[Brief]`, `result: object` (node update, `SpecialistResult`, `Plan`, `CheckedReply`, `ComposedReply` as relevant), `outcome: RunOutcome | None`, `ctx: TurnContext`.
+5. `MARK_OPTION = "zq-rejected-option-7731"`, `MARK_QUERY = "zq-rejected-query-7731"`, `MARK_DRAFT = "zq-rejected-draft-7731"`; `def padded(marker: str, length: int) -> str: return "a" * (length - len(marker) - 1) + " " + marker` (assert `len == length`).
+6. Case runners, each `(case_id: str, caplog: pytest.LogCaptureFixture) -> CaseRun`, each with its own `temp_sqlite()`, sink, ledger and `case_ctx`. `caplog.set_level(logging.DEBUG)` and `caplog.clear()` at the start; collect `list(caplog.records)` at the end.
+
+   **`run_routing_case`** (AC-7). Planner and classifier each get their own `JevAdapter`; `fallback` is `adapter_for(...)`. State `pf.make_state(text, turn_id=pf.TURN_1).model_copy(update={"thread_id": THREAD})`:
+
+   | case_id | text | Jev planner body | Sonnet fallback text | Jev classifier body |
+   |---|---|---|---|---|
+   | `a-choice-outside-options` | `pf.WP3` | BOOK answers but `knowledge = MARK_OPTION` | BOOK JSON | — |
+   | `b-missing-field` | `pf.WP3` | BOOK answers without `topic` | BOOK JSON | — |
+   | `c-unparseable-json` | `pf.WP3` | `content=b"{not json"` | BOOK JSON | — |
+   | `d1-fallback-extra-field` | `pf.NODANGER` | `knowledge = "maybe"` | BOOK JSON plus `"urgency": "today"` | — |
+   | `d2-fallback-option-outside` | `pf.NODANGER` | `knowledge = "maybe"` | BOOK JSON with `"handoff": "cancel_membership"` | — |
+   | `e1-classifier-emergency` | `pf.NODANGER` | BOOK answers (valid) | — | `{"danger_level": "emergency"}` |
+   | `e2-classifier-empty` | `pf.NODANGER` | BOOK answers (valid) | — | `{}` (no answers) |
+
+   BOOK = `pf.choices(scheduling="book_new", topic="booking")`. For a–d run `planner(...)` then `plan_join(merged_state)` (merge with `state.model_copy(update=dict(update))`); for e run `planner`, `danger_classifier`, then `plan_join` on the state with both updates merged, and `route_after_plan_join(state_with_plan)`.
+
+   **`run_specialist_case`** (AC-8, runner level). Seed one customer message (`rf.seed(store, customer=[(rf.TURN_4, pf.WP1)])`); `index = FakeIndex(passages=(WP1_INCLUDES, WP1_PRICE, WP1_MINIMUM))`; real registry and `ToolDispatcher(registry, store.uow)`; `adapter, recorder = adapter_for(sequence(*handlers))` used as both the gateway's `specialist` adapter and the runner's `transcript`; spy specs: `specs = {**SPECS, kind: dataclasses.replace(SPECS[kind], build_result=spy)}` where `spy` records the `RunOutcome` and returns `SPECS[kind].build_result(outcome)` (observation only); `SpecialistRunner(gateway=gw, transcript=adapter, dispatcher=dispatcher, specs=specs, brakes=Brakes(), trace=sink)`; scope with `customer_id=None` and the seeded `message_id`. Step 2 handler for "the run goes on" = `ok([{"type": "text", "text": "Done."}])`.
+
+   | case_id | task | step 1 tool_use(s) | step 2 |
+   |---|---|---|---|
+   | `unknown-tool` | knowledge / ANSWER_QUESTION / `pf.WP1` | `issue_refund` `{"amount_cents": 47800}` | end |
+   | `not-allowed` | knowledge | `read_invoices` `{}` | end |
+   | `args-none` | knowledge | `kb_search` input `"not-json{"` (a string) | end |
+   | `extra-customer-id` | knowledge | `kb_search` `{"query": "membership", "customer_id": "C-0001"}` | end |
+   | `query-301` | knowledge | `kb_search` `{"query": padded(MARK_QUERY, 301)}` | end |
+   | `invoice-pattern` | account / READ_INVOICE / "What is my bill for?" | `read_invoices` `{"invoice_number": "INV-12"}` | end |
+   | `report-6-points` | knowledge | `kb_search {"query": "membership"}` and `report_facts {"answered": true, "points": [6 × {"text": "Two tune-ups a year.", "passage_id": str(WP1_INCLUDES.passage_id)}]}` in the same step | none (the runner returns after a step with a report) |
+   | `report-summary-301` | account / READ_MEMBERSHIP | `report_facts {"summary": "s" * 301}` only | none |
+
+   **`run_act_case`** (AC-8, act node; step 9). Same store and runner as above (knowledge, no spy needed) with one handler: `step-unparseable` → `respond(200, content=b"{not json")`; `step-max-tokens` → `ok([{"type": "text", "text": "partial"}], stop_reason="max_tokens")`; `step-refusal` → `ok([{"type": "text", "text": ""}], stop_reason="refusal")`. `deps = GraphDeps(gateway=gw, retrieval=index, uow=store.uow, identity=None, scheduling=NoScheduling(), handoff=None, brief=None, demo=None, limits=Limits(), trace=sink, specialists=runner, cases=None, ledger=ledger)`; `planned = PlannedTask(order=1, specialist="knowledge", intent=TaskIntent.ANSWER_QUESTION, needs_identity=False)`; `state = rf.state(turn_input=rf.turn_input(turn=rf.TURN_4, message_id=mid, text=pf.WP1))`; `update = act.run_specialist(SpecialistSend(planned=planned, state=state), pf.runtime(ctx), deps=deps)`; then `state2 = state.model_copy(update={"specialist_results": update["specialist_results"], "plan": Plan(mode="act", tasks=(planned,), handoff_request=None, topic="other", source="planner")})` and `esc = act.escalation(state2, pf.runtime(ctx), deps=deps)["escalation"]`.
+
+   **`run_reply_case`** (AC-9 responder). Seed WP-7; `state = rf.state(turn_input=rf.turn_input(turn=rf.TURN_4, message_id=mid, text=rf.WP7_MESSAGE), facts=rf.facts(), settled=rf.settled())`; responder adapter `adapter_for(handler)`; `upd = reply.responder(state, rt, deps=deps)`; `s2 = state.model_copy(update={"draft": upd["draft"]})`; `checked = reply.checks(s2, rt, deps=deps)["checked"]`; `composed = ReplyComposer().compose(s2.model_copy(update={"checked": checked}), ctx)`. Bodies: `draft-empty` `{"text": ""}`; `draft-1201` `{"text": padded(MARK_DRAFT, 1201)}`; `draft-extra-promise` `{"text": "Your visit is booked.", "promise": "tomorrow"}`; `draft-refusal` stop_reason `"refusal"`.
+
+   **`run_brief_case`** (AC-9 brief). Seed WP-7 (customer), `"I'm sorry the repair didn't fix it."` (assistant) and `"A team member is reviewing your refund."` (representative); `cases = rf.FakeCaseService(rf.case_summary())`; `deps = rf.deps(uow=store.uow, gw=gw, cases=cases, brief=BriefAssembler())`; `state = rf.state(turn_input=…, handoff=rf.handoff_result(rf.case_summary()), facts=rf.facts(), settled=rf.settled())`; `b = reply.brief(state, rt, deps=deps)`; `checked = reply.checks(state.model_copy(update={"brief_extraction": b["brief_extraction"]}), rt, deps=deps)["checked"]`. Let `cid, aid, rid` be the seeded ids and `Q = {"message_id": cid, "text": "full refund"}`. Bodies (JSON text of a `BriefExtraction`-shaped object):
+
+   | case_id | body |
+   |---|---|
+   | `brief-needs-0` | `{"needs": [], "claims": [], "open_decision": "Decide on the refund."}` |
+   | `brief-needs-3` | `{"needs": [Q, Q, Q], "claims": [], "open_decision": "Decide on the refund."}` |
+   | `brief-claims-6` | `{"needs": [Q], "claims": [Q]*6, "open_decision": "Decide on the refund."}` |
+   | `brief-decision-201` | `{"needs": [Q], "claims": [], "open_decision": "d" * 201}` |
+   | `quote-ai-message` | `{"needs": [Q], "claims": [{"message_id": aid, "text": "the repair"}], "open_decision": "Decide on the refund."}` |
+   | `quote-staff-message` | `{"needs": [Q], "claims": [{"message_id": rid, "text": "reviewing your refund"}], "open_decision": "Decide on the refund."}` |
+   | `quote-paraphrase` | `{"needs": [Q], "claims": [{"message_id": cid, "text": "I want my money back " + MARK_DRAFT}], "open_decision": "Decide on the refund."}` |
+
+**Step 6 — `test_malformed_routing_outputs(case_id)`** (expected values; `K = ProviderFailureKind`):
+- a, b, c: `requests == {"jev_planner": 1, "fallback": 1}`; planner update `PlannerOutcome.fallback_used is True`, `choices` = BOOK; plan `source == "fallback_planner"`, one task `BOOK_NEW`; exactly one signal `{"name": "planner_fallback", "cause": "invalid_output", "role": "planner", "node": "planner", "recovered": True}`; the Jev `CallRecord` has `status == "error"`, `failure.kind is K.INVALID_OUTPUT`, `attempt == 1` (no retry).
+- d1, d2: `requests == {"jev_planner": 1, "fallback": 1}`; `PlannerOutcome(choices=None, fallback_used=True, failure.kind=INVALID_OUTPUT)`; plan `== Plan(mode="act", tasks=(), handoff_request=None, topic="other", source="rules_only", planner_failed=True)`; one `planner_fallback` signal with `recovered is False`.
+- e1, e2: `requests["jev_classifier"] == 1`; `danger == DangerAssessment(label="normal", raised=False, confidence=None, failure=<failure with kind INVALID_OUTPUT>)` (compare `label`, `raised`, `failure.kind`); `check_events == [CheckEvent(check="classifier", turn_id=ctx.ids.turn_id, result="fallback", codes=("fallback", "invalid_output"))]`; exactly one signal `classifier_fallback` (`role == "classifier"`, `node == "danger_classifier"`, `cause == "invalid_output"`); `plan_join` returns `{"plan": …}` with tasks `(BOOK_NEW,)` and no `halt`; `route_after_plan_join(...) != "safety"`.
+
+**Step 7 — `test_malformed_specialist_outputs(case_id)`** (runner-level cases; the three `step-*` ids dispatch to `run_act_case`, step 9):
+- `unknown-tool`: `tool_records == [<name "issue_refund", kind None, outcome "refused", error UNKNOWN_TOOL, lookup_id not None>]`; one lookup row, `tool == "issue_refund"`, `result_seen == "refused:unknown_tool"`; `requests["specialist"] == 2` (the run went on); `index.searches == []`.
+- `not-allowed`: one record `kind is ToolKind.ACCOUNT_READ`, `error is NOT_ALLOWED`; lookup `"refused:not_allowed"`.
+- `args-none`, `extra-customer-id`, `query-301`: one record `error is BAD_ARGUMENTS`; lookup `"refused:bad_arguments"`; `index.searches == []` (the executor never ran); `requests["specialist"] == 2`.
+- `invoice-pattern`: one record `name == "read_invoices"`, `error is BAD_ARGUMENTS`; lookup `"refused:bad_arguments"`; result `AccountResult.status == "failed"`, `invoices == ()`.
+- `report-6-points`: spy `outcome.report is None`; result `KnowledgeResult.status == "no_current_source"`, `points == ()`; `len(index.searches) == 1`; one lookup row for `kb_search`.
+- `report-summary-301`: `outcome.report is None`; `AccountResult.status == "failed"`, `membership is None`, `invoices == ()`, `tools == ()`; no lookup row.
+
+**Step 8 — `test_malformed_reply_outputs(case_id)`:**
+- `draft-*`: `upd == {"draft": None}`; one signal `{"name": "responder_fallback", "role": "responder", "node": "responder", "cause": "invalid_output" (or "refusal" for draft-refusal), "attempt": 1}`; `checked.fallback_used is True`, `checked.text == ""`; `composed` has a block with `type == "failure_offer"` and `person_key is True`, `composed.outcome == "degraded_handoff"`, `composed.degrade_reason == "model_error"`; `requests["responder"] == 1`.
+- `brief-needs-0`, `brief-needs-3`, `brief-claims-6`, `brief-decision-201`: `b == {"brief_extraction": None}`; one `brief_failed` signal, `cause == "invalid_output"`, `role == "brief"`; the last brief in `cases.attached` has `status == "failed"` and headings 2, 4, 7 `not_generated is True` (others `False`); `reply.checks` returned a `CheckedReply` (the turn is not failed).
+- `quote-ai-message`, `quote-staff-message`, `quote-paraphrase`: `b["brief_extraction"]` is not None; `checked.events` contains `CheckEvent(check="brief_quote", result="trimmed", removed=1)`; the stored brief's heading 4 items contain no item whose text equals the removed quote; no `brief_failed` signal.
+
+**Step 9 — act-node part of AC-8 (needs AEA-39).** `step-unparseable` / `step-max-tokens` / `step-refusal` via `run_act_case`: `update["specialist_results"][0].status == "failed"` and `.failure.kind` is `INVALID_OUTPUT` / `MAX_TOKENS` / `REFUSAL`; `requests["specialist"] == 1`; exactly one signal `{"name": "specialist_failed", "node": "run_specialist", "role": "specialist", "specialist": "knowledge", "cause": <kind value>}`; `esc.outcome == "escalate"`, `esc.reason is HandoffReason.AI_FAILURE`, `esc.priority is Priority.P3`, `esc.rule_id == "AI.specialist_failed"`, `esc.degraded is True` (cases.md §3.4 rule 6). If AEA-39's node names or fields differ from graph-nodes §4/§9.5, report the mismatch as a defect on AEA-39; do not adapt the test to a contract-breaking value.
+
+**Step 10 — AC-10, AC-11, AC-12, AC-14.**
+- `test_rejected_values_absent_from_records(caplog)`: run `a-choice-outside-options` (MARK_OPTION), `query-301` (MARK_QUERY), `draft-1201` (MARK_DRAFT) and `quote-paraphrase` (MARK_DRAFT). For each `CaseRun` build the haystack: `json.dumps` of every `failure.model_dump(mode="json")`, every ledger `CallRecord`, every signal dict, every `CheckEvent`, every `ToolCallRecord`, every `LookupRow`, every stored brief, the `tool_result` contents of `next_request_bodies`, and every log record (`record.getMessage()` plus `json.dumps(record.__dict__, default=str)`). Assert the marker is not a substring. Trace sink: for MARK_OPTION and the 1,201-char draft, the marker is absent from every `masked_input` and `masked_output`; for MARK_QUERY and the paraphrase, the marker is absent from every `masked_input`, and present (if at all) only in the `masked_output` of the one span whose attempt produced it (clarification C-2): assert `[i for i, c in enumerate(spans) if marker in c.masked_output] in ([], [producing_index])`.
+- `test_check_fails_on_drift(drift_id, monkeypatch)`: six params, each `pytest.raises(Drift, match=re.escape(<expected message>))`:
+  - `planner-handoff-added`: monkeypatch `routing_prompts.PLANNER_FIELDS` with a copy whose `handoff` field has `cancel_membership` added; re-render via `routing_prompts.planner_request(...)`; `check_choice_fields("routing.planner", req, PlannerChoices)` → `routing.planner.handoff offers 'cancel_membership'; PlannerChoices.handoff does not accept it`.
+  - `planner-late-technician-removed`: same, `late_technician` removed → `routing.planner.handoff does not offer 'late_technician'; PlannerChoices.handoff accepts it`.
+  - `classifier-emergency-added`: monkeypatch `routing_prompts.CLASSIFIER_FIELDS` with `emergency` added → `routing.classifier.danger_level offers 'emergency'; DangerAssessment.label does not accept it`.
+  - `specialist-refund-invoice`: monkeypatch `specialist_prompts.ACCOUNT_PREFIX` to `ACCOUNT_PREFIX + " Call refund_invoice when asked."`, re-render through `SPECS["account"].render(task, ctx)` and the runner → `specialist.account wording names 'refund_invoice'; no tool sent with it`.
+  - `responder-promise-field`: `class DriftedDraft(LLMFacing): text: str; promise: str` (defined in the test); `req.model_copy(update={"output_model": DriftedDraft})` → `responder.output_model offers 'promise'; ResponderDraft does not accept it`.
+  - `brief-staff-message`: rendered map plus the representative message id → `brief.shown offers message <rid> which is not a customer message of this thread`.
+  Build the copies with `ChoiceField.model_copy(update={"options": …})` and tuple rebuilds; never write to the prompt modules.
+- Module guard: in `test_prompts_vs_consumers.py`, `@pytest.fixture(scope="module", autouse=True) def _no_heldout_no_network() -> Iterator[None]`: `install_guard(); GUARD.active = True; yield; GUARD.active = False; assert GUARD.opens == [] and GUARD.connects == [], (GUARD.opens, GUARD.connects)`.
+  `test_no_heldout_reads_and_no_network(tmp_path)`: assert `GUARD.active`; record `before = (list(GUARD.opens), list(GUARD.connects))`; prove the hook bites without touching held-out data: append `str(tmp_path)` to `HELD_OUT_PREFIXES`, `(tmp_path / "probe.txt").write_text("x")`, `open(tmp_path / "probe.txt").close()`, assert a new entry under `tmp_path`, remove the prefix and those entries; `sys.audit("socket.connect", None, ("127.0.0.1", 9))` (an audit event only, no socket), assert recorded, remove it; finally assert `before == ([], [])` (no held-out open and no socket by earlier tests in this worker; the fixture teardown covers the rest of the module). Put this test **last** in the file.
+- `test_malformed_cases_leave_their_records(case_id, caplog)` parametrised over every case id of AC-7…AC-9 (7 + 11 + 11 = 29): ledger has one record per HTTP attempt, each failed attempt `status == "error"` with `failure.kind` = the case's kind and `role` = the case's role; the sink has exactly as many `model_calls` as ledger records, with matching `record` objects; every signal carries `name, cause, role, node, turn_id == ctx.ids.turn_id, thread_id == THREAD, request_id == ctx.ids.request_id, run_tag == "live"`; classifier cases carry the `classifier` event; quote cases carry the `brief_quote` event; specialist cases have exactly one lookup row per dispatched call (`len(lookup_rows) == len(tool_records)`). (`step-*` cases go through `run_act_case`.)
+
+**Step 11 — journeys (AC-13)**, copying `tests/journeys/j5/test_aea_37.py`'s structure (`pytestmark = pytest.mark.journey`, `open_chat`, `submit`, `journey.step(J, name, needs=…, operations=("submitTurn",))`, `journey.script.add(Role.X, raw)`, `journey.db.one/rows/count`). `TURN_NEEDS = ("login_sessions", "session_service", "demo_service", "demo_clock", "reply_composer", "turn_service", "run_graph")`; `HANDOFF_NEEDS = (*TURN_NEEDS, "handoff_service", "case_service")`. Steps without their services bound are skipped by the harness as `blocked-on …`; never pass them another way.
+- `tests/journeys/j5/test_aea_60.py::test_j5_malformed_classifier_reply_books_normally`: script `PLANNER` BOOK raw (`'{"knowledge": "no", "account": "none", "scheduling": "book_new", "handoff": "none", "topic": "booking"}'`), `CLASSIFIER` `'{"danger_level": "emergency"}'`, `RESPONDER` `json.dumps({"text": "I can help book a visit for that. First I need to find your account."})`; submit `NODANGER`. Assert: 200; block types include `locate_prompt` once, no `emergency_line`, no `safety`; `journey.db.count("cases", "thread_id = ?", (thread_id,)) == 0`; the turn row `danger_raised == 0`, `plan_intents == ["book_new"]`; `check_events` rows with `check_kind = 'classifier'` for the turn: exactly one, `result == "fallback"`, `json.loads(codes) == ["fallback", "invalid_output"]`; `[(c.role, c.result) for c in journey.script.problems()] == [(Role.CLASSIFIER, "invalid_output")]`; `journey.script.remaining() == 0`.
+- `tests/journeys/j9/test_aea_60.py::test_j9_both_planners_malformed_hand_off_degraded` (needs `HANDOFF_NEEDS`): script `PLANNER` `'{"knowledge": "maybe", "account": "none", "scheduling": "none", "handoff": "none", "topic": "other"}'`, `CLASSIFIER` `'{"danger_level": "normal"}'`, `PLANNER_FALLBACK` the same five keys valid plus `"urgency": "today"`, `RESPONDER` a valid draft, `BRIEF` `json.dumps({"needs": [{"message_id": 1, "text": "question"}], "claims": [], "open_decision": ""})` (schema-valid; its quote may be trimmed; the brief is not asserted here); submit `"Hello, I have a question."`. Assert: 200; one block `type == "handoff"` whose `reference` equals the case row's `case_ref` and whose `promise_text` is non-empty; turn row `outcome == "degraded_handoff"`, `degrade_reason == "model_error"`, `planner_failed == 1`; one case for the thread with `reason == "ai_failure"`, `priority == "P3"`; problems `== [(Role.PLANNER, "invalid_output"), (Role.PLANNER_FALLBACK, "invalid_output")]` (compare as a sorted list).
+- `…::test_j9_malformed_responder_draft_falls_back` (needs `TURN_NEEDS`): script PLANNER BOOK raw, CLASSIFIER normal, RESPONDER `'{"text": ""}'`; submit `NODANGER`. Assert: a `failure_offer` block with `person_key is True`; no `text` block from the model; turn `outcome == "degraded_handoff"`, `degrade_reason == "model_error"`; `cases` count 0; problems `== [(Role.RESPONDER, "invalid_output")]`.
+
+**Step 12 — docs (AC-15) and the evidence record.**
+1. `docs/design/code-design.md` §9 tree, the `contract/` entry (currently ending `test_types_gen_drift.py`): append `; prompt ↔ consumer checks (AEA-60): test_prompts_vs_consumers.py with private helpers _prompts_render.py, _prompts_checks.py, _prompts_malformed.py`. The "**Built on `main`:**" line: append `; \`tests/contract/test_prompts_vs_consumers.py\` and \`j5/\`, \`j9/test_aea_60.py\` (AEA-60, branch \`<your branch>\`)`. No other edit.
+2. `.claude/state/icm-progress.md`: append one row after the last *Routes verified against code and tests* row: `| Routes verified against code and tests | provisional | <date>: AEA-60 prompt ↔ consumer checks: tests/contract/test_prompts_vs_consumers.py (<N> passed) against agent/prompts/{routing,specialists,reply}.py, agent/nodes/{plan,act,reply}.py, agent/specialists/, agent/tools/, both adapters, gateway; journeys j5/j9 test_aea_60.py (<passed or blocked-on …>); record docs/testing/journeys/<date>-AEA-60.md | Each slice adds its route; verified when every area-map row is actual |`.
+3. `docs/testing/journeys/<date>-AEA-60.md` with every field of `integrated-journeys.md` §4: Claim (AC-1…AC-14 mock-tested; AC-13 J-5/J-9 legs), Level (`mock-tested` for the contract module; journeys at the level the run reached, `mock-tested` + *Blocked by* AEA-51 while the harness reports `blocked-on`), Tested revision, Environment (host, Python, uv, no network, stubbed transports, scripted journey adapter), Command (section 7), Result (numbers from the run), Evidence location, Remaining limitations (no live model: AEA-61; trace-span carve-out C-2; classifier exemption C-1), Blocked by.
+4. Do not edit `.claude/reference/area-map.md`; say "area map unchanged: no area row owns `tests/contract/`" in the commit message body.
+
+**Step 13 — commit** on your branch: `git add <each owned path>` (never `-A`), message `test(AEA-60): prompt ↔ consumer checks and J-5/J-9 malformed-output legs` with a body listing C-1, C-2 and the area-map note, last line `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Do not push.
 
 ## 6. Data and fixtures
 
-Synthetic or issued-dev only; nothing from `eval/cases/heldout/`.
-
-| Fixture | Source | Where |
-|---|---|---|
-| Turn texts 1–5 | WP-3 (turns 1–2), WP-1 (3–4), WP-7 (5): `docs/data/worked-pairs.md` lines 19–30, 102–115, 251–262 | `prompts_world.TURNS` |
-| NODANGER `"my AC isn't cooling"` | DO-5 `evaluation-plan.md` line 61 | `prompts_world.NODANGER` |
-| WP-2 / WP-8 account texts | `worked-pairs.md` WP-2 ("I got an invoice … and I'm not sure what it's for."), WP-8 ("I want to cancel my Comfort Club membership.") | case table |
-| Customer `MHC-10001` (Standard, renewal on record) | issued DB (`customers`), read through `temp_sqlite()`'s working copy | `VERIFIED` |
-| Assistant replies, staff line, passages, markers, placeholder keys | generated in the test | `REPLIES`, `STAFF_LINE`, `WP1_PASSAGES`, markers, `secrets.token_hex` |
-| Raw provider bodies | generated; shapes copied from AEA-18's `tests/contract/test_jev_adapter.py` (`DANGER_BODY`) and AEA-17's `_anthropic_fixtures.message_body` | `prompts_wire.py` |
-
-No phone number, code, card-like number or email appears anywhere (the masked hint is "the phone ending in 01").
-
----
+Synthetic or development-only: worked-pair texts from `plan_fixtures.py` (WP-1, WP-3, WP-3 pick, WP-4F, WP-7, WP-8,
+DANGER, NODANGER), WP-1 passages from `specialists/_doubles.py`, `rf.case_summary()` (`MHC-C-0042`), the issued SQLite
+copied by `temp_sqlite()` (never written in place), `FixedClock()` (Friday 2026-10-16 10:00 America/Chicago), API keys
+built at run time (`"sk-test-" + secrets.token_hex(12)` via `_anthropic_fixtures`, `"test-key-" + secrets.token_hex(8)`).
+The markers are made-up strings. No phone number, card-like number, verification code, real name or e-mail appears; the
+`amount_cents` and `customer_id` values (`47800`, `"C-0001"`) are synthetic and never real records. Nothing reads
+`eval/cases/heldout/` or the sealed key directory.
 
 ## 7. Checks
 
-### 7.1 While iterating (affected tests only)
+**While iterating:** `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` (serial: the module-scoped guard
+expects one process; at most `-n 2` if you add xdist, and then the guard's teardown covers each worker).
 
-```bash
-uv run pytest tests/contract/test_prompts_vs_consumers.py -q
-uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs
-```
-If you want parallelism: `uv run --with pytest-xdist pytest -n 2 tests/contract/test_prompts_vs_consumers.py -q` (never
-more than `-n 2`; the module-scoped `rendered` fixture is per worker, so serial is usually as fast).
+**Once before the final commit (cheapest first, stop at the first red):**
+1. `uv run ruff check tests/contract/test_prompts_vs_consumers.py tests/contract/_prompts_render.py tests/contract/_prompts_checks.py tests/contract/_prompts_malformed.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py`
+   and `uv run ruff format --check` on the same six files.
+2. `uv run mypy tests/contract/test_prompts_vs_consumers.py tests/contract/_prompts_render.py tests/contract/_prompts_checks.py tests/contract/_prompts_malformed.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py` → `Success: no issues found`.
+3. `uv run pytest tests/contract/test_prompts_vs_consumers.py -q -rs` → all pass, 0 skipped, 0 xfailed. Expected count: 8 (AC-1) + 1 + N(AC-3, one per planner option: 2+5+5+7+5 = 24) + 1 + 3 + 1 + 7 + 11 + 11 + 1 + 6 + 29 + 1 = **105** tests.
+4. `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` → each test passes or is skipped with the harness's `blocked-on AEA-…` reason (never failed). Record which in the evidence file.
+5. Tests that must stay green (shared-surface neighbours): `uv run pytest tests/journeys/support/test_support.py tests/unit/test_affected_journeys.py tests/contract/test_anthropic_adapter.py tests/contract/test_jev_adapter.py -q` (new journey files follow the `j<N>/test_aea_<NN>.py` convention; the adapter fixtures you import are unchanged).
+6. `uv run python -m tests.journeys.affected --base main --list-only` (paste the list into the evidence record).
+7. `git diff --name-only main` lists only the nine owned paths; `git diff --stat main -- src/` is empty (AC-11, AC-15).
 
-### 7.2 Once before the final commit (cheapest first; stop at the first red)
-
-| # | Gate | Command | Passing looks like |
-|---|---|---|---|
-| G-1 | Format | `uv run ruff format --check tests/contract/test_prompts_vs_consumers.py tests/contract/prompts_compare.py tests/contract/prompts_world.py tests/contract/prompts_render.py tests/contract/prompts_wire.py tests/contract/prompts_cases.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py` | `8 files already formatted` (run without `--check` first if needed) |
-| G-2 | Lint | `uv run ruff check <same 8 paths>` | `All checks passed!` |
-| G-3 | Types | `uv run mypy <same 8 paths>` | `Success: no issues found` |
-| G-4 | Contract module | `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` | all pass, 0 skipped, 0 xfail; record the count |
-| G-5 | Collection of the folder (nothing else broke) | `uv run pytest tests/contract -q --co` | collects with no error |
-| G-6 | Journey convention + harness | `uv run pytest tests/journeys/support/test_support.py -q -k "convention"` | pass |
-| G-7 | This ticket's journeys | `uv run pytest -m journey tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py -rs` | pass, or skipped with the `blocked-on AEA-51` reason (never failed) |
-| G-8 | Affected journeys (AEA addition; `tests/journeys/` is an always-input, so this runs all journeys) | `uv run python -m tests.journeys.affected --base main` | no failure (skips allowed with blocked reasons) |
-| G-9 | No product code touched | `git diff --name-only main...HEAD` | only the 11 owned paths of §2.1 |
-| G-10 | No sensitive literal | `grep -nE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|[0-9]{4}[ -][0-9]{4}[ -][0-9]{4}\|sk-ant\|\b[0-9]{6}\b" tests/contract/prompts_*.py tests/contract/test_prompts_vs_consumers.py tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py` | no output (if a 6-digit literal is a harmless number such as a token count, write it as an expression, e.g. `300`) |
-| G-11 | Context check | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no **new** FAIL. On 2026-10-21 `.claude/state/icm-progress.md` already FAILs its size budget (16,670 B > 8,192 B on `ebca98d`); that is pre-existing, not this ticket's to fix. Keep the AEA-60 row as short as possible (≤ 250 characters) and report the before/after byte count; do not trim other tickets' rows |
-
-**Full suite:** not required (test-only change; no `conftest.py`, settings, dependency or shared module changes —
-`build-loop-test-scope.md`). **Existing tests that must stay green:** everything under `tests/contract/` (G-5 collection)
-and `tests/journeys/support/test_support.py` (G-6); nothing else imports these files.
-
-### 7.3 Report (in your final message)
-
-Each AC with its test id and result; the G-1…G-11 outputs (counts from the run); every §4.3 name that differed on
-`main`; any PromptDrift the test raised against product code (that is a **defect on the owning ticket** — leave the test
-red, name the owner, do not "fix" the test to pass); F-1 status.
-
-### 7.4 `git add` (exact)
-
-```bash
-git add tests/contract/test_prompts_vs_consumers.py tests/contract/prompts_compare.py tests/contract/prompts_world.py \
-  tests/contract/prompts_render.py tests/contract/prompts_wire.py tests/contract/prompts_cases.py \
-  tests/journeys/j5/test_aea_60.py tests/journeys/j9/test_aea_60.py
-git add docs/testing/journeys/<run-date>-AEA-60.md docs/design/code-design.md .claude/state/icm-progress.md
-```
-
----
+No full suite: this change adds test files only and touches no shared fixture, setting or dependency (`build-loop-test-scope.md`).
+No paid or live call; nothing is marked `live`.
 
 ## 8. Risks and requests
 
-| # | Kind | Item | What to do |
-|---|---|---|---|
-| R-1 | Collision map | Five helper modules `tests/contract/prompts_*.py` are new paths; §3 says "one file each" for prompt files | Orchestrator: accept them as AEA-60's (no other ticket owns or edits them; AEA-59 set the precedent) |
-| R-2 | Sibling names | AEA-37 is on a branch and AEA-35/39 are planned only (§4.3). A rename when they merge changes this plan's call sites, not its checks | Implementer follows `main` and reports each difference |
-| R-3 | Drift found = red | The test is meant to fail when a prompt and consumer disagree. If it fails against merged product code, the defect belongs to the owner (35/37/38 prompts, 17/18 adapters, 22/27/28/33 tools) | Report with the exact PromptDrift message; never weaken a check |
-| R-4 | AC-10 reading (PD-7) | AC-10 lists "InMemoryTraceSink span"; DO-6 line 113 requires the model_call span to keep the masked raw output, which for the 301-char tool call contains the query | Plan asserts that one presence explicitly. Orchestrator: post the PD-7 note on issue #60 so the AC text and DO-6 read the same |
-| R-5 | AC-4 overlap (PD-6) | "No routing option equals … danger, burning_unclear" literally hits the classifier's labels, which AC-2 requires | Plan scopes AC-4 to planner/fallback; post on #60 |
-| R-6 | Case double (PD-9, refresh 2) | `BriefAssembler` is now real; `CaseService` stays a double (it only stores the brief) | Real case storage is AEA-51's integration; J-9a asserts the stored case row |
-| F-1 | **Finding (other tickets)** | `account="appointments"` with `scheduling="none"` makes `join_plan` (AEA-37 step 5–6) emit `READ_APPOINTMENTS` on the **account** specialist, but the account tool set (graph-tools §4: `read_invoices`, `read_membership`, `read_warranty`) has no appointment read, so the model cannot do the task. AC-3 still passes (the specialist is a `SPECS` key) | Orchestrator: raise on #37 and #27 before AEA-51. Options: (a) join maps `appointments` with no scheduling to a scheduling `CONFIRM` task (the scheduling slice already holds appointments) — recommended, no new tool; (b) AEA-27 adds a `read_appointments` account tool (changes graph-tools §4). Not asserted here. Re-checked on AEA-37's branch `36dc321`: still present (`join_plan` clears `appointments` only when `scheduling != "none"`) |
-| R-7 | Runtime | Each malformed case builds a temp DB; ~30 cases × (AC-7/8/9 + AC-14) + 4 (AC-10) ≈ 64 runs | Expected well under a minute; if slower, keep correctness, report the time |
-| R-9 | Context budget | `icm-progress.md` is already over its 8 KB budget; the one-row AEA-60 addition makes it slightly worse | Orchestrator: schedule a `lane::direct` compaction of `icm-progress.md` (replace per-ticket rows with one rolling row); not in AEA-60's ownership |
-| R-8 | Audit hook | Process-wide and permanent once added | Gated by `_GUARD.active`; cheap; never raises |
-| R-10 | Blocker chain | (refresh 3) The type-home question is answered (option A, AEA-35b merged). Remaining order: AEA-35 (being built) → AEA-39 (plan READY) ; AEA-37 (built on `65a7cd1`, ledger `blocked` on an orchestrator NEEDS-DECISION about its earlier run). AEA-60 cannot start until all three are on `main` | Orchestrator: resolve AEA-37's ledger item and merge it when its gates are green; merge AEA-35 then AEA-39. Do not dispatch AEA-60's implementer before all three are on `main` |
-| R-11 | Ledger drift | `.claude/state/build-ledger.md` row AEA-40 says `blocked`, but `main` has `f466ff7 Merge AEA-40 sessions and turns`; row AEA-60's blockers list is the slice-plan list, most of which are merged | Orchestrator: update the ledger (not AEA-60's file). This plan treats AEA-40 as merged |
-| R-12 | WIP names | §4.3's AEA-35 names were read from an uncommitted worktree; they may change before merge | Implementer follows `main` (step 0) and reports each difference |
+- **R-1, AEA-39 (blocker for step 9).** The act-node clause of AC-8 and J-9(a)'s handoff path need AEA-39's real
+  `run_specialist` / `escalation` / `handoff`. The orchestrator dispatches this implementer after AEA-39 merges. If AEA-39's
+  signal `node` or fields differ from graph-nodes §4/§9.5 (`node="run_specialist"`, `role="specialist"`, `specialist=<kind>`,
+  `cause=<failure kind>`), that is a defect on AEA-39, not a test change.
+- **R-2, AEA-51.** J-5/J-9 steps stay `blocked-on AEA-51` (`reply_composer`, `run_graph`) until AEA-51 binds them; the
+  evidence record says `mock-tested` with *Blocked by* AEA-51 (`integrated-journeys.md` §4). The J-9(a) brief raw quotes
+  `message_id: 1`; when AEA-51 lands, if that id is not the customer's, the quote is trimmed and nothing asserted changes.
+- **R-3, clarifications C-1 and C-2** (section 3) narrow AC-4 and AC-10 to what the signed contracts allow. Request: the
+  orchestrator posts them on issue #60 before review so the reviewer reads the ACs with them.
+- **R-4, three private helper files** beyond the slice-plan row (500-line cap). No other ticket names them; the collision map
+  row stays "AEA-60's alone".
+- **R-5, coupling to other tickets' test helpers** (`plan_fixtures`, `reply_fixtures`, `specialists/_doubles`,
+  `_gateway_doubles`, `_anthropic_fixtures`). A later rename there breaks this module at import; the affected-test rule
+  ("any test file that imports a changed module") makes that visible at that ticket's merge.
+- **R-6, a real mismatch found while building.** If a check goes red on `main` code (not on a typo in the test), keep the test
+  red, do not weaken it, and report it with the owning ticket (routing/specialists/reply prompts → AEA-37/35/38; parsers →
+  AEA-17/18/22; nodes → AEA-37/38/39). The ticket's scope boundary forbids fixing it here.
+- **R-7, audit hook.** `sys.addaudithook` is process-wide and permanent; the hook is inert unless `GUARD.active` and never
+  raises. Do not add any other global hook or patch `socket`.
+- **R-8, affected-journey mapping.** AEA-60's journey files must be selected when a prompt or schema changes
+  (`build-loop-test-scope.md` AEA addition). `tests/journeys/affected.py` is AEA-57's; if its import-based selection does not
+  pick these files for a prompt change, that is a follow-up request on AEA-57, not an edit here.
 
-No shared primitive is requested from the integrator. No signed contract changes. Nothing here needs Innocent.
-
----
+**Must not do:** edit any `src/` file or prompt module; edit another ticket's tests or helpers or `tests/journeys/support/`;
+import `dispatch._trimmed_schema` or `plan._HANDOFF_REASON`; use `pytest.skip`/`xfail` anywhere in the contract module
+(the journeys rely only on the harness's own `blocked-on` skip); mark anything `live`; open a socket; read held-out paths;
+put a phone, card-like number, code or real name in any fixture or test id; exceed 500 lines in any file; `git add -A`;
+push; bind ports 4019 or 5184.
 
 ## 9. Readiness
 
-**READY** — every decision is made (PD-1…PD-14); no product decision and no signed-contract change is needed for this
-ticket.
+**Refresh 1: READY, nothing to build now; step 14 is BLOCKED-ON AEA-51.** Steps 0–13 are built and merged (`0e37fad`);
+AC-1…AC-12, AC-14 and AC-15 are met on `main`, and AC-13 is met at the level its own evidence clause allows
+(`mock-tested`, *Blocked by* AEA-51). The orchestrator dispatches step 14 only after AEA-51 merges; if AEA-51's own
+check 8 already shows the three legs passing, step 14 is the two-doc update in 5a.2. No `NEEDS-DECISION`: CAS-16 and
+DAT-2 stay on their D-14 options, C-1 and C-2 stay inside signed contracts, and no signed contract needs a change.
 
-**Blocked-on (true imports not yet on `main` at `ebca98d`; the implementer starts only when all three are merged):**
+*Original readiness (kept for the record):* READY, with BLOCKED-ON AEA-39 for step 9 only; AEA-39 merged (`12e46ee`)
+before the build, so step 9 was built and passes.
 
-| Ticket | What this test imports from it | State on 2026-10-21 |
-|---|---|---|
-| AEA-37 | `planner`, `danger_classifier`, `plan_join`, `join_plan`, `DANGER_FIELD` and the routing wording | built on `aea-37-graph-plan-node` (`65a7cd1`), not merged; ledger `blocked` (orchestrator item) |
-| AEA-35 | `SPECS`, `REPORT_FACTS_TOOL`, `SpecialistRunner`, the specialist wording | being built (uncommitted in its worktree); ledger `planned` |
-| AEA-39 | `run_specialist`, `escalation` | plan READY (refresh 3); builds after AEA-35 merges |
+## Deviations
 
-**Why these three are not replaced by doubles.** The slice plan's injection rule covers siblings in the same or a later
-wave; these three are wave 2, earlier than AEA-60's wave 3. And the ticket's point is to render prompts "through the real
-builders" and feed answers to the real nodes: a double of the builder or node would check the double against itself.
+Recorded by the implementer, 2026-10-21 (branch `aea-60-prompt-consumer-checks`).
 
-**Now on `main` (no longer blockers):** AEA-17 (`0a85270`), AEA-18 (`900a1d8`), AEA-21 (`5531664`), AEA-27 (`13adc86`),
-AEA-28 (`2c2e8c5`), AEA-38 (`042ad35`), AEA-29 (`ef561fc`; the real `BriefAssembler`, PD-9), AEA-35b (`3725c90`),
-AEA-30 (`cf8fd78`), AEA-40 (`f466ff7`); and, as before, AEA-20, 22, 33, 57.
-**Journey level** (`integrated with a scripted model`) waits on AEA-51 only (`run_graph`, `reply_composer`); until then
-the steps skip with that blocked reason and the record says `mock-tested`.
-
-**Gates:** none (no human, paid or live gate).
+- **Two more private helper files.** `tests/contract/test_prompts_vs_consumers.py` came to 706 lines with all 12 test
+  functions' bodies, over the 500-line test cap. The expected-fallback assertions for AC-7..AC-9 moved to
+  `tests/contract/_prompts_expect.py` and the six drifted copies of AC-11 to `tests/contract/_prompts_drift.py`; the test
+  module is now 449 lines. Same ownership rule as the other three helpers (no other ticket names these paths).
+- **Test count is 104, not 105.** The plan's own terms (8+1+24+1+3+1+7+11+11+1+6+29+1) sum to 104; AC-1 has 8 params
+  (the five non-specialist roles plus three kinds; the `specialist` role is covered by the three kinds).
+  `test_malformed_specialist_outputs` is split in two functions: 8 runner-level params and
+  `test_malformed_step_failures_at_the_act_node` (3 params) for the act-node cases.
+- **`step 0` held:** `act.py` had 0 `NotImplementedError` (AEA-39 merged, `12e46ee`), so step 9 is built and passes.
+- **Journey files import constants from `tests/journeys/j5/test_aea_37.py`** (`BOOK_RAW`, `NODANGER`, `NORMAL_RAW`,
+  `RESPONDER_RAW`, `TURN_NEEDS`, `open_chat`, `submit`) instead of copying them. A rename there breaks these files at
+  import (same coupling as R-5).
+- **Pre-existing red on `main`, not ours:** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0`
+  expects "0 journeys affected" but journeys now exist. Shown by stashing this branch's files and rerunning.

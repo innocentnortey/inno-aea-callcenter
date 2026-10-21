@@ -13,6 +13,7 @@ from typing import Any
 import httpx
 import pytest
 
+from meridian.adapters.sqlite.repos_cases import DEMO_START
 from meridian.domain.common import Role
 from meridian.policy.texts import TextId, render
 from tests.journeys.support.client import JourneyClient, cookie_attributes, set_cookie_lines
@@ -158,8 +159,9 @@ def test_j1_session_resume_and_owner_guard(journey: JourneyRun) -> None:
         assert conv["last_customer_wall_at"] is None
         messages = journey.db.rows("SELECT * FROM messages WHERE thread_id = ?", (thread_id,))
         assert len(messages) == 1 and messages[0]["role"] == "assistant" and messages[0]["text"] == greeting
-        demo_now = journey.db.scalar("SELECT demo_now FROM demo_state WHERE id = 1")
-        assert datetime.fromisoformat(demo_now) == datetime.fromisoformat(start["demo_clock"]["now"])
+        # A fresh store keeps no demo_state row; the demo clock reads DEMO_START (stage7/cases.md §6, DemoStateRepo.get)
+        assert journey.db.rows("SELECT demo_now FROM demo_state WHERE id = 1") == []
+        assert datetime.fromisoformat(start["demo_clock"]["now"]) == DEMO_START
         print(
             f"step 4: conversation {conv['outcome']} run_tag={conv['run_tag']}; greeting rows={len(messages)}"
         )
