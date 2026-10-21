@@ -374,10 +374,21 @@ def register_person_request(container: Container, app: FastAPI, *, settings: Any
 
 
 def register_demo_routes(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
-    """AEA-43 customer API: CON-6 to CON-9 demo routes (web.md §7).
+    """AEA-43 customer API: CON-6 to CON-9 demo routes (web.md §4, §5, §7).
 
-    No-op until AEA-43 fills it.
+    Includes routes/demo.py's router (listDemoInbox, getStaffing, setStaffing, getDemoClock, resetDemo; GET only on
+    /api/demo/clock, whose POST is AEA-47's) once per app. Provides nothing: the services behind it are bound by the
+    AEA-27, AEA-30 and AEA-31 hunks. An app that create_app did not build has no web shell, so this does nothing.
     """
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.demo import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    if getattr(app.state, "demo_routes_included", False):
+        return  # a second lifespan on the same app must not add the routes again (FastAPI includes lazily)
+    app.include_router(build_router())
+    app.state.demo_routes_included = True
 
 
 def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
