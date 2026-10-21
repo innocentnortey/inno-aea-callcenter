@@ -122,7 +122,7 @@ def test_domain_ports_config_imports() -> None:
         ("ports", sorted(p for p in (SRC / "ports").glob("*.py") if p.name != "__init__.py")),
         ("config", [SRC / "config.py"]),
     ]
-    assert [len(files) for _, files in areas] == [11, 2, 1]
+    assert [len(files) for _, files in areas] == [12, 2, 1]
     for area, files in areas:
         for path in files:
             for module, type_checking, level in _aea02_scan(path):
