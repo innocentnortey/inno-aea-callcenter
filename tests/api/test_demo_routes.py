@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from fastapi.routing import APIRoute
 
 from meridian.domain.staff import DemoRole
 from meridian.policy.limits import WebLimits
@@ -219,7 +220,10 @@ def test_clock_is_demo_clock_and_get_only(monkeypatch: pytest.MonkeyPatch, tmp_p
         assert again.status_code == 200, again.text
         assert again.json() == first
     methods = {
-        m for route in build_router().routes if getattr(route, "path", "") == CLOCK for m in route.methods
+        m
+        for route in build_router().routes
+        if isinstance(route, APIRoute) and route.path == CLOCK
+        for m in route.methods
     }
     assert methods == {"GET"}
     app_methods: set[str] = set()
