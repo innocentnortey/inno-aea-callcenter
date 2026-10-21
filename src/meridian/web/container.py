@@ -127,8 +127,36 @@ class Container:
 def register_storage(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-10 storage: SQLite unit of work, migrations and first boot, checkpointer (cases.md §1).
 
-    No-op until AEA-10 fills it.
+    Provides Key("uow_factory") (SqliteUnitOfWorkFactory; building it migrates the working copy, WF-16),
+    Key("checkpointer") (Checkpointer over checkpoints.sqlite, closed with the container) and
+    Key("restore_working_copy") (restore_working_copy bound to settings.issued_db_path; cases.md §1.4).
     """
+    import functools
+    from pathlib import Path
+
+    from meridian.adapters.checkpointer import CHECKPOINTS_DB_NAME, Checkpointer
+    from meridian.adapters.sqlite.db import SqliteUnitOfWorkFactory
+    from meridian.adapters.sqlite.migrate import WORKING_DB_NAME, migrate, restore_working_copy
+
+    data_dir = Path(settings.data_dir)
+    issued_path = Path(settings.issued_db_path)
+    db_path = data_dir / WORKING_DB_NAME
+
+    def make_uow_factory(_c: Container) -> SqliteUnitOfWorkFactory:
+        migrate(db_path, issued_path=issued_path)  # first boot copies the issued file; DDL every boot
+        return SqliteUnitOfWorkFactory(db_path)
+
+    def make_checkpointer(c: Container) -> Checkpointer:
+        checkpointer = Checkpointer(data_dir / CHECKPOINTS_DB_NAME)
+        c.on_close(checkpointer.close)
+        return checkpointer
+
+    container.provide(Key[SqliteUnitOfWorkFactory]("uow_factory"), make_uow_factory)
+    container.provide(Key[Checkpointer]("checkpointer"), make_checkpointer)
+    container.provide(
+        Key[Callable[..., None]]("restore_working_copy"),
+        lambda _c: functools.partial(restore_working_copy, issued_path=issued_path),
+    )
 
 
 def register_web(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
