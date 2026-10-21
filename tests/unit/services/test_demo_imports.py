@@ -29,3 +29,12 @@ def test_demo_and_scheduler_import_direction() -> None:
         for module in modules:
             assert not module.startswith(FORBIDDEN_PREFIXES), (name, module)
             assert module.split(".")[0] not in FORBIDDEN_TOP, (name, module)
+
+
+def test_view_types_come_from_domain_views() -> None:
+    """The four demo views are AEA-02b's classes, re-exported, never redefined (T-1)."""
+    from meridian.domain import views
+    from meridian.services import demo
+
+    for name in ("ClockView", "ClockAdvanced", "StaffingView", "StaffingChange"):
+        assert getattr(demo, name) is getattr(views, name)
