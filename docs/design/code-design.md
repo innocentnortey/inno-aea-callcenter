@@ -166,7 +166,7 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 | `triggers.py` | All word rules plus escalation keywords in one function | `gates/rules.py` (rules, typo-tolerant) and `gates/gate.py` (intake + pure decision). Safety text moves to `policy/texts.py` with the KB's "immediately" wording, pending the UX copy (SCREEN_SPECS note 1) |
 | `policy.py` | One `REASONS` dict mixing priority and draft promise texts | Split by consumer: `policy/booking.py` (zones, fees; A5), `policy/handoff.py` (R-26 promises word for word, priorities; A6), `policy/escalation.py` (A7b). The parked draft promise texts are not R-26's and are not carried over |
 | `tools.py` | Functions keyed on `thread_id` that open the DB themselves | Tool definitions in `domain/tools.py`, executors per area, one guard and dispatcher (`agent/tools/dispatch.py`), services underneath |
-| `identity.py` | Unsalted SHA-256 of a 6-digit code; string compare of ISO times | HMAC-SHA256 with the session secret (a plain hash of a 6-digit code is reversible by trying a million values), `datetime` comparison on the injected clock, the per-conversation code cap, demo-session scoping (N-11) |
+| `identity.py` | Unsalted f4aa2cb-256 of a 6-digit code; string compare of ISO times | HMAC-f4aa2cb256 with the session secret (a plain hash of a 6-digit code is reversible by trying a million values), `datetime` comparison on the injected clock, the per-conversation code cap, demo-session scoping (N-11) |
 | `db.py` | Global lock, `settings` table, `log_metric` | `adapters/sqlite/` with a unit of work and one DDL file per area, all written by A0 (AEA-10); DO-6's records replace `log_metric` |
 | `cases.py` | Brief built by heuristics from the log | `services/cases.py` + `services/handoff.py` (typed eight-heading `Brief`; five headings from state) |
 | `kb/` | Index under `var/`, built at runtime | `retrieval/` builds the index at image build from the manifest (DO-1 §11 decision 10); the parked `MANIFEST` data seeds `retrieval/manifest.py` |
@@ -190,7 +190,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/identity.py`, `adapters/sqlite/repos_identity.py` body, `agent/tools/account.py` (AEA-27, `93dfca4`).
 **Built:** `eval/cases/` (case files, `case.schema.json`, `FORMAT.md`, `models.py`, `build.py`, `seal.py`, `checks.py`) (AEA-06, branch `aea-06-eval-case-files`).
 **Built:** `services/scheduling.py`, `adapters/sqlite/repos_booking.py` (body), `agent/tools/scheduling.py` (AEA-28, `a6d8a68`).
-**Built:** `services/demo.py`, `services/scheduler.py` (AEA-30, `SHA`; signatures stage7/cases.md §6; the four demo view types are imported from `domain/views.py`, AEA-02b).
+**Built:** `services/demo.py`, `services/scheduler.py` (AEA-30, `f4aa2cb`; signatures stage7/cases.md §6; the four demo view types are imported from `domain/views.py`, AEA-02b).
 
 ```
 src/meridian/                                    planned                                                     area  wave
