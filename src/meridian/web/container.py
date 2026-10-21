@@ -594,8 +594,46 @@ def register_staff_cases(container: Container, app: FastAPI, *, settings: Any, l
 def register_staff_live(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
     """AEA-46 staff API: LiveChatService, CON-14 and CON-21 routes (staff.md §5, §7).
 
-    No-op until AEA-46 fills it.
+    Provides deps.LIVE_CHAT ("live_chat"): a LiveChatService over Key("uow_factory") (AEA-10), the demo clock
+    Key("demo_clock") (AEA-30, read through a forwarder only when an action writes, so the app builds before AEA-30
+    binds it; until then a write raises RuntimeError("not bound: demo_clock")) and the STORE redactor (data.md §1,
+    MC-23). Includes the staff_live router once per app. An app that create_app did not build has no web shell, so
+    this does nothing.
     """
+    from datetime import datetime
+
+    from meridian.privacy.redact import RedactionProfile, redact
+    from meridian.services.live_chat import LiveChatService
+    from meridian.web.deps import LIVE_CHAT, UOW_FACTORY
+    from meridian.web.middleware import WebShellState
+    from meridian.web.routes.staff_live import build_router
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    demo_clock_key: Key[Any] = Key("demo_clock")
+
+    class _DemoClock:
+        """Resolves AEA-30's clock at call time (AEA-40 and AEA-42 use the same forwarder)."""
+
+        def now(self) -> datetime:
+            try:
+                clock = container.get(demo_clock_key)
+            except ContainerError as exc:
+                if str(exc) == f"not provided: {demo_clock_key.name}":
+                    raise RuntimeError(f"not bound: {demo_clock_key.name}") from None
+                raise
+            moment: datetime = clock.now()
+            return moment
+
+    container.provide(
+        LIVE_CHAT,
+        lambda c: LiveChatService(
+            c.get(UOW_FACTORY), _DemoClock(), lambda t: redact(t, RedactionProfile.STORE).text
+        ),
+    )
+    if not getattr(app.state, "staff_live_router_included", False):
+        app.include_router(build_router())
+        app.state.staff_live_router_included = True
 
 
 def register_staff_clock(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
