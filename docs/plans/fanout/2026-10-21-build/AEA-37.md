@@ -1,18 +1,66 @@
 # Plan — [AEA-37] graph: plan node (planner, danger classifier, join)
 
-**Status:** planned — **READY, no blocker** (AEA-21 merged to `main` at `5531664`; §9)
-**Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/37 · **Base revision:** `dd1b110`
+**Status:** planned — **READY, no blocker** (built on the branch, not yet verified against today's `main`; §9)
+**Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/37 · **Base revision:** `8a205b2`
 (main when refreshed: AEA-21 graph spine `5531664`, AEA-02b `5305d57`, AEA-57 journey harness `bd79a29`, AEA-17
-`0a85270`, AEA-18 Jev adapter `900a1d8`, AEA-28 scheduling `2c2e8c5`, AEA-27 identity `13adc86`, and every earlier merge
-in `.claude/state/build-ledger.md`. First planned against `16ca639`; refreshed against `775f591` + AEA-21's branch
-`0a5b703`, then `0a85270`, `a81f59d`, and again here.)
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refreshed four times the same day) · **Implementer:** fanout-implementer on Sonnet ·
+`0a85270`, AEA-18 Jev adapter `900a1d8`, AEA-28 scheduling `2c2e8c5`, AEA-27 identity `13adc86`, AEA-34 `dd31214`,
+AEA-38 `042ad35`, AEA-29 `ef561fc`, AEA-30 `cf8fd78`, AEA-40 `f466ff7`, and every earlier merge in
+`.claude/state/build-ledger.md`. First planned against `16ca639`; refreshed against `775f591` + AEA-21's branch
+`0a5b703`, then `0a85270`, `a81f59d`, `dd1b110`, and again here.)
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refreshed five times the same day) · **Implementer:** fanout-implementer on Sonnet ·
 **Lane:** build-loop · **Risk:** none (no `risk::security`: no test-writer, no security review; AC-8 still proves the
 JEV redaction) · **Wave:** 2 · **Gates:** none
 **Slug / branch:** `graph-plan-node` → branch `aea-37-graph-plan-node`, worktree
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-37` (the orchestrator creates it from `main`)
 
-### Refresh 4 — 2026-10-21, against `main` `dd1b110` (read this first)
+### Refresh 5 — 2026-10-21, against `main` `8a205b2` (read this first; it overrides Refresh 4 where they differ)
+
+**The situation in one paragraph.** An earlier run of this plan already built AEA-37 and **committed** it on branch
+`aea-37-graph-plan-node` (worktree `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-37`): `b760241` *feat(graph):
+plan node — planner, raise-only classifier, join_plan (AEA-37)* (code and tests), `41c961f` *docs(context): AEA-37 built
+paths and journey record*, and `36dc321` (a merge of `main` at `b559c75`). The worktree is clean. The build ledger
+parked the ticket as `NEEDS-DECISION` because of that. **This refresh decides it (PD-10): keep the committed build and
+finish it — do not rebuild, do not reset, do not rewrite history.** The implementer's job is now *verify and finish*:
+bring the branch up to today's `main`, resolve three context-doc conflicts exactly as §5 step 0 says, run every gate in
+§7.3, fix anything red inside the owned files, refresh the journey record and the ICM row with the new evidence, and
+commit on the branch. That is an engineering choice, reversible, and needs nothing from Innocent.
+
+- **What the planner checked on the branch (read, not run).** `src/meridian/agent/nodes/plan.py` (473 lines) matches
+  §4.7 step for step (the signatures, `_parse_planner`, the halt-before-fallback order, raise-only, the 13 `join_plan`
+  steps, the brake and PA-6). `routing.py` (147 lines), `plan_fixtures.py`, and every test named in §7.1 exist with the
+  binding names. Extras that are fine to keep: `test_classifier_raise_only_rules_verdict_and_node_rows` (AC-1 parts 2
+  and 3 split out of `test_classifier_raise_only`) and `test_failed_planner_without_follow_up_is_planner_failed` in
+  `test_join_plan.py`. The branch's earlier record says G-5 gave `48 passed`.
+- **What changed on `main` since the branch's last merge (`b559c75` → `8a205b2`), on the surfaces this plan reads:**
+  only `src/meridian/agent/nodes/load_context.py` (AEA-34), `agent/nodes/reply.py` and `agent/prompts/reply.py`
+  (AEA-38), and `tests/graph/test_spine.py` (rows for `load_context` and `reply` dropped). No file under `domain/`,
+  `ports/`, `policy/`, `privacy/`, `gates/`, `agent/{gateway,context,signals,graph,routers}.py`, `tests/fakes/`,
+  `tests/unit/agent/_gateway_doubles.py`, `tests/graph/_spine_doubles.py` or `tests/journeys/support/` changed, and no
+  spec this ticket cites changed (`cases.md` gained §5a for AEA-29 only). Every name in §4 and §6 still holds.
+- **A dry-run merge (`git merge-tree`) of `main` into the branch gives exactly three text conflicts**, all in context
+  docs, all "both sides added a line": `.claude/reference/area-map.md` (A7c and A7d rows),
+  `.claude/state/icm-progress.md` (the *Routes verified* rows), `docs/design/code-design.md` (the `**Built:**` lines and
+  the `prompts/routing.py` / `prompts/reply.py` tree lines). `tests/unit/agent/prompts/__init__.py` was added on both
+  sides with the same empty blob and merges cleanly; no source or test file conflicts. §5 step 0 gives the exact
+  resolution for each.
+- **R-1 is now handled by precedent, not by this ticket.** On `main`, `d724301` (merged as `f63ec50`, "Orchestrator-
+  authorised maintenance fix to merged ticket AEA-21's test") dropped the four `reply` rows once AEA-38 built them.
+  `tests/graph/test_spine.py::test_stubs_raise_loudly` still lists `(plan, "planner", "plan.py")`,
+  `(plan, "danger_classifier", "plan.py")` and `(plan, "plan_join", "plan.py")`, so after the merge those three cases
+  fail on this branch. The implementer still does **not** edit that file (§7.2); the orchestrator applies the same kind
+  of fix for the three `plan` rows at this ticket's merge (§8.2 R-1 gives the exact diff).
+- **The J-5 journey steps are still blocked, now by AEA-51 only.** AEA-30 (`demo_clock`, `demo_service`), AEA-40
+  (`session_service`, `turn_service`, `startChatSession`, `submitTurn`) and AEA-29 (`handoff_service`) are merged and
+  bound. `reply_composer` and `run_graph` are still AEA-51's (`tests/journeys/support/steps.py` `NEED_OWNERS`;
+  `register_chat` binds them lazily). Step "1 login" now runs and passes; step "2 start session" needs `reply_composer`
+  (same `CHAT_NEEDS` as J-1's `test_aea_57.py`), so G-6 should show `2 skipped`, each reason starting
+  `blocked-on AEA-51:`. The old record's "blocked-on AEA-30" is stale and is replaced (§7.4).
+- **The context rows on the branch cite `b760241`.** If step 0 or the gates force a code change, the rows and the record
+  cite the final code commit instead (the AEA-34 precedent, `4c423b7`: "rows cite final code revision").
+- **No sign-off decision bears on this ticket:** D-4…D-15 (`docs/plans/stage7-signoff.md`) touch web, cases, eval and
+  journeys; D-14 keeps DAT-1 on option A, which this build already uses. No signed contract changes.
+
+### Refresh 4 — 2026-10-21, against `main` `dd1b110` (superseded by Refresh 5 where they differ)
 
 - **What changed on `main` since `a81f59d`:** AEA-18 (`adapters/models/openrouter_jev.py`, `register_jev`), AEA-28
   (`services/scheduling.py`, `repos_booking.py`, `agent/tools/scheduling.py`, `register_scheduling`), AEA-27
@@ -662,30 +710,45 @@ accepted for the DO-4 signature and changes nothing (the router reads `danger.ra
 ## 5. Steps (build order; each ends with a check)
 
 **Setup.** Work in the worktree `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-37` (branch
-`aea-37-graph-plan-node`). `export UV_LINK_MODE=hardlink`.
+`aea-37-graph-plan-node`). `export UV_LINK_MODE=hardlink`. Never copy a venv; no `node_modules` in the worktree.
 
-0. **Keep the earlier run's work and catch up with `main`** (Refresh 4). In the worktree:
-   1. `git status --short` must show only `M src/meridian/agent/nodes/plan.py`, `?? src/meridian/agent/prompts/routing.py`,
-      `?? tests/unit/agent/nodes/plan_fixtures.py`, `?? tests/unit/agent/prompts/` (plus any of this plan's other owned
-      files). Anything outside §2.1 → stop and report; do not delete it.
-   2. `git log --oneline main..HEAD` must be empty. Then `git merge --ff-only main`. `main`'s new commits touch none of
-      these files, so the fast-forward keeps the uncommitted work in place. If git refuses, stop and report (never
-      `git stash drop`, `git reset --hard`, `git checkout -- <file>` or `git clean`).
-   3. `uv sync`.
-   4. Read the four existing files against §4.5, §4.6, §4.7 and §6. Keep everything that matches, fix what differs, and
-      add what is missing. `plan.py` is 473 lines: over the 400 target but under the 600 hard cap, so it is acceptable.
-      Do not split it into a new module (that would be a file outside §2.1). Steps 1, 2 and 4–8 then become "check and
-      complete" steps. Their checks still run.
-
-`uv sync` (if step 0.3 has not already run it). Never copy a venv, and put no `node_modules` in the worktree. Import check
-(the only "baseline"): `uv run python -c "import meridian.agent.context, meridian.agent.signals, meridian.agent.graph,
-meridian.agent.nodes.plan, meridian.agent.gateway, tests.graph._spine_doubles, tests.unit.agent._gateway_doubles,
-tests.fakes, tests.journeys.support.run"` exits 0. Then open `src/meridian/domain/{turn,state,common}.py`,
-`src/meridian/ports/models.py`, `src/meridian/agent/{context,signals,gateway}.py`, `src/meridian/agent/nodes/plan.py`
-(the stub), `tests/graph/_spine_doubles.py`, `tests/unit/agent/_gateway_doubles.py`, `tests/fakes/models.py`,
-`tests/journeys/support/README.md` and `tests/journeys/j1/test_aea_57.py`. **Stop and report** if any name in §4.1–§4.4,
-§6 or §7.1 differs. This planner checked them all on `0a85270` and `a81f59d`, and confirmed on `dd1b110` that none of
-their files changed, so a difference means a sibling changed them since.
+0. **Bring the committed build up to `main` (Refresh 5; PD-10).** The code and tests of steps 1–10 are already
+   committed in `b760241`, and the step-12 docs in `41c961f`. Keep them. Do not rebuild a file from scratch.
+   1. `git status --short` must be empty, and `git log --oneline -3` must show `36dc321`, `41c961f` and `b760241` at
+      the top. If the tree is dirty or the history differs, stop and report. Never run `git stash drop`,
+      `git reset --hard`, `git checkout -- <file>`, `git clean`, `git rebase` or `git push --force`.
+   2. `git merge --no-ff main -m "Merge main into aea-37-graph-plan-node" -m "Co-Authored-By: Claude Sonnet 5.5
+      <noreply@anthropic.com>"` (one line for the trailer; it is the message's last line). Expect three conflicts, all
+      in context docs; nothing else may conflict. If a source or test file conflicts, run `git merge --abort` and stop
+      and report.
+   3. Resolve each conflict by **keeping both sides**: main's lines unchanged and in place, then this ticket's line. The
+      counts below are for `main` `8a205b2`; if `main` has moved on, keep every line `main` has, whatever the count, and
+      put this ticket's line after them.
+      - `.claude/reference/area-map.md`: keep **main's** A7c row (it ends `` `nodes/reply.py`, `prompts/reply.py` actual
+        (AEA-38, `ec94722`) ``) and **the branch's** A7d row (it starts `partly built: `agent/nodes/plan.py``). Exactly
+        one A7c row and one A7d row remain.
+      - `.claude/state/icm-progress.md`: keep **all six** of main's *Routes verified against code and tests* rows (AEA-40,
+        AEA-43, AEA-38, AEA-34, AEA-29, AEA-50) in their order, then the branch's AEA-37 row directly after the last of
+        them (step 12 rewrites that row's text).
+      - `docs/design/code-design.md`: keep **all six** of main's new `**Built:**` lines (AEA-40, AEA-38, AEA-34, AEA-29,
+        AEA-24, AEA-30) in their order, then the branch's `**Built:** `agent/nodes/plan.py`, `agent/prompts/routing.py`
+        (AEA-37, `b760241`).` line directly after the AEA-30 one. In the tree, keep the branch's `prompts/routing.py`
+        line (ends `built AEA-37 b760241`) and **main's** `prompts/reply.py` line (ends `built AEA-38 ec94722`).
+      - Check: `grep -c '^<<<<<<<\|^=======$\|^>>>>>>>' .claude/reference/area-map.md .claude/state/icm-progress.md
+        docs/design/code-design.md` prints `0` for each file. Then `git add` exactly those three paths and
+        `git commit --no-edit` (the merge message from 0.2 stands).
+   4. `uv sync`. Import check (the only "baseline"): `uv run python -c "import meridian.agent.context,
+      meridian.agent.signals, meridian.agent.graph, meridian.agent.nodes.plan, meridian.agent.gateway,
+      tests.graph._spine_doubles, tests.unit.agent._gateway_doubles, tests.fakes, tests.journeys.support.run"` exits 0.
+   5. Re-read `src/meridian/domain/{turn,state,common}.py`, `src/meridian/ports/models.py`,
+      `src/meridian/agent/{context,signals,gateway}.py`, `tests/graph/_spine_doubles.py`,
+      `tests/unit/agent/_gateway_doubles.py` and `tests/fakes/models.py` only far enough to confirm the names in §4.1–§4.4
+      and §6. **Stop and report** if any differs (the planner confirmed none of their files changed between `b559c75`
+      and `8a205b2`, so a difference means a sibling changed them after this refresh).
+   6. Steps 1–10 below are now **check steps**: open each file named in the step, compare it with §4.5–§4.7, §6 and
+      §7.1, and fix only a real difference (a missing test, a wrong assertion, a name that differs). Each step's check
+      command still runs. Do not restyle working code; do not split `plan.py` (473 lines: over the 400 target, under the
+      600 cap; a new module would be a file outside §2.1).
 
 1. **Marker.** `test -e tests/unit/agent/prompts/__init__.py || touch tests/unit/agent/prompts/__init__.py` (0 bytes).
    `tests/unit/agent/nodes/__init__.py` already exists; leave it alone.
@@ -713,31 +776,34 @@ their files changed, so a difference means a sibling changed them since.
     `tests/journeys/j5/test_aea_37.py` per §7.1. Check: `uv run pytest tests/unit/agent/nodes/test_plan_graph.py -q` →
     `2 passed`; `uv run pytest -m journey tests/journeys/j5/test_aea_37.py -q -rs` → `2 skipped` with `blocked-on AEA-NN`
     reasons (or `2 passed`), never a failure or a collection error.
-11. **Gates** §7.3 in order, cheapest first; stop at the first red **except** the known R-1 conflict (§7.2). Then the
-    feature commit:
-    `git add src/meridian/agent/nodes/plan.py src/meridian/agent/prompts/routing.py tests/unit/agent/nodes/plan_fixtures.py
-    tests/unit/agent/nodes/test_plan.py tests/unit/agent/nodes/test_join_plan.py tests/unit/agent/nodes/test_plan_graph.py
-    tests/unit/agent/prompts/__init__.py tests/unit/agent/prompts/test_routing_prompts.py
-    tests/unit/agent/prompts/test_routing_prompt_turns.py tests/journeys/j5/test_aea_37.py`; message `feat(graph): plan node — planner, raise-only classifier, join_plan (AEA-37)`.
-12. **Context (AC-12) and record (AC-11)**, a second commit `docs(context): AEA-37 built paths and journey record`:
-    - `docs/testing/journeys/<YYYY-MM-DD>-AEA-37.md` per §7.4 (use the feature commit's SHA).
-    - `.claude/reference/area-map.md`, A7d row, **Status cell only**: if it reads `planned`, write `partly built:
-      agent/nodes/plan.py, agent/prompts/routing.py actual (AEA-37, <sha>); agent/nodes/front.py planned (AEA-36)`;
-      if AEA-36 already changed it, keep its text and add `; agent/nodes/plan.py, agent/prompts/routing.py actual
-      (AEA-37, <sha>)`.
-    - `.claude/state/icm-progress.md`: **add one row** (one line in the file) directly below the last *Routes verified
-      against code and tests* row: `| Routes verified against code and tests | provisional | 2026-10-21: A7d →
-      agent/nodes/plan.py, agent/prompts/routing.py checked against tests/unit/agent/nodes/test_{plan,join_plan}.py and
-      tests/unit/agent/prompts/ (AEA-37, <sha>; <n> pass) | Each slice adds its route; verified when every area-map row
-      is actual |` (≤ 400 characters; your run date if later; `<n>` = G-5's passed count). Edit no other row and not
-      the *Last reconciled* line.
-    - `docs/design/code-design.md`, `## 3. The module map` only. First, add a new line directly after the last existing
-      `**Built:**` line, in the same shape as the existing ones (paths and sha in backticks): **Built:**
-      `agent/nodes/plan.py`, `agent/prompts/routing.py` (AEA-37, `<sha>`). Second, on the tree line that starts
-      `│   ├── nodes/plan.py`, replace the trailing `stub AEA-21 6df4f4c` with `built AEA-37 <sha>`. Third, append
-      `   built AEA-37 <sha>` to the end of the tree line that starts `│   ├── prompts/routing.py`. Change nothing else
-      in the file.
-    - `git add` those four paths explicitly.
+11. **Gates** §7.3 in order, cheapest first; stop at the first red **except** the known R-1 conflict (§7.2). If any
+    step 1–10 check or gate needed a fix in a source or test file, commit only the files you changed, by explicit path
+    (any of: `src/meridian/agent/nodes/plan.py src/meridian/agent/prompts/routing.py
+    tests/unit/agent/nodes/plan_fixtures.py tests/unit/agent/nodes/test_plan.py tests/unit/agent/nodes/test_join_plan.py
+    tests/unit/agent/nodes/test_plan_graph.py tests/unit/agent/prompts/test_routing_prompts.py
+    tests/unit/agent/prompts/test_routing_prompt_turns.py tests/journeys/j5/test_aea_37.py`), message
+    `fix(graph): AEA-37 plan node after merging main (<what changed, in one line>)`, then re-run G-1…G-9. That commit's
+    SHA becomes `<sha>` (the final code commit) in step 12. If nothing needed a fix, `<sha>` stays `b760241` and there
+    is no code commit.
+12. **Context (AC-12) and record (AC-11)**, one commit `docs(context): AEA-37 rows and journey record after merging
+    main` (skip only if every line below is already exactly right):
+    - `docs/testing/journeys/2026-10-21-AEA-37.md` (the file already exists; edit it in place, your run date in the
+      name only if it is no longer 2026-10-21, then `git mv`): rewrite the fields named in §7.4 with this run's results.
+    - `.claude/reference/area-map.md`, A7d row, **Status cell only**: it already reads `partly built:
+      agent/nodes/plan.py, agent/prompts/routing.py actual (AEA-37, `b760241`); agent/nodes/front.py planned (AEA-36)`.
+      Change it only if `<sha>` is not `b760241` (replace the SHA). If AEA-36 changed the cell on `main` meanwhile, keep
+      its text and add `; agent/nodes/plan.py, agent/prompts/routing.py actual (AEA-37, <sha>)`.
+    - `.claude/state/icm-progress.md`: **replace the text of this ticket's own row only** (the one starting
+      `| Routes verified against code and tests | provisional | 2026-10-21: A7d →`) with: `| Routes verified against
+      code and tests | provisional | 2026-10-21: A7d → agent/nodes/plan.py, agent/prompts/routing.py checked against
+      tests/unit/agent/nodes/test_{plan,join_plan,plan_graph}.py and tests/unit/agent/prompts/ (AEA-37, <sha>; <n>
+      pass); J-5 steps blocked on AEA-51 | Each slice adds its route; verified when every area-map row is actual |`
+      (≤ 400 characters; `<n>` = G-5's passed count from this run; the skip owner from G-6 if it is not AEA-51). Edit no
+      other row and not the *Last reconciled* line.
+    - `docs/design/code-design.md`, `## 3. The module map` only: after step 0 it holds the AEA-37 `**Built:**` line and
+      the two `built AEA-37 b760241` tree markers. Change them only if `<sha>` is not `b760241` (replace the SHA in all
+      three places). Change nothing else in the file.
+    - `git add` the changed paths among these four explicitly.
 
 **Commits:** explicit `git add <paths>` only (never `-A`); last line of every message
 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Commit only on your branch; never push `main`; never
@@ -1157,12 +1223,14 @@ another `rule_id`). Treat that as a seam finding for AEA-51's merge. Do not loos
 
 `tests/unit/agent/**` (AEA-20's `test_gateway.py`, AEA-22's `tools/`, AEA-21's `test_{context,routers,signals}.py` and
 `nodes/test_compose*.py`), `tests/graph/**` (AEA-21; they import `meridian.agent.graph`, which imports this module),
-`tests/unit/test_import_direction.py`. **Known conflict (R-1, still open on `main` `dd1b110`):**
-`tests/graph/test_spine.py::test_stubs_raise_loudly` is parametrised over all 14 stubs, including `(plan, "planner")`,
-`(plan, "danger_classifier")` and `(plan, "plan_join")`; once this ticket replaces the stubs those three cases fail. Do
-**not** edit that file. If R-1 is still not on `main` when you run G-4: check that the only failures are exactly those three
-parametrised cases, quote them verbatim in your report, finish the remaining gates and **commit anyway** on your
-branch (the merge waits for R-1, which the orchestrator applies). Any other red stops the commit.
+`tests/unit/test_import_direction.py`, and AEA-34's and AEA-38's node tests now in `tests/unit/agent/nodes/` and
+`tests/unit/agent/prompts/` (on `main` since `dd31214` and `042ad35`). **Known conflict (R-1, still open on `main`
+`8a205b2` for the `plan` rows):** `tests/graph/test_spine.py::test_stubs_raise_loudly` still lists
+`(plan, "planner", "plan.py")`, `(plan, "danger_classifier", "plan.py")` and `(plan, "plan_join", "plan.py")`; with this
+ticket's real nodes those three cases fail (no `NotImplementedError`). Do **not** edit that file. In G-4, check that the
+only failures are exactly those three parametrised cases, quote their ids verbatim in your report, finish the remaining
+gates and **commit anyway** on your branch; the orchestrator drops the three rows at the merge, the same maintenance fix
+it made for AEA-38 in `d724301` (§8.2 R-1). Any other red stops the commit.
 
 ### 7.3 Gates (cheapest first; stop at the first red; `export UV_LINK_MODE=hardlink`)
 
@@ -1173,9 +1241,9 @@ branch (the merge waits for R-1, which the orchestrator applies). Any other red 
 | G-3 | `uv run mypy src/meridian/agent tests/unit/agent tests/journeys/j5/test_aea_37.py` | "Success: no issues found" |
 | G-4 | `uv run pytest tests/unit/agent tests/graph -q` (serial: AEA-21's timing test must not share CPUs) | all pass (see §7.2 for the one known conflict); report the count |
 | G-5 | `uv run pytest tests/unit/agent/nodes/test_plan.py tests/unit/agent/nodes/test_join_plan.py tests/unit/agent/nodes/test_plan_graph.py tests/unit/agent/prompts -q -rA` | every non-journey test named in §7.1 listed as PASSED |
-| G-6 | `uv run pytest -m journey tests/journeys/j5/test_aea_37.py -q -rs` | `2 skipped`, each reason `blocked-on AEA-NN: …` (quote both lines), or `2 passed` once every need is bound; never a failure or a collection error |
+| G-6 | `uv run pytest -m journey tests/journeys/j5/test_aea_37.py -q -rs` | `2 skipped`, each reason starting `blocked-on AEA-51:` (step "2 start session" needs `reply_composer`; quote both lines), or `2 passed` once every need is bound; never a failure or a collection error. A skip naming AEA-30, AEA-40 or AEA-29 means `main` was not merged (step 0) |
 | G-7 | `uv run python -m tests.journeys.affected --base main` | selects every journey (a new file under `tests/journeys/` is an always-input, `ALWAYS_PREFIXES`), including `tests/journeys/j5/test_aea_37.py`; all selected pass or skip; report its summary lines |
-| G-8 | `grep -rlE "meridian\.agent\.nodes\.plan\|agent\.nodes import .*plan\|meridian\.agent\.prompts\.routing\|meridian\.agent\.graph" tests/ \| sort` | on `0a85270` before this ticket: `tests/graph/_spine_doubles.py`, `tests/graph/test_spine.py`, `tests/unit/agent/test_routers.py`; after it, also this ticket's files under `tests/unit/agent/`. All of them are inside G-4's folders. Anything else: add it to G-4 and report it |
+| G-8 | `grep -rlE "meridian\.agent\.nodes\.plan\|agent\.nodes import .*plan\|meridian\.agent\.prompts\.routing\|meridian\.agent\.graph\|nodes\.plan" tests/ \| sort` | on `main` `8a205b2` (before this ticket's files): `tests/graph/_spine_doubles.py`, `tests/graph/test_spine.py`, `tests/journeys/j2/test_aea_38.py`, `tests/journeys/j3/test_aea_34.py`, `tests/unit/agent/nodes/test_load_context.py`, `tests/unit/agent/test_routers.py`; after the merge, also this ticket's files under `tests/unit/agent/` and `tests/journeys/j5/`. The unit and graph files are inside G-4's folders; the journey files are run by G-7. Anything else: add it to G-4 and report it. (Services and API tests reach the graph only through the container's lazy `run_graph` key, which AEA-51 binds; `services/turn.py` imports nothing from `agent/`) |
 | G-9 | `grep -rnE "[0-9]{3}-[0-9]{3}-[0-9]{4}\|[0-9]{4} [0-9]{4} [0-9]{4}\|914276" src/meridian/agent/nodes/plan.py src/meridian/agent/prompts/routing.py tests/unit/agent/nodes tests/unit/agent/prompts tests/journeys/j5/test_aea_37.py` | no output (no literal phone, card or code; `tests/unit/agent/nodes` covers `test_plan_graph.py`) |
 
 The full suite is **not** run: this ticket changes no shared fixture, settings, dependency or widely imported module
@@ -1190,20 +1258,22 @@ Title `# Journey record: AEA-37 plan node`, then a `| Field | Value |` table in 
 |---|---|
 | Claim | AEA-37 AC-11: on a free-text turn the raise-only classifier sends DANGER to the safety path and NODANGER to a normal booking (J-5), with exactly the two Jev routing calls (graph run with node doubles, `test_plan_graph.py`); GRN-7 and the SDQ-6 fallback behave as graph-nodes §4–§5 (unit tests). The J-5 steps on AEA-57's harness (`tests/journeys/j5/test_aea_37.py`) are written and reported blocked |
 | Level | `mock-tested` |
-| Tested revision | the feature commit SHA |
+| Tested revision | `<sha>` (the final code commit: `b760241` unless step 11 made a fix commit), on the branch after merging `main` `8a205b2` (give the merge commit SHA too) |
 | Environment | VPS worktree, `uv run`, Python 3.12. Graph run: LangGraph 1.2.16 `InMemorySaver`, AEA-21 node doubles for every node but the three plan nodes, real `ModelGateway` with AEA-11 `FakeChoiceModel`s, no server, DB or provider. Journey: AEA-57 harness (real app under uvicorn on loopback, disposable DB copy, scripted raw model output), steps blocked before the turn |
 | Command | G-5 and G-6 verbatim; G-7 |
-| Result | counts per command; G-6's two skip reasons quoted verbatim |
+| Result | counts per command from this run (G-5 passed count; G-6's two skip reasons quoted verbatim; G-7's summary lines); replace the old `48 passed` and the stale "blocked-on AEA-30" text |
 | Evidence location | this record |
 | Remaining limitations | the graph run uses doubles for the gate and safety nodes (AEA-36) and the case write (AEA-29); the J-5 steps that check the P1 case row, the stored turn and event rows and the two-call spend ledger are blocked; CAP-2 spans are AEA-51's; E-5 is scored at Stage 9 |
-| Blocked by | the owners named in G-6's skip reasons (expected among AEA-30, AEA-40, AEA-51, AEA-29), and AEA-51 for J-5 at the CON-2 entry point (graph wiring) |
+| Blocked by | AEA-51 (`reply_composer` and `run_graph`, named in G-6's skip reasons; it also wires J-5 at the CON-2 entry point); AEA-36 for the real gate and safety nodes on the DANGER step (its `R47.classifier_danger` case rule) |
 | Journeys that will exercise this code | J-5 (`tests/journeys/j5/test_aea_37.py`, this ticket; AEA-36's and AEA-51's J-5 files), and every journey with a free-text turn (J-1 step 5, J-2…J-4, J-9) once AEA-51 binds `run_graph` |
 
 ### 7.5 Evidence to report back
 
-G-1…G-9 output lines; the three AC-9 hashes; G-6's two skip reasons verbatim; the journey record path and both commit SHAs; whether R-1 was already on
-`main` (if not, the three failing case ids verbatim); any name in §4.1–§4.4 or §6 that differed on `main` (if any, you
-should have stopped).
+G-1…G-9 output lines; the three AC-9 hashes; G-6's two skip reasons verbatim; the journey record path; the SHAs of
+the merge commit, any fix commit and the docs commit (and `b760241` as the original code commit); how each of the three
+step-0 conflicts was resolved (one line each); whether the three `plan` rows of R-1 were still on `main` (if so, the
+three failing case ids verbatim); any name in §4.1–§4.4 or §6 that differed on `main` (if any, you should have
+stopped).
 
 ---
 
@@ -1223,15 +1293,18 @@ should have stopped).
 
 | PD-8 | SP-1's third continuation trigger ("not verified and a phone in the text") is **not** carried over; only an affirmative or a slot pick continues an open task | DO-4 §4 names only "a bare 'Yes, please.' or a slot pick"; production identity is the locate form card (`GateKind.LOCATE` in AEA-12's `decide_gate`), not a phone typed as free text |
 | PD-9 | The planner's "state summary" (PRD R-45) is `StateFlags`: flags only, no prose summary | DO-4 §3 ("What crosses this line: only `PlannerInput`"); answers AEA-34's R-3 for the planner side (the responder side is AEA-38) |
+| PD-10 | The build an earlier run committed on the branch (`b760241`, `41c961f`, merge `36dc321`) is kept and finished: merge today's `main` into the branch, resolve the context-doc conflicts by keeping both sides, re-run every gate, fix only real differences. No rebuild, reset, rebase or force push | The code matches §4.7 on reading; the ledger's `NEEDS-DECISION` was about process, not product; a rebuild would redo reviewed-shape work and lose provenance; the merge-main precedent is `1d34e79` (AEA-40) and `36dc321` itself |
 
 ### 8.2 Requests to the orchestrator
 
-- **R-1 (AEA-21's test; still open on `main` `dd1b110`; one fix serves AEA-34, 36, 37, 38, 39; apply it once when
-  that wave-2 node group merges by the tree):**
-  `tests/graph/test_spine.py::test_stubs_raise_loudly` must check only functions that are still stubs (e.g.
-  `pytest.skip` a case whose `inspect.getsource(fn)` does not contain `"stub from AEA-21"`). Otherwise every wave-2
-  node ticket (AEA-34, 36, 37, 38, 39) turns its cases red and would have to edit AEA-21's file — a five-way collision.
-  This ticket does not edit it (§7.2).
+- **R-1 (AEA-21's test; the `plan` rows are still on `main` `8a205b2`):** at this ticket's merge, apply the same
+  orchestrator-authorised maintenance fix as `d724301` (AEA-38): in `tests/graph/test_spine.py`, delete the three
+  parametrize rows `(plan, "planner", "plan.py"),`, `(plan, "danger_classifier", "plan.py"),` and
+  `(plan, "plan_join", "plan.py"),` from `test_stubs_raise_loudly`, and change the import line
+  `from meridian.agent.nodes import act, front, plan` to `from meridian.agent.nodes import act, front` **only if**
+  `plan` is then unused in that file (check with `grep -n "plan\." tests/graph/test_spine.py`). No other assertion
+  changes. Commit message in the shape of `d724301`: `test(graph): drop stale plan-node rows from
+  test_stubs_raise_loudly`. This ticket does not edit the file (§7.2).
 - **R-2 (AEA-02b):** when `ConversationState` gains `pending_change`, switch `StateFlags.pending_change` to
   `state.pending_change is not None` (one line in `build_planner_input`; R-5).
 - **R-3 (AEA-08):** record PD-1…PD-9 in DO-4 §4 / graph-nodes §9.4 (`tasks_per_turn` keyword, `TaskBrakeExceeded`, the
@@ -1284,17 +1357,20 @@ should have stopped).
 ## 9. Readiness
 
 **READY**, no blocker. No product decision is open: DAT-1 stands on option A per sign-off D-14, and GRN-7 and SDQ-6 are
-decided. Every engineering gap is decided in §8.1 and reported. No signed contract changes.
+decided. Every engineering gap is decided in §8.1 and reported. No signed contract changes. The ledger's earlier
+`NEEDS-DECISION` ("already built and committed by an earlier run") is answered by PD-10: verify and finish the committed
+build (§5 step 0), nothing for Innocent.
 - The slice-plan blockers are all on `main`: AEA-11 (`FakeChoiceModel`, `provider_call`, used in tests), AEA-12
   (`decide_gate`; not imported, because the tests build `GateDecision` directly) and AEA-21 (`5531664`: `GraphDeps`,
   `emit_signal`, the `plan.py` stub, `build_graph` / `run_graph` / `ReplyComposer`, `tests/graph/_spine_doubles.py`).
 - Also on `main` and imported: AEA-02 (types, ports), AEA-04 (`redact`), AEA-01 (`Limits`), AEA-20 (`ModelOutcome`;
   `build_gateway` in tests), AEA-57 (journey harness).
-- The J-5 journey steps need AEA-40, AEA-51 and AEA-29 to bind their services. Until then they are reported *blocked*,
-  which the harness and `integrated-journeys.md` §4 allow. They are not a blocker for this ticket.
-- **R-1** must be applied by the orchestrator (one guard in `tests/graph/test_spine.py`) before this ticket's merge gate
-  can be green. Under tree merging it is applied once for the wave-2 node group (AEA-34, 36, 37, 38, 39). The
-  implementer commits on its branch either way (§7.2).
-- The worktree's uncommitted earlier run is kept and finished (§5 step 0); nothing is rewritten from scratch.
+- **R-1** must be applied by the orchestrator (drop the three `plan` rows from `tests/graph/test_spine.py`, as
+  `d724301` did for `reply`) before this ticket's merge gate can be green. The implementer commits on its branch
+  either way (§7.2).
+- The committed build on the branch is kept and finished (§5 step 0, PD-10); nothing is rewritten from scratch.
+- The J-5 journey steps need AEA-51 (`reply_composer`, `run_graph`); AEA-30, AEA-40 and AEA-29 are now merged and
+  bound. Until AEA-51 lands the steps report *blocked*, which the harness and `integrated-journeys.md` §4 allow. They
+  are not a blocker for this ticket.
 
 **Gates:** none (no human, paid or live gate). No security review (not `risk::security`).

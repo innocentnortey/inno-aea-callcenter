@@ -1,19 +1,45 @@
 # Plan — [AEA-35] specialists: specs, braked tool loop, wording
 
-**Status:** planned; **NEEDS-DECISION** (§9.1) and **BLOCKED-ON the specialist task types** (`SpecialistTask`,
-`KnowledgeSlice`, `AccountSlice`; §9, §8.3 R-1). These types are still not on `main` at `dd1b110`; the AEA-02b that
-merged (`5305d57`) is case views only (see refresh item 1 of Refresh 3). Every other name this plan imports is on
-`main` and was checked.
+**Status:** planned; **READY**. The open question of earlier refreshes (where `SpecialistTask`, `KnowledgeSlice` and
+`AccountSlice` live) was answered by Innocent on 2026-10-21 ("just do whatever you recommend": option A of §9.1). They
+live in `src/meridian/domain/tools.py`, built by the small ticket **AEA-35b** (branch `aea-35b-specialist-types`, commit
+`68f7f19`), which merges into `main` before this ticket builds. Step 0.2 checks that it has.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/35 (spec copy:
-`docs/plans/tickets/AEA-35.md`) · **Base revision:** `main` at `dd1b110` (fourth refresh 2026-10-21; earlier `e22aebb`,
-`775f591`, first written at `16ca639`) · **Lane:** `lane::build-loop`, no `risk::security` · **Wave:** 2 · **Planner:** Claude Opus
-5.5 (`claude-opus-5-5`), 2026-10-21 · **Implementer:** `fanout-implementer` on Sonnet.
+`docs/plans/tickets/AEA-35.md`) · **Base revision:** `main` at `f466ff7` plus AEA-35b `68f7f19` (fifth refresh
+2026-10-21; earlier `dd1b110`, `e22aebb`, `775f591`, first written at `16ca639`) · **Lane:** `lane::build-loop`, no
+`risk::security` · **Wave:** 2 · **Planner:** Claude Opus 5.5 (`claude-opus-5-5`), 2026-10-21 · **Implementer:**
+`fanout-implementer` on Sonnet.
 
 Read this whole file before writing code. Every decision is already made here (§8.1 lists them). If the code on `main`
 disagrees with a name in this plan, **the code on `main` wins**: follow it, and say so in your report. If a name this
 plan needs is **missing** on `main`, stop and report (do not invent it).
 
-**Refresh 4 (2026-10-21, `main` at `dd1b110`).** 37 commits since `e22aebb`. `git diff --stat e22aebb dd1b110` on
+**Refresh 5 (2026-10-21, `main` at `f466ff7`; AEA-35b at `68f7f19`). Where Refreshes 1–4 below disagree with this
+block, this block wins; they are kept as history.**
+
+1. **Decision taken; the blocker is AEA-35b.** `git show aea-35b-specialist-types:src/meridian/domain/tools.py` defines,
+   right after `ToolCallScope`: `KnowledgeSlice(MeridianModel)` with only `kind: Literal["knowledge"] = "knowledge"`,
+   `AccountSlice(MeridianModel)` with only `kind: Literal["account"] = "account"`, and `SpecialistTask(MeridianModel)`
+   with `task: PlannedTask`, `customer_text: str`, `task_messages: tuple[str, ...]`, `slice: KnowledgeSlice |
+   AccountSlice | SchedulingSlice`, `offer_quick_checks: bool = False`: exactly R-1's sketch. AEA-35b also adds the
+   home note to graph-tools §2 and its own area-map and ICM rows. Every import of `SpecialistTask` in this plan is now
+   `from meridian.domain.tools import SpecialistTask` (§4.4–§4.6), and `_doubles.py` builds the slices as
+   `KnowledgeSlice()` and `AccountSlice()` (§6.2). §9.1 is answered and kept as history.
+2. **Nothing else this plan imports changed.** `git diff --stat dd1b110 main` on `src/meridian/{domain,ports,privacy}`,
+   `policy/limits.py`, `agent/gateway.py`, `agent/tools/dispatch.py` and `tests/fakes/` is empty, so §4 holds name for
+   name. `src/meridian/agent/specialists/` still holds only `__init__.py`.
+3. **`tests/unit/agent/prompts/__init__.py` now exists on `main`** (AEA-38, with `test_reply_prompts.py` and
+   `test_reply_prompt_turns.py`). It is no longer an owned file: do not create or edit it; it is out of the commit list
+   (§2.1, step 6, step 10).
+4. **AEA-38 merged** (`ec94722`): `agent/prompts/reply.py` and `tests/journeys/j2/test_aea_38.py`, a `mock-tested`
+   J-2 file and the nearest precedent for this ticket's journey file. **AEA-40 merged** (`f466ff7`). AC-15's
+   integrated level still waits on AEA-51 only.
+5. **AEA-39's plan** imports only `scope_for` from `agent/specialists/runner.py` and calls
+   `deps.specialists.run(task, scope_for(state, ctx), ctx)`; both stay exactly as §4.6 defines them.
+6. Ruff config on `main`: `line-length = 110`, rules `E, W, F, I, B, UP, S, RUF` (tests ignore `S101, S105, S106,
+   S603, S607, S311`); mypy `strict = true` over `src/meridian`, `tests`, `eval` (tests may leave defs untyped).
+
+**Refresh 4 (2026-10-21, `main` at `dd1b110`; history).** 37 commits since `e22aebb`. `git diff --stat e22aebb dd1b110` on
 `src/meridian/{domain,ports,privacy}`, `policy/limits.py`, `agent/gateway.py`, `agent/tools/dispatch.py` and
 `tests/fakes/` shows only the new `domain/views.py` (AEA-02b), so §4 still holds name for name. What changed:
 
@@ -127,7 +153,7 @@ wave 1; the executors (AEA-27, 28, 33) and the act node (AEA-39) are siblings in
 | Evaluation plan | DO-5 `docs/design/evaluation-plan.md` E-1 (trajectory), E-7 (booking validity) | Kept passing when AEA-51 runs the compiled graph; scored runs are Stage 9 → other-ticket |
 | Observability | DO-6 `docs/design/observability-contract.md` WF-1, rule 18 (tool call is a timed span), *Missing instrumentation* "a tool call left no lookup-log row"; CAP-1 | One span per dispatched call; one dispatch per call; CAP-1 is AEA-51 |
 | Metrics | DO-7 `docs/design/key-metrics-registry.md` M-7, M-8, M-9, M-21, M-24, M-25 | Stay computable: passage ids in lookup rows, every `CallRecord` on the result, brake/failure on the result. No target set here |
-| Sibling plans (read only) | `docs/plans/fanout/2026-10-21-build/AEA-02.md` §4.0–§4.13, §8.2; `AEA-11.md` §4–§5; `AEA-20.md` §4.5; `AEA-22.md` §4.3, §5 | Exact homes and names of the types used here; `SpecialistTask` is **not** built by AEA-02 (§9) |
+| Sibling plans (read only) | `docs/plans/fanout/2026-10-21-build/AEA-02.md` §4.0–§4.13, §8.2; `AEA-11.md` §4–§5; `AEA-20.md` §4.5; `AEA-22.md` §4.3, §5 | Exact homes and names of the types used here; `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` are AEA-35b's (`domain/tools.py`), not AEA-02's |
 | Journey harness | `tests/journeys/support/README.md` (AEA-57, merged `bd79a29`); precedents `tests/journeys/j10/test_aea_48.py`, `tests/journeys/j9/test_aea_26.py` and their records | Harness steps need the wired graph (`run_graph`, `turn_service`: AEA-51, AEA-40); until then a ticket's journey file is `mock-tested` and names the landing ticket |
 
 ### 1.4 Entry-point registration
@@ -151,21 +177,21 @@ wave 1; the executors (AEA-27, 28, 33) and the act node (AEA-39) are siblings in
 | `tests/unit/agent/specialists/_doubles.py` | create | test builders and the two doubles (§6.2) |
 | `tests/unit/agent/specialists/test_runner.py` | create | runner tests (§7.1) |
 | `tests/unit/agent/specialists/test_specs.py` | create | spec/builder tests, WP-1/WP-4/WP-4F, static checks (§7.1) |
-| `tests/unit/agent/prompts/__init__.py` | create | empty (0 bytes); AEA-37/AEA-38 may create the same empty file — identical empty files merge cleanly |
 | `tests/unit/agent/prompts/test_specialist_prompts.py` | create | AC-11 and wording tests (§7.1) |
 | `tests/unit/agent/prompts/test_specialist_prompt_turns.py` | create | AC-12 turn 1/2/5 test (§7.1) |
 | `tests/journeys/j2/test_aea_35.py` | create | AC-15 journey steps at `mock-tested` level (§7.1) |
 | `docs/testing/journeys/<run-date>-AEA-35.md` | create | AC-15 evidence record (§7.4) |
 | `.claude/reference/area-map.md` | modify | A7b row only (AC-16, step 9) |
-| `.claude/state/icm-progress.md` | modify | evidence cell of the first *Routes verified against code and tests* row only (AC-16, step 9) |
+| `.claude/state/icm-progress.md` | modify | one new *Routes verified against code and tests* row only (AC-16, step 9.3) |
 | `docs/design/code-design.md` | modify | §3 tree lines for the three files only (AC-16, step 9) |
 
 `src/meridian/agent/specialists/__init__.py` and `src/meridian/agent/prompts/__init__.py` already exist (AEA-01);
-**do not edit them** (consumers import from the submodules).
+**do not edit them** (consumers import from the submodules). `tests/unit/agent/prompts/__init__.py` (AEA-38) and
+`tests/journeys/j2/__init__.py` (AEA-01) already exist too: do not create or edit them.
 
 ### 2.2 Shared surfaces: read, never edit
 
-`src/meridian/domain/*`, `src/meridian/ports/*`, `src/meridian/config.py` (AEA-02); `src/meridian/policy/limits.py`
+`src/meridian/domain/*` (AEA-02; `domain/tools.py` also holds AEA-35b's `SpecialistTask`, `KnowledgeSlice`, `AccountSlice`), `src/meridian/ports/*`, `src/meridian/config.py` (AEA-02); `src/meridian/policy/limits.py`
 (AEA-01, `Brakes`); `src/meridian/privacy/redact.py` (AEA-04); `src/meridian/agent/gateway.py` (AEA-20);
 `src/meridian/agent/tools/dispatch.py` (AEA-22); `tests/fakes/*` (AEA-11); `tests/conftest.py`,
 `tests/journeys/affected.py`, `tests/journeys/README.md` (AEA-01); `tests/journeys/support/` (AEA-57, merged);
@@ -177,7 +203,7 @@ ticket adds its import checks in its own test file instead).
 `agent/tools/{knowledge,account,scheduling}.py` (AEA-33, AEA-27, AEA-28, all merged: executors, tool names, `for_model` content);
 `agent/nodes/act.py` (AEA-39: `run_specialist`, `build_specialist_task`, `offer_quick_checks` rule, signals, check
 events); `agent/context.py` (AEA-21: `GraphDeps.specialists`); `web/container.py` (AEA-51 wires the runner);
-`src/meridian/domain/views.py` and every other `domain/*` file (AEA-02, AEA-02b, the specialist-types follow-up);
+`src/meridian/domain/views.py`, `domain/tools.py` and every other `domain/*` file (AEA-02, AEA-02b, AEA-35b); `agent/prompts/reply.py`, `tests/unit/agent/prompts/test_reply_*.py`, `tests/unit/agent/prompts/__init__.py`, `tests/journeys/j2/test_aea_38.py` (AEA-38);
 `tests/contract/test_prompts_vs_consumers.py` (AEA-60); `apps/web/**`,
 `docs/ux/**`, the OpenAPI, the briefing, issued data, `docs/archive/`, `docs/parked/`.
 
@@ -243,7 +269,7 @@ All test paths are under `tests/unit/agent/` unless written in full. "Runner" = 
 | WP-1 worked pair test | build-loop-test-scope; ticket example 1 | no (pair stated, no test named) | **added** AC-17 | step 6 |
 | No `if spec.kind` in the runner | DO-3 §4.5 | no | **added** AC-18 | step 3, step 6 |
 | `SPECS` complete; report schema = report model's | graph-tools §2; AEA-60 AC-5 | no | **added** AC-19 | step 2 |
-| `SpecialistTask` (with `offer_quick_checks`), `KnowledgeSlice`, `AccountSlice` exist in `domain/` | DO-4 §5; graph-tools §2 ("domain/specialists.py (AEA-02)"); AEA-02 ticket row | no | **blocked-on** the specialist task types follow-up (AEA-02 plan §8.2; **not** the AEA-02b that was cut, which is case views only); its home needs Innocent's yes (§9.1) | §9, §8.3 R-1 |
+| `SpecialistTask` (with `offer_quick_checks`), `KnowledgeSlice`, `AccountSlice` exist in `domain/` | DO-4 §5; graph-tools §2 ("domain/specialists.py (AEA-02)"); AEA-02 ticket row | no | **resolved:** AEA-35b builds them in `domain/tools.py` (option A, Innocent 2026-10-21); it merges before this ticket builds | step 0.2 |
 | `SpecialistTask` assembly, `offer_quick_checks` rule, signals, check events, `specialist_results` state key | graph-nodes §4, §9.5; GRT-8 | yes (scope boundary) | other-ticket: AEA-39 (its AC-7 covers signals; `test_act.py::test_quick_checks_rule`) | — |
 | Executors, tool names, `for_model` content | graph-tools §1, §4; data.md §4 | yes | other-ticket: AEA-27, AEA-28, AEA-33 | — |
 | Wiring (`GraphDeps.specialists`, `runner.transcript is` the gateway's adapter, `runner.trace is` the sink) | graph-tools §2; AEA-51 AC-1 | yes | other-ticket: AEA-51 (this ticket exposes the attributes, PD-8) | — |
@@ -362,16 +388,18 @@ class KnowledgeReport(LLMFacing): points: list[ReportedPoint] = Field(max_length
 class AccountReport(LLMFacing): summary: str = Field(max_length=300)
 class SchedulingReport(LLMFacing): appointment_id: int; wanted_time: str; note: str = Field(max_length=200)
 
-# SpecialistTask — NOT in AEA-02's plan (its §8.2). Expected shape (DO-4 §5 + graph-tools §2):
+# meridian.domain.tools (AEA-35b, `68f7f19`; home chosen by Innocent 2026-10-21, option A). Copied from the branch.
+class KnowledgeSlice(MeridianModel):
+    kind: Literal["knowledge"] = "knowledge"          # kind-only marker: the knowledge specialist sees only the text
+class AccountSlice(MeridianModel):
+    kind: Literal["account"] = "account"              # kind-only marker: account tools get the customer from scope
 class SpecialistTask(MeridianModel):
     task: PlannedTask
     customer_text: str                                # SONNET profile
     task_messages: tuple[str, ...]                    # same profile
     slice: KnowledgeSlice | AccountSlice | SchedulingSlice
     offer_quick_checks: bool = False
-# Import it from the module where `grep -rn "^class SpecialistTask" src/meridian/domain/` finds it
-# (the specialist task types follow-up decides; §9.1 recommends `meridian.domain.tools`). This plan reads ONLY these five fields, and reads `slice` only through
-# `slice.model_dump(mode="json")`, so the exact fields of KnowledgeSlice / AccountSlice do not matter here.
+# This plan reads ONLY these five fields, and reads `slice` only through `slice.model_dump(mode="json")`.
 
 # meridian.domain.turn (AEA-02)
 SpecialistKind = Literal["knowledge", "account", "scheduling"]
@@ -515,7 +543,7 @@ from zoneinfo import ZoneInfo
 
 from pydantic.main import IncEx                               # pydantic 2.14: the type of model_dump's `exclude`
 
-from meridian.domain.specialists import SpecialistTask        # or the module step 0 finds (see §4.1)
+from meridian.domain.tools import SpecialistTask               # AEA-35b (§4.1)
 from meridian.domain.turn import TaskIntent, TurnContext
 from meridian.privacy.redact import RedactionProfile, redact
 ```
@@ -647,7 +675,7 @@ Module docstring: "The three specialists as data (AEA-35; DO-3 §4.5, S-12; grap
 `SpecialistSpec` names its tool kinds, report model, wording and result builder. Builders fold what the tools
 captured into the result and never read model text for a record value."
 
-Imports (adjust only the `SpecialistTask` module per step 0):
+Imports (ruff `I` sorts them; drop any name ruff `F401` reports unused, e.g. `ShownSlot`, `InvoiceView`, `StaffNote` if a builder does not name them):
 
 ```python
 from __future__ import annotations
@@ -668,10 +696,9 @@ from meridian.domain.common import HaltReason, LLMFacing, PassageId, ProviderFai
 from meridian.domain.records import Passage, ShownSlot
 from meridian.domain.specialists import (
     AccountCapture, AccountReport, AccountResult, InvoiceView, KnowledgeCapture, KnowledgePoint, KnowledgeReport,
-    KnowledgeResult, SchedulingCapture, SchedulingReport, SchedulingResult, SpecialistResult, SpecialistTask,
-    StaffNote,
+    KnowledgeResult, SchedulingCapture, SchedulingReport, SchedulingResult, SpecialistResult, StaffNote,
 )
-from meridian.domain.tools import ToolCallRecord, ToolKind
+from meridian.domain.tools import SpecialistTask, ToolCallRecord, ToolKind
 from meridian.domain.turn import SpecialistKind, TurnContext
 from meridian.ports.models import CallRecord, ToolSchema
 ```
@@ -802,10 +829,10 @@ from meridian.agent.tools.dispatch import DispatchedCall, ToolDispatcher
 from meridian.domain.common import HaltReason, LLMFacing, ProviderFailure
 from meridian.domain.records import Passage
 from meridian.domain.specialists import (
-    AccountCapture, KnowledgeCapture, SchedulingCapture, SpecialistResult, SpecialistTask,
+    AccountCapture, KnowledgeCapture, SchedulingCapture, SpecialistResult,
 )
 from meridian.domain.state import ConversationState
-from meridian.domain.tools import ToolCallRecord, ToolCallScope, ToolKind
+from meridian.domain.tools import SpecialistTask, ToolCallRecord, ToolCallScope, ToolKind
 from meridian.domain.turn import SpecialistKind, TurnContext
 from meridian.policy.limits import Brakes
 from meridian.ports.models import CallRecord, ProviderMessages, Role, ToolCall, ToolStep, ToolStepRequest, ToolTranscript
@@ -948,15 +975,15 @@ Work in the worktree and branch the orchestrator gives you (for example
 `export UV_LINK_MODE=hardlink`. Never copy a venv; no `node_modules`; never read `.env`; bind no port.
 
 **Step 0 — preflight (no code).** On the branch, with `main` merged in:
-1. `git log --oneline -1 main` and confirm AEA-02, AEA-11, AEA-20, AEA-22 are merged (they are at `dd1b110`):
+1. `git log --oneline -1 main` and confirm AEA-02, AEA-11, AEA-20, AEA-22 are merged (they are at `f466ff7`):
    `ls src/meridian/agent/gateway.py src/meridian/agent/tools/dispatch.py tests/fakes/models.py tests/fakes/trace.py`.
-2. `grep -rn "^class SpecialistTask\|^class KnowledgeSlice\|^class AccountSlice" src/meridian/domain/` — all three
-   must exist and `SpecialistTask` must have `task`, `customer_text`, `task_messages`, `slice`, `offer_quick_checks`.
-   **If any is missing: stop and report `blocked-on specialist task types follow-up` (§9). Do not define them
-   anywhere.** (A merged AEA-02b with only `domain/views.py` does not satisfy this check.)
-   Also: `uv run python -c "from meridian.domain.<module> import KnowledgeSlice, AccountSlice; print(KnowledgeSlice(), AccountSlice())"`
-   with the module the grep found. If the slices need constructor arguments, fill them in `_doubles.py`
-   `knowledge_slice()` / `account_slice()` only (§6.2); nothing else in this plan reads slice fields.
+2. `grep -n "^class SpecialistTask\|^class KnowledgeSlice\|^class AccountSlice" src/meridian/domain/tools.py` must
+   print three lines (AEA-35b merged). Then
+   `uv run python -c "from meridian.domain.tools import AccountSlice, KnowledgeSlice, SpecialistTask; print(KnowledgeSlice(), AccountSlice(), sorted(SpecialistTask.model_fields))"`
+   → `kind='knowledge' kind='account' ['customer_text', 'offer_quick_checks', 'slice', 'task', 'task_messages']`.
+   **If the grep prints nothing: `git merge main` once more; if `main` still lacks the three classes, stop and report
+   `blocked-on AEA-35b`. Never define these types anywhere, and never merge the `aea-35b-specialist-types` branch
+   yourself.**
 3. `uv run python -c "from meridian.agent.gateway import ModelGateway, ModelOutcome; from meridian.agent.tools.dispatch import DispatchedCall, ToolDispatcher; from meridian.ports.models import ToolTranscript, ToolStepRequest; from meridian.domain.specialists import KnowledgeReport, SchedulingCapture; from tests.fakes import FakeToolModel, InMemoryTraceSink"`
    → no output. If a name differs, follow `main` and note it in your report.
 
@@ -972,7 +999,7 @@ Work in the worktree and branch the orchestrator gives you (for example
 `uv run pytest tests/unit/agent/specialists -q` until green. If a test expectation in this plan fails, fix the code
 toward the plan; do not change an expected value. If the plan itself looks wrong, stop and send it back.
 
-**Step 6 — prompt tests** `tests/unit/agent/prompts/__init__.py` (empty), `test_specialist_prompts.py`,
+**Step 6 — prompt tests** (`tests/unit/agent/prompts/__init__.py` already exists; do not touch it) `test_specialist_prompts.py`,
 `test_specialist_prompt_turns.py` per §7.1. `uv run pytest tests/unit/agent/prompts -q`.
 
 **Step 7 — journey** `tests/journeys/j2/test_aea_35.py` per §7.1; `uv run pytest -m journey tests/journeys/j2/test_aea_35.py -q` → 2 passed.
@@ -988,8 +1015,7 @@ toward the plan; do not change an expected value. If the plan itself looks wrong
    `│   ├── specialists/runner.py`, `│   ├── prompts/specialists.py`, append `   built AEA-35 <feat sha> (ticket wave 2)` (the form AEA-22 used on `tools/dispatch.py`) at the end of
    the line. Nothing else.
 3. `.claude/state/icm-progress.md`: **add one new row** directly after the last row titled *Routes verified against
-   code and tests* (at `dd1b110` that is the AEA-27 `services/identity.py` row; rows are appended in merge order, so
-   take whichever is last when you get there), the form every wave-2 ticket used (AC-16's "evidence link" is this row's evidence cell):
+   code and tests* (whichever such row is last in the table when you get there), the form every wave-2 ticket used (AC-16's "evidence link" is this row's evidence cell):
    `| Routes verified against code and tests | provisional | <run-date>: area map A7b → \`agent/specialists/{specs,runner}.py\`, \`agent/prompts/specialists.py\` (AEA-35, \`<feat sha>\`) checked against \`tests/unit/agent/specialists/\`, \`tests/unit/agent/prompts/test_specialist_prompt*.py\` (<N> passed); record docs/testing/journeys/<run-date>-AEA-35.md | Each slice adds its route; verified when every area-map row is actual |`
    (evidence cell ≤ 400 characters). Change no other row and not the *Last reconciled* line.
 4. Write the journey record §7.4.
@@ -998,7 +1024,7 @@ toward the plan; do not change an expected value. If the plan itself looks wrong
 **Step 10 — commits** (explicit `git add <paths>`, never `-A`; the last line of every message is
 `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`):
 1. `feat(agent): specialist specs, braked runner and wording (AEA-35)` —
-   `git add src/meridian/agent/prompts/specialists.py src/meridian/agent/specialists/specs.py src/meridian/agent/specialists/runner.py tests/unit/agent/specialists/__init__.py tests/unit/agent/specialists/_doubles.py tests/unit/agent/specialists/test_runner.py tests/unit/agent/specialists/test_specs.py tests/unit/agent/prompts/__init__.py tests/unit/agent/prompts/test_specialist_prompts.py tests/unit/agent/prompts/test_specialist_prompt_turns.py tests/journeys/j2/test_aea_35.py`
+   `git add src/meridian/agent/prompts/specialists.py src/meridian/agent/specialists/specs.py src/meridian/agent/specialists/runner.py tests/unit/agent/specialists/__init__.py tests/unit/agent/specialists/_doubles.py tests/unit/agent/specialists/test_runner.py tests/unit/agent/specialists/test_specs.py tests/unit/agent/prompts/test_specialist_prompts.py tests/unit/agent/prompts/test_specialist_prompt_turns.py tests/journeys/j2/test_aea_35.py`
 2. `docs(AEA-35): journey record and context for the specialist runner` —
    `git add docs/testing/journeys/<run-date>-AEA-35.md .claude/reference/area-map.md .claude/state/icm-progress.md docs/design/code-design.md`
 
@@ -1031,7 +1057,7 @@ Do not push (the merge step pushes `main`). Do not force-push.
 
 ### 6.2 `tests/unit/agent/specialists/_doubles.py` (test-only builders; module docstring "Builders and doubles for the AEA-35 specialist tests. Synthetic values only.")
 
-Imports from `meridian.*` as in §4 and `from tests.fakes import CHICAGO, WORKED_PAIRS_NOW, FakeToolModel, InMemoryTraceSink, provider_call`.
+Imports from `meridian.*` as in §4 (`KnowledgeSlice`, `AccountSlice`, `SpecialistTask` from `meridian.domain.tools`) and `from tests.fakes import CHICAGO, WORKED_PAIRS_NOW, FakeToolModel, InMemoryTraceSink, provider_call`.
 
 Constants: `THREAD`, `TURN_1`, `TURN_2`, `TURN_5`, `REQUEST` (§6.1); the passages and views of §6.1 as module
 constants (`WP1_INCLUDES`, `WP1_PRICE`, `WP1_MINIMUM`, `ARCHIVE_ID`, `TROUBLESHOOTING`, `FAQ_CREDIT`, `INV_204411`,
@@ -1053,8 +1079,8 @@ def turn_ctx(sink: InMemoryTraceSink, *, turn_id: TurnId = TURN_1,
 def scope(ctx: TurnContext, *, customer_id: CustomerId | None = None,
           shown: frozenset[int] = frozenset(), message_id: int = 412) -> ToolCallScope
 
-def knowledge_slice() -> KnowledgeSlice      # the ONLY places that know the follow-up's slice fields:
-def account_slice() -> AccountSlice          #   construct with whatever fields main defines (minimal valid values)
+def knowledge_slice() -> KnowledgeSlice      # return KnowledgeSlice()  (AEA-35b: kind-only)
+def account_slice() -> AccountSlice          # return AccountSlice()    (AEA-35b: kind-only)
 def scheduling_slice(*, appointments: tuple[AppointmentView, ...] = (),
                      shown: tuple[ShownSlot, ...] = ()) -> SchedulingSlice:
     # SchedulingSlice(customer_zone="central", member=False, appointments=appointments, shown_slots=shown,
@@ -1211,7 +1237,7 @@ AEA-51 (integrated customer path; it wires the graph that AEA-57's merged harnes
 values only."
 This file does not use the harness `journey` fixture: the harness steps need `run_graph` and `turn_service`, which are
 unbound until AEA-51 and AEA-40 merge, and the README's "no doubles above the model ports" rule governs those
-integrated steps. It follows the merged `mock-tested` precedents (`j10/test_aea_48.py`, `j9/test_aea_26.py`). Do not
+integrated steps. It follows the merged `mock-tested` precedents (`j2/test_aea_38.py`, `j10/test_aea_48.py`, `j9/test_aea_26.py`). Do not
 import anything from `tests/journeys/support/`.
 
 | Test | Assertions |
@@ -1230,7 +1256,7 @@ this ticket's files; if another file appears, add it to the pytest command).
 | 1 | Lint | `uv run ruff check src/meridian/agent/specialists src/meridian/agent/prompts/specialists.py tests/unit/agent/specialists tests/unit/agent/prompts tests/journeys/j2/test_aea_35.py` | `All checks passed!` |
 | 2 | Format | `uv run ruff format --check src/meridian/agent/specialists src/meridian/agent/prompts/specialists.py tests/unit/agent/specialists tests/unit/agent/prompts tests/journeys/j2/test_aea_35.py` | `N files already formatted` (run `uv run ruff format <same paths>` first if needed) |
 | 3 | Types | `uv run mypy` | `Success: no issues found in N source files` |
-| 4 | Affected tests | `uv run pytest tests/unit/agent/specialists tests/unit/agent/prompts tests/unit/test_import_direction.py -q` | all pass (≈ 35 items incl. parametrised cases), 0 skipped |
+| 4 | Affected tests | `uv run pytest tests/unit/agent/specialists tests/unit/agent/prompts tests/unit/test_import_direction.py -q` | all pass, 0 failed, 0 skipped (the folder also holds AEA-38's reply-prompt tests; they must stay green) |
 | 5 | Journey file | `uv run pytest -m journey tests/journeys/j2/test_aea_35.py -q` | `2 passed` |
 | 6 | Affected journeys | `uv run python -m tests.journeys.affected --base main` | selects every journey file present (any change under `tests/journeys/` selects all, `affected.py` ALWAYS_PREFIXES); passes and skips only (each skip prints `blocked-on AEA-NN` or a stale reason already on `main`); AEA-57's harness journey starts a loopback server on an OS-assigned port (never 4019 or 5184) |
 
@@ -1299,47 +1325,25 @@ nothing in them; run them once at gate 4 if they exist:
 
 | Surface | Sibling | Handling |
 |---|---|---|
-| `tests/unit/agent/prompts/__init__.py` | AEA-37, AEA-38 may create it | identical 0-byte files merge cleanly |
+| `tests/unit/agent/prompts/` | AEA-38 (merged: `__init__.py`, `test_reply_*.py`), AEA-37 | this ticket adds only `test_specialist_prompts.py` and `test_specialist_prompt_turns.py` |
+| `tests/journeys/j2/` | AEA-38 (`test_aea_38.py`, merged), AEA-51 | one file per ticket: `test_aea_35.py` |
 | `.claude/reference/area-map.md` A7b row | AEA-22, AEA-39, AEA-14 share the row | edit only this ticket's two path mentions; expect a trivial text conflict at merge |
-| `.claude/state/icm-progress.md` first *Routes verified…* row, `docs/design/code-design.md` §3 | every build ticket | replace / append only as step 9 says; trivial conflicts expected |
+| `.claude/state/icm-progress.md` *Routes verified…* rows, `docs/design/code-design.md` §3 | every build ticket | add one row / append to three lines only, as step 9 says; trivial conflicts expected |
 | `docs/testing/journeys/` | every ticket | one file per ticket |
-| `SpecialistTask` | AEA-21's plan says "AEA-39 adds it"; AEA-02's plan defers it to a follow-up; the cut AEA-02b does not include it | **Neither AEA-35 nor AEA-39 may define it** (both are barred from `domain/*`); one owner: the specialist task types follow-up (R-1, §9.1) |
+| `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` | AEA-35b (owner, `domain/tools.py`); AEA-39 consumes them too | resolved: AEA-35b owns them; neither AEA-35 nor AEA-39 defines or edits them |
 
 ### 8.3 Requests to the orchestrator
 
-- **R-1 (blocker; still open at `dd1b110`): cut the specialist task types follow-up.** AEA-02 merged (`f8c6860`)
-  without `SpecialistTask` (with `offer_quick_checks`), `KnowledgeSlice` and `AccountSlice` (its plan §8.2). The
-  follow-up cut as **AEA-02b** (`db85ec4`, branch `aea-02b-case-views`) took a different scope (`domain/views.py`, case
-  and demo views) and does not include them; no ledger, slice-plan or ticket row owns them. AEA-35 and AEA-39 both need
-  `SpecialistTask` and are both barred from `domain/*`. Proposed follow-up: one small `lane::build-loop` ticket (call
-  it AEA-02c or extend AEA-02b; the orchestrator picks), owning one `domain/` file plus a test, merged before AEA-35 and
-  AEA-39. Proposed content (engineering; R-45 "only what the specialist needs"):
-  ```python
-  class KnowledgeSlice(MeridianModel):       # the knowledge specialist needs no state beyond the task text (R-45)
-      kind: Literal["knowledge"] = "knowledge"
-  class AccountSlice(MeridianModel):         # account tools bind the verified customer in code (scope); nothing else
-      kind: Literal["account"] = "account"
-  class SpecialistTask(MeridianModel):       # DO-4 §5 + graph-tools §2 (GRT-8)
-      task: PlannedTask; customer_text: str; task_messages: tuple[str, ...]
-      slice: KnowledgeSlice | AccountSlice | SchedulingSlice
-      offer_quick_checks: bool = False
-  ```
-  **Home: the signed one cannot work.** graph-tools §2 writes "domain/specialists.py (AEA-02): SpecialistTask gains
-  one field". Verified again at `dd1b110`: `domain/turn.py` line 44 imports `domain/specialists.py`, and `SpecialistTask`
-  holds `PlannedTask` (defined in `turn.py` line 302), so `specialists.py` importing `turn.py` is a circular import.
-  `domain/tools.py` (79 lines) already imports both `turn.py` and `specialists.py`, holds `ToolCallScope` (the runner's
-  other input), and no `domain/` module imports it, so it is cycle-free. The home change touches a signed addendum's
-  comment, so it goes to Innocent first (§9.1), then to AEA-08's reconcile. The `kind` literals keep the plain union
-  unambiguous (two field-less models would both accept `{}`). AEA-39's plan already expects this shape
-  (`KnowledgeSlice()` and `AccountSlice()` with no arguments, `set(slice.model_dump()) <= {"kind"}`). This plan reads
-  only the five `SpecialistTask` fields and `slice.model_dump(mode="json")`, so any slice fields the follow-up picks
-  work here; only `_doubles.py`'s `knowledge_slice()` / `account_slice()` need its constructor arguments.
+- **R-1 (resolved 2026-10-21).** The specialist task types were the blocker of earlier refreshes. Innocent chose option A
+  (§9.1); AEA-35b builds `SpecialistTask`, `KnowledgeSlice` and `AccountSlice` in `domain/tools.py` exactly as sketched
+  here (branch `aea-35b-specialist-types`, `68f7f19`). The orchestrator merges AEA-35b before dispatching this
+  ticket's implementer; step 0.2 checks it.
 - **R-2 (AEA-60).** Rendered specialist requests and the tool sets are reachable as `SPECS[kind].render(task, ctx)`,
   `dispatcher.schemas(SPECS[kind].tool_kinds)` and `report_facts_schema(SPECS[kind])`; the rule constants are public in
   `agent/prompts/specialists.py`.
 - **R-3 (AEA-51).** Wire `SpecialistRunner(gateway=…, transcript=<the SPECIALIST adapter object>, dispatcher=…,
   specs=SPECS, brakes=limits.brakes, trace=<the container's sink>)`; the attributes are public (PD-8).
-- **R-4 (AEA-08 reconcile).** graph-tools §2: `specs: Mapping[str, SpecialistSpec]` → `Mapping[SpecialistKind,
+- **R-4 (AEA-08 reconcile).** AEA-35b already added the home note to graph-tools §2; AEA-08 reconciles the file names there. graph-tools §2: `specs: Mapping[str, SpecialistSpec]` → `Mapping[SpecialistKind,
   SpecialistSpec]` (PD-7). DO-4 §5 still shows `run_specialist(spec, task, ctx)` (AEA-02 plan §8.4 item 4 already lists it).
 - **R-5 (dev log).** The ticket's run gets one dev-log entry in `Gauntlet AI/devlogs/aea-callcenter/` per
   `.claude/reference/dev-log.md`; that folder is outside this ticket's owned files, so the orchestrator writes it.
@@ -1364,8 +1368,8 @@ nothing in them; run them once at gate 4 if they exist:
 
 ### 8.5 What the implementer must not do
 
-- Do not define `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` or any other type in `domain/*`, `ports/*`, or in
-  this ticket's modules as a stand-in. Stop and report instead (§9).
+- Do not define `SpecialistTask`, `KnowledgeSlice`, `AccountSlice` (AEA-35b's, in `domain/tools.py`) or any other type
+  in `domain/*`, `ports/*`, or in this ticket's modules as a stand-in. If they are missing, stop and report (step 0.2).
 - Do not edit `agent/gateway.py`, `agent/tools/*`, `agent/nodes/*`, `domain/*`, `ports/*`, `policy/limits.py`,
   `tests/fakes/*`, `tests/conftest.py`, `tests/unit/test_import_direction.py`, `tests/journeys/support/`.
 - No `if spec.kind == …` and no kind string literal in `runner.py`; no signal, no check event, no customer-facing
@@ -1379,25 +1383,23 @@ nothing in them; run them once at gate 4 if they exist:
 
 ## 9. Readiness
 
-**NEEDS-DECISION (§9.1), then BLOCKED-ON the specialist task types follow-up.** The plan itself is complete; it
-cannot be built until one prerequisite exists, and that prerequisite needs one yes from Innocent first.
+**READY.** Every decision is made; the one product question (§9.1) was answered by Innocent on 2026-10-21 (option A).
 
-- **Specialist task types (not cut)**: `SpecialistTask` (with `offer_quick_checks`), `KnowledgeSlice` and
-  `AccountSlice` in a `domain/` module. AEA-02 (`f8c6860`) merged without them; the cut AEA-02b (`db85ec4`) is case
-  views only; R-1 gives the shapes and the recommended home. Every signature in this ticket takes a `SpecialistTask`,
-  so nothing here type-checks without it. If an implementer is dispatched before it lands, step 0.2 stops the run.
-- Already on `main` at `dd1b110` and verified: AEA-01 (`Brakes`), AEA-02 (every other domain and port type), AEA-04
+- **Prerequisite, merged before this ticket builds:** AEA-35b (`SpecialistTask`, `KnowledgeSlice`, `AccountSlice` in
+  `domain/tools.py`; branch `aea-35b-specialist-types`, `68f7f19`). The orchestrator's note says it merges first; step
+  0.2 stops the implementer if it has not.
+- Already on `main` at `f466ff7` and verified: AEA-01 (`Brakes`), AEA-02 (every other domain and port type), AEA-04
   (`redact`), AEA-11 (`FakeToolModel`, `InMemoryTraceSink`, `provider_call`, `WORKED_PAIRS_NOW`), AEA-20
-  (`ModelGateway`, `ModelOutcome`), AEA-22 (`ToolDispatcher`, `DispatchedCall`), AEA-33 (`kb_search`), AEA-57 (harness);
-  since the last refresh also AEA-17 (Anthropic `ToolTranscript`), AEA-21 (`GraphDeps`, act stub), AEA-27 (account
-  executors), AEA-28 (scheduling executors) and AEA-02b (case views; not the missing types).
+  (`ModelGateway`, `ModelOutcome`), AEA-22 (`ToolDispatcher`, `DispatchedCall`), AEA-33 (`kb_search`), AEA-57 (harness),
+  AEA-17 (Anthropic `ToolTranscript`), AEA-21 (`GraphDeps`, act stub), AEA-27 and AEA-28 (executors, doubled here),
+  AEA-38 (reply prompts; `tests/unit/agent/prompts/__init__.py`).
 
-Siblings (AEA-27, 28 executors; AEA-39 act node) are doubled, not waited on. The `[journey]` criterion's integrated
-level waits on AEA-51 (not a merge blocker; the record says so). No sign-off decision D-4…D-15 is touched; GRT-6…GRT-9
-are settled. **Gates:** none (no human, paid or live gate). No security review unless the reviewer adds
-`risk::security`.
+Siblings (AEA-39 act node, AEA-51 wiring) are called by injection or tested with doubles, not waited on. The `[journey]`
+criterion's integrated level waits on AEA-51 (not a merge blocker; the record says so). No sign-off decision D-4…D-15 is
+touched; GRT-6…GRT-9 are settled. **Gates:** none (no human, paid or live gate). No security review unless the reviewer
+adds `risk::security`.
 
-### 9.1 Decision for Innocent (story, options, ask)
+### 9.1 Decision for Innocent (answered 2026-10-21: option A; kept as history)
 
 **The story.** The specialists are the middle of every customer turn: the planner picks a task, a specialist looks
 things up with tools (the knowledge base, the invoice, the calendar), and the responder writes the reply. The runner

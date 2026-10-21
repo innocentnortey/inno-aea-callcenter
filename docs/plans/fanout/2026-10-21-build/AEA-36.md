@@ -1,80 +1,142 @@
 # Plan — [AEA-36] graph: front node (gates, safety, identity)
 
 **Status:** planned — READY; every prerequisite is on `main` (§9). **A build of this plan already exists** on branch
-`aea-36-aea-36-front-node` (head `6a79b5a`, which already merges `main` `dd1b110`): read §0 first.
-**Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/36 · **Base revision:** `dd1b110`
-(main when refreshed: "AEA-27: ledger row merged; plan file"; AEA-02, 02b, 10, 11, 12, 14, 17, 18, 21, 27, 28 and
-AEA-57's journey harness are merged). First planned on `16ca639`; refreshed against `775f591` + `0a5b703`, against
-`5531664`, against `a81f59d`, then a fourth time 2026-10-21 against `dd1b110` (§10–§13 list what changed each time). **Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21. **Test-writer:** `test-writer-agent` (Sonnet), first. **Implementer:** `fanout-implementer` (Sonnet).
-**Lane:** `lane::build-loop`. **Risk:** `risk::security` → the test-writer freezes `tests/unit/agent/nodes/test_front.py`
-(every test in §7.1) **before** the implementer starts; `security-privacy-agent` reads this diff at the wave-2 merge.
+`aea-36-aea-36-front-node` (head `118e0a1`, which merges `main` `b559c75`), in the worktree
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-36`. The build workflow **resumes** it: there is no test-writer
+this round, and the implementer runs §0 role A. Read §0 first.
+**Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/36 · **Base revision:** `8a205b2`
+(main at this refresh: "Merge fix: typing-only edits to AEA-29's frozen tests"). Since the last refresh, AEA-29, 30, 34,
+38, 40 and 43 have merged, and `d724301` dropped the stale reply rows from `test_stubs_raise_loudly`. Refresh history:
+first planned on `16ca639`; refreshed against `775f591` + `0a5b703`, `5531664`, `a81f59d` and `dd1b110`; fifth refresh
+2026-10-21 against `8a205b2`. §10–§14 list what changed each time; §15 holds the deviations. **Planner:**
+fanout-planner on `claude-opus-5-5`, 2026-10-21. **Test-writer:** `test-writer-agent` (Sonnet); done in `76fe4c2`.
+**Implementer:** `fanout-implementer` (Sonnet).
+**Lane:** `lane::build-loop`. **Risk:** `risk::security`. The test-writer froze `tests/unit/agent/nodes/test_front.py`
+(every test in §7.1) in `76fe4c2`, before the implementer started. `security-privacy-agent` reads this diff at the
+wave-2 merge.
 
 Read this whole file before touching anything. Every name below was checked on 2026-10-21 against the code on `main`
-`5531664`, re-checked on `a81f59d` and again on `dd1b110` (§13: the only change in the surfaces this plan reads is
-AEA-27's real `IdentityService`, whose three signatures equal §4.4) (no file under `src/meridian/{domain,gates,policy,agent}`, `tests/{graph,
-journeys,fixtures,unit/agent}`, the ticket, the slice plan, `docs/design/contracts/` or the decision ledgers changed
-between the two) (AEA-02 domain, AEA-10 storage, AEA-12 gate, AEA-14 policy, AEA-21 `GraphDeps`, `emit_signal`, the `front.py`
-stub, the routers, compose; AEA-57 journey harness). **Before coding, run §5 step 0: if a name differs on `main`, stop and report; never write a
-local copy of a missing type or function.**
+`5531664`, and re-checked on `a81f59d`, `dd1b110` and `8a205b2`. §14 lists what moved on `8a205b2`. None of it changes
+a name or signature this plan uses:
+- `git diff b559c75 8a205b2` touches no file under `src/meridian/{domain,gates,policy}/` and none of
+  `src/meridian/agent/{context,signals,routers,graph}.py`;
+- AEA-29's real `HandoffService.open` has §4.4's signature;
+- `tests/graph/test_spine.py` still holds the three `front` stub rows (§15 D-1 deletes them).
+
+**Before coding, run §5 step 0. If a name differs on `main`, stop and report. Never write a local copy of a missing
+type or function.**
 
 ---
 
-## 0. Existing build on the branch (read first; added in the third refresh)
+## 0. Existing build on the branch (read first; rewritten in the fifth refresh)
 
-An earlier run of the build workflow already carried this plan through the test-writer and the implementer, but the
-build ledger (`.claude/state/build-ledger.md`) still says `ready` for AEA-36. What exists, checked by the planner on
-2026-10-21 against `main` `dd1b110` (read only; no test was run by the planner):
+An earlier run carried this plan through the test-writer and the implementer. A later run merged `main` `b559c75` and
+re-ran the gates. The build workflow (`build8.js`, resume entry for ticket 36) now resumes the branch: **no
+test-writer is dispatched**, and the implementer gets a resume note. What exists, checked by the planner on 2026-10-21
+against `main` `8a205b2` (read only; the planner ran no test):
 
 | Commit on `aea-36-aea-36-front-node` | Role | Content |
 |---|---|---|
-| `76fe4c2` `test(graph): frozen tests for the front node (AEA-36)` | test-writer | `tests/unit/agent/nodes/test_front.py` (1,043 lines; 16 test functions, 21 collected tests: §7.1) |
-| `712b9e9` `feat(graph): front node — gates, safety, identity (AEA-36)` | implementer | `src/meridian/agent/nodes/front.py` (matches §4.1 and §4.6–§4.8; uses the `_as_locate` / `_as_send` / `_as_verify` variant §4.8 allows and a private `_signal()` builder for `SignalRecord`) |
-| `377fa73` `test(journey): J-5 safety step; docs(AEA-36): journey record and context` | implementer | `tests/journeys/j5/test_aea_36.py` (= §7.6), `docs/testing/journeys/2026-10-21-AEA-36.md`, area-map A7d row, ICM routes row, `**Built:**` line |
-| `1c12482` `docs(AEA-36): module tree status for nodes/front.py` | implementer | `docs/design/code-design.md` module-tree line → `built AEA-36 712b9e9` |
-| `6a79b5a` `Merge main into aea-36-aea-36-front-node` | implementer (earlier §0 step 2) | merges `main` `dd1b110` (AEA-17, 18, 27, 28 and ledger commits); message ends with the Co-Authored-By line |
+| `76fe4c2` `test(graph): frozen tests for the front node (AEA-36)` | test-writer | `tests/unit/agent/nodes/test_front.py` (1,043 lines; 16 test functions, 21 collected tests: §7.1). **Frozen.** `git log --format=%h -- tests/unit/agent/nodes/test_front.py` prints only `76fe4c2`. |
+| `712b9e9` `feat(graph): front node — gates, safety, identity (AEA-36)` | implementer | `src/meridian/agent/nodes/front.py`. The planner read it line by line on this refresh: it matches §4.1 and §4.6–§4.8. It uses the `_as_locate` / `_as_send` / `_as_verify` variant that §4.8 allows, and a private `_signal()` builder for `SignalRecord`. |
+| `377fa73` | implementer | J-5 journey file `tests/journeys/j5/test_aea_36.py` (= §7.6), the journey record `docs/testing/journeys/2026-10-21-AEA-36.md`, the area-map A7d row, the ICM routes row, the `**Built:**` line |
+| `1c12482` | implementer | `docs/design/code-design.md` module-tree line → `built AEA-36 712b9e9` |
+| `6a79b5a` | implementer | merge of `main` `dd1b110` |
+| `20575f8` | implementer | merge of `main` `b559c75` (AEA-03b) |
+| `118e0a1` `docs(AEA-36): journey record re-run after merging main` | implementer | Result line: on `20575f8`, `test_front.py` 21 passed; `tests/unit/agent tests/graph` 308 passed and 3 failed (the three `front` stub rows, R-1); J-5 `1 skipped` (`blocked-on AEA-30`) |
 
-**The merge `6a79b5a` had two text conflicts** (`.claude/state/icm-progress.md`, `docs/design/code-design.md`; main
-had moved past the `a81f59d` the earlier `merge-tree` check used). The planner read `git diff main...HEAD` for the three
-context files: the resolution keeps every main-side row and changes only this ticket's text (A7d Status cell →
-`planned; agent/nodes/front.py actual (AEA-36, 712b9e9)`; the AEA-12 ICM routes row extended with A7d, 21 pass; the
-`Last reconciled:` line starts `AEA-36 front node (routes row); AEA-27 identity (A4 routes row); earlier, AEA-21 …`,
-all earlier entries kept; one new `**Built:** agent/nodes/front.py (AEA-36, 712b9e9).` line; the module-tree line
-ends `built AEA-36 712b9e9`). `git diff --name-only main...HEAD` lists exactly the seven owned files of §2.1. The
-branch's journey record still reports the pre-merge run: `test_front.py` 21 passed; `tests/unit/agent tests/graph` 298
-passed and 3 failed (the three `front` cases of `test_stubs_raise_loudly`, R-1); J-5 step `1 skipped` (`blocked-on
-AEA-30: demo_clock not bound`). **The post-merge re-run (role A step 5) has not been done.**
+**Main has moved again** (`b559c75` → `8a205b2`; `git merge-base --is-ancestor main aea-36-aea-36-front-node` is false).
+The planner ran `git merge-tree` on this merge. Its prediction:
+- **One text conflict, in `.claude/reference/area-map.md` only.** Main changed the A7c row (AEA-38: `nodes/reply.py`,
+  `prompts/reply.py` actual). The branch changed the A7d row directly below it.
+- `.claude/state/icm-progress.md` and `docs/design/code-design.md` merge cleanly. The `**Built:** agent/nodes/front.py
+  (AEA-36, 712b9e9).` line lands among main's new `**Built:**` lines.
+- No source or test file conflicts.
 
-**What each role does, by which worktree the orchestrator hands over:**
+**Role A: the implementer, in the existing worktree** `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-36`, on
+`aea-36-aea-36-front-node`. In every shell: `export UV_LINK_MODE=hardlink`. First, `df -h /home`: under 4 GB free means
+stop and return `LOW-DISK` (16 GB were free at this refresh). Then:
 
-- **(A) The existing worktree** `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-36` on
-  `aea-36-aea-36-front-node`. The test-writer step is already done: the orchestrator records `76fe4c2` in the frozen-test
-  manifest and does **not** re-dispatch the test-writer. The implementer:
-  1. Tamper check: `git diff 76fe4c2 HEAD -- tests/unit/agent/nodes/test_front.py` prints nothing, and `git log
-     --format=%h -- tests/unit/agent/nodes/test_front.py` prints only `76fe4c2`. Anything else → stop and report.
-  2. **Already done** (`6a79b5a`). Check: `git merge-base --is-ancestor main HEAD && echo up-to-date`. If it prints
-     nothing (main moved again), run exactly `git merge --no-ff main -m "Merge main into aea-36-aea-36-front-node" -m
-     "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"` (the two `-m` parts become the subject and the last
-     line). Never rebase, never amend, never force-push. On a conflict in the three context files keep every row from
-     both sides, keep only this ticket's text changes (as listed above), and stop and report a conflict in any other file.
-  3. Step 0 (§5) on the merged tree, then read `front.py` against §4.6–§4.8 line by line. Change nothing that already
-     matches. If a line differs from §4 in behaviour, fix `front.py` only (never the frozen file), commit it with the
-     I-7 message shape, and say what changed.
-  4. Run G-1…G-7 (§7.3), cheapest first.
-  5. Update the journey record `docs/testing/journeys/2026-10-21-AEA-36.md`: keep *Tested revision* `712b9e9` unless
-     step 3 changed `front.py` (then the new SHA); append to *Result* `Re-run on <merge sha> (main <main sha> merged):
-     <G-4 line>; <G-5 line>; <G-7 line>.`; set *Blocked by* from G-7's reason. Commit it alone: `git add
-     docs/testing/journeys/2026-10-21-AEA-36.md`, message `docs(AEA-36): journey record re-run after merging main` +
-     blank line + `Refs #36` + blank line + Co-Authored-By line last. Steps I-2…I-6 and I-8…I-10 are already done on
-     this branch; do not redo them. The context rows (I-9) stay as they are (their SHA `712b9e9` remains right unless
-     step 3 changed `front.py`; then update the three SHAs to the new one in the same commit).
-  6. Report per §7.5.
-- **(B) A fresh worktree from `main`.** Follow §5 in full: T-1…T-4 (test-writer), then I-1…I-10 (implementer). Do not
-  cherry-pick from the old branch: the frozen-test rule needs the test-writer's own commit on this branch.
+1. **Tamper check.** `git diff 76fe4c2 HEAD -- tests/unit/agent/nodes/test_front.py` prints nothing, and `git log
+   --format=%h -- tests/unit/agent/nodes/test_front.py` prints only `76fe4c2`. Anything else: stop and report.
+2. **Merge main.** `git status --short` must be empty. Run exactly `git merge --no-ff main -m "Merge main into
+   aea-36-aea-36-front-node" -m "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"`. Never rebase, amend or
+   force-push.
+   - Expected: exactly one conflict, in `.claude/reference/area-map.md`.
+   - Resolve it to these two consecutive rows, and nothing else in the file changes:
+     - main's A7c row, verbatim: ``| 3 | **A7c Reply** | Turn facts, responder, brief extraction, R-46 checks |
+       `agent/nodes/reply.py`, `checks.py`, `agent/prompts/reply.py` | AEA-15, 38 | `checks.py` actual (AEA-15,
+       `57883e6`); `nodes/reply.py`, `prompts/reply.py` actual (AEA-38, `ec94722`) |``
+     - the branch's A7d row, verbatim: ``| 3 | **A7d Front** | Gate, safety, identity, planner and classifier nodes |
+       `agent/nodes/{front,plan}.py`, `agent/prompts/routing.py` | AEA-36, 37 | planned; `agent/nodes/front.py`
+       actual (AEA-36, `712b9e9`) |``
+   - If main's A7d row has meanwhile changed (AEA-37 merged first), keep its words and append `; agent/nodes/front.py
+     actual (AEA-36, `712b9e9`)`.
+   - Then `grep -c '^<<<<<<<\|^>>>>>>>' .claude/reference/area-map.md` prints `0`.
+   - Then `git add .claude/reference/area-map.md` and `git commit -m "Merge main into aea-36-aea-36-front-node" -m
+     "Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"`.
+   - A conflict in any other file: run `git merge --abort`, stop and report the file.
+   - After the merge, check three things. `grep -c 'AEA-36' docs/design/code-design.md` is at least 2: the module-tree
+     line ends `built AEA-36 712b9e9`, and the `**Built:**` line appears exactly once. The ICM row whose evidence starts
+     ``2026-10-21: area map A1 → `gates/gate.py` (AEA-12`` still names A7d and `712b9e9`. `git diff --name-only
+     main...HEAD` lists exactly seven files: `src/meridian/agent/nodes/front.py`,
+     `tests/unit/agent/nodes/test_front.py`, `tests/journeys/j5/test_aea_36.py`,
+     `docs/testing/journeys/2026-10-21-AEA-36.md`, `.claude/reference/area-map.md`, `.claude/state/icm-progress.md` and
+     `docs/design/code-design.md`. After step 4, `tests/graph/test_spine.py` makes eight.
+3. **Step 0 (§5) on the merged tree.** Then `git diff 712b9e9 HEAD -- src/meridian/agent/nodes/front.py` must print
+   nothing. Read `front.py` against §4.6–§4.8. Change nothing that already matches. If a line differs from §4 in
+   behaviour, fix `front.py` only (never the frozen file). Commit it with the I-7 message shape and report what changed.
+4. **Stale stub rows (deviation D-1, §15; standing permission relayed by the orchestrator).** Edit
+   `tests/graph/test_spine.py`. Delete exactly these three lines of the `test_stubs_raise_loudly` parametrize list:
+   ```
+           (front, "gates", "front.py"),
+           (front, "safety", "front.py"),
+           (front, "identity", "front.py"),
+   ```
+   - Then change line 17 from `from meridian.agent.nodes import act, front, plan` to `from meridian.agent.nodes import
+     act, plan`. `front` has no other use in that file; `grep -nw front tests/graph/test_spine.py` must print nothing
+     afterwards.
+   - If AEA-37 has merged first and line 17 already reads `from meridian.agent.nodes import act, front`, the line
+     becomes `from meridian.agent.nodes import act`.
+   - Change nothing else in the file (the `plan` and `act` rows stay while they are stubs). Never touch
+     `tests/graph/_spine_doubles.py`: it still uses `front` as a module map.
+   - Check: `uv run pytest tests/graph/test_spine.py -q` is all green.
+   - Commit it alone with `git add tests/graph/test_spine.py`. Message: `test(graph): drop stale front-node rows from
+     test_stubs_raise_loudly (AEA-36)`. Body: one paragraph saying AEA-36 (`712b9e9`) built gates, safety and identity,
+     so they no longer raise "stub from AEA-21"; the three rows and the now-unused `front` import are removed; the plan
+     and act rows are unchanged; no other assertion is touched; same pattern as `d724301`. Then a blank line, `Refs
+     #36`, a blank line, and the Co-Authored-By line last.
+   - Append the SHA to §15 D-1 of this plan file at
+     `/home/linuxuser/workspaces/inno-aea-callcenter/docs/plans/fanout/2026-10-21-build/AEA-36.md` (main checkout; the
+     orchestrator commits plan files). Do not commit the plan file.
+5. **Gates G-1…G-7 (§7.3), cheapest first; stop at the first red.**
+6. **Journey record.** Update `docs/testing/journeys/2026-10-21-AEA-36.md`:
+   - Keep *Tested revision* `712b9e9`, unless step 3 changed `front.py`; then use the new SHA.
+   - Append to *Result*: `Re-run on <merge sha> (main 8a205b2 merged; stale front stub rows removed in <D-1 sha>): <G-4
+     line>; <G-5 line>; <G-6 line>; <G-7 line>.`
+   - Set *Blocked by* from G-7's reason. It is expected to be `AEA-51 (reply_composer, run_graph)`, followed by `AEA-29,
+     AEA-30 and AEA-40 are merged; AEA-57 is merged`.
+   - Add to *Command* `uv run pytest tests/graph/test_spine.py -q`.
+   - Commit it alone: `git add docs/testing/journeys/2026-10-21-AEA-36.md`, message `docs(AEA-36): journey record
+     re-run after merging main 8a205b2`, then a blank line, `Refs #36`, a blank line, and the Co-Authored-By line last.
+   - The context rows (I-9) stay as they are, unless step 3 changed `front.py`. In that case, update the three `712b9e9`
+     SHAs (A7d row, ICM row, module-tree line and `**Built:**` line) to the new one in this same commit.
+7. **Report per §7.5.**
+   - Return `DONE` with the last commit SHA, and an `acResults` entry for each of AC-1…AC-14 with the command and the
+     key line.
+   - AC-13 is `verified=false` while G-7 is skipped (level `mock-tested`, blocked by AEA-51). Say so; this is the
+     honest state, not a failure.
 
-Either way the orchestrator updates the ledger row; no role here edits `.claude/state/build-ledger.md`. **Neither role
-merges into `main` or pushes:** the orchestrator merges this branch together with the rest of its wave, following the
-dependency tree in the slice plan (Innocent, 2026-10-21: merges follow the tree, not one ticket at a time); the
-merge-gate tests then cover the union of the wave's diffs (rule `build-loop-test-scope`).
+Steps I-2…I-10 and the test-writer's T-1…T-4 are already done on this branch. Do not redo them.
+
+**Role B: a fresh worktree from `main` (only if the orchestrator discards the branch).** Follow §5 in full: T-1…T-4
+(test-writer), then I-1…I-10 (implementer), then §0 step 4 (D-1). Do not cherry-pick from the old branch: the
+frozen-test rule needs the test-writer's own commit on the new branch.
+
+Either way, the orchestrator updates the ledger row; no role here edits `.claude/state/build-ledger.md`. **Neither role
+merges into `main` or pushes.** The orchestrator merges this branch with the rest of its wave, following the dependency
+tree in the slice plan (Innocent, 2026-10-21: merges follow the tree, not one ticket at a time). The merge-gate tests
+then cover the union of the wave's diffs (rule `build-loop-test-scope`).
 
 ## 1. Goal and sources
 
@@ -115,11 +177,12 @@ writes the code-built plan (§4.6). Test: `::test_burning_and_danger_paths`, `::
 Wave 2, `risk::security` (the identity node handles the verification code and the locate form's name and phone, R-15).
 Blocked by AEA-11, 12, 14, 21 in the slice plan. **All are merged (checked on `5531664` and again on `a81f59d`)** (AEA-21 at the merge commit itself;
 its stub, `GraphDeps`, `emit_signal`, routers and compose match §4 exactly). AEA-57's harness is merged too, so this
-ticket now writes its own J-5 journey file (§7.6), whose steps report *blocked* until AEA-30, AEA-40, AEA-51 and AEA-29
-bind their services. This plan does not use AEA-11's fakes (§9). `IdentityService` (AEA-27, **merged** at `13adc86`:
+ticket now writes its own J-5 journey file (§7.6), whose step reports *blocked* until AEA-51 binds `reply_composer` and
+`run_graph` (AEA-29, AEA-30 and AEA-40 are merged on `8a205b2`). This plan does not use AEA-11's fakes (§9). `IdentityService` (AEA-27, **merged** at `13adc86`:
 `src/meridian/services/identity.py`; its `locate`, `send_code`, `verify` signatures equal §4.4) and `HandoffService`
-(AEA-29, not merged) are still reached only through `GraphDeps` (whose `identity` and `handoff` fields stay `Any`
-aliases on `dd1b110`) and are tested with doubles honouring DO-4 §14, §7 and graph-tools §5; `front.py` never imports
+(AEA-29, **merged** at `ef561fc`: `src/meridian/services/handoff.py`; `open(self, req, ctx)` equals §4.4; it retries
+once itself and raises `CaseWriteFailed`, §8 R-4) are still reached only through `GraphDeps` (whose `identity` and `handoff` fields stay `Any`
+aliases on `8a205b2`) and are tested with doubles honouring DO-4 §14, §7 and graph-tools §5; `front.py` never imports
 `meridian.services` (PA-1). GRC-3 and CAS-16 stand on option A (sign-off D-14).
 
 ### 1.3 Sources checked
@@ -158,6 +221,7 @@ aliases on `dd1b110`) and are tested with doubles honouring DO-4 §14, §7 and g
 | `.claude/reference/area-map.md` | implementer | edit the **A7d row's Status cell** only | AC-14 |
 | `.claude/state/icm-progress.md` | implementer | edit the **evidence cell of one "Routes verified against code and tests" row** only | AC-14 |
 | `docs/design/code-design.md` | implementer | edit the **`**Built:**` line under `## 3`** only | AC-14 |
+| `tests/graph/test_spine.py` | implementer | modify **only**: delete the three `front` rows of `test_stubs_raise_loudly` and drop `front` from the line-17 import (§0 step 4) | deviation D-1 (§15) |
 
 ### 2.2 Shared surfaces read, never edited
 
@@ -166,7 +230,7 @@ aliases on `dd1b110`) and are tested with doubles honouring DO-4 §14, §7 and g
 `src/meridian/gates/*`, `src/meridian/agent/{graph,routers,context,signals}.py`, `src/meridian/agent/nodes/{compose,
 load_context,plan,act,reply}.py`, `src/meridian/adapters/**`, `src/meridian/services/**`, `src/meridian/web/**`
 (incl. `container.py`: **this ticket has no `register_<x>()` hunk**), `tests/fixtures/sqlite.py`, `tests/fakes/**`,
-`tests/graph/**`, `tests/journeys/**`, `docs/design/contracts/**`, the OpenAPI file, `UI_CONTRACTS.md`, `docs/ux/**`,
+`tests/graph/**` (except §2.1's `test_spine.py` row), `tests/journeys/**`, `docs/design/contracts/**`, the OpenAPI file, `UI_CONTRACTS.md`, `docs/ux/**`,
 `apps/web/**`, the briefing, issued data, `docs/archive/**`, `docs/parked/**`.
 
 ### 2.3 Owned by other tickets — do not create or change
@@ -201,7 +265,7 @@ row: `uv run pytest tests/unit/agent/nodes/test_front.py -q -rA` (or `::<name>`)
 | AC-10 [negative] | Code digits and the form's phone and name never in state, a return value, a signal or a log; 0 gateway calls | §4.8 I-6 (read only from `ctx.intake`), no logging in `front.py` | `::test_code_and_form_values_never_leave_intake` (caplog) |
 | AC-11 [invariant] | Key ownership: gates ⊆ {`gate`, `check_events`, `burning_card_id`, `plan`(burning "no" only)}; safety ⊆ {`handoff`}; identity ⊆ {`identity_step`, `identity`} | §4.6–§4.8 return statements | `::test_front_nodes_write_only_own_keys` |
 | AC-12 [capture] | `gate` event codes-only; `safety_reply_sent` carries `turn_id`, `thread_id`, `request_id`, `run_tag`, `node="safety"`, cause (`safety` / `danger`); a sentinel phrase absent from both | §4.6 G-3, §4.7 S-3 | `::test_check_event_and_signal_records` (caplog) |
-| AC-13 [journey] | Extends J-5 in `tests/journeys/j5/test_aea_36.py` on AEA-57's harness at level `integrated with a scripted model`; until the services it needs are bound, the record states `mock-tested` and *Blocked by* their owners | §7.6 journey file (AEA-57 is merged; the step is reported blocked by the harness until AEA-40, AEA-51, AEA-29 bind `turn_service`, `run_graph`, `handoff_service`); §7.4 record | `uv run pytest -m journey tests/journeys/j5/test_aea_36.py -rs` (1 skipped `blocked-on AEA-NN`, 0 failed; or 1 passed once all are bound); `docs/testing/journeys/<date>-AEA-36.md` |
+| AC-13 [journey] | Extends J-5 in `tests/journeys/j5/test_aea_36.py` on AEA-57's harness at level `integrated with a scripted model`; until the services it needs are bound, the record states `mock-tested` and *Blocked by* their owners | §7.6 journey file (AEA-57 is merged; the step is reported blocked by the harness until AEA-51 binds `reply_composer` and `run_graph`; AEA-29, 30, 40 are merged); §7.4 record | `uv run pytest -m journey tests/journeys/j5/test_aea_36.py -rs` (1 skipped `blocked-on AEA-NN`, 0 failed; or 1 passed once all are bound); `docs/testing/journeys/<date>-AEA-36.md` |
 | AC-14 [regression/context] | Area map A7d row, ICM row, DO-3 §3 `**Built:**` line in the diff, only this ticket's rows | §5 step I-9 | `git diff --name-only main...HEAD` and `git diff main...HEAD -- .claude/ docs/design/code-design.md` |
 
 ### 3.2 Plan-added criteria (the issue gets a comment proposing them; the test-writer freezes them too)
@@ -238,7 +302,7 @@ row: `uv run pytest tests/unit/agent/nodes/test_front.py -q -rA` (or `::<name>`)
 | CON-2 error codes, blocks, wording | graph-tools §5; `policy/texts.py` | no wording here | other-ticket AEA-21 / AEA-03 | — |
 | Node spans | graph-core §4 `timed_node` | yes | other-ticket AEA-21 (nodes never call `TraceSink`) | — |
 | E-1 / E-5 slices, CAP-2 | DO-5, DO-6 | yes | other-ticket AEA-51 (kept passing there) | — |
-| AEA-21 `test_stubs_raise_loudly` goes red when the front stub is replaced | AEA-21 plan §7.1 | no | **collision**: request R-1 | — |
+| AEA-21 `test_stubs_raise_loudly` goes red when the front stub is replaced | AEA-21 plan §7.1 | no | **resolved by deviation D-1** (§15): the three `front` rows are deleted on this branch | §0 step 4 |
 
 ### 3.4 Entry-point registration
 
@@ -640,13 +704,15 @@ uv run python -c "from meridian.policy.handoff import priority_for, promise_for;
 uv run python -c "from meridian.agent.context import GraphDeps; from meridian.agent.signals import emit_signal; import dataclasses; print([f.name for f in dataclasses.fields(GraphDeps)])"
 uv run python -c "from tests.fixtures.sqlite import temp_sqlite, TempStore; from meridian.adapters.sqlite.db import format_wall; print('sqlite ok')"
 uv run python -c "import inspect; from meridian.services.identity import IdentityService as S; print([list(inspect.signature(getattr(S, m)).parameters) for m in ('locate', 'send_code', 'verify')])"
+uv run python -c "import inspect; from meridian.services.handoff import HandoffService as H; print(list(inspect.signature(H.open).parameters))"
 grep -n "stub from AEA-21" src/meridian/agent/nodes/front.py
 ```
 
 Expected: `burning_ruled_out`; `identity ok`; the `GatesUpdate` keys include `burning_card_id`, `check_events`, `gate`,
 `halt`, `plan`; `turn ok`; `gate ok`; `P0 P1 P1`; the 13 `GraphDeps` field names; `sqlite ok`;
 `[['self', 'thread_id', 'locator', 'now'], ['self', 'thread_id', 'demo_session', 'now'], ['self', 'ids', 'digits',
-'now']]` (AEA-27's real service; a check only, never an import in `front.py`); three stub lines **on a fresh worktree
+'now']]` (AEA-27's real service; a check only, never an import in `front.py`); `['self', 'req', 'ctx']` (AEA-29's real
+`HandoffService.open`; a check only); three stub lines **on a fresh worktree
 from main** (role B). **On the existing branch (role A) the grep prints nothing**, because `front.py` is already
 filled; that is expected there. On any
 failure **stop and report** `blocked-on AEA-02` (domain), `AEA-12` (gate), `AEA-14` (policy), `AEA-21` (agent, stub),

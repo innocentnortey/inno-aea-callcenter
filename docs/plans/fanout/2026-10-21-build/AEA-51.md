@@ -1,14 +1,54 @@
 # Plan — [AEA-51] integration A: the customer path end to end
 
-**Status:** planned (READY as a plan), **BLOCKED-ON** prerequisites (§9). Building starts when §9's list is on `main`.
+**Status:** planned (READY as a plan), **BLOCKED-ON** prerequisites (§9). Building starts when §9's list is on `main`;
+Parts B and C may start earlier if the orchestrator chooses (§9, *Startable now*).
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/51 (spec copy:
-`docs/plans/tickets/AEA-51.md`) · **Base revision:** `main` at `c9b17ea` (refresh 3, 2026-10-21; refresh 2 at `2ec19ad`;
-first written at `0dc2ad4`)
+`docs/plans/tickets/AEA-51.md`) · **Base revision:** `main` at `f466ff7` (refresh 4, 2026-10-21; refresh 3 at `c9b17ea`,
+refresh 2 at `2ec19ad`, first written at `0dc2ad4`)
 **Planner:** Opus 5.5 (`claude-opus-5-5`) · **Implementer:** `fanout-implementer` on Sonnet · **Lane:** `lane::build-loop`
 · **Risk label:** none in the slice plan (see §8 R-9 for the orchestrator's confirmation) · **Wave:** 3
 
-**Refresh 3 (2026-10-21, `main` at `c9b17ea`, 55 commits after `2ec19ad`).** Read this box first; everything below it
-was re-checked against `main` and kept where it still holds.
+**Refresh 4 (2026-10-21, `main` at `f466ff7`, 22 commits after `c9b17ea`).** Read this box first; everything below it
+was re-checked against `main` and kept where it still holds. Where refresh 3 and refresh 4 differ, refresh 4 wins.
+
+1. **Merged since refresh 3:** AEA-30 (`cf8fd78`, merge of `e5c4ce4`: `services/demo.py`, `services/scheduler.py`,
+   `register_demo`) and AEA-40 (`f466ff7`: `services/session.py`, `services/turn.py`, `web/routes/chat.py`,
+   `register_chat`). The ledger row for AEA-40 still says `blocked`, but the merge commit is on `main`. Both leave §9.
+   `register_demo` provides exactly the keys §4.3 named (`Key("demo_clock")` = `DemoClock`, `deps.DEMO_SERVICE`,
+   `Key("scheduler_job")`, `Key("scheduler_thread")`). `register_chat` provides `deps.TURN_SERVICE` and
+   `deps.SESSION_SERVICE`. It reads `Key("ledger")` and `Key("trace")` **eagerly** in the `TurnService` factory
+   (`container.py` lines 803–804), and `Key("run_graph")`, `deps.REPLY_COMPOSER`, `Key("demo_clock")` and
+   `deps.DEMO_SERVICE` lazily. §4.1 gains the merged names (block "merged after `c9b17ea`").
+2. **Still not on `main`:** AEA-35 and AEA-39 (NEEDS-DECISION: where the specialist task types live), AEA-36 and AEA-37
+   (blocked; branches exist) and AEA-45 (blocked; a resume run is planned). `front.py`, `plan.py` and `act.py` are still
+   AEA-21's `NotImplementedError` stubs, and `agent/specialists/` holds only `__init__.py`.
+3. **The two follow-ups are still not cut** (no ticket file, ledger row or branch). AEA-19-F1 (§8 R-1): `register_tracing`
+   (`container.py` lines 294–344) still provides `Key("trace")` itself. AEA-21b (§8 R-13): `compose.py` still builds none
+   of the five card blocks (`grep -c` = 0).
+4. **R-14 is now a follow-up on merged code.** AEA-40 merged with `allow_turn()` at `services/turn.py` line 318, before
+   `parse_intake` at line 322. That is the order DO-4 §14 and stage7 web.md give ("admission checks `ledger.allow_turn()`
+   only"). DO-4 §11 says "safety and CON-4 still work" at our cap. The ticket's *Agent handoff* already rules on this
+   conflict: AC-24's safety half is `blocked-on AEA-40`. Because AEA-40 is merged, that blocker is now a follow-up,
+   **AEA-40-F1** (to be cut; §8 R-14). AC-24's notice and CON-4 halves wait on nothing new, and nor does anything else.
+5. **Changed in place by this refresh:**
+   - AC-5 compares CON-1's `demo_clock.label` with `format_clock(DEMO_START)[0]` (`format_clock` returns
+     `(label, date_label)`), and the greeting with `render(TextId.GREETING)`.
+   - AC-24 and J-9 read the stored reasons `TurnService._reject` writes: `BUSY` and `RATE_LIMITED` give
+     `degrade_reason = 'rate_limit'`, and `SPEND_CAP_REACHED` gives `'spend_cap'`. Each has `outcome = 'degraded_handoff'`
+     and `trace_export = 'off'`.
+   - AC-24's safety half moves into its own test, `test_spend_cap_safety_still_answered`, skipped while AEA-40-F1 is
+     not on `main` (§5 F3).
+   - AC-1's `run_graph` check stays behavioural, because `register_chat` hands `TurnService` a forwarding closure, not
+     the compiled graph's object.
+   - Check 5's baseline is measured: `mypy` reports `Success: no issues found in 468 source files` at `f466ff7` (the 24
+     errors in the AEA-30 ledger row are gone).
+6. **Startable now (orchestrator's choice, §9).** Part B (AC-3) needs only the two adapters, which are on `main`. Part C's
+   two support modules need only AEA-57's harness and AEA-23's overrides. Part A step 7 imports `SpecialistRunner` and
+   `SPECS` (AEA-35), so Part A and everything from Part D on wait for §9.
+7. **Other numbers:** `web/container.py` is 1,082 lines (R-3); 16 GB free on `/` (R-12).
+
+**Refresh 3 (2026-10-21, `main` at `c9b17ea`, 55 commits after `2ec19ad`).** Kept as history; items 2 and 3 are
+superseded by refresh 4 items 1 to 4.
 
 1. **Merged since refresh 2:** AEA-29 (`ef561fc`), AEA-34 (`dd31214`), AEA-38 (`042ad35`), AEA-43 (`03f5334`), AEA-24
    (`7fddbf5`), AEA-50 (`67c5ffe`) and AEA-54 (docs). `register_cases` on `main` provides exactly the keys §4.3 named
@@ -82,8 +122,8 @@ never patches a sibling in place.
 | Observability (DO-6) | `docs/design/observability-contract.md` WF-1…WF-4, WF-9, WF-10, WF-12, WF-13; *Records*, *Correlation*, *Content and redaction*, *Status values*, *Missing instrumentation*; CAP-1…CAP-4, CAP-7, CAP-8 | Capture tests AC-17…AC-23, AC-30, AC-31, AC-42, AC-46…AC-51 |
 | Metrics (DO-7) | `docs/design/key-metrics-registry.md` M-1, M-3, M-4, M-6…M-27, M-29 | Stay computable from the stored records; no target is set here |
 | Rules | `.claude/rules/build-loop-test-scope.md` (+ AEA addition), `integrated-journeys.md` §3–§5, `context-maintenance.md`; workspace `context-management-multi-turn.md` rule 3 | Checks, journey gate, evidence record, turn-2+ prompt test |
-| Current code | `src/meridian/web/{container,app,deps,logging}.py`, `config.py`, `agent/gateway.py`, `adapters/{checkpointer,retrieval_fastembed,tracing_langfuse}.py`, `retrieval/ingest.py`, `policy/limits.py`, `domain/turn.py`; `tests/unit/web/test_container.py`, `tests/unit/test_import_direction.py`, `tests/fakes/models.py`, `tests/unit/adapters/{_tracing_doubles,test_retrieval_fastembed}.py`, `tests/api/openapi_check.py`, `tests/journeys/affected.py`; since refresh 2 also `agent/{graph,context}.py`, `agent/tools/*.py`, `agent/nodes/compose.py`, `domain/blocks.py`, `adapters/models/{anthropic,openrouter_jev}.py`, `web/middleware.py` (`run_tag_of`), `tests/journeys/support/*.py`, `tests/contract/openapi_variants.py`; since refresh 3 also `services/{cases,handoff}.py`, `agent/nodes/{load_context,reply}.py`, `domain/handoff.py`, `adapters/sqlite/schema/{00_core,20_spend,60_cases}.sql`, `adapters/tracing_langfuse.py` (span metadata), `eval/harness/{cli,deps,freeze,cases,records,report}.py` | §4 copies |
-| Sibling plans and branches (not on `main` at `c9b17ea`) | Plans `AEA-30`, `AEA-35`, `AEA-36`, `AEA-37`, `AEA-39`, `AEA-40`, `AEA-45` in this folder; branches `aea-30-aea-30-demo-clock-sched` (`e5c4ce4`), `aea-40-aea-40-sessions-turns` (`5a4cdf0`), `aea-36-aea-36-front-node`, `aea-37-graph-plan-node`, `aea-45-staff-cases-api` | Container key names not in DO-4 (§4.3); verified again in step A0 after they merge |
+| Current code | `src/meridian/web/{container,app,deps,logging}.py`, `config.py`, `agent/gateway.py`, `adapters/{checkpointer,retrieval_fastembed,tracing_langfuse}.py`, `retrieval/ingest.py`, `policy/limits.py`, `domain/turn.py`; `tests/unit/web/test_container.py`, `tests/unit/test_import_direction.py`, `tests/fakes/models.py`, `tests/unit/adapters/{_tracing_doubles,test_retrieval_fastembed}.py`, `tests/api/openapi_check.py`, `tests/journeys/affected.py`; since refresh 2 also `agent/{graph,context}.py`, `agent/tools/*.py`, `agent/nodes/compose.py`, `domain/blocks.py`, `adapters/models/{anthropic,openrouter_jev}.py`, `web/middleware.py` (`run_tag_of`), `tests/journeys/support/*.py`, `tests/contract/openapi_variants.py`; since refresh 3 also `services/{cases,handoff}.py`, `agent/nodes/{load_context,reply}.py`, `domain/handoff.py`, `adapters/sqlite/schema/{00_core,20_spend,60_cases}.sql`, `adapters/tracing_langfuse.py` (span metadata), `eval/harness/{cli,deps,freeze,cases,records,report}.py`; since refresh 4 also `services/{demo,session,turn}.py`, `web/routes/chat.py`, the `register_demo` and `register_chat` hunks | §4 copies |
+| Sibling plans and branches (not on `main` at `f466ff7`) | Plans `AEA-35`, `AEA-36`, `AEA-37`, `AEA-39`, `AEA-45` in this folder; branches `aea-36-aea-36-front-node`, `aea-37-graph-plan-node`, `aea-45-staff-cases-api` (AEA-30 and AEA-40 merged at refresh 4) | Container key names not in DO-4 (§4.3); verified again in step A0 after they merge |
 | Seam audits | `.claude/state/resume.md`: second wave-2 batch, open finding 1; wave-3 findings 1, 2, 4 and 8 | PA-5; check 7's known reds; the J-1 contract steps are an AEA-59 follow-up; the `PROVIDER_KEYS` test is a proposed follow-up |
 
 ---
@@ -152,7 +192,7 @@ Notation: **S** = `tests/integration/customer_support.py`, **A** = `customer_api
 | AC-2 | failure/refusal | Jev in a structured/tool role is unconfigurable: start-up fails naming the field, no value; after a turn every `spend_ledger.model` equals its role's `RoleSpec.model` | `config.py` validation (AEA-02) + gateway guard (AEA-20) + `register_graph` provider check (§5 A2 step 3) | `::test_role_maps_bound_and_guarded` → error text; role→model pairs from `SpendRepo.for_turn` |
 | AC-3 | invariant | Both adapters: one HTTP attempt, never raise, `ProviderCall` always present, stop reason before content, same `ProviderFailureKind` for the shared situations (models.md §3) | Test only (§5 B1, decision PD-11) | `uv run pytest tests/contract/test_model_ports_contract.py` → every case passes for both; 0 network calls |
 | AC-4 | failure/refusal | CON-1 and CON-2 without `mhc_session` → 401 `UNAUTHENTICATED`, `details.reason` `none` | AEA-23 gate, proven here | `::test_login_gate` → 401 bodies valid against the OpenAPI |
-| AC-5 | invariant | CON-1 greeting = rendered fixed text (R-1); clock label = `format_clock(DEMO_START)` = "Fri Oct 16, 2026 · 10:00 am" | AEA-40 SessionService + AEA-30 clock | `tests/graph/test_worked_pairs_api.py::test_greeting_and_demo_date` |
+| AC-5 | invariant | CON-1 greeting = rendered fixed text (R-1); clock label = `format_clock(DEMO_START)` = "Fri Oct 16, 2026 · 10:00 am" | AEA-40 `SessionService` + AEA-30 `DemoClock` (both on `main`); assert the greeting `text` block equals `render(TextId.GREETING)` and `body["demo_clock"]["label"] == format_clock(DEMO_START)[0]` | `tests/graph/test_worked_pairs_api.py::test_greeting_and_demo_date` |
 | AC-6 | invariant | WP-1: knowledge only; no `archive/` passage; citation in the lookup log; scripted `$149` removed by R-46 with a counts-only `check_event` | W `wp1` | `::test_wp1_membership_stale_twin` → 0 identity actions, 0 cases, 0 `archive/` ids, the removal event without `$149`, `$149` absent from reply |
 | AC-7 | invariant | WP-2: locate by form; code only on CON-6 for this login session; invoice read before code → `not_verified`; after code the billed facts; dispute → P3 `billing_dispute` + promise + reference | W `wp2` | `::test_wp2_invoice_after_code` |
 | AC-8 | invariant | WP-3: windows incl. 56, 42, 58, no Saturday; book 56 in one transaction; member fee note; concurrent 56 from another conversation → `SLOT_TAKEN`; issued file unchanged | W `wp3` + concurrent second chat | `::test_wp3_booking_and_one_slot_concurrency` |
@@ -171,7 +211,7 @@ Notation: **S** = `tests/integration/customer_support.py`, **A** = `customer_api
 | AC-21 | capture | CAP-2: WP-5 no model span before the safety reply; DANGER only `planner` and `classifier` spans before it; P0/P1 cases; no identity/lookup step first | Sink spans in start-time order | `tests/capture/test_cap2_safety_first.py` |
 | AC-22 | capture | CAP-3 after WP-7 + CON-4 + CON-5: case, events, promise from the table; CON-4 `turn` row values; `already_open` same reference; CON-5 stored; unverified `on_record` → 409 `NOT_ALLOWED_IN_STATE` | AEA-42 routes on the real `HandoffService` | `tests/capture/test_cap3_handoff.py` (`::test_cap3_records`) |
 | AC-23 | capture | Relayed turn while a representative holds the chat: `AI_PAUSED` notice with `delivered_to_representative: true`, CON-21 `customer_message` with STORE text, `turn.outcome = to_staff`, 0 model calls; CO alarm while paused → safety card in the same turn, still delivered, controller stays human (GRC-3 A) | Staff role (CON-10), claim (CON-13), join (CON-14), CON-21 read | `tests/integration/test_relayed_turn.py` |
-| AC-24 | failure/refusal | Day total $30 → `SPEND_CAP_REACHED`, no model call; safety turn still answered; CON-4 still opens a case; a scripted `PROVIDER_SPEND_CAP` trips the circuit; the next turn makes no model call | Real `LedgerService` | `tests/integration/test_customer_failures.py::test_spend_caps` |
+| AC-24 | failure/refusal | Day total $30 → `SPEND_CAP_REACHED`, no model call; safety turn still answered; CON-4 still opens a case; a scripted `PROVIDER_SPEND_CAP` trips the circuit; the next turn makes no model call | Real `LedgerService` | `tests/integration/test_customer_failures.py::test_spend_caps`; the safety half in `::test_spend_cap_safety_still_answered`, skipped `blocked-on AEA-40-F1` until it lands (§8 R-14) |
 | AC-25 | failure/refusal | Brake, model error, tool error, deadline through the real graph; each a `degraded_handoff` row with its reason; conversations never `resolved`; "Try again" after a committed write does not repeat it | Scripted outputs + short deadline (PD-9) | `::test_brake_and_deadline` |
 | AC-26 | invariant | Restart between the business write and the checkpoint: turn 4 still sees the move | Stop, restore the pre-turn-3 checkpoint files, restart (§5 E) | `tests/graph/test_worked_pairs_api.py::test_restart_between_write_and_checkpoint` |
 | AC-27 | invariant | Turn-2+ prompt test: identical complete stable prefix per role on turns 1, 2, 5; window caps 10 turns / 8,000 chars / 600 per line; no tool output in `messages` or window; "what about Monday?" resolves against the open task | Request capture in `script.calls` | `::test_turn_two_plus_prompt_and_state` |
@@ -484,6 +524,33 @@ from eval.harness.freeze import write_freeze  # def write_freeze(freeze_file: Pa
 #   report.write_report writes <reports_dir>/<run_id>.json (EvalReportFile: run: EvalRunRecord{run_id, suite, experiment_id,
 #     status, ...}; results: tuple[EvalCaseResult{run_id, case_id, thread_id, outcome, ...}]; summary: dict with key
 #     "db_check"), <run_id>.md, and <run_id>.client_side_turn_timings.jsonl (one ClientTurnTiming JSON line per CON-2 call)
+# ---- merged after c9b17ea; copied from main at f466ff7 ----
+# services/demo.py (AEA-30):
+def format_clock(dt: datetime) -> tuple[str, str]: ...   # (label, date_label); label "Fri Oct 16, 2026 · 10:00 am" at DEMO_START
+class DemoClock: ...        # DemoClock(uow); .now() reads the demo_state row, America/Chicago
+class DemoService: ...      # DemoService(uow, clock, cases, *, wall_clock); .staffing() .clock_view() .set_staffing(...) .advance_clock(...)
+# services/session.py (AEA-40): SessionService.open writes the conversation row and the greeting
+#   TextBlock(block_id="blk-greeting", text=render(TextId.GREETING), sources=()) in one write transaction, no model call.
+# web/container.py register_demo (AEA-30): web-shell guard; provides Key[DemoClock]("demo_clock"), deps.DEMO_SERVICE,
+#   Key("scheduler_job"), Key("scheduler_thread") (thread started by a starter, stopped on close); reaches
+#   deps.CASE_SERVICE only at a shift end.
+# web/container.py register_chat (AEA-40): web-shell guard; provides deps.TURN_SERVICE ("turn_service") and
+#   deps.SESSION_SERVICE ("session_service"). The TurnService factory calls c.get(Key("ledger")) and c.get(Key("trace"))
+#   at build (EAGER), and passes run_graph as a forwarding closure that resolves container.get(Key("run_graph")) on each
+#   call (RuntimeError("not bound: run_graph") until this hunk provides it). settled_view forwards to
+#   container.get(deps.REPLY_COMPOSER).settled_view(settled, identity, controller). Starter: turns.fail_running() sweep.
+# services/turn.py (AEA-40):
+NoticeCode = Literal["BUSY", "SPEND_CAP_REACHED", "RATE_LIMITED", "TURN_TIMEOUT"]
+class TurnService:
+    def __init__(self, uow: UnitOfWorkFactory, demo_clock: Clock, wall_clock: Callable[[], dt.datetime],
+                 spend: SpendGuard, trace: TraceSink, run_graph: RunGraph, settled_view: SettledViewFn,
+                 limits: Limits, agent_version: str, *, monotonic: Callable[[], float] = time.monotonic) -> None: ...
+    def run_turn(self, cmd: RunTurn) -> TurnResponse: ...
+#   Order: non-blocking slot (limits.admission.max_in_flight = 30) else BUSY; spend.allow_turn() False →
+#   SPEND_CAP_REACHED; only then parse_intake(cmd.payload) (line 322). So at our cap a safety message gets the notice
+#   (§8 R-14). _reject(code, reason) stores status "failed", TurnTrace(gate_result="clear", path="degraded",
+#   outcome="degraded_handoff", degrade_reason=reason) with reason "rate_limit" (BUSY, RATE_LIMITED) or "spend_cap",
+#   trace_id None, trace_export "off", and calls no model.
 ```
 
 ### 4.2 Addenda signatures this hunk consumes (DO-4 + stage7)
@@ -514,14 +581,14 @@ class GraphDeps:          # agent/context.py
 
 ### 4.3 Names from sibling branches and plans (not DO-4; re-check in step A0 after they merge)
 
-| Name | Status at `c9b17ea` | Used as |
+| Name | Status at `f466ff7` | Used as |
 |---|---|---|
 | `build_graph`, `bind_run_graph`, `GraphDeps`, `ReplyComposer` | on `main` (AEA-21, `5531664`); §4.1 | compile once; `Key("run_graph")` |
 | `Key("anthropic_client")`, `Key("jev_adapter_factory")` | on `main` (AEA-17, AEA-18); §4.1 | `adapter_for` |
 | `Key("scheduling")`, `deps.IDENTITY_SERVICE` (`"identity_service"`) | on `main` (AEA-28, AEA-27); §4.1 | `scheduling_tools`, `GraphDeps.scheduling`, `.identity` |
 | `deps.CASE_SERVICE` (`"case_service"`), `deps.HANDOFF_SERVICE` (`"handoff_service"`), `Key[Any]("brief_assembler")` | on `main` (AEA-29, `ef561fc`); §4.1 | `GraphDeps.cases`, `.handoff`, `.brief` |
-| `Key[DemoClock]("demo_clock")`, `deps.DEMO_SERVICE` (`"demo_service"`), `Key("scheduler_job")`, `Key("scheduler_thread")` | branch `aea-30-aea-30-demo-clock-sched` `e5c4ce4`, `register_demo` (ledger: blocked) | `GraphDeps.demo` |
-| `deps.TURN_SERVICE`, `deps.SESSION_SERVICE`; reads `Key("run_graph")` and `Key("reply_composer")` lazily, `Key("ledger")` and `Key("trace")` **eagerly** in the `TurnService` factory | branch `aea-40-aea-40-sessions-turns` `5a4cdf0` (Parts A and B built; ledger NEEDS-DECISION after review) | what this hunk must provide; why §8 R-1 blocks the override |
+| `Key[DemoClock]("demo_clock")`, `deps.DEMO_SERVICE` (`"demo_service"`), `Key("scheduler_job")`, `Key("scheduler_thread")` | on `main` (AEA-30, `cf8fd78`); §4.1 | `GraphDeps.demo` |
+| `deps.TURN_SERVICE`, `deps.SESSION_SERVICE`; reads `Key("run_graph")` and `Key("reply_composer")` lazily, `Key("ledger")` and `Key("trace")` **eagerly** in the `TurnService` factory | on `main` (AEA-40, `f466ff7`); §4.1 | what this hunk must provide; why §8 R-1 blocks the override |
 | `SPECS` (`agent/specialists/specs.py`); `SpecialistRunner(*, gateway, transcript, dispatcher, specs, brakes, trace)` (`agent/specialists/runner.py`), constructor arguments kept as public attributes (PD-8) | AEA-35 plan (not built: NEEDS-DECISION upstream) | the runner |
 | `DANGER_FIELD`, `CLASSIFIER_FIELDS` (`agent/prompts/routing.py`) | AEA-37 branch `aea-37-graph-plan-node` (ledger: blocked) | D1 `classifier(...)` |
 | AEA-24 runner (`eval.harness.cli.main`, `HarnessDeps`, `write_freeze`) | on `main` (AEA-24, `7fddbf5`); §4.1 | F2 (in-process) |
@@ -579,9 +646,10 @@ ls src/meridian/services/session.py src/meridian/web/routes/chat.py src/meridian
 ```
 Expect `imports ok`, every key name of §4.3 present in its owner's hunk, `Key("trace_override")` read inside
 `register_tracing` (the AEA-19-F1 follow-up, §8 R-1), compose building the slot, account and appointment blocks (the
-AEA-21b follow-up, §8 R-13), a safety turn answered before the spend check in `TurnService` (§8 R-14), and every file
-listed. **Any difference → stop, report the
-exact mismatch on issue #51; do not adapt the wiring to a guessed name.**
+AEA-21b follow-up, §8 R-13), and every file listed. **Any difference → stop, report the exact mismatch on issue #51;
+do not adapt the wiring to a guessed name.** One exception: the `allow_turn`/`parse_intake` grep (AEA-40-F1, §8 R-14).
+If `allow_turn` still comes first, carry on: AC-24's safety half stays skipped as §5 F3 says. If `parse_intake` (or a
+safety check) now comes first, remove that skip and the test must pass.
 
 **A1. Docstring.** Replace the `register_graph` docstring with exactly:
 ```
@@ -1112,7 +1180,13 @@ stop and record `blocked-on AEA-24 follow-up` on #51 for AC-49…AC-51 only, quo
   the safety block; CON-4 → `case_created`. Part 2 on a fresh run: a responder entry `ScriptedFailure(kind=
   PROVIDER_SPEND_CAP)` → that turn `degraded_handoff`/`spend_cap`, `ledger.open_circuits() == ("anthropic",)`; the next
   text turn makes no Anthropic call (only Jev roles may appear, models.md §6 "per provider") and ends
-  `degraded_handoff`/`spend_cap`.
+  `degraded_handoff`/`spend_cap`. Stored row of each cap turn: `turns.outcome = 'degraded_handoff'`, `degrade_reason =
+  'spend_cap'`, `trace_export = 'off'` (merged `TurnService._reject`, §4.1). **The safety half is its own test**,
+  `test_spend_cap_safety_still_answered`: seed $30 the same way, then send "My carbon monoxide detector is going off.";
+  assert the first block is `safety` with the WP-5 text, a P0 `safety` case exists, and 0 scripted calls were made.
+  While AEA-40-F1 is not on `main` (A0 grep), decorate it `@pytest.mark.skip(reason="blocked-on AEA-40-F1: TurnService
+  checks allow_turn() before parse_intake, so a safety message at our cap gets SPEND_CAP_REACHED (DO-4 §11, §8 R-14)")`.
+  Never assert the notice for the safety message, and never move the safety message into `test_spend_caps`.
 - `test_brake_and_deadline` (AC-25): (a) brake: specialist entry a tuple of 3 identical tool steps
   (`kb_search` with different queries each round) so `tool_rounds` (2) is exceeded → `degraded_handoff`/`brake`, one
   `ai_failure` case, the handoff block. (b) model error: specialist `ScriptedFailure(kind=SERVER, http_status=500)` →
@@ -1241,9 +1315,12 @@ name>", needs=(...), operations=(...))`, `needs` from AEA-57's `NEED_OWNERS` nam
 - `j5/test_aea_51.py::test_j5_safety_first` — `1 co alarm` (wp5), `2 danger` (danger), `3 nodanger` (normal path, no P1).
 - `j9/test_aea_51.py::test_j9_failure_states` — `1 degraded` (model error), `2 spend cap` (seeded $30), `3 timeout`
   (`deadline_s=3`, `Stall`), `4 busy` (decision: 31 conversations whose responder entry is `Stall(2.0)`, sent at once
-  with a barrier; at least one 200 with `notice.code == "BUSY"`; `Admission.max_in_flight` is 30), `5 rate limited` (21
+  with a barrier; at least one 200 with `notice.code == "BUSY"`, whose stored row has `outcome = 'degraded_handoff'` and
+  `degrade_reason = 'rate_limit'`; `Admission.max_in_flight` is 30), `5 rate limited` (21
   turns on one thread within a minute → the 21st answers the chat `RATE_LIMITED` notice; `chat_turns_per_thread_per_min`
-  is 20; send the WP-5 sentence each time, which calls no model, so the 21 turns take seconds). Each step asserts the user-visible notice/blocks and the stored `turns` row.
+  is 20; send the WP-5 sentence each time, which calls no model, so the 21 turns take seconds; the 21st turn's stored row
+  has `degrade_reason = 'rate_limit'`). `tests/journeys/j9/test_aea_40.py` (AEA-40's) has its own integrated test skipped
+  "blocked-on AEA-51 and an AEA-57 follow-up": do not edit or unskip it; name it in the report for its owner. Each step asserts the user-visible notice/blocks and the stored `turns` row.
 
 **H2. Record.** On the clean tree after commit 3, run (serial, never with `-n`):
 `uv run pytest -m journey tests/journeys/j2 tests/journeys/j3 tests/journeys/j4 tests/journeys/j5 tests/journeys/j9
@@ -1285,7 +1362,7 @@ Run from the worktree with `export UV_LINK_MODE=hardlink`. Cheapest first; stop 
 | 2 | Iterating, Part B | `uv run pytest tests/contract/test_model_ports_contract.py -q` | every case passed, 0 skipped |
 | 3 | Iterating, Parts C–G | `uv run pytest tests/graph/test_worked_pairs_api.py tests/integration tests/capture/test_cap1_customer_chat.py tests/capture/test_cap2_safety_first.py tests/capture/test_cap3_handoff.py -q -rs` | green; skips only `INDEX_SKIP` (none on the VPS) |
 | 4 | Before the final commit: lint and format | `uv run ruff check src tests && uv run ruff format --check src tests` | no findings |
-| 5 | Before the final commit: types | `uv run mypy` | `Success` |
+| 5 | Before the final commit: types | `uv run mypy` | `Success` (baseline at `f466ff7`: no issues in 468 source files) |
 | 6 | Before the final commit: contract boundary, strict (PA-4) | `CONTRACT_STRICT=1 uv run pytest tests/contract -rs` | green; no `route not registered` / `not bound` for a customer-path operation |
 | 7 | Before the final commit: **full suite** (this change reaches everything: `web/container.py` is built by every app-level test, build-loop-test-scope "a module imported across the codebase") | `uv run --with pytest-xdist pytest -n 2 -m "not journey" -q` | green, except the two known reds on `main` listed under this table; any other red stops the commit |
 | 8 | Before the final commit: journeys (serial) | `uv run pytest -m journey tests/journeys -q -rs` then `uv run python -m tests.journeys.affected --base main` | green; J-1 (AEA-57) still green with the graph bound; the five AEA-51 journeys pass |
@@ -1293,7 +1370,7 @@ Run from the worktree with `export UV_LINK_MODE=hardlink`. Cheapest first; stop 
 | 10 | Context | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no FAIL in an owned row |
 | 11 | Diff scope | `git diff --name-only main...HEAD` | only §2.1 paths |
 
-**Known reds on `main` at `c9b17ea` (not this ticket's; never fixed or skipped here):** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (stale since journeys exist; wave-3 seam finding 1) and, under `-n 2` only, `tests/unit/adapters/test_tracing_langfuse.py::test_export_never_blocks_hanging_exporter` (timing flake; finding 4). If either is red, re-run it alone with `uv run pytest <nodeid> -q`, and quote both results in the report. A third red is this ticket's.
+**Known reds on `main` at `f466ff7` (not this ticket's; never fixed or skipped here):** `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0` (stale since journeys exist; wave-3 seam finding 1) and, under `-n 2` only, `tests/unit/adapters/test_tracing_langfuse.py::test_export_never_blocks_hanging_exporter` (timing flake; finding 4). If either is red, re-run it alone with `uv run pytest <nodeid> -q`, and quote both results in the report. A third red is this ticket's.
 
 The WP-N worked pairs this ticket owns are WP-1…WP-8 + WP-4F + DANGER + NODANGER (AC-6…AC-16); the single `[journey]`
 criterion is AC-32 at level `integrated with a scripted model`. No test calls a paid model; no test is marked `live`.
@@ -1328,9 +1405,9 @@ on the controller).
 
 | # | Kind | Item | Request / handling |
 |---|---|---|---|
-| R-1 | **Shared-primitive request (blocks AC-1, AC-17, AC-18, AC-21, AC-46, AC-47)** | `register_tracing` (AEA-19, merged) already provides `Key("trace")`, and `TurnService` (AEA-40) and `PersonRequestService` (AEA-42) read that key. `register_graph` runs later and the container refuses a second `provide`, so `overrides.trace` cannot reach the turn span from this hunk: AC-17's "one trace per turn with nested spans" would fail | **AEA-19-F1** (small follow-up on AEA-19's hunk, merged before AEA-51): `register_tracing` keeps its sink choice exactly as now but provides `Key[TraceSink]("trace")` through a factory that returns `c.get(Key[TraceSink]("trace_override"))` when that key is provided (`ContainerError` with message `not provided: trace_override` → the existing choice; any other error re-raised). Its own test adds one case. `register_graph` stays the only reader of `overrides` (R-W-8); no consumer key changes; no gap on `main`. **Status at `c9b17ea`: not cut.** `register_tracing` still provides `Key("trace")` itself, and AEA-40's branch `5a4cdf0` reads it eagerly in the `TurnService` factory (AEA-42's `register_person_request` reads it in its factory too), so the need is unchanged. Because every `provide` runs before `container.build()`, the F1 factory sees `trace_override` when it is built |
+| R-1 | **Shared-primitive request (blocks AC-1, AC-17, AC-18, AC-21, AC-46, AC-47)** | `register_tracing` (AEA-19, merged) already provides `Key("trace")`, and `TurnService` (AEA-40) and `PersonRequestService` (AEA-42) read that key. `register_graph` runs later and the container refuses a second `provide`, so `overrides.trace` cannot reach the turn span from this hunk: AC-17's "one trace per turn with nested spans" would fail | **AEA-19-F1** (small follow-up on AEA-19's hunk, merged before AEA-51): `register_tracing` keeps its sink choice exactly as now but provides `Key[TraceSink]("trace")` through a factory that returns `c.get(Key[TraceSink]("trace_override"))` when that key is provided (`ContainerError` with message `not provided: trace_override` → the existing choice; any other error re-raised). Its own test adds one case. `register_graph` stays the only reader of `overrides` (R-W-8); no consumer key changes; no gap on `main`. **Status at `f466ff7`: not cut.** `register_tracing` (`container.py` lines 294–344) still provides `Key("trace")` itself, and the merged `register_chat` reads it eagerly in the `TurnService` factory (line 804); AEA-42's `register_person_request` reads it too. The need is unchanged. Because every `provide` runs before `container.build()`, the F1 factory sees `trace_override` when it is built |
 | R-2 | Collision | `web/container.py` is shared; this hunk is the last large one | Edit only `register_graph`; module imports untouched |
-| R-3 | Code size | `container.py` is 942 lines at `c9b17ea` and grows by ~150 (AEA-30, 40 and 45 add more); above the 700-line orchestrator cap of `code-structure.md` | Request to the integrator: a later AEA-01 follow-up may move the hunks into per-area wiring modules; not this ticket (the slice plan gives 3+ no `src/` file) |
+| R-3 | Code size | `container.py` is 1,082 lines at `f466ff7` and grows by ~150 here (AEA-45 adds more); above the 700-line orchestrator cap of `code-structure.md` | Request to the integrator: a later AEA-01 follow-up may move the hunks into per-area wiring modules; not this ticket (the slice plan gives 3+ no `src/` file) |
 | R-4 | Sibling names not in DO-4 | §4.3 names come from sibling plans/branches | Step A0 verifies them after merge; any difference stops the build |
 | R-5 | Start-up cost | Every app-level test now builds the real graph, the registry and a readiness read | Measured by check 7; if the full suite slows by more than 30 %, report it (no lazy-loading hack here) |
 | R-6 | Index build time | The session index build embeds 17 files once per process | `functools.cache`; with `-n 2`, twice. Fine on this machine |
@@ -1339,9 +1416,9 @@ on the controller).
 | R-9 | Label | graph-core §2 rule 4 calls the intake test "(AEA-51, `risk::security`)"; the slice plan has no Sec label | Recommendation to the orchestrator: keep the label off. This ticket adds wiring with start-up guards and proves AEA-04/12/19/20's redaction at the entry point; the redaction code itself is in those `risk::security` tickets. If the orchestrator adds the label, AC-17…AC-20, AC-31, AC-47 become frozen tests written first by `test-writer-agent` |
 | R-10 | Readiness policy | PA-2 lets the app start on an empty index | Matches data.md (readiness "never raises"); AEA-50's image builds the index, so production never runs empty; recorded as a plan-added criterion for Innocent's visibility in the issue comment |
 | R-11 | `Limits` replacement in tests | PD-9 replaces the container's `Limits` factory for a short deadline | The only way to reach `TURN_TIMEOUT` without a 60 s wait; no Settings field or env name added (web.md §15 forbids test seams in Settings) |
-| R-12 | Disk | 16 GB free on `/` (83 %) at refresh 3, 2026-10-21 | One worktree, hardlinked venv, temp index removed at exit; check `df -h /home` in A0 |
-| R-13 | **Missing prerequisite (new at refresh 2)** | `agent/nodes/compose.py` (AEA-21's file) builds no `SlotCardBlock`, `AccountCardBlock`, `AppointmentBlock`, `WherePromptBlock` or `UrgencyQuestionsBlock`, and no `ErrorBlock SLOT_TAKEN` with fresh windows. AEA-21's plan §8.2 R-2 asked for an "AEA-21b compose cards" follow-up before AEA-51 (its blocker, AEA-13's fee note, merged as `dc1f4da`); it was never cut and no open branch builds the blocks. Without them the customer cannot pick a window or see account facts | **Request to the orchestrator: cut AEA-21b** (owner: AEA-21's area, `agent/nodes/compose.py` and its tests) and merge it before this ticket. Blocks AC-7, AC-8, AC-10, AC-12 (`no` branch), AC-14, AC-25(e), AC-26, AC-27 (Monday follow-up), AC-36, AC-37, AC-38, AC-43 and J-2 step 2, J-3. This ticket never builds a block |
-| R-14 | **Missing prerequisite (the ticket's own clause)** | AEA-40's `TurnService._run` (branch `5a4cdf0`, `services/turn.py` line 318; unchanged since `6891c3c`) returns `SPEND_CAP_REACHED` before `parse_intake`, so at our cap a CO-alarm message gets the notice, not the WP-5 instruction. DO-4 §11 says "safety and CON-4 still work"; DO-4 §14 step 2 checks the cap before intake. The ticket's *Agent handoff* settles it: AC-24's safety half is `blocked-on AEA-40` | **Tell AEA-40 now** (still in flight): run the deterministic safety gate before `allow_turn()` and answer a safety turn with no model call. If AEA-40 merges as is, build AC-24's notice and CON-4 halves, mark the safety half blocked on #51, and do not weaken it |
+| R-12 | Disk | 16 GB free on `/` (83 %) at refresh 4, 2026-10-21 | One worktree, hardlinked venv, temp index removed at exit; check `df -h /home` in A0 |
+| R-13 | **Missing prerequisite (new at refresh 2)** | `agent/nodes/compose.py` (AEA-21's file) builds no `SlotCardBlock`, `AccountCardBlock`, `AppointmentBlock`, `WherePromptBlock` or `UrgencyQuestionsBlock`, and no `ErrorBlock SLOT_TAKEN` with fresh windows. AEA-21's plan §8.2 R-2 asked for an "AEA-21b compose cards" follow-up before AEA-51 (its blocker, AEA-13's fee note, merged as `dc1f4da`); it was never cut and no open branch builds the blocks. Without them the customer cannot pick a window or see account facts | **Request to the orchestrator: cut AEA-21b** (owner: AEA-21's area, `agent/nodes/compose.py` and its tests) and merge it before this ticket. Blocks AC-7, AC-8, AC-10, AC-12 (`no` branch), AC-14, AC-25(e), AC-26, AC-27 (Monday follow-up), AC-36, AC-37, AC-38, AC-43 and J-2 step 2, J-3. This ticket never builds a block. **Status at `f466ff7`: not cut;** `grep -c` of the five constructors in `compose.py` is 0 |
+| R-14 | **Missing prerequisite (the ticket's own clause), now a follow-up** | AEA-40 merged (`f466ff7`) with `TurnService._run` checking `self._spend.allow_turn()` (`services/turn.py` line 318) before `parse_intake` (line 322). So at our cap a CO-alarm message gets `SPEND_CAP_REACHED`, not the WP-5 instruction. DO-4 §14 step 2 and stage7 web.md give that order; DO-4 §11's failure table says "safety and CON-4 still work". The ticket's *Agent handoff* settles which wins here: AC-24's safety half is `blocked-on AEA-40` | **Request to the orchestrator: cut AEA-40-F1** (owner: AEA-40's `services/turn.py` and its tests). Its outcome: at our cap, a message the deterministic safety gate catches (CO alarm, gas, smoke words; R-6) still gets the WP-5 instruction and its P0 case, with no model call; every other message keeps `SPEND_CAP_REACHED`. The mechanism is F1's planner's to choose. AEA-51 builds AC-24's notice and CON-4 halves now, and keeps the safety half in `test_spend_cap_safety_still_answered`, skipped as `blocked-on AEA-40-F1` until F1 lands (§5 F3). If the orchestrator reads F1 as changing the signed DO-4 §14 order rather than resolving a contradiction the ticket already ruled on, it goes to Innocent as a decision; this plan changes nothing in either case |
 | R-15 | Typing follow-up, not a blocker | `agent/context.py` (AEA-21's file) types seven `GraphDeps` fields as `TypeAlias = Any`; AEA-21's R-3 offers the swap to "AEA-51 or a follow-up". That file is not in this ticket's owned list | Not done here. mypy passes either way, and AC-1 asserts the real classes at run time. Request a one-line-per-type follow-up on AEA-21's file after AEA-29, 30 and 35 merge |
 | R-16 | Upstream decision | AEA-35 (`SpecialistRunner`, `SPECS`) and AEA-39 (act node) are `blocked` with one NEEDS-DECISION: where the specialist task types live; the runner's constructor signature is not in question | AEA-51 waits for both like any blocker; nothing here depends on the answer |
 | R-17 | Seam finding carried in | AEA-38's `reply.checks` calls `attach_extraction` without `customer_messages`, so the assembler's own quote check is off; `check_quotes` runs first | PA-5 proves the end result on the real path. Red → `blocked-on AEA-38 follow-up`, reported on #51, never patched here |
@@ -1369,17 +1446,22 @@ above is engineering and made). **BLOCKED-ON** for building, until these are mer
 
 | Prerequisite | Why this ticket needs its result (not only its signature) |
 |---|---|
-| AEA-30 (ledger: blocked) | `DemoService`, `Key("demo_clock")`; without the clock a real login answers 500 |
 | AEA-35, AEA-39 (one NEEDS-DECISION: where the specialist task types live) | `SpecialistRunner`, `SPECS`; the act node (`run_specialist`, `escalation`, `handoff` are stubs on `main`) |
 | AEA-36, AEA-37 (ledger: blocked) | the front node (gates, safety, identity) and the plan node (planner, danger classifier, `DANGER_FIELD`); stubs on `main` |
-| AEA-40 (ledger: NEEDS-DECISION after review; branch `5a4cdf0`) | CON-1/CON-2 and `register_chat` reading `Key("run_graph")`; for AC-24's safety half, the safety gate before the spend check (§8 R-14) |
+| **AEA-40-F1** (follow-up, not cut; §8 R-14) | AC-24's safety half only (`test_spend_cap_safety_still_answered`, skipped until it lands); nothing else waits on it |
 | AEA-45 (ledger: blocked) | CON-13 claim for AC-23 only (PD-12) |
 | **AEA-19-F1** (follow-up, not cut; §8 R-1) | `overrides.trace` reaching `Key("trace")` (AC-1, AC-17, AC-18, AC-21, AC-46, AC-47, AC-49) |
 | **AEA-21b compose cards** (follow-up, not cut; §8 R-13) | Slot, account and appointment blocks, `SLOT_TAKEN` with fresh windows (AC-7, AC-8, AC-10, AC-12, AC-14, AC-25, AC-26, AC-27, AC-36, AC-37, AC-38, AC-43, J-2, J-3) |
 
-Already on `main` at `c9b17ea`: AEA-01, 02, 02b, 03, 03b, 04, 05, 06, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-22, 23, 24, 26, 27, 28, 29, 31, 32, 33, 34, 38, 41, 42, 43, 44, 46, 47, 48, 49, 50, 57, 59 (and the docs tickets 07, 08,
-25, 54). Since refresh 2 this removed AEA-24, 29, 34, 38, 43 and 46 from the list above.
+Already on `main` at `f466ff7`: AEA-01, 02, 02b, 03, 03b, 04, 05, 06, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+22, 23, 24, 26, 27, 28, 29, 30, 31, 32, 33, 34, 38, 40, 41, 42, 43, 44, 46, 47, 48, 49, 50, 57, 59 (and the docs tickets
+07, 08, 25, 54). Refresh 4 removed AEA-30 and AEA-40 from the list above and added AEA-40-F1 for AC-24's safety half.
+
+**Startable now (orchestrator's choice; nothing here needs a blocker):** Part B (`tests/contract/test_model_ports_contract.py`,
+AC-3) and Part C (`tests/integration/customer_support.py`, `tests/integration/customer_api.py`). They import only what is on
+`main` (§4.1). Commit them on the ticket branch as `test(AEA-51): cross-adapter port contract and integration launcher`
+and run checks 2 and 4–5 on them. Part A (it imports AEA-35's runner and `SPECS`) and Parts D–H wait for the table above.
+If this split is used, commit 1 holds only the container hunk.
 
 **Gates:** none human; no paid call; the wave-3 merge runs `seam-audit-agent` across AEA-50…53 with all journeys
 (integrated-journeys §5).
