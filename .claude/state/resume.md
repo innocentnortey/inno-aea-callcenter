@@ -140,3 +140,12 @@ Stage 4 interview (`docs/prd/inno-aea-callcenter-interview.md`); the UX session 
 ## Stage 7 (VPS session, started 2026-10-21 ~01:00 CT)
 
 Started before UX-5 by Innocent's decision (checklist *Skips*). **7a draft:** `docs/plans/slice-plan.md` (57 tickets, 9 waves). **Waiting on Innocent:** sign-off of 7a, which tickets are `risk::security`, and the cut line against the 06:00 CT target (slice-plan §5). Nothing published; 7b–7d not started. UX-4 owns `apps/web/**`; this session touches `src/`, `tests/`, `eval/`, `data/`, `pyproject.toml`, §7–§8 lines only.
+
+## Stage 7 closed (2026-10-21, Innocent: D-1 yes, D-2 set aside, D-3 sign-off)
+
+62 tickets published as GitLab issues #1–#62 (project 2318; issue number = ticket number). Local `main` holds the whole tree
+(`ca9ab5c`, then a small docs commit); **nothing is pushed**: the first push must merge GitLab's README commit
+(`--allow-unrelated-histories`, keep our README, no force). Parked first-attempt code is reference-only at
+`docs/parked/2026-10-21-first-attempt/`. **Next:** Stage 8, waves 0–1 (AEA-01…25) with the prompt in
+`docs/plans/BUILD-PROMPT-waves-0-1.md`. Open decisions D-4…D-15 are in `docs/plans/stage7-signoff.md` (tickets are built on the
+recommended option). The UX session takes `docs/plans/ux-join/FOR-UX-SESSION.md`.
