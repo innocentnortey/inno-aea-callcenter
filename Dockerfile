@@ -64,7 +64,7 @@ COPY scripts/ /app/scripts/
 RUN --mount=type=bind,source=.,target=/ctx \
     mkdir -p /app/eval/reports /data \
  && if [ -d /ctx/eval/reports ]; then cp -a /ctx/eval/reports/. /app/eval/reports/; fi \
- && if [ -f /ctx/BUILD_SHA ]; then cp /ctx/BUILD_SHA /app/BUILD_SHA; fi \
+ && if [ -f /ctx/BUILD_SHA ]; then cp /ctx/BUILD_SHA /app/BUILD_SHA; else echo 'WARNING: no BUILD_SHA in the build context; agent_version reads RAILWAY_GIT_COMMIT_SHA at run time or else unknown' >&2; fi \
  && chmod -R a-w /app/docs/data/issued
 EXPOSE 8080
 CMD ["sh", "-c", "MERIDIAN_AGENT_VERSION=\"$(python -m scripts.agent_version)\" && export MERIDIAN_AGENT_VERSION && exec uvicorn --factory scripts.serve:create_deployed_app --host 0.0.0.0 --port \"$PORT\" --workers 1 --log-config scripts/log_config.json --no-access-log --timeout-keep-alive 75"]
