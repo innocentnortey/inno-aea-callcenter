@@ -10,6 +10,7 @@ and ReplyComposer satisfy them structurally.
 
 from __future__ import annotations
 
+import contextlib
 import time
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -32,6 +33,7 @@ from meridian.ports.runtime import Clock, TraceSink, UnitOfWorkFactory
 RUNNING_WAIT_S: Final = 3.0  # [A] web.md section 8 step 1; replaced by a measured CON-4 p99 at Stage 9
 RUNNING_POLL_S: Final = 0.1  # poll interval while a duplicate press is running
 CON4_RULE_ID: Final = "CON4.person"
+HANDOFF_SPAN: Final = "handoff"  # DO-6 WF-2 "handoff node": the one timed child of the CON-4 turn span (F-5)
 
 
 class HandoffOpener(Protocol):
@@ -62,7 +64,7 @@ class PersonRequestOutcome(MeridianModel):
 
 
 class HandoffWriteFailed(Exception):
-    """The case could not be written, or a duplicate press never finished. The message carries no value."""
+    """The turn or case could not be written (a held write lock included), or a duplicate press never finished. The message carries no value."""
 
 
 def read_identity(uow: UnitOfWorkFactory, thread_id: ThreadId) -> IdentityState:
@@ -103,21 +105,28 @@ class PersonRequestService:
         now = self._demo_clock.now()  # the one demo reading: received_at, ctx.now, settled and replied_at
         mono = time.monotonic()
 
-        with self._uow(write=True) as tx:
-            row = tx.core.conversations.lookup(str(cmd.thread_id))
-            if not isinstance(row, ConversationRow):
-                raise HandoffWriteFailed("thread is not open")  # a reset ended it after owned_thread
-            ids = TurnIds(
-                thread_id=cmd.thread_id,
-                turn_id=cmd.turn_id,
-                request_id=cmd.request_id,
-                run_tag=cmd.run_tag,
-                run_id=cmd.run_id,
-                agent_version=row.agent_version,
-            )
-            begin = tx.core.turns.begin(ids, now)
-            identity = tx.core.reads.identity_state(cmd.thread_id)
-            tx.commit()
+        try:
+            with self._uow(write=True) as tx:
+                row = tx.core.conversations.lookup(str(cmd.thread_id))
+                if not isinstance(row, ConversationRow):
+                    raise HandoffWriteFailed("thread is not open")  # a reset ended it after owned_thread
+                ids = TurnIds(
+                    thread_id=cmd.thread_id,
+                    turn_id=cmd.turn_id,
+                    request_id=cmd.request_id,
+                    run_tag=cmd.run_tag,
+                    run_id=cmd.run_id,
+                    agent_version=row.agent_version,
+                )
+                begin = tx.core.turns.begin(ids, now)
+                identity = tx.core.reads.identity_state(cmd.thread_id)
+                tx.commit()
+        except HandoffWriteFailed:
+            raise
+        except Exception as exc:
+            # F-4: a write lock held past busy_timeout (or any store error) before the turn is claimed. Nothing
+            # was written, so 503 "tap again" is safe; the cause is chained, never put in the message.
+            raise HandoffWriteFailed("turn claim failed") from exc
 
         if begin.status == "completed":
             if begin.response is None:
@@ -149,12 +158,18 @@ class PersonRequestService:
                 trigger="con4",
                 identity=identity,
             )
+            t0 = time.monotonic()
+            node_status = "error"
             try:
                 result = self._handoff.open(req, ctx)
+                node_status = "ok"
             except Exception as exc:
                 # CaseWriteFailed (AEA-29) is the documented failure after its one retry and is not importable here;
                 # any failure must still leave the turn row failed so the next tap re-runs.
                 failure = exc
+            finally:
+                # F-5: exactly one timed child span per run, also when open raises (agent/graph.py timed_node).
+                self._trace.node(span, HANDOFF_SPAN, int((time.monotonic() - t0) * 1000), node_status)
             if result is not None:
                 first = result.created or result.action.key.turn_id == cmd.turn_id
                 if first:
@@ -168,7 +183,7 @@ class PersonRequestService:
         server_ms = int((time.monotonic() - mono) * 1000)
 
         if outcome is None:
-            with self._uow(write=True) as tx:
+            with contextlib.suppress(Exception), self._uow(write=True) as tx:
                 tx.core.turns.finish(
                     cmd.turn_id,
                     TurnRecord(
@@ -194,29 +209,32 @@ class PersonRequestService:
                 tx.commit()
             raise HandoffWriteFailed("case write failed") from failure
 
-        with self._uow(write=True) as tx:
-            tx.core.turns.finish(
-                cmd.turn_id,
-                TurnRecord(
-                    status="completed",
-                    trace=TurnTrace(gate_result="person_requested", path="handoff", outcome="handed_off"),
-                    replied_at=now,
-                    server_ms=server_ms,
-                    model_calls=0,
-                    input_tokens=0,
-                    output_tokens=0,
-                    cost_usd=0.0,
-                    tool_calls=0,
-                    trace_id=trace_id,
-                    trace_export=export,
-                    response=outcome.model_dump_json(),
-                ),
-            )
-            if kind in ("case_created", "live_queued"):
-                tx.core.conversations.set_outcome(
-                    cmd.thread_id, "handed_off", ended_wall_at=self._wall_clock()
+        try:
+            with self._uow(write=True) as tx:
+                tx.core.turns.finish(
+                    cmd.turn_id,
+                    TurnRecord(
+                        status="completed",
+                        trace=TurnTrace(gate_result="person_requested", path="handoff", outcome="handed_off"),
+                        replied_at=now,
+                        server_ms=server_ms,
+                        model_calls=0,
+                        input_tokens=0,
+                        output_tokens=0,
+                        cost_usd=0.0,
+                        tool_calls=0,
+                        trace_id=trace_id,
+                        trace_export=export,
+                        response=outcome.model_dump_json(),
+                    ),
                 )
-            tx.commit()
+                if kind in ("case_created", "live_queued"):
+                    tx.core.conversations.set_outcome(
+                        cmd.thread_id, "handed_off", ended_wall_at=self._wall_clock()
+                    )
+                tx.commit()
+        except Exception as exc:
+            raise HandoffWriteFailed("turn write failed") from exc
         return outcome
 
     def _await_stored(self, cmd: PersonRequest) -> PersonRequestOutcome:
