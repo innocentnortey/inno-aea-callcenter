@@ -289,11 +289,13 @@ class AnthropicAdapter:
                 "max_tokens": req.max_tokens,
                 "system": _system_blocks(req.system_prefix, req.system_dynamic),
                 "messages": cast(list[MessageParam], list(req.messages.items)),
+                # Strict tools reject constraints such as maxItems (HTTP 400); transform_schema moves them into
+                # descriptions, as structured() does. Callers still validate the args against their own model.
                 "tools": [
                     {
                         "name": t.name,
                         "description": t.description,
-                        "input_schema": t.input_schema,
+                        "input_schema": anthropic.transform_schema(dict(t.input_schema)),
                         "strict": True,
                     }
                     for t in req.tools
