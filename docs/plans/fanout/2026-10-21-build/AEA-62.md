@@ -1525,3 +1525,11 @@ greeting after reload), AEA-43 (demo inbox), AEA-44, AEA-45 (`getQueue`, `getCas
 
 **Gates:** no human, external, paid or live gate of its own; inherits `gate::ux4` through AEA-58. No model call is paid
 (scripted adapter only).
+
+## Deviations
+
+1. **Helper placement and file sizes (plan §2, R-7, C-5).** After `ruff format` (line length 110) the shared helpers plus the J-2 tests came to about 790 lines in `j2/test_aea_62.py`, and the plan's fallback (move only the identity block to j3) was not enough. Placement as built: `j2` holds the script builders, `expect_turn`/`say`/`open_chat`, passage and record helpers, `browser_run` and the J-2 tests (648 lines); `j3` holds the identity helpers (`Verified`, `verify_in_chat`, `billing_through_code` and its constants) and J-3 (474); `j6` holds `switch_role` and J-6 (446); `j8` imports from j2, j3 and j6 (554). Import chain j2 <- j3 <- j6 <- j8; j2 imports `billing_through_code`/`INVOICE_VALUES` from j3 inside `test_j2_invoice_after_code_as_billed` (function-local, because j3 imports j2). j2 and j8 stay above the 500-line target; no fifth file was added (AC-1 forbids it).
+2. `billing_through_code(run, bp)` drops the plan's unused `thread_id` parameter.
+3. `test_j_aea62_records_present` uses a small `rec_of(run, response)` for the two page-load records (Playwright `Response.headers`), and the closure `rec(ex)` for API exchanges.
+4. C-6 was run without the `npm run build` half: `apps/web/dist` in the primary checkout was already built and `check:dist` passed inside the fixture (`dist is clean: no dev-layer markers`).
+5. Result today: all 18 tests report `blocked-on UX session` (`CONTRACT_ROWS` is empty because `docs/plans/ux-join/selectors.md` is unpublished), so the bodies of the steps after sign-in have never executed against Chrome; they are checked by import, ruff, mypy and collection only.
