@@ -9,12 +9,14 @@ from __future__ import annotations
 
 import datetime as dt
 import operator
-from typing import Annotated, Literal, TypedDict
+from collections.abc import Mapping, Sequence
+from types import MappingProxyType
+from typing import Annotated, Final, Literal, TypedDict
 
 from pydantic import Field
 
 from meridian.domain.actions import Settled
-from meridian.domain.common import CaseRef, Halt, MeridianModel, ThreadId, TurnId
+from meridian.domain.common import CaseRef, Halt, HandoffReason, MeridianModel, ThreadId, TurnId
 from meridian.domain.common import FailureCounters as FailureCounters
 from meridian.domain.handoff import BriefExtraction, HandoffResult
 from meridian.domain.identity import IdentityState as IdentityState
@@ -35,6 +37,7 @@ from meridian.domain.turn import (
     ResponderDraft,
     SpecialistKind,
     TaskIntent,
+    Topic,
     TurnFacts,
     TurnInput,
 )
@@ -57,7 +60,7 @@ class TaskDetails(MeridianModel):
 
 
 class OpenTask(MeridianModel):
-    """DO-4 section 1 WITHOUT `missing` (MissingInfo blocked, plan 8.2)."""
+    """DO-4 section 1 WITHOUT `missing` (MissingInfo blocked, plan 8.2); plus `handoff_request` (FU-identity-plan)."""
 
     task_id: str
     specialist: SpecialistKind
@@ -65,6 +68,9 @@ class OpenTask(MeridianModel):
     opened_turn: TurnId
     details: TaskDetails
     status: Literal["open", "waiting_identity", "done"]
+    handoff_request: HandoffReason | None = (
+        None  # FU-identity-plan (F-1): the plan's request, kept while the task waits on identity
+    )
 
 
 class ChatLine(MeridianModel):
@@ -163,6 +169,7 @@ class SafetyUpdate(TypedDict, total=False):
 class IdentityNodeUpdate(TypedDict, total=False):
     identity: IdentityState
     identity_step: IdentityStep
+    plan: Plan
     halt: Halt
 
 
@@ -224,3 +231,54 @@ class ChecksUpdate(TypedDict, total=False):
 
 class ComposeUpdate(TypedDict):
     reply: ComposedReply
+
+
+_RESUME_TOPIC: Final[Mapping[TaskIntent, Topic]] = MappingProxyType(
+    {  # mirrors agent/nodes/plan.py _TOPIC_BY_INTENT (front.py may not import agent.nodes); ANSWER_QUESTION -> "other"
+        TaskIntent.READ_INVOICE: "billing",
+        TaskIntent.READ_MEMBERSHIP: "membership",
+        TaskIntent.READ_WARRANTY: "warranty",
+        TaskIntent.READ_APPOINTMENTS: "booking",
+        TaskIntent.BOOK_NEW: "booking",
+        TaskIntent.RESCHEDULE: "booking",
+        TaskIntent.CANCEL: "booking",
+        TaskIntent.CONFIRM: "booking",
+    }
+)
+
+
+def identity_resume_plan(open_tasks: Sequence[OpenTask], step_kind: str) -> Plan | None:
+    """The plan a code turn resumes when the identity detour ends (FU-identity-plan, AEA-51 finding F-1).
+
+    `verified`: only when a task waiting on identity carries a handoff request, so the request reaches escalation
+    (WP-6 "no" for an unverified customer). `code_locked`: when any task waits on identity, so escalation rule 5 sees
+    a private task open (three wrong codes -> identity_unverified, R-16). Every other step kind: None. The tasks are
+    the first three open tasks in stored order, as `routers._resumed` resumes them.
+    """
+    live = [t for t in open_tasks if t.status != "done"][:3]
+    waiting = [t for t in live if t.status == "waiting_identity"]
+    carried = next((t.handoff_request for t in waiting if t.handoff_request is not None), None)
+    if step_kind == "verified":
+        if carried is None:
+            return None
+    elif step_kind == "code_locked":
+        if not waiting:
+            return None
+    else:
+        return None
+    return Plan(
+        mode="act",
+        tasks=tuple(
+            PlannedTask(
+                order=i + 1,
+                specialist=t.specialist,
+                intent=t.intent,
+                needs_identity=t.status == "waiting_identity",
+                resumes_task_id=t.task_id,
+            )
+            for i, t in enumerate(live)
+        ),
+        handoff_request=carried,
+        topic=_RESUME_TOPIC.get(live[0].intent, "other"),
+        source="open_task",
+    )

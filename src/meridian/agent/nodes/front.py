@@ -3,6 +3,7 @@
 `gates` decides what kind of turn this is, first on every turn; `safety` opens the P0/P1 case by code with no model,
 identity or lookup call; `identity` turns a locate form or a code entry into identity-service calls and passes the
 result through. The code digits and the form values are read only from `ctx.intake` and never copied anywhere.
+On a verified or locked code it also writes the identity-resume plan (FU-identity-plan, finding F-1).
 """
 
 from __future__ import annotations
@@ -28,7 +29,13 @@ from meridian.domain.identity import (
     NotVerified,
     Verified,
 )
-from meridian.domain.state import ConversationState, GatesUpdate, IdentityNodeUpdate, SafetyUpdate
+from meridian.domain.state import (
+    ConversationState,
+    GatesUpdate,
+    IdentityNodeUpdate,
+    SafetyUpdate,
+    identity_resume_plan,
+)
 from meridian.domain.turn import (
     CheckEvent,
     DangerAssessment,
@@ -239,7 +246,11 @@ def identity(
             fresh = tx.core.reads.identity_state(thread_id)
         if step is None:
             return {"identity": fresh}
-        return {"identity_step": step, "identity": fresh}
+        update: IdentityNodeUpdate = {"identity_step": step, "identity": fresh}
+        resumed = identity_resume_plan(state.open_tasks, step.kind) if state.plan is None else None
+        if resumed is not None:
+            update["plan"] = resumed  # F-1: the detour's plan, rebuilt for the turn that ends it
+        return update
     if step is not None:
         return {"identity_step": step}
     return {}

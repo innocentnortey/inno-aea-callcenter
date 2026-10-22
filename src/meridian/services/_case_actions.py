@@ -1,4 +1,4 @@
-"""Staff write bodies of the case service (A6): `apply`, `set_followup` and `record_activity`.
+"""Write bodies of the case service (A6): the staff actions `apply`, `set_followup`, `record_activity`, and the burning due move.
 
 Each function runs inside the caller's write unit of work and never commits: `CaseService` commits only when the
 result is not a `CaseActionRejected`, so a rejection leaves nothing written. No model, route or SQL here.
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from typing import Final
 
 from meridian.adapters.sqlite.rows import (
     ActivityRow,
@@ -17,8 +18,8 @@ from meridian.adapters.sqlite.rows import (
     StreamEvent,
     case_stream,
 )
-from meridian.domain.common import ApiErrorCode, CaseRef, ThreadId
-from meridian.domain.handoff import FollowUp
+from meridian.domain.common import ApiErrorCode, CaseRef, ThreadId, TurnId
+from meridian.domain.handoff import FollowUp, HandoffReason
 from meridian.domain.staff import ASSIGNEE_ROLES, ROLE_ACTIONS, StaffActor
 from meridian.domain.views import (
     ActivityIn,
@@ -29,6 +30,7 @@ from meridian.domain.views import (
     CaseSummaryView,
     FollowUpChoice,
 )
+from meridian.policy.handoff import case_due_at
 from meridian.policy.texts import TextId, render
 from meridian.ports.runtime import UnitOfWork
 from meridian.services._case_rules import (
@@ -43,7 +45,14 @@ from meridian.services._case_rules import (
 )
 from meridian.services._case_views import activity_view, live_state_of, summary_view
 
-__all__ = ["apply_in", "record_activity_in", "rejected", "set_followup_in", "version_conflict"]
+__all__ = [
+    "align_burning_due_in",
+    "apply_in",
+    "record_activity_in",
+    "rejected",
+    "set_followup_in",
+    "version_conflict",
+]
 
 
 def rejected(code: ApiErrorCode, **details: object) -> CaseActionRejected:
@@ -302,3 +311,47 @@ def record_activity_in(
         case=summary_view(tx, fresh, actor.role, staffing, now),
     )
     return result
+
+
+DUE_MOVED_RULE: Final = "CAS16.booked_window"  # CAS-16 option A (D-14)
+
+
+def align_burning_due_in(
+    tx: UnitOfWork, thread_id: ThreadId, window_start: dt.datetime, turn_id: TurnId, now: dt.datetime
+) -> bool:
+    """Moves the thread's open burning_ruled_out case due to the booked window start, once (CAS-16 option A).
+
+    False, with nothing written, when the thread has no open case, the case has another reason, its promise row is
+    missing, or its due already differs from the promise due (an earlier booking moved it). Never commits.
+    """
+    row = tx.cases.cases.get_for_thread_open(thread_id)
+    if row is None or row.reason is not HandoffReason.BURNING_RULED_OUT:
+        return False
+    prow = tx.cases.promises.current(row.case_ref)
+    if prow is None or row.due_at != prow.promise.due_at:
+        return False
+    due = case_due_at(row.reason, prow.promise, window_start)
+    if due == row.due_at:
+        return False
+    version = tx.cases.cases.update_versioned(row.case_ref, row.version, due_at=due, updated_at=now)
+    if version is None:
+        raise RuntimeError("case changed during the due move")
+    tx.cases.case_events.append(
+        CaseEventRow(
+            case_ref=row.case_ref,
+            kind="due_moved",
+            actor_role="ai",
+            detail={
+                "reason": row.reason.value,
+                "rule_id": DUE_MOVED_RULE,
+                "turn_id": str(turn_id),
+                "version": version,
+            },
+            at=now,
+        )
+    )
+    tx.core.events.append(
+        case_stream(row.case_ref),
+        StreamEvent(type="case_changed", payload={"version": version, "lifecycle": row.lifecycle}, at=now),
+    )
+    return True
