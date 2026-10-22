@@ -1614,3 +1614,22 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 `gate::paid` before every paid run: Innocent's go with the day's spend so far (`LIVE_SMOKE_SPENT_TODAY_USD`, sign-off
 D-15), and the provider keys in the environment. The free tests and the four journeys run at every merge; the paid
 command never does. No deploy (AEA-56), no E-run, no repeats beyond one.
+
+## Deviations
+
+Recorded by the implementer, parts A and B (2026-10-22, branch `aea-61-aea-61-live-smoke`).
+
+1. **`staff_guidance` lookups are not customer retrievals (A5).** When a case opens, `services/handoff.py` writes a
+   `lookup_log` row with `tool = "staff_guidance"` and `passage_ids = ["internal/agent_discretion_notes.md#N"]` (staff-only
+   guidance for the brief, never shown to the customer). The plan's generic check "passage from a non-current file" failed
+   WP-2 and WP-4 on it in the scripted run. `smoke_checks.py` now defines `STAFF_GUIDANCE_TOOL = "staff_guidance"` and skips
+   those rows in the passage-file, warranty account-read, private-before-verified and DANGER "lookup first" checks. No
+   other check was loosened; the same rows would have failed the paid run.
+2. **`test_live_smoke.py` imports the record module, not `tested_revision` (A7).** pytest collects any imported name that
+   starts with `test`, so `from ...record import tested_revision` became a skipped phantom test (11 skipped, not 10). The
+   file uses `from tests.journeys.support import record as journey_record`.
+3. **Untracked part A files were found in the worktree at start** (written by an earlier, interrupted dispatch). They were
+   reviewed line by line against A1 to A7 and adopted; `test_smoke_guards.py`, `scripted_cases.py` and the journey files
+   were written in this dispatch.
+4. **Context rows written once.** Parts A and B landed in one dispatch, so A8 and B4 were folded into one docs commit (as
+   refresh 7 allowed), with the B4 wording.
