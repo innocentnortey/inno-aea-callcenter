@@ -95,8 +95,11 @@ def _task_message_texts(planned: PlannedTask, state: ConversationState) -> tuple
 
 
 def _has_pending_change(state: ConversationState) -> bool:
-    # graph-nodes 9.5; ConversationState has no pending_change yet (AEA-02 8.2), so False until it lands
-    return getattr(state, "pending_change", None) is not None
+    """graph-nodes 9.5 `pending_change`, from the same stored source as the planner's `StateFlags.pending_change`
+    (`plan.build_planner_input`): the current visit's filed change request (FU-pending-change). There is no
+    `pending_change` state key; `settled` is the authority (D-9)."""
+    visit = state.settled.current_visit() if state.settled is not None else None
+    return visit is not None and visit.change_request is not None
 
 
 def _offers_quick_checks(planned: PlannedTask, state: ConversationState) -> bool:
