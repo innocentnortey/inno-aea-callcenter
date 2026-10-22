@@ -199,6 +199,7 @@ Owner area and wave in the right-hand columns (§8). Sizes follow `code-structur
 **Built:** `services/cases.py`, `services/handoff.py`, `services/_case_rules.py`, `services/_case_views.py`, `services/_case_actions.py`, the `register_cases` hunk (AEA-29, `d3facfe`).
 **Built:** `eval/harness/{__main__,cli,deps,records,cases,freeze,scrub,runlog,client,runner,invariants,scoring,judge,ledger,dbcheck,report,load,retrieval,dryrun}.py`, `eval/run_retrieval.py` (AEA-24, branch `aea-24-eval-harness`).
 **Built:** `services/demo.py`, `services/scheduler.py` (AEA-30, `f4aa2cb`; signatures stage7/cases.md §6; the four demo view types are imported from `domain/views.py`, AEA-02b).
+**Built (FU-identity-plan, wave fix):** `OpenTask.handoff_request` and `identity_resume_plan` in `domain/state.py`; the identity node writes the resume plan on a verified or locked code (AEA-51 F-1); `policy/handoff.window_start_of`, `CaseService.align_burning_due` (body `_case_actions.align_burning_due_in`) and its call from the escalation node move a `burning_ruled_out` case's due to the booked window start (CAS-16 A, F-2). Plan: `docs/plans/fanout/2026-10-21-build/FU-identity-plan.md`.
 
 ```
 src/meridian/                                    planned                                                     area  wave

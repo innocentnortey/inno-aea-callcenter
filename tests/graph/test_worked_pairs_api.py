@@ -307,29 +307,19 @@ def test_wp6_burning_three_branches(request: pytest.FixtureRequest) -> None:
         assert run.script.problems() == ()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="blocked-on a burning-ruled-out follow-up (finding F-2): the P2 case opens when the windows are shown and is "
-    "due in one business day; nothing moves its due time to the booked window start (CAS-16 A)",
-)
 def test_wp6_no_due_is_booked_window_start(request: pytest.FixtureRequest) -> None:
     with open_customer_run(request, RunOptions()) as run:
         no = sc.wp6_no(run)
         [case] = case_rows(run, no.thread_id)
         booked = run.db.one(
-            "SELECT s.slot_date, s.window FROM actions a JOIN appointments p ON p.appointment_id = a.record_id "
-            "JOIN appointment_slots s ON s.slot_id = p.slot_id WHERE a.thread_id = ? AND a.kind = 'booked'",
+            "SELECT s.slot_date, s.window FROM actions a "
+            "JOIN appointment_slots s ON s.slot_id = a.record_id WHERE a.thread_id = ? AND a.kind = 'booked'",
             (no.thread_id,),
         )
         start = datetime.fromisoformat(f"{booked['slot_date']}T{booked['window'][:5]}:00").replace(tzinfo=CHI)
         assert case["due_at"] == utc_iso(start)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="blocked-on identity-resume plan follow-up (finding F-1): an unverified customer's burning 'no' plan "
-    "(handoff_request burning_ruled_out) is lost when the identity detour interrupts the turn",
-)
 def test_wp6_no_unverified_still_opens_p2(request: pytest.FixtureRequest) -> None:
     with open_customer_run(request, RunOptions()) as run:
         no = sc.wp6_no(run, verified_first=False)
@@ -468,11 +458,6 @@ def test_wf1_identity_failure_reveals_nothing(request: pytest.FixtureRequest) ->
         assert not actions_of(run, result.thread_id, "verified")
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="blocked-on identity-resume plan follow-up (finding F-1): on the turn that locks the code the plan is None, "
-    "so escalation never sees a private task and no identity_unverified P3 case opens",
-)
 def test_wf1_three_wrong_codes_open_identity_unverified(request: pytest.FixtureRequest) -> None:
     with open_customer_run(request, RunOptions()) as run:
         result = sc.identity_failures(run)

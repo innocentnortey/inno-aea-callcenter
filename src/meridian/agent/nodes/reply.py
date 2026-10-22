@@ -131,6 +131,7 @@ def _next_open_tasks(state: ConversationState, turn_id: TurnId) -> list[OpenTask
         for planned in state.plan.tasks:
             result = next((r for r in state.specialist_results if r.kind == planned.specialist), None)
             status = _task_status(planned, result, state.identity.status)
+            carried = state.plan.handoff_request if status == "waiting_identity" else None  # F-1
             update: dict[str, object] = {}
             if isinstance(result, SchedulingResult) and result.change_request is not None:
                 update = {
@@ -142,7 +143,11 @@ def _next_open_tasks(state: ConversationState, turn_id: TurnId) -> list[OpenTask
                 old = tasks[resumed]
                 task_id = old.task_id
                 tasks[resumed] = old.model_copy(
-                    update={"status": status, "details": old.details.model_copy(update=update)}
+                    update={
+                        "status": status,
+                        "details": old.details.model_copy(update=update),
+                        "handoff_request": carried,
+                    }
                 )
             else:
                 task_id = f"task-{str(turn_id)[:8]}-{planned.order}"
@@ -153,6 +158,7 @@ def _next_open_tasks(state: ConversationState, turn_id: TurnId) -> list[OpenTask
                     opened_turn=turn_id,
                     details=TaskDetails(**update),  # type: ignore[arg-type]
                     status=status,
+                    handoff_request=carried,
                 )
                 same = next((i for i, t in enumerate(tasks) if t.task_id == task_id), None)
                 if same is not None:

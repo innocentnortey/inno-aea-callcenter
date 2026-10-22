@@ -1,9 +1,10 @@
-"""The act nodes: specialist fan-out, escalation decision and handoff (A7b; graph-nodes section 9.5)."""
+"""The act nodes: specialist fan-out, escalation decision (plus the CAS-16 due move after a booking) and handoff (A7b; graph-nodes section 9.5)."""
 
 from __future__ import annotations
 
 import time
 from collections.abc import Sequence
+from datetime import date, datetime
 from typing import Final
 
 from langgraph.runtime import Runtime
@@ -12,6 +13,7 @@ from meridian.agent.context import GraphDeps
 from meridian.agent.routers import BRAKE_HALTS
 from meridian.agent.signals import emit_signal
 from meridian.agent.specialists.runner import scope_for
+from meridian.domain.actions import ActionKind
 from meridian.domain.common import Halt
 from meridian.domain.handoff import HandoffReason, HandoffRequest, HandoffResult
 from meridian.domain.specialists import (
@@ -43,7 +45,7 @@ from meridian.domain.turn import (
     TurnContext,
 )
 from meridian.policy.escalation import decide_escalation
-from meridian.policy.handoff import priority_for
+from meridian.policy.handoff import priority_for, window_start_of
 from meridian.policy.limits import Limits
 from meridian.privacy.redact import RedactionProfile, redact
 
@@ -208,6 +210,50 @@ def run_specialist(
     return update
 
 
+_ESCALATION_NODE: Final = "escalation"
+
+
+def _booked_window_start(
+    results: Sequence[KnowledgeResult | AccountResult | SchedulingResult],
+) -> datetime | None:
+    """The start of the window this turn booked, from the BOOKED action's stored `after` (date, window)."""
+    for result in results:
+        if not isinstance(result, SchedulingResult) or result.status != "written" or result.write is None:
+            continue
+        action = result.write.action
+        after = action.after or {}
+        if action.kind is ActionKind.BOOKED and "date" in after and "window" in after:
+            return window_start_of(date.fromisoformat(after["date"]), after["window"])
+    return None
+
+
+def _align_burning_due(state: ConversationState, ctx: TurnContext, deps: GraphDeps) -> None:
+    """CAS-16 option A (FU-identity-plan, finding F-2): a burning_ruled_out case opened on an earlier turn is due at the
+    start of the visit booked for it. The booking is already written, so a failed move is signalled, never raised."""
+    case = state.settled.open_case if state.settled is not None else None
+    if case is None or case.reason is not HandoffReason.BURNING_RULED_OUT:
+        return
+    try:
+        start = _booked_window_start(state.specialist_results)
+        if start is not None:
+            deps.cases.align_burning_due(ctx.ids.thread_id, start, ctx.ids.turn_id, ctx.now)
+    except Exception:
+        emit_signal(
+            ctx.ids,
+            SignalRecord(
+                name=SignalName.CASE_WRITE_FAILED,
+                turn_id=ctx.ids.turn_id,
+                thread_id=ctx.ids.thread_id,
+                request_id=ctx.ids.request_id,
+                run_tag=ctx.ids.run_tag,
+                node=_ESCALATION_NODE,
+                cause="write_error",
+                attempt=1,
+                recovered=False,
+            ),
+        )
+
+
 def escalation(
     state: ConversationState, runtime: Runtime[TurnContext], *, deps: GraphDeps
 ) -> EscalationUpdate:
@@ -224,7 +270,9 @@ def escalation(
         models_disabled=deps.ledger.models_disabled(),
         now=runtime.context.now,
     )
-    return {"escalation": decide_escalation(inputs)}
+    decision = decide_escalation(inputs)
+    _align_burning_due(state, runtime.context, deps)
+    return {"escalation": decision}
 
 
 def _change_request(

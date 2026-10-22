@@ -36,6 +36,7 @@ __all__ = [
     "phone_support_open",
     "priority_for",
     "promise_for",
+    "window_start_of",
 ]
 
 _CHICAGO: Final = ZoneInfo("America/Chicago")
@@ -183,6 +184,18 @@ def _window_text(window_start: datetime) -> str:
     if end is None:
         raise ValueError("window_start is not the start of an issued window")
     return f"{_clock_text(start)} – {_clock_text(end)}"
+
+
+def window_start_of(slot_date: date, window: str) -> datetime:
+    """The Chicago start of an issued appointment window on `slot_date` ("12:00-16:00" -> 12:00).
+
+    Raises ValueError for a window the issued schema does not have. CAS-16 option A: a burning_ruled_out case is due
+    at this time once its urgent visit is booked.
+    """
+    start = time.fromisoformat(window[:5])
+    if start not in _ISSUED_WINDOW_END:
+        raise ValueError("window is not an issued appointment window")
+    return datetime.combine(slot_date, start, tzinfo=_CHICAGO)
 
 
 def _make(

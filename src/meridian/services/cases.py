@@ -55,7 +55,12 @@ from meridian.domain.views import (
 from meridian.policy.handoff import case_due_at, promise_for
 from meridian.policy.texts import TEXTS, TextId, render
 from meridian.ports.runtime import Clock, UnitOfWork, UnitOfWorkFactory
-from meridian.services._case_actions import apply_in, record_activity_in, set_followup_in
+from meridian.services._case_actions import (
+    align_burning_due_in,
+    apply_in,
+    record_activity_in,
+    set_followup_in,
+)
 from meridian.services._case_rules import (
     LANE_ORDER,
     LIFECYCLE_WORD,
@@ -562,3 +567,13 @@ class CaseService:
             if not isinstance(recorded, CaseActionRejected):
                 tx.commit()
             return recorded
+
+    def align_burning_due(
+        self, thread_id: ThreadId, window_start: dt.datetime, turn_id: TurnId, now: dt.datetime
+    ) -> bool:
+        """CAS-16 option A: the burning_ruled_out case is due at its booked window start; True when it moved."""
+        with self._uow(write=True) as tx:
+            moved = align_burning_due_in(tx, thread_id, window_start, turn_id, now)
+            if moved:
+                tx.commit()
+            return moved
