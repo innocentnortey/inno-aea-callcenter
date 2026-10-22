@@ -5,7 +5,10 @@ from __future__ import annotations
 import re
 import uuid
 from collections import Counter
+from collections.abc import Callable
+from datetime import datetime
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any, cast
 
 import pytest
@@ -14,6 +17,7 @@ from fastapi import FastAPI
 from meridian.config import Settings
 from meridian.web.container import ContainerError
 from tests.api.openapi_check import load_contract
+from tests.journeys.browser import selectors as selectors_module
 from tests.journeys.browser.build import (
     BrowserPrerequisiteError,
     ProductionBuild,
@@ -30,20 +34,30 @@ from tests.journeys.browser.network import (
     teardown_failures,
     validate_exchanges,
 )
+from tests.journeys.browser.pages import DESKTOP, BrowserPage, BrowserRun
 from tests.journeys.browser.record import BrowserSession, browser_record_values
 from tests.journeys.browser.selectors import (
     CONTRACT_ROWS,
+    PARAMETRIC_KEYS,
+    PLACEHOLDER,
     SELECTOR_KEYS,
     SELECTORS_REVISION,
     SELECTORS_SOURCE,
+    SelectorRow,
+    fill_row,
+    locate,
+    locate_by,
+    locate_in,
     missing_selectors,
+    placeholder_count,
 )
-from tests.journeys.browser.server import browser_environ
+from tests.journeys.browser.server import INDEX_DIR_ENV, browser_environ
 from tests.journeys.j1.test_aea_57 import CHAT_NEEDS, TURN_NEEDS
 from tests.journeys.support.env import REPO_ROOT, journey_environment
 from tests.journeys.support.logtap import tap_logs
 from tests.journeys.support.record import FIELDS, build_record_data
-from tests.journeys.support.server import launch_server
+from tests.journeys.support.scripted_model import JourneyScript, scripted_overrides
+from tests.journeys.support.server import StepClock, launch_server
 from tests.journeys.support.steps import NEED_OWNERS, RunNote, StepCollector, StepResult, blocked_message
 
 pytestmark = pytest.mark.journey
@@ -285,3 +299,237 @@ def test_dev_params_and_origins_helpers() -> None:
     ]
     assert net.origins() == {"http://127.0.0.1:9"}
     assert net.dev_param_hits(allowed_urls=("/?signedin=1&role=owner",)) == ["/login?scenario=x"]
+
+
+AEA62_KEYS: tuple[str, ...] = (
+    "screen.scr2",
+    "screen.scr4",
+    "screen.scr5",
+    "screen.scr6",
+    "login.message.expired",
+    "chat.source",
+    "chat.source.toggle",
+    "chat.source.excerpt",
+    "chat.block.locate_prompt",
+    "chat.block.code_prompt",
+    "chat.block.account_card",
+    "chat.block.slot_card",
+    "chat.block.confirmation",
+    "chat.block.handoff",
+    "card.locate.name",
+    "card.locate.phone",
+    "card.locate.submit",
+    "card.code.input",
+    "card.code.submit",
+    "card.slot.window_by_id",
+    "card.slot.continue",
+    "settled.visit",
+    "settled.request",
+    "inbox.message.active",
+    "inbox.code",
+    "shell.role.customer",
+    "shell.role.representative",
+    "shell.role.supervisor",
+    "shell.role.owner",
+    "shell.header_name",
+    "role.panel",
+    "role.panel.wrong_role",
+    "role.panel.role_reset",
+    "queue.row",
+    "queue.row_by_ref",
+    "case.root",
+    "case.owner",
+    "case.promise",
+    "case.promise.open",
+    "brief.section_by_number",
+    "brief.heading",
+    "brief.item.tag",
+    "case.sources_tab",
+    "case.source_by_id",
+    "demo.reset",
+    "demo.reset_result",
+)
+
+
+@pytest.fixture
+def production_build(tmp_path: Path) -> ProductionBuild:
+    """Stand-in for the plugin's fixture in this module: a dist with only index.html (no npm, no Chrome)."""
+    dist = tmp_path / "dist"
+    dist.mkdir()
+    (dist / "index.html").write_text("<!doctype html><title>self-check</title>", encoding="utf-8")
+    return ProductionBuild(dist, "0" * 64, "self-check stand-in")
+
+
+@pytest.fixture
+def journey_chrome() -> Any:
+    """Stand-in for the plugin's fixture in this module: no browser starts; these runs open no page."""
+    return cast(Any, object())
+
+
+class _Target:
+    def locator(self, selector: str) -> tuple[str, ...]:
+        return ("css", selector)
+
+    def get_by_role(self, role: str, *, name: str | None, exact: bool) -> tuple[str, ...]:
+        return ("role", role, str(name), str(exact))
+
+    def get_by_label(self, text: str, *, exact: bool) -> tuple[str, ...]:
+        return ("label", text, str(exact))
+
+
+def _rows(*extra: SelectorRow) -> Any:
+    rows = [
+        SelectorRow("queue.row_by_ref", "css", '[data-case-ref="{value}"]', None, "self-check"),
+        SelectorRow("case.source_by_id", "role", "link", "{value}", "self-check"),
+        SelectorRow("brief.section_by_number", "label", "Brief section {value}", None, "self-check"),
+        SelectorRow("case.root", "css", "[data-testid=case]", None, "self-check"),
+        *extra,
+    ]
+    return MappingProxyType({r.key: r for r in rows})
+
+
+def test_selector_keys_cover_aea62() -> None:
+    assert len(AEA62_KEYS) == 46
+    assert len(set(AEA62_KEYS)) == 46
+    assert all(SELECTOR_KEYS.get(k) for k in AEA62_KEYS)
+    assert len(SELECTOR_KEYS) == 62
+    assert PARAMETRIC_KEYS == {
+        "card.slot.window_by_id",
+        "queue.row_by_ref",
+        "brief.section_by_number",
+        "case.source_by_id",
+    }
+    assert PARAMETRIC_KEYS <= set(SELECTOR_KEYS)
+    found = missing_selectors(AEA62_KEYS)
+    if not any(k in CONTRACT_ROWS for k in AEA62_KEYS):
+        assert len(found) == 46
+        assert all(m.owner == "UX session" for m in found)
+
+
+def test_locate_by_fills_one_placeholder(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(selectors_module, "CONTRACT_ROWS", _rows())
+    t = cast(Any, _Target())
+    got: Any = locate_by(t, "queue.row_by_ref", "MHC-C-0009")
+    assert got == ("css", '[data-case-ref="MHC-C-0009"]')
+    got = locate_by(t, "case.source_by_id", "src-12")
+    assert got == ("role", "link", "src-12", "True")
+    got = locate_by(t, "brief.section_by_number", "4")
+    assert got == ("label", "Brief section 4", "True")
+    got = locate(t, "case.root")
+    assert got == ("css", "[data-testid=case]")
+    got = locate_in(t, "case.root")
+    assert got == ("css", "[data-testid=case]")
+    row = SelectorRow("queue.row_by_ref", "css", '[data-case-ref="{value}"]', None, "self-check")
+    filled = fill_row(row, "56")
+    assert PLACEHOLDER not in filled.value
+    assert PLACEHOLDER in row.value
+
+
+def test_locate_by_refuses_misuse(monkeypatch: pytest.MonkeyPatch) -> None:
+    two = SelectorRow(
+        "card.slot.window_by_id", "css", "[data-a='{value}'][data-b='{value}']", None, "self-check"
+    )
+    monkeypatch.setattr(selectors_module, "CONTRACT_ROWS", _rows(two))
+    t = cast(Any, _Target())
+    with pytest.raises(ValueError):
+        locate(t, "queue.row_by_ref")
+    with pytest.raises(ValueError):
+        locate_by(t, "case.root", "x")
+    for bad in ('a"b', "", "a b", "x" * 65):
+        with pytest.raises(ValueError):
+            locate_by(t, "queue.row_by_ref", bad)
+    with pytest.raises(ValueError):
+        locate_by(t, "card.slot.window_by_id", "56")
+    with pytest.raises(ValueError):
+        fill_row(SelectorRow("queue.row_by_ref", "css", "[data-case-ref]", None, "self-check"), "1")
+    with pytest.raises(KeyError):
+        locate_by(t, "no.such.key", "1")
+
+
+def test_contract_rows_parametric_placeholders() -> None:
+    for key, row in CONTRACT_ROWS.items():
+        assert placeholder_count(row) == (1 if key in PARAMETRIC_KEYS else 0), key
+
+
+class _Shot:
+    def __init__(self) -> None:
+        self.paths: list[str] = []
+
+    def screenshot(self, *, path: str) -> None:
+        self.paths.append(path)
+        Path(path).write_bytes(b"png")
+
+
+def test_screenshot_element_shoots_only_the_target(tmp_path: Path) -> None:
+    shot = _Shot()
+    brun = BrowserRun(
+        run=cast(Any, None),
+        browser=cast(Any, None),
+        channel="chrome",
+        build=cast(Any, None),
+        shots_dir=tmp_path / "shots",
+        session=BrowserSession(),
+        test_name="t",
+    )
+    bp = BrowserPage(DESKTOP, cast(Any, None), cast(Any, None), cast(Any, None))
+    path = brun.screenshot_element(bp, cast(Any, shot), "account-card")
+    assert path == tmp_path / "shots" / "t-chrome-desktop-account-card.png"
+    assert shot.paths == [str(path)]
+    assert path.is_file()
+    assert brun.session.screenshots == [path]
+    with pytest.raises(ValueError):
+        brun.screenshot_element(bp, cast(Any, shot), "Account Card")
+    assert len(shot.paths) == 1
+    assert len(brun.session.screenshots) == 1
+
+
+def test_browser_journey_factory_run_options(
+    request: pytest.FixtureRequest,
+    browser_journey_factory: Any,
+    production_build: ProductionBuild,
+    tmp_path: Path,
+) -> None:
+    idx = tmp_path / "idx"
+    idx.mkdir()
+    script = JourneyScript()
+    seen: list[tuple[Any, ...]] = []
+
+    def builder(settings: Settings, sc: JourneyScript, clock: Callable[[], datetime] | None) -> Any:
+        seen.append((settings, sc, clock))
+        return scripted_overrides(settings, sc, wall_clock=clock)
+
+    with browser_journey_factory(
+        index_dir=idx, with_clock=True, script=script, overrides_for=builder
+    ) as brun:
+        assert brun.run.script is script
+        assert isinstance(brun.run.clock, StepClock)
+        assert len(seen) == 1
+        assert seen[0][0] is brun.run.settings
+        assert seen[0][1] is script
+        assert seen[0][2] is brun.run.clock
+        assert brun.run.settings.index_dir == idx
+        assert brun.run.settings.require_frontend is True
+        assert brun.run.settings.web_dist_dir == production_build.dist_dir
+        assert brun.build is production_build
+        assert brun.pages == []
+        assert brun.test_name == "test_browser_journey_factory_run_options"
+        if not request.config.getoption("--journey-record"):
+            assert brun.shots_dir == tmp_path / "shots"
+
+
+def test_browser_journey_factory_defaults_match_browser_journey(
+    browser_journey_factory: Any, tmp_path: Path
+) -> None:
+    with browser_journey_factory() as brun:
+        assert type(brun.run.script) is JourneyScript
+        assert brun.run.clock is None
+        assert brun.run.settings.index_dir != tmp_path / "idx"
+        assert brun.run.models
+
+
+def test_index_dir_env_is_the_settings_name(tmp_path: Path) -> None:
+    assert INDEX_DIR_ENV == "MERIDIAN_INDEX_DIR"
+    with journey_environment() as base:
+        environ = browser_environ(base.root, tmp_path / "dist")
+        environ[INDEX_DIR_ENV] = str(tmp_path / "idx")
+        assert Settings.from_env(environ).index_dir == tmp_path / "idx"
