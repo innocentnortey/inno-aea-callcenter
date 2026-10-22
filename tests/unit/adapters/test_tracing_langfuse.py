@@ -9,11 +9,13 @@ import re
 import sys
 import threading
 import time
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 
 from meridian.privacy.redact import Redacted, RedactionProfile
@@ -42,6 +44,10 @@ from tests.unit.adapters._tracing_doubles import (
 
 MODULE_PATH = Path(__file__).resolve().parents[3] / "src" / "meridian" / "adapters" / "tracing_langfuse.py"
 LIMIT_S = 0.050
+STUCK_WAIT_S = 5.0  # time allowed for the export worker to take the first 512-span batch and hang in export()
+DRIVER_BUDGET_S = (
+    15.0  # half HangingExporter's own 30 s release: a call that waited on export cannot finish within it
+)
 
 
 @pytest.fixture
@@ -68,27 +74,83 @@ class Timer:
             self.worst = max(self.worst, time.perf_counter() - start)
 
 
+class _ObservedHangingExporter(HangingExporter):
+    """HangingExporter that also records that the export worker is inside export() and stuck there."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.entered = threading.Event()
+
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        self.entered.set()
+        return super().export(spans)
+
+
 def test_export_never_blocks_hanging_exporter(sinks: list[Any]) -> None:
-    """failure (AC-3): a hanging exporter and a full queue never slow a turn; refused spans are counted."""
-    exporter = HangingExporter()
+    """failure (AC-3): a hanging exporter and a full queue never slow a turn; refused spans are counted.
+
+    Proven structurally: every call completes while the exporter is stuck inside export() and not
+    yet released; the median call stays under 50 ms.
+    """
+    exporter = _ObservedHangingExporter()
     sink, _e, _stub, _alerts = build_sink(sinks, exporter=exporter)
     sink.start()
     timer = Timer()
-    ids = turn_ids()
-    cm = sink.turn(ids)
-    handle = timer.call(cm.__enter__)
-    for i in range(1600):
-        timer.call(sink.node, handle, f"n{i}", 1, "ok")
-    for _ in range(50):
-        timer.call(sink.model_call, handle, call_record(), "in", "out")
-    timer.call(cm.__exit__, None, None, None)
-    print("max call ms", round(timer.worst * 1000, 2))
-    assert timer.worst < LIMIT_S
+    durations: list[float] = []
+    handles: list[Any] = []
+    stuck: list[bool] = []
+    failures: list[BaseException] = []
+    done = threading.Event()
+
+    def timed(fn: Any, *args: Any) -> Any:
+        start = time.perf_counter()
+        try:
+            return timer.call(fn, *args)
+        finally:
+            durations.append(time.perf_counter() - start)
+
+    def drive() -> None:
+        try:
+            cm = sink.turn(turn_ids())
+            handle = timed(cm.__enter__)
+            handles.append(handle)
+            for i in range(600):  # past 512 queued spans: the worker takes a batch and hangs in export()
+                timed(sink.node, handle, f"n{i}", 1, "ok")
+            stuck.append(exporter.entered.wait(STUCK_WAIT_S))
+            for i in range(600, 1600):  # every call from here runs while export() is stuck
+                timed(sink.node, handle, f"n{i}", 1, "ok")
+            for _ in range(50):
+                timed(sink.model_call, handle, call_record(), "in", "out")
+            timed(cm.__exit__, None, None, None)
+        except BaseException as exc:  # surfaced below; a thread's exception would otherwise vanish
+            failures.append(exc)
+        finally:
+            done.set()
+
+    driver = threading.Thread(target=drive, name="aea19-turn-driver", daemon=True)
+    driver.start()
+    finished = done.wait(DRIVER_BUDGET_S)
+    released_during_turn = exporter.release.is_set()
+    if not finished:
+        exporter.release.set()
+        driver.join(DRIVER_BUDGET_S)
+        pytest.fail(
+            "a turn call waited on the hanging exporter (the turn did not finish while export() was stuck)"
+        )
+    assert not failures, f"a turn call raised: {type(failures[0]).__name__}"
+    assert stuck == [True], "export() was never entered: the test cannot prove the calls ran while it hung"
+    assert not released_during_turn
+    durations.sort()
+    median = durations[len(durations) // 2]
+    print("max call ms", round(timer.worst * 1000, 2), "median call ms", round(median * 1000, 3))
+    assert median < LIMIT_S
+    handle = handles[0]
     dropped = sink.dropped_spans()
     assert dropped > 0
     assert dropped >= 1651 - (1024 + 512)
     assert sink.export_status(handle) == "failed"
     exporter.release.set()
+    driver.join(DRIVER_BUDGET_S)
     sink.flush()
     assert len(exporter.spans) + dropped == 1651
 

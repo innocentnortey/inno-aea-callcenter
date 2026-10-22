@@ -11,7 +11,6 @@ import pytest
 from tests.journeys import affected
 from tests.journeys.affected import closure, main, module_index, select_journeys
 
-REPO = Path(__file__).resolve().parents[2]
 J1 = "tests/journeys/j1/test_aea_57.py"
 J2 = "tests/journeys/j2/test_aea_51.py"
 
@@ -53,9 +52,17 @@ def tree(tmp_path: Path) -> Path:
     return _tree(tmp_path, FILES)
 
 
-def test_no_journey_yet_prints_zero_and_exits_0(capsys: pytest.CaptureFixture[str]) -> None:
+def test_no_journey_yet_prints_zero_and_exits_0(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """A tree with no journey files: any change selects none, prints 0 and exits 0 (whatever the real repo holds)."""
+    no_journeys = {
+        rel: text
+        for rel, text in FILES.items()
+        if not rel.startswith(("tests/journeys/j1/", "tests/journeys/j2/"))
+    }
+    root = _tree(tmp_path, no_journeys)
+    assert affected.journey_files(root) == []
     code = main(
-        ["--files", "pyproject.toml", "src/meridian/policy/limits.py", "--list-only", "--root", str(REPO)]
+        ["--files", "pyproject.toml", "src/meridian/policy/limits.py", "--list-only", "--root", str(root)]
     )
     assert code == 0
     assert "0 journeys affected" in capsys.readouterr().out.splitlines()
