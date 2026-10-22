@@ -373,3 +373,14 @@ Sources: DO-1 §6.4, §7, §9; DAT-19, DAT-20, WEB-2.
   Stage 9 load run); rate limits and the browser grace (the Stage 9 load re-measure, E-8); trace-export re-check interval
   (first real project-check failure).
 - **Not yet measured:** the public URL and the redeploy downtime, `pending: AEA-56`.
+
+## Hosting: Render (decided 2026-10-21, deployed 2026-10-22; supersedes Railway)
+
+Innocent moved this project to Render (approved total across the three moved apps: $40/month). AEA was never deployed on
+Railway (AEA-56 stayed gated), so wherever these files say "Railway variables", `railway.json` or `railway up`, read
+"Render environment group", the Render service and a mirror-driven deploy.
+
+- **Live service:** https://inno-aea-callcenter.onrender.com, Render service `srv-dbcogjjrjlhs73e68vhg` (Docker, Ohio, Starter $7, health check `/healthz`, one instance), 1 GB disk at `/data` (SQLite; the issued dataset in the image stays read-only). Settings live in the Render environment group `inno-aea-production` (demo login, provider keys, session secret, `MERIDIAN_*` paths).
+- **Flow:** GitLab `main` (source of truth) → GitLab push mirror (existing, id 113) → GitHub `innocentnortey/inno-aea-callcenter` (public) → Render auto-deploys on commit to `main`.
+- **Version stamp:** `scripts/agent_version.py` also reads `RENDER_GIT_COMMIT` (after Railway's variable, so the frozen AEA-50 test is unchanged); `/api/eval/latest` reports `current_agent_version` starting with the deployed commit.
+- **Known red test, not caused by the move:** `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script` fails on `main` before this move (the fixture inserts an older `reset_events` row, the test expects exactly one). Innocent declined changing the frozen test (2026-10-21). No full-suite run was done for the deploy at his instruction (2026-10-22); the stamp change was checked with the affected deploy tests.
