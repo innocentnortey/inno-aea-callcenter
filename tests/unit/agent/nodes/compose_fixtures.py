@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime as dt
+import re
+from collections.abc import Sequence
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -175,3 +177,11 @@ def open_booking_task(task_id: str = "t-1") -> OpenTask:
         details=TaskDetails(),
         status="open",
     )
+
+
+def join_uxr19(promise_text: str, due_label: str | None, extra_lines: Sequence[str]) -> str:
+    """The screen's join (UXR-19), copied from apps/web/src/screens/scr01/cards/parts/promise.ts joinPromise."""
+    lead = f"{promise_text}, {due_label}." if due_label else promise_text
+    if not re.search(r"[.!?]$", lead):
+        lead += "."
+    return " ".join([lead, *extra_lines])

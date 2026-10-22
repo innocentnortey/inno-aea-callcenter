@@ -32,6 +32,7 @@ from meridian.agent.nodes.compose_cards import (
     scheduling_cards,
     window_label,
 )
+from meridian.agent.nodes.compose_promise import promise_wire
 from meridian.domain import blocks as b
 from meridian.domain import identity as idn
 from meridian.domain import turn as tn
@@ -253,6 +254,7 @@ class ReplyComposer:
         )
         if p.live_queued:
             return b.LiveQueuedBlock(**base, reference=case.case_ref, promise_text=p.text)
+        wire = promise_wire(p, str(case.case_ref))
         return b.HandoffBlock(
             **base,
             card_id=f"handoff-{case.case_ref}",
@@ -260,10 +262,10 @@ class ReplyComposer:
             answered=None,
             reference=case.case_ref,
             variant=_VARIANT.get(p.policy_row, "nobody_online"),
-            promise_text=p.text,
+            promise_text=wire.promise_text,
             due_at=p.due_at,
-            due_label=p.due_label,
-            extra_lines=p.extra_lines,
+            due_label=wire.due_label,
+            extra_lines=wire.extra_lines,
             followup_chooser=_GENERAL_FOLLOWUP,
         )
 
@@ -284,12 +286,13 @@ class ReplyComposer:
             visit = b.SettledVisit.model_validate({**v.model_dump(), "window_label": window_label(v.window)})
         request = None
         if oc is not None:
+            wire = promise_wire(oc.promise, str(oc.case_ref))
             request = b.SettledRequest(
                 reference=oc.case_ref,
-                promise_text=oc.promise.text,
+                promise_text=wire.promise_text,
                 due_at=oc.promise.due_at,
-                due_label=oc.promise.due_label,
-                extra_lines=oc.promise.extra_lines,
+                due_label=wire.due_label,
+                extra_lines=wire.extra_lines,
                 live_queued=oc.live_queued,
                 followup=oc.followup,
             )
@@ -582,6 +585,7 @@ class ReplyComposer:
             for s in state.shown_slots
             if s.slot_id in draft.windows_shown
         )
+        wire = promise_wire(c.promise, str(c.case_ref))
         return b.ChangeRequestBlock(
             **ids.kw(),
             change=draft.change,
@@ -590,10 +594,10 @@ class ReplyComposer:
             wanted_text=draft.wanted_text,
             windows_shown=shown,
             reference=c.case_ref,
-            promise_text=c.promise.text,
+            promise_text=wire.promise_text,
             due_at=c.promise.due_at,
-            due_label=c.promise.due_label,
-            extra_lines=c.promise.extra_lines,
+            due_label=wire.due_label,
+            extra_lines=wire.extra_lines,
             cant_guarantee_line=None,
             phone_support_line=None,
         )
