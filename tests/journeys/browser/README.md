@@ -75,9 +75,26 @@ fixed label.
 
 ## Adding a browser journey later
 
-One file `tests/journeys/j<N>/test_aea_<NN>.py` with `pytest_plugins = ("tests.journeys.browser.plugin",)`, the
-`browser_journey` fixture, `browser_step(...)` for every step, and selectors only by key from `selectors.py`. A missing
-helper is a follow-up on AEA-58, merged first. A test file never calls `locator(` or `get_by_` itself.
+One file `tests/journeys/j<N>/test_aea_<NN>.py` with `pytest_plugins = ("tests.journeys.browser.plugin",)`,
+`browser_step(...)` for every step, and selectors only by key from `selectors.py`: `locate(page, key)`,
+`locate_in(parent, key)`, and `locate_by(target, key, value)` for a parametric key such as `queue.row_by_ref`.
+
+Use the `browser_journey` fixture for a run with an empty script and no clock. Use `browser_journey_factory` when
+the run needs options:
+
+```python
+with browser_journey_factory(
+    index_dir=idx, with_clock=True, script=my_script, overrides_for=my_builder
+) as brun:
+    bp = brun.open(DESKTOP)
+```
+
+`index_dir` reaches the app as `MERIDIAN_INDEX_DIR`; `with_clock=True` gives `brun.run.clock`, a `StepClock` the
+test moves forward; `overrides_for(settings, script, clock)` builds the scripted models (default: AEA-57's
+`scripted_overrides`). Every option is optional. `brun.screenshot_element(bp, target, label)` shoots one element
+only, for a card shown next to identity values.
+
+A missing helper is a follow-up on AEA-58, merged first. A test file never calls `locator(` or `get_by_` itself.
 
 ## Selectors
 
@@ -86,4 +103,4 @@ session's contract) and from nowhere else. To add one: find the row that names t
 `CONTRACT_ROWS` as a `SelectorRow` (an attribute selector is `css`; "role=X name=Y" is `role`; "input labelled Y" is
 `label`), put the row's exact id or heading in `row`, set `SELECTORS_REVISION` to the file's short SHA, and end the
 line with `# selectors.md <row> @ <rev>`. A state the file does not list stays absent, and the steps that need it
-report `blocked-on UX session`. Never invent a row, use copy text as a selector, or read `apps/web/src` to fill a gap.
+report `blocked-on UX session`. Never invent a row, use copy text as a selector, or read `apps/web/src` to fill a gap. A parametric key (`PARAMETRIC_KEYS`) gets a row whose `value` (or, for a role row, `name`) holds exactly one `{value}` placeholder; tests reach it only through `locate_by`.

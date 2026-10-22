@@ -1,4 +1,5 @@
-"""Devices, pages and the run object (AEA-58): contexts, screenshots, teardown validation (AC-7, PA-1)."""
+"""Devices, pages and the run object (AEA-58): contexts, screenshots (page and element, AEA-58-F1), teardown
+validation (AC-7, PA-1)."""
 
 from __future__ import annotations
 
@@ -16,7 +17,7 @@ from tests.journeys.browser.network import (
 )
 
 if TYPE_CHECKING:
-    from playwright.sync_api import Browser, BrowserContext, Page
+    from playwright.sync_api import Browser, BrowserContext, Locator, Page
 
     from tests.journeys.browser.build import ProductionBuild
     from tests.journeys.browser.record import BrowserSession
@@ -72,12 +73,22 @@ class BrowserRun:
         self.session.devices.add(device.name)
         return made
 
-    def screenshot(self, bp: BrowserPage, label: str) -> Path:
+    def _shot_path(self, bp: BrowserPage, label: str) -> Path:
         if not LABEL.fullmatch(label):
             raise ValueError(f"bad screenshot label: {label!r}")
         self.shots_dir.mkdir(parents=True, exist_ok=True)
-        path = self.shots_dir / f"{self.test_name}-{bp.device.name}-{label}.png"
+        return self.shots_dir / f"{self.test_name}-{bp.device.name}-{label}.png"
+
+    def screenshot(self, bp: BrowserPage, label: str) -> Path:
+        path = self._shot_path(bp, label)
         bp.page.screenshot(path=str(path), full_page=False)
+        self.session.screenshots.append(path)
+        return path
+
+    def screenshot_element(self, bp: BrowserPage, target: Locator, label: str) -> Path:
+        """Only the element (AEA-58-F1 A-3): a card shown next to identity values is shot alone."""
+        path = self._shot_path(bp, label)
+        target.screenshot(path=str(path))
         self.session.screenshots.append(path)
         return path
 
