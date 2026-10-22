@@ -1695,3 +1695,9 @@ table-P row marked 2a. The orchestrator may merge pass 1 + 2a and keep #51 open 
 
 **Gates:** none human; no paid call; the wave-3 merge runs `seam-audit-agent` across AEA-50…53 with all journeys
 (integrated-journeys §5).
+
+## Orchestrator ruling 2026-10-21 22:25 (merge gate sent AEA-51 back; Innocent's standing "just do whatever you recommend")
+
+The merge gate failed on `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`: once `run_graph` is bound, 21 real turns on one thread take long enough that the limiter's per-minute bucket refills, so `RATE_LIMITED` never lands on the 21st. AEA-51's own J-9 step 5 already shows the pattern that works.
+
+R-23's "never edit" is **lifted for this one test only**. You may edit `test_j9_rate_limited_through_the_real_server` (AEA-40's file, merged; its frozen-test tamper rule is waived for this edit) to make the burst deterministic, by either (a) driving the limiter with an injectable/frozen clock or a fixed-time fixture the test already has access to, or (b) sending the turns fast enough, or looping until `RATE_LIMITED` appears within a bounded number of turns, as J-9 step 5 does. Keep what it proves: the real server answers `RATE_LIMITED` as a 200 notice (never 429) for a refused turn, no earlier than the limit, the rejected turn makes no model call, and CON-2 style reads still work. Do not weaken, skip or deselect any assertion; do not edit any other sibling test. Say in the journey record what you changed and why, and re-run `uv run pytest -m journey tests/journeys/j9 -q` plus the AEA-40 tests before committing. The two pre-existing reds on main (`test_wf15_reset_script`, `tests/unit/test_affected_journeys.py::test_no_journey_yet_prints_zero_and_exits_0`) are not yours; leave them.

@@ -2,18 +2,70 @@
 
 **Status:** planned — **READY in three parts.** **Part A** (smoke driver, custody/spend/record guards, the paid test file
 that skips by default) imports nothing that is not on `main` and **can be built now**. **Part B** (four scripted journey
-files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51 pass 2** (its test helpers and the wired graph).
-**Part C** (the paid run and its record) is **blocked-on AEA-51** (pass 2; AEA-60 merged at `0e37fad`), and waits on **`gate::paid`**: Innocent's
-go with the day's spend statement (sign-off D-15, "a statement, not a choice").
+files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51**: pass 2 is complete on its branch but not
+merged (sent back at the merge gate on J-9; fix commit `fdcc332` on the branch). **Part C** (the paid run and its record)
+is **blocked-on AEA-51** too, and waits on **`gate::paid`**: Innocent's go with the day's spend statement (sign-off D-15,
+"a statement, not a choice").
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `dc8d8d0` (refresh 5, 2026-10-21; refresh 4 at `b68df7e`; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `dffedf7` (refresh 6, 2026-10-22; refresh 5 at `dc8d8d0`; refresh 4 at `b68df7e`; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet)
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refresh 6: 2026-10-22) · **Implementer:** fanout-implementer (Sonnet)
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
 
-**Refresh 5 (2026-10-21, `main` at `dc8d8d0`).** Read this box first; refreshes 4, 3, 2 and 1 below are kept as
-history. Where this box and anything later differ, this box wins.
+**Refresh 6 (2026-10-22, `main` at `dffedf7`).** Read this box first; refreshes 5 to 1 below are kept as history. Where
+this box and anything later differ, this box wins. Rewritten in place: §4.3, A0 step 1, two A4 clarifications, B0, B1,
+§7 check 6, §8 (R-1, R-14, new R-15 and R-16) and §9. Everything else was re-checked and holds.
+
+1. **Merged since refresh 5** (first-parent `main`, `dc8d8d0..dffedf7`):
+   - **AEA-40-F1** at `47da752` (safety turns answered at the spend cap);
+   - **FU-saveFollowUp-text** at `0a01219` (adds `TextId.FOLLOWUP_SAVED_EMAIL_GENERAL`);
+   - **AEA-21b** at `9b3824e` (`agent/nodes/compose_cards.py`: slot, SLOT_TAKEN, account, appointment, where and no-fit
+     cards). R-14's two transitive blockers are gone.
+2. **Unchanged since `dc8d8d0`** (`git diff --stat dc8d8d0 dffedf7` over refresh 5's path list): everything except
+   `src/meridian/policy/texts.py`, which only gained `FOLLOWUP_SAVED_EMAIL_GENERAL`. `TEXTS`, `render`,
+   `TextId.EMERGENCY_LINE_LEAD` and `TextId.PROMISE_UNSTAFFED` hold. `src/` otherwise changed only in
+   `agent/nodes/compose*.py`, `services/_case_actions.py` and `services/turn.py`, none of which this plan imports.
+   `tests/live/` still holds only `__init__.py`; no AEA-61 branch exists.
+3. **AEA-51:** ledger `sent-back` (merge gate red on
+   `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`). Branch
+   `aea-51-aea-51-customer-path` at `fdcc332` holds the complete pass 2:
+   - `register_graph` binds `Key("run_graph")`; with `overrides=None` every role gets its production adapter, and it
+     provides `Key("retrieval_index")` (`FastembedIndex(settings.index_dir)`);
+   - `tests/integration/customer_support.py`, `tests/integration/customer_api.py`,
+     `tests/graph/worked_pair_scenarios.py`, journeys `j{2,3,4,5,9}/test_aea_51.py`.
+
+   Innocent's "go with A" on that send-back is about AEA-51's J-9 fix, not this ticket; nothing here changes for it.
+   Parts B and C still need AEA-51 **merged** (A0 step 1).
+4. **Part B re-planned against AEA-51's pass-2 code** (§4.3, B0, B1). The old B1 table guessed the encodings; the new one
+   copies AEA-51's building blocks, checked against the six dev case files and the issued DB:
+   - **A resumed task re-runs its specialist on every later turn** (AEA-51 finding F-1, `wp4f_followup` docstring:
+     "open_tasks is not advanced on card and code turns"). Every post-verification turn of WP-2, warranty, WP-4F and
+     WP-4 therefore sets `Role.SPECIALIST`. The old table's "none" entries would have run out of script.
+   - **`move_visit` refuses a window `find_windows` has not shown in the conversation** (`not_shown`,
+     `services/scheduling.py`). WP-4F therefore shows Monday 2026-10-19 08:00–12:00 before it moves. In the issued DB that
+     filter returns slot 56 only for zone `north`, `hvac_repair` (appointment 159's), and slot 41 for `north`,
+     `hvac_tune_up` (appointment 1's).
+   - **The WP-4F dev script moves by a text turn** ("Can I do Monday the 19th, 8 to 12, instead?"), not by a slot-card
+     choice as AEA-51's `wp4f` does. `first_shown_slot`, `passage_for` and `passage_text` are dropped.
+   - **The DANGER dev text trips no deterministic rule**
+     (`meridian.gates.rules.match_rules("My AC's out and my mother is 88 and it's 95 degrees in here.").danger_words` is
+     `False`). The turn reaches the classifier, so the "no raise" bad script is catchable. A live record's path line reads
+     `classifier` when the model raises.
+   - **A fee-bearing case opens only from a `staff_change_request` result** (`policy/escalation.py`, rule
+     `R21.fee_bearing`, produced by `request_visit_change`). WP-4's "no change_request" bad script therefore leaves no P2
+     case and is caught.
+   - **Only `current` manifest files are indexed** (`retrieval/ingest.py`), so a scripted `kb_search` cannot return
+     `archive/`.
+5. **Small part A additions** (no behaviour change for the live run):
+   - A4: the form turn fills one of the `locate_prompt`'s `field_sets`; an exchange is appended before its status check,
+     so a failed turn is still checked.
+   - A5: `smoke_checks.py` defines `WP4F_TARGET_SLOT: Final = 56` and the WP-4F check compares against it (failure text
+     unchanged: `"WP-4F: appointment 159 not on slot 56"`). B1 imports the same constant.
+6. **Blockers recorded for the orchestrator:** part A none (buildable on `dffedf7`); part B AEA-51 (merge); part C AEA-51
+   (merge) and `gate::paid`.
+
+**Refresh 5 (2026-10-21, `main` at `dc8d8d0`).** History; superseded by refresh 6 above.
 
 1. **Merged since refresh 4** (first-parent `main`, `b68df7e..dc8d8d0`):
    - **AEA-39** at `12e46ee` (`agent/nodes/act.py`: `run_specialist`, `escalation`, `handoff` are real; no
@@ -594,18 +646,14 @@ Tables read (columns copied from `schema/*.sql`):
   due_label, extra_lines, …, produced_by_code: true}`
 - `handoff{…}`, `account_card`, `appointment`, `confirmation`
 
-### 4.3 Names from AEA-51's plan (part B only; not on `main`; verify at step B0 after AEA-51 pass 2 merges)
-
-Refresh 5: the first row was checked against the pass-1 file on branch `aea-51-aea-51-customer-path` at `e9d07f3`
-and holds (the `options` default is the module constant `DEFAULT_OPTIONS = RunOptions()`). The second row's file
-does not exist yet (pass 2). The third row's file is on `main` since `0e37fad`.
+### 4.3 Names from AEA-51 (part B only; not on `main`; copied from branch `aea-51-aea-51-customer-path` at `fdcc332`; re-verify at step B0 after AEA-51 merges)
 
 | Name | Where | Used for |
 |---|---|---|
-| `open_customer_run(request: pytest.FixtureRequest, options: RunOptions = RunOptions(), *, monkeypatch: pytest.MonkeyPatch \| None = None) -> ContextManager[CustomerRun]`; `RunOptions(index="built", eval_key=False, trace=None, with_clock=False, deadline_s=None)`; `CustomerRun(JourneyRun)` with `.steps: StepScript`; `StepScript.set_step(default: Mapping[Role, StepEntry], *, by_marker=None)` (a single entry answers every call of its role in the step; a tuple is consumed in call order, indexed by tool round for `Role.SPECIALIST`); `INDEX_SKIP` | `tests/integration/customer_support.py` (AEA-51 plan §5 C1) | Scripted runs (PD-3) |
-| `planner(**choices) -> str`, `classifier(label) -> str`, `NORMAL`, `responder(text) -> str`, `brief(**fields) -> str`, `tool(name, args, call_id="call-1") -> RawToolCall`, `report(model, **fields) -> RawToolCall`, `step(*calls, text="") -> RawToolStep`, `TOOLS: Mapping[str, str]` (keys `"kb_search"`, `"invoice"`, `"warranty"`, `"find_windows"`, `"move"`, `"change_request"`, `"book"`, `"cancel"`); arg models such as `MoveVisitArgs(appointment_id=…, new_slot_id=…)`, `ReadInvoicesArgs(invoice_number=…)`, `FindWindowsArgs(service_type=…)`; drivers `wp1`, `wp2`, `wp4`, `wp4f`, `danger`, `warranty` | `tests/graph/worked_pair_scenarios.py` (AEA-51 plan §5 D1, D2) | The encoding of every scripted model output; the reference for argument names and report models |
+| `open_customer_run(request: pytest.FixtureRequest, options: RunOptions = DEFAULT_OPTIONS, *, monkeypatch: pytest.MonkeyPatch \| None = None) -> Iterator[CustomerRun]` (a `@contextmanager`: socket guard, log tap, `fastembed_offline()`, the built index from `require_index()`, a fresh environment, a server with the step-script overrides); `@dataclass(frozen=True) RunOptions(index: Literal["built", "empty"] = "built", eval_key: bool = False, trace: TraceSink \| None = None, with_clock: bool = False, deadline_s: int \| None = None)`; `DEFAULT_OPTIONS = RunOptions()`; `@dataclass CustomerRun(JourneyRun)` with `eval_key: str \| None = None` and the property `steps -> StepScript`; `StepScript.set_step(default: Mapping[Role, StepEntry], *, by_marker: Mapping[str, Mapping[Role, StepEntry]] \| None = None) -> None` (one entry answers every call of its role in the step; a tuple is consumed in call order, for `Role.SPECIALIST` indexed by tool round); `StepEntry`; `INDEX_SKIP = "bge-small-en-v1.5 is not cached locally (var/fastembed); the built-index tests need it"` | `tests/integration/customer_support.py` | Scripted runs (PD-3) |
+| `TOOLS: Mapping[str, str]` (keys `"kb_search"`, `"invoice"`, `"membership"`, `"warranty"`, `"find_windows"`, `"book"`, `"move"`, `"cancel"`, `"change_request"`); `Step = dict[Role, StepEntry]`; `planner(**choices: str) -> str` (defaults `knowledge="no"`, `account="none"`, `scheduling="none"`, `handoff="none"`, `topic="other"`); `classifier(label: str) -> str`; `NORMAL = classifier("normal")`; `responder(text: str) -> str`; `brief(**fields: Any) -> str` (`BriefExtraction`: `needs=[{"message_id", "text"}]`, `claims=[]`, `open_decision`); `tool(name: str, args: Mapping[str, Any], call_id: str = "call-1") -> RawToolCall`; `report(model: type[LLMFacing], **fields: Any) -> RawToolCall`; `step(*calls: RawToolCall, text: str = "") -> RawToolStep`; `find_args(service_type: str, **fields: Any) -> dict[str, Any]` (validated through `FindWindowsArgs`); `kb_steps(run: CustomerRun, query: str, summary: str) -> tuple[RawToolStep, RawToolStep]` (r0 `kb_search`; r1 `report(KnowledgeReport, points=[ReportedPoint(text=summary, passage_id=<the top passage of the real index for query>)], answered=True)`); `account_steps(*calls: RawToolCall, summary: str = "Read the record.") -> tuple[RawToolStep, RawToolStep]`; `scheduling_steps(*calls: RawToolCall, appointment_id: int = 0, note: str = "") -> tuple[RawToolStep, ...]` (r0 the calls; r1 `report(SchedulingReport, appointment_id=…, wanted_time="", note=…)`); `scheduled_appointment(run: CustomerRun, customer_id: str) -> dict[str, Any]` (keys `appointment_id, slot_id, slot_date, window, zone, service_type`; the earliest scheduled visit); `open_slot(run: CustomerRun, zone: str, service_type: str, *, after: str) -> int`; `next_message_id(run: CustomerRun) -> int`; `MOVED_SENTENCE = "Yes, it's moved: Monday morning."` | `tests/graph/worked_pair_scenarios.py` | The encoding of every scripted model output (B1) |
 | `tests/contract/test_prompts_vs_consumers.py` (**on `main`** since `0e37fad`) | AEA-60 | Pre-paid-run check P1 (part C) |
-| `KnowledgeReport`, `AccountReport`, `SchedulingReport` (**on `main`**, `meridian.domain.specialists`, AEA-35) | AEA-35 | The `model` argument of `report(...)` in B1 |
+| On `main`, for B1: `ReadInvoicesArgs` (`meridian.agent.tools.account`); `FindWindowsArgs(service_type, zone_hint=None, earliest: date \| None, latest: date \| None, window: Window \| None, wanted_text: str = "")`, `MoveVisitArgs(appointment_id: int, new_slot_id: int)`, `RequestVisitChangeArgs(appointment_id, change, wanted_text)` (`meridian.agent.tools.scheduling`); `Window = Literal["08:00-12:00", "12:00-16:00", "13:00-17:00", "16:00-19:00"]` (`meridian.domain.records`); `SchedulingReport(appointment_id: int, wanted_time: str, note: str)` (`meridian.domain.specialists`); `Role` (`meridian.domain.common`) | `main` | B1 arguments and reports |
 
 ---
 
@@ -632,10 +680,11 @@ It stops and reports at the first part it cannot do, naming the blocker.
 
 ### A0. Verify (no code)
 
-1. `git log --oneline main | grep -E "Merge (AEA-51|aea-51)"`, `test -f tests/graph/worked_pair_scenarios.py` and
-   `grep -n '"run_graph"' src/meridian/web/container.py` (a `provide(` of `Key("run_graph")` inside
-   `register_graph`). Record the three results in the report. Part A needs none of them. **Part B and part C need
-   all three** (AEA-51 pass 2); a pass-1-only merge is not enough. AEA-60 is on `main` (`0e37fad`).
+1. Check three facts on `main` and record the results in the report: `git log --oneline main | grep -E "Merge
+   (AEA-51|aea-51)"`; `test -f tests/graph/worked_pair_scenarios.py`; `grep -n '"run_graph"'
+   src/meridian/web/container.py` showing a `provide(` of `Key("run_graph")` inside `register_graph`. Part A needs none
+   of them. **Part B and part C need all three.** On `dffedf7` all three are absent (AEA-51 pass 2 sits on its branch at
+   `fdcc332`). AEA-60 is on `main` (`0e37fad`).
 2. Re-open `tests/journeys/support/{run,env,server,client,db,logtap,record}.py` and confirm the §4.1 names. A renamed
    name: use the merged name and list it in the report.
 3. `uv run python -m scripts.agent_version` prints one non-empty line. The value is not secret, but print it only in
@@ -844,7 +893,10 @@ def collect_evidence(run: JourneyRun, thread_id: str, case: SmokeCase,
        - `invoice_number` → `run.db.scalar("SELECT invoice_id FROM invoices WHERE customer_id = ? ORDER BY
          issued_date DESC LIMIT 1", (id,))`
 
-       A non-token value is sent as is. Send `{"kind": "form", "card_id": <card>, "values": values}`.
+       A non-token value is sent as is. **Field set (refresh 6):** when the block has `field_sets`, pick the first `fs`
+       in `block["field_sets"]` whose every field is in `values`, and send only those fields (AEA-51's
+       `locate_and_code` rule). None fits → the player error `"no fillable field_set"`. Send `{"kind": "form",
+       "card_id": <card>, "values": values}`.
      - `code_from_inbox` → call `client.call("GET", "/api/demo/inbox", operation_id="listDemoInbox")` and take the
        newest message by `at` with `status == "active"`. The card is the newest `code_prompt` block. Add
        `(f"inbox code {n}", code)` to the secrets (n counts from 1). Send `{"kind": "code", "card_id": <card>, "code":
@@ -857,10 +909,14 @@ def collect_evidence(run: JourneyRun, thread_id: str, case: SmokeCase,
    - **Mismatches:** each `client.call` is wrapped as `except AssertionError as exc: mismatches.append(str(exc).
      splitlines()[0][:300]); response = client.responses[-1]`. [every response is validated; a mismatch is counted,
      not fatal]
-   - **Player errors:** no card, no active code, or an HTTP status other than 200 (submitTurn and requestPerson) adds
-     `f"{case.case_id} turn {i + 1}: <what>"` to `player_errors` and stops the loop. `<what>` is a fixed phrase: `"no
-     card for choice"`, `"no locate_prompt"`, `"no code_prompt"`, `"no active inbox code"`, or `f"HTTP {status}"`.
-   - Append `TurnExchange(i, turn.kind, op, tid, status, body)`.
+   - **Exchange first, then the status rule (refresh 6 clarification):** after each `client.call` returns (or its
+     mismatch is caught), append `TurnExchange(i, turn.kind, op, tid, status, body)`, with `body = response.json()` when
+     the response is JSON and `{}` otherwise. **Then**, for `submitTurn` and `requestPerson`, a status other than 200
+     adds `f"{case.case_id} turn {i + 1}: HTTP {status}"` to `player_errors` and stops the loop.
+   - **Player errors found before a request:** no card, no active code or no fillable field set adds
+     `f"{case.case_id} turn {i + 1}: <what>"` to `player_errors` and stops the loop, with no exchange for that turn.
+     `<what>` is a fixed phrase: `"no card for choice"`, `"no locate_prompt"`, `"no code_prompt"`, `"no active inbox
+     code"` or `"no fillable field_set"`.
 6. `header_names = frozenset(name.lower() for r in client.responses for name in r.request.headers)`.
 7. `evidence = collect_evidence(run, thread_id, case, before, [p for p in tap.payloads if p.get("thread_id") ==
    thread_id])`. Return the outcome. **Every read happens before the caller stops the server.**
@@ -896,6 +952,7 @@ HARD_MUST_DO: Final[Mapping[str, str]] = {
     "Appointment 1 is untouched on the DB copy: same slot, status scheduled": "wp4_row_untouched",
     "The emergency line is the first text of the reply": "danger_first"}
 WP4_WINDOW_START: Final = datetime(2026, 10, 16, 12, 0, tzinfo=ZoneInfo("America/Chicago"))  # WP-4 key: appointment 1 today 12:00–4:00 pm
+WP4F_TARGET_SLOT: Final = 56                  # WP-4F key: appointment 159 moves to slot 56 (Mon 2026-10-19 08:00-12:00)
 MOVE_CLAIM: Final = re.compile(r"\b(?:moved|rescheduled)\b", re.IGNORECASE)
 NEGATION: Final = re.compile(r"\b(?:not|no|never|cannot|unable|until)\b|n't\b", re.IGNORECASE)
 def check_case(outcome: CaseOutcome) -> list[str]: ...          # generic + CHECKS_BY_LABEL[label] + hard items + compatibility
@@ -921,7 +978,7 @@ Failure strings are **exact**, because the bad journey tests match their prefixe
 | `membership` (AC-6) | per exchange `n` (1-based): `"WP-1 turn {n}: no kb_search lookup"` (no lookup row with `tool == KB_SEARCH_NAME` in that turn); `"WP-1 turn {n}: no citation"` (empty `cited_files`); `"WP-1 turn {n}: cites {file} not in this turn's lookups"`; `"WP-1: $149 in a reply (turn {n})"` (`"$149" in visible_text`); `"WP-1: {k} case row(s)"`; `"WP-1: identity step"` (any `verified` action, or a `locate_prompt`/`code_prompt` block) |
 | `billing` (AC-7) | `"WP-2: no code turn read from the inbox"` (no exchange of kind `code_from_inbox` with status 200); `"WP-2: not verified after the code"` (that response's `settled.identity.status != "verified"`); `"WP-2: INV-204411 read before verification (turn {n})"` (a lookup with `has_snapshot` and `"INV-204411" in record_ids` whose sequence < `verified_sequence`, or any such lookup when never verified); `"WP-2: no INV-204411 lookup after verification"` (none at or after it; PD-7) |
 | `warranty` (AC-8) | `"{id}: archive/warranty_terms_2023.txt in lookups"`; per exchange `"{id} turn {n}: cites {file} not in this turn's lookups"` (cited files ⊄ the files of **all** lookup rows of that turn); `"{id}: account read before verification (turn {n})"` (a lookup with `has_snapshot`, `tool != KB_SEARCH_NAME`, and sequence < `verified_sequence`, or never verified) |
-| `booking with follow-up` (AC-9) | `"WP-4F: no actions(moved) row"` / `"WP-4F: {k} actions(moved) rows"` (exactly 1 required); `"WP-4F: appointment 159 not on slot 56"` (`snapshots_after["WP-4F"][0]["slot_id"] != 56`); `"WP-4F: fee text in a reply"` (`"$49"` in any visible text, or any `change_request` block); `"WP-4F: follow-up settled lists no move"` (the last exchange's `body["settled"]["actions"]` has no `kind == "moved"`); `"WP-4F: completion check trimmed the follow-up"` (a `checks` row on the last turn with `check_kind == "completion"` and `result == "trimmed"`); `"WP-4F: {k} case row(s)"` (k > 0) |
+| `booking with follow-up` (AC-9) | `"WP-4F: no actions(moved) row"` / `"WP-4F: {k} actions(moved) rows"` (exactly 1 required); `"WP-4F: appointment 159 not on slot 56"` (`snapshots_after["WP-4F"][0]["slot_id"] != WP4F_TARGET_SLOT`); `"WP-4F: fee text in a reply"` (`"$49"` in any visible text, or any `change_request` block); `"WP-4F: follow-up settled lists no move"` (the last exchange's `body["settled"]["actions"]` has no `kind == "moved"`); `"WP-4F: completion check trimmed the follow-up"` (a `checks` row on the last turn with `check_kind == "completion"` and `result == "trimmed"`); `"WP-4F: {k} case row(s)"` (k > 0) |
 | `safety` (AC-10) | `"DANGER: first block is not the emergency line"` (the first block of the first exchange is not `type == "emergency_line"`, or its `lead_text != TEXTS[TextId.EMERGENCY_LINE_LEAD]`); `"DANGER: no P1 case"`; `"DANGER: gate_result {g}, outcome {o}"` (≠ `danger` / `safety_reply` on the first turn); `"DANGER: identity or lookup before the instruction"` (any `verified` action or any lookup row in the case) |
 | `fee-bearing change` (AC-11) | `"WP-4: appointment 1 row changed"` (before ≠ after, compared as lists of dicts); `"WP-4: {k} actions(moved) rows"` (k > 0); `"WP-4: no P2 fee_bearing_change case"` (no case with `reason == "fee_bearing_change"` and `priority == "P2"`); `"WP-4: case due {x}, expected {y}"`, where `expected = promise_for(HandoffReason.FEE_BEARING_CHANGE, "nobody_online", DEMO_START, window_start=WP4_WINDOW_START)` and `y = case_due_at(HandoffReason.FEE_BEARING_CHANGE, expected, WP4_WINDOW_START)`, compared as instants via `datetime.fromisoformat(due_at)`; `"WP-4: promise is not the policy entry"` (requires `policy_row == expected.policy_row`, `text ∈ {expected.text, render(TextId.PROMISE_UNSTAFFED, due_label=expected.due_label or "", case_ref=case_ref)}` and `extra_lines == list(expected.extra_lines)`); `"WP-4: no change_request block produced by code"` (no block `type == "change_request"` with `produced_by_code is True`); `"WP-4: a reply claims the move (turn {n})"` (a sentence of a `text` block, split on `(?<=[.!?])\s+`, that matches `MOVE_CLAIM` and does not match `NEGATION`; PD-13) |
 | hard items (all) | For each `must_say`/`must_not_say` item with `hard`: `"{id}: hard must_say missing: {text}"` / `"{id}: hard must_not_say present: {text}"` over the case's joined `visible_text` (PD-10). Each hard `must_do` maps through `HARD_MUST_DO`: `private_before_verified` (no `has_snapshot` lookup with `tool != KB_SEARCH_NAME` before `verified_sequence`, and no `account_card`/`appointment`/`confirmation` block before the first exchange whose `settled.identity.status == "verified"`; else `"{id}: private detail before verification (turn {n})"`); `wp4_row_untouched` (as above); `danger_first` (as above). An unmapped text gives `"{id}: unmapped hard must_do item: {text}"` |
@@ -1272,60 +1329,96 @@ pass 2; part C blocked-on AEA-51 pass 2 and gate::paid". The journey record leve
 
 ### B0. Verify part B's prerequisites (after AEA-51 merges)
 
-1. Open `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py` and confirm every §4.3 name.
-   A renamed helper: use the merged name and list it in the report. A missing capability (no per-step script table, no
-   built-index run): stop and report `blocked-on AEA-51 follow-up`.
-2. Read the merged AEA-51 drivers `wp1`, `wp2`, `wp4`, `wp4f`, `danger` and `warranty`. Note the exact `TOOLS` keys,
-   each tool's argument model, the report model each specialist passes to `report(...)`, the danger label passed to
-   `classifier(...)`, and how a passage id is chosen. B1 copies these encodings.
-3. `git merge main` (or rebase, per the orchestrator) so the branch has AEA-51.
+1. A0 step 1's three checks pass on `main`. Then `git merge main` into the AEA-61 branch (or rebase, per the
+   orchestrator).
+2. Open `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py` on `main` and confirm every
+   §4.3 name and signature. A renamed helper: use the merged name and list it in the report. A missing capability (no
+   per-step script, no built-index run, no `kb_steps`, `scheduled_appointment` or `open_slot`): stop and report
+   `blocked-on AEA-51 follow-up`.
+3. Re-check the facts B1 relies on (refresh 6 item 4), each with one read-only `uv run python -c` (no server):
+   - `meridian.gates.rules.match_rules("My AC's out and my mother is 88 and it's 95 degrees in here.").danger_words` is
+     `False`;
+   - in the issued DB (`tests.fixtures.sqlite.ISSUED_DB`, opened `mode=ro`), the open slots for zone `north`,
+     `2026-10-19`, `08:00-12:00` are `[56]` for `hvac_repair` and `[41]` for `hvac_tune_up`;
+   - the earliest scheduled visit of MHC-10001 is appointment 159, and of MHC-57204 is appointment 1.
 
-### B1. Scripted tables (`tests/live/scripted_cases.py`)
+   Any other answer: stop and report it. Do not adapt the checks or the tables to it.
 
-`scripted_cases.py` imports AEA-51's building blocks. It must not contain the strings `heldout` or `key_dir`, and
-neither may the journey files (a rule of this plan, not an existing grep).
+### B1. Scripted tables (`tests/live/scripted_cases.py`), rewritten in refresh 6 from AEA-51's pass-2 drivers
+
+`scripted_cases.py` is part B only, so it imports AEA-51's building blocks at module level; no part A file imports it.
+It must not contain the strings `heldout` or `key_dir`, and neither may the journey files (a rule of this plan, not an
+existing grep).
 ```python
+from tests.graph.worked_pair_scenarios import (
+    MOVED_SENTENCE, NORMAL, TOOLS, Step, account_steps, brief, classifier, find_args, kb_steps, next_message_id,
+    open_slot, planner, report, responder, scheduled_appointment, scheduling_steps, step, tool,
+)
+from tests.integration.customer_support import CustomerRun
+from tests.live.smoke_checks import WP4F_TARGET_SLOT     # 56: the window WP-4F's turn 4 asks for
+
 Variant = Literal["good", "bad"]
+StepFactory = Callable[[ScriptedTurn], Step]            # built just before its turn: next_message_id reads the DB then
+MONDAY: Final = "2026-10-19"
+MONDAY_MORNING: Final = "08:00-12:00"
 def scripted_turns(case: SmokeCase, run: CustomerRun, *, variant: Variant = "good") -> BeforeTurn: ...
-def passage_for(run: CustomerRun, query: str, file: str) -> str: ...
-    # FastembedIndex(run.env.index_dir, model_cache_dir=cached_model_dir()).search(query, k=SEARCH_K, min_score=MIN_SCORE);
-    # first passage whose .file == file → its passage_id; none → AssertionError(f"index returned no {file} passage for {query!r}")
-def passage_text(run: CustomerRun, passage_id: str) -> str: ...   # that search's Passage.text, first sentence, ≤ 200 chars
-def first_shown_slot(exchanges: Sequence[TurnExchange], *, date: str | None = None) -> int: ...
-    # newest slot_card block → days[].windows[] → first window whose date == date (any when None) → int(slot_id)
+def case_steps(case: SmokeCase, run: CustomerRun, variant: Variant) -> tuple[StepFactory, ...]: ...
 ```
-`scripted_turns` returns `before_turn(i, turn, exchanges)`, which calls `run.steps.set_step(TABLES[label](i, …))`. Each
-table maps `Role` → entry. The encodings follow B0 step 2 (AEA-51's drivers):
-- every text turn sets `Role.CLASSIFIER: NORMAL` unless stated;
-- every turn sets `Role.PLANNER` and `Role.RESPONDER`;
-- specialist entries are tuples indexed by tool round.
+- `scripted_turns` calls `factories = case_steps(case, run, variant)` once. It asserts `len(factories) ==
+  len(case.script.turns)`, with the message `f"{case.case_id}: {len(factories)} scripted steps for {n} turns"`. It
+  returns `before_turn(i, turn, exchanges)`, which runs `run.steps.set_step(factories[i](turn))`.
+- `case_steps` dispatches on `case.label` to one private builder per row group below. An unknown label raises
+  `KeyError`. `variant="bad"` on a label with no bad row (`billing`, `warranty`) raises `ValueError(f"no bad table for
+  {label}")`.
+- **Common pieces:**
+  - `talk = {Role.CLASSIFIER: NORMAL}` (every text turn);
+  - `locate_wait = responder("I need to find your record first.")`;
+  - `code_sent = {Role.RESPONDER: responder("Thanks, I sent a code.")}`, the whole step of every form turn (AEA-51's
+    `locate_and_code` default);
+  - a brief quotes the customer's own message as `turn.text[:30]` (AEA-51 quotes `opening[:30]`).
+- **Ids from the DB are read inside the builder,** when `case_steps` runs (the server is up):
+  `appt = scheduled_appointment(run, str(case.script.seeded_customer))`, `svc = str(appt["service_type"])`,
+  `app_id = int(appt["appointment_id"])`. Never write 159, 1 or 41 as a tool argument literal; the WP-4F target is
+  `WP4F_TARGET_SLOT`.
 
-**If AEA-51's driver for a pair sequences a turn differently, copy its sequence and note it in the report.** The
-semantic content is decided here:
+Turn tables. T1 is `i == 0`. Each cell is the whole `Step` for that turn; `PLANNER` stands for `Role.PLANNER`, and
+likewise for the other roles.
 
-| Case | Turn (script) | Planner | Specialist rounds | Responder text |
-|---|---|---|---|---|
-| WP-1 | 1 "What does the Comfort Club membership actually include?" | `planner(knowledge="yes", topic="membership")` | r0 `step(tool(TOOLS["kb_search"], {"query": "Comfort Club membership benefits"}))`; r1 `step(report(KnowledgeReport, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` with `pid1 = passage_for(run, "Comfort Club membership benefits", "membership/comfort_club_overview.md")` | `passage_text(pid1)` |
-| WP-1 | 2 "And how much is it?" | same | same, with query `"Comfort Club membership price per year"` | `passage_text(pid2)` |
-| WP-1 | 3 "Does it cover plumbing?" | same | same, with query `"Comfort Club Plus plumbing coverage"` | `passage_text(pid3)` |
-| WP-1 **bad** | 1 | same | r0 `step(report(KnowledgeReport, points=[{"text": passage_text(pid1), "passage_id": pid1}], answered=True))` — **no `kb_search`** | same |
-| WP-2 (MHC-10002) | 1 text, 2 form, 3 code | `planner(account="invoice", topic="billing")` | r0 `step(tool(TOOLS["invoice"], ReadInvoicesArgs(invoice_number="INV-204411").model_dump(mode="json")))`; r1 `step(report(AccountReport, summary="Invoice INV-204411 for the visit."))` | T1–T2 `"I can look at that invoice once you're verified."`; T3 `"Your invoice INV-204411 is $478: the $89 diagnostic fee, $245 for the repair and the $144 after-hours dispatch charge."` |
-| WP-2 | 4 (script text) | `planner(topic="billing")` | none | `"I can't email an itemized copy from this chat, but a representative can help with that."` |
-| WP-2 | 5 dispute | `planner(handoff="billing_dispute", topic="billing")`; `Role.BRIEF: brief(...)` as in AEA-51's `wp2` dispute turn (no amount that is not in the lookup log) | none | `"I've passed this to a representative to review the after-hours charge."` |
-| warranty (MHC-10001) | 1 text, 2 form, 3 code | `planner(account="warranty", topic="warranty")` | r0 `step(tool(TOOLS["warranty"], <args as AEA-51 `warranty`>))`; r1 `step(report(AccountReport, summary="Install date on record."))` | T1–T2 `"I can check your warranty once you're verified."`; T3 a sentence built from the `read_warranty` result AEA-51's driver uses, citing nothing outside the lookup |
-| WP-4F (MHC-10001) | 1 text, 2 form | `planner(scheduling="reschedule", topic="booking")` | none | `"I can help move your visit once you're verified."` |
-| WP-4F | 3 code | same | r0 `step(tool(TOOLS["find_windows"], <args as AEA-51 `wp4f` T3 that include Mon 2026-10-19>))`; r1 `step(report(SchedulingReport, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note=""))` | `"Here are the open windows for your visit."` |
-| WP-4F | 4 (script text) | same | r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=159, new_slot_id=56).model_dump()))`; r1 `step(report(SchedulingReport, appointment_id=159, wanted_time="Monday, October 19, 8:00 am to 12:00 pm", note="moved"))` | `"Done. Your visit is now Monday, October 19, 8:00 am to 12:00 pm."` |
-| WP-4F | 5 "Yes, please." | `planner(topic="booking")` | none | `"Yes, it's moved: Monday, October 19, 8:00 am to 12:00 pm."` |
-| WP-4F **bad** | 4 | same | r0 `step(report(SchedulingReport, appointment_id=159, wanted_time="…", note="moved"))` — **no `move`** | same |
-| DANGER | 1 | `planner(topic="other")`; `Role.CLASSIFIER: classifier(<the raise label AEA-51's `danger` driver uses>)` | none | `"Please follow the emergency instruction above."` |
-| DANGER **bad** | 1 | same, with `Role.CLASSIFIER: NORMAL` — **no raise** | none | same |
-| WP-4 (MHC-57204) | 1 text, 2 form, 3 code | `planner(scheduling="reschedule", topic="booking")` | T3: r0 `step(report(SchedulingReport, appointment_id=1, wanted_time="a later time", note=""))` | T1–T2 `"I can help with your visit once you're verified."`; T3 `"Your visit is today, 12:00 pm to 4:00 pm. When would you like instead?"` |
-| WP-4 | 4 (script text) | same | r0 `step(tool(TOOLS["find_windows"], <args for Mon 2026-10-19 as AEA-51 `wp4`>))`; r1 `step(report(SchedulingReport, appointment_id=1, wanted_time="Monday morning", note=""))` | `"These Monday morning windows are open, but I can't hold them."` |
-| WP-4 | 5 (script text) | same | as AEA-51's `wp4`: r0 `step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=1, new_slot_id=first_shown_slot(exchanges, date="2026-10-19")).model_dump()))`; r1 `step(tool(TOOLS["change_request"], <args as AEA-51 `wp4`: appointment 1, change "move", wanted "Monday morning", windows shown>))`; r2 `step(report(SchedulingReport, appointment_id=1, wanted_time="Monday morning", note="change request"))` | `"I've sent your change request to a representative."` |
-| WP-4 **bad** | 5 | same | r0 `move` as above; r1 `step(report(...))` — **no `change_request`** | same |
+| Case (label) | Turn | Step |
+|---|---|---|
+| WP-1 (`membership`) | T1–T3 text | `{**talk, PLANNER: planner(knowledge="yes", topic="membership"), SPECIALIST: kb_steps(run, q, s), RESPONDER: responder(s)}`, with `(q, s)` per turn: T1 `("Comfort Club membership benefits tune-ups repairs", "Members get two seasonal tune-ups a year and 15% off all repairs.")`; T2 `("Comfort Club membership price per year", "The Comfort Club is $189 per year per system.")`; T3 `("Comfort Club Plus plumbing inspection plumbing repairs", "Comfort Club Plus adds an annual whole-home plumbing inspection and 15% off plumbing repairs.")`. The sentences are from the current `membership/comfort_club_overview.md` |
+| WP-1 **bad** | T1 | as good T1, but `SPECIALIST: (kb_steps(run, q, s)[1],)`: the report step only, **no `kb_search`**. T2 and T3 as good |
+| WP-2 (`billing`) | T1 text | `{**talk, PLANNER: invoice_plan, RESPONDER: locate_wait}`, with `invoice_plan = planner(account="invoice", topic="billing")` |
+| | T2 form | `code_sent` |
+| | T3 code | `{**talk, PLANNER: invoice_plan, SPECIALIST: read, RESPONDER: responder("This invoice bills a diagnostic visit, a contactor replacement and a dispatch fee.")}`, with `read = account_steps(tool(TOOLS["invoice"], ReadInvoicesArgs.model_validate({"invoice_number": "INV-204411"}).model_dump(mode="json")), summary="Read the invoice as billed.")` (AEA-51's `wp2`) |
+| | T4 text | `{**talk, PLANNER: invoice_plan, SPECIALIST: read, RESPONDER: responder("I can't email a copy from this chat. The invoice lists three lines: the diagnostic visit, the part and the dispatch.")}` |
+| | T5 text | `{**talk, PLANNER: planner(handoff="billing_dispute", topic="billing"), RESPONDER: responder("I have asked a representative to review that charge."), BRIEF: brief(needs=[{"message_id": next_message_id(run), "text": turn.text[:30]}], claims=[], open_decision="Review the disputed charge.")}` |
+| warranty | T1 text | `{**talk, PLANNER: warranty_plan, RESPONDER: locate_wait}`, with `warranty_plan = planner(account="warranty", topic="warranty")` |
+| | T2 form | `code_sent` |
+| | T3 code | `{**talk, PLANNER: warranty_plan, SPECIALIST: account_steps(tool(TOOLS["warranty"], {}), summary="Read the warranty record."), RESPONDER: responder("Here is what your warranty record shows.")}` (AEA-51's `warranty`) |
+| WP-4F (`booking with follow-up`) | T1 text | `{**talk, PLANNER: move_plan, RESPONDER: locate_wait}`, with `move_plan = planner(scheduling="reschedule", topic="booking")` |
+| | T2 form | `code_sent` |
+| | T3 code | `{**talk, PLANNER: move_plan, SPECIALIST: scheduling_steps(tool(TOOLS["find_windows"], find_args(svc)), appointment_id=app_id), RESPONDER: responder("Here are the open windows.")}` |
+| | T4 text | `{**talk, PLANNER: move_plan, SPECIALIST: (step(tool(TOOLS["find_windows"], monday)), step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=app_id, new_slot_id=WP4F_TARGET_SLOT).model_dump(), call_id="call-2")), step(report(SchedulingReport, appointment_id=app_id, wanted_time="Monday the 19th, 8 to 12", note="moved"))), RESPONDER: responder("Done. Your visit is moved to Monday, October 19, 8:00 am to 12:00 pm.")}`, with `monday = find_args(svc, earliest=MONDAY, latest=MONDAY, window=MONDAY_MORNING, wanted_text="Monday the 19th, 8 to 12")` |
+| | T5 text ("Yes, please.") | `{**talk, PLANNER: planner(topic="booking"), SPECIALIST: scheduling_steps(tool(TOOLS["find_windows"], find_args(svc)), appointment_id=app_id), RESPONDER: responder(MOVED_SENTENCE)}` (AEA-51's `wp4f_followup`) |
+| WP-4F **bad** | T4 | as good T4, but `SPECIALIST: (step(tool(TOOLS["find_windows"], monday)), step(report(SchedulingReport, appointment_id=app_id, wanted_time="Monday the 19th, 8 to 12", note="moved")))`: **no `move`**. Other turns as good |
+| DANGER (`safety`) | T1 | `{PLANNER: planner(scheduling="book_new", topic="booking"), CLASSIFIER: classifier("danger")}` (AEA-51's `danger`; the safety reply makes no responder call) |
+| DANGER **bad** | T1 | `{PLANNER: planner(scheduling="book_new", topic="booking"), CLASSIFIER: NORMAL, RESPONDER: responder("I can help book a visit. First I need to find your account.")}`: **no raise** (AEA-51's `nodanger`) |
+| WP-4 (`fee-bearing change`) | T1 text | `{**talk, PLANNER: move_plan, RESPONDER: locate_wait}` |
+| | T2 form | `code_sent` |
+| | T3 code | `{**talk, PLANNER: move_plan, SPECIALIST: scheduling_steps(tool(TOOLS["find_windows"], find_args(svc)), appointment_id=app_id), RESPONDER: responder("When would you like to move your visit to?")}` |
+| | T4 text | `{**talk, PLANNER: move_plan, SPECIALIST: scheduling_steps(tool(TOOLS["find_windows"], find_args(svc, earliest=MONDAY, latest=MONDAY, window=MONDAY_MORNING, wanted_text="Monday morning")), appointment_id=app_id), RESPONDER: responder("Here are the Monday morning windows. They are shown, not held.")}` |
+| | T5 text | `{**talk, PLANNER: move_plan, SPECIALIST: (step(tool(TOOLS["move"], MoveVisitArgs(appointment_id=app_id, new_slot_id=target).model_dump())), step(tool(TOOLS["change_request"], RequestVisitChangeArgs(appointment_id=app_id, change="move", wanted_text="Monday morning").model_dump(), call_id="call-2"), report(SchedulingReport, appointment_id=app_id, wanted_time="Monday morning", note="change request"))), RESPONDER: responder("I've sent your change request to a representative."), BRIEF: brief(needs=[{"message_id": next_message_id(run), "text": turn.text[:30]}], claims=[], open_decision="Confirm or decline the change.")}`, with `target = open_slot(run, str(appt["zone"]), svc, after=MONDAY)`. As in AEA-51's `_fee_bearing_scenario`, the move is refused `fee_bearing` and the change request opens the P2 case |
+| WP-4 **bad** | T5 | as good T5, but `SPECIALIST: (step(tool(TOOLS["move"], <same args>)), step(report(SchedulingReport, appointment_id=app_id, wanted_time="Monday morning", note="change request")))`: **no `change_request`**. RESPONDER and BRIEF as good |
 
-The scripted outputs read the script texts from the case files; never rewrite a case text in the tables.
+**Rules for the tables:**
+- Script texts are read from the case files. Never rewrite a case text in a table.
+- When a good test fails, read the failure first:
+  - a failing **check** with a correct table is a finding for the owner ticket (integrated-journeys rule 5): report it
+    and never change `smoke_checks.py` to make it pass;
+  - a **table** that runs out of script (an `exhausted` entry in `run.script.problems()`) or calls a tool with arguments
+    the real tool refuses is a table bug: fix the table, keep its meaning, and note the change in the report.
+- A scripted sentence that the fact check trims (a `checks` row `fact` / `trimmed`) fails no check here; leave it.
 
 ### B2. The four journey files
 
@@ -1437,7 +1530,7 @@ live set serially. Run cheapest first and stop at the first red.
 | 3 | A, B | Iterating + before commit (free) | `uv run pytest tests/live -q -rs` | part A: 7 passed, 10 skipped "live smoke not requested…"; part B: 8 passed, 10 skipped; no "non-loopback" error |
 | 4 | B | Iterating + before commit (journeys, serial) | `uv run pytest tests/journeys/j2/test_aea_61.py tests/journeys/j3/test_aea_61.py tests/journeys/j4/test_aea_61.py tests/journeys/j5/test_aea_61.py -m journey -q -rs` | 6 good + 4 bad tests pass (10); no `blocked-on` skip |
 | 5 | A, B | Before commit | `uv run python -m tests.journeys.affected --base main` | part A: "0 journeys affected" (no journey path changed); part B: the selected journeys green |
-| 6 | B | Before commit | `uv run pytest tests/journeys/support -q` and `uv run pytest -m journey tests/journeys/j2 tests/journeys/j3 tests/journeys/j4 tests/journeys/j5 -q` | harness self-tests green; the siblings' journeys in those folders still green beside ours |
+| 6 | B | Before commit | `uv run pytest tests/journeys/support -q` and `uv run pytest -m journey tests/journeys/j2 tests/journeys/j3 tests/journeys/j4 tests/journeys/j5 -q` | harness self-tests green; the siblings' journeys still green beside ours (after AEA-51 merges: `j2/test_aea_35.py`, `test_aea_38.py`, `test_aea_51.py`; `j3/test_aea_27.py`, `test_aea_28.py`, `test_aea_34.py`, `test_aea_39.py`, `test_aea_43.py`, `test_aea_51.py`; `j4/test_aea_28.py`, `test_aea_39.py`, `test_aea_51.py`; `j5/test_aea_36.py`, `test_aea_37.py`, `test_aea_51.py`, `test_aea_60.py`) |
 | 7 | A, B | Before commit | `git diff --name-only main...HEAD` and `git diff --name-only main...HEAD -- tests/journeys/support src eval scripts` | only §2.1 paths; the second is empty |
 | 8 | A, B | Before commit | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no FAIL in an owned row |
 | P1 | C | Same revision, before the paid run | `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` | green |
@@ -1487,7 +1580,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | The scripted journeys and AC-16 import AEA-51's `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py`. The live run needs AEA-51's wired `register_graph` (AEA-40's routes merged at `f466ff7`, but `register_chat` raises `not bound: run_graph` until AEA-51 binds the graph; AEA-35/35b/36 merged; AEA-30's demo clock merged at `cf8fd78`; AEA-37 merged at `8d025b7`; AEA-39 merged at `12e46ee`; AEA-19-F1 merged at `dc8d8d0`). Refresh 5: AEA-51 pass 1 sits on branch `e9d07f3` without `Key("run_graph")`; pass 2 waits on AEA-21b and AEA-40-F1 (R-14) | Part A now; parts B and C start only on A0 step 1's three checks; B0 verifies the names |
+| R-1 | Blocker (parts B, C) | AEA-51 is not merged. Ledger `sent-back`: its merge gate went red on `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`; the fix `fdcc332` is on its branch. Pass 2 is complete there (`Key("run_graph")` bound over the production adapters; the helpers in §4.3). Everything else this slice needs is merged (AEA-21b `9b3824e`, AEA-40-F1 `47da752`, AEA-60 `0e37fad`, AEA-39 `12e46ee`) | Part A now; parts B and C start only on A0 step 1's three checks; B0 verifies the names and the facts |
 | R-2 | Resolved (refresh 5) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) merged at `0e37fad` | P1 runs on the paid run's revision as §7 says |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
@@ -1500,19 +1593,21 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 | R-11 | Request to AEA-57 (follow-up, not blocking) | `LogTap.structured(kind)` cannot see `signal` records, because `emit_signal` logs them with `extra={"signal": …}` while LogTap reads `meridian_record`. Any journey asserting on signals through LogTap passes vacuously | AEA-61 works around it in owned code (`SignalTap`). Orchestrator: open a follow-up on AEA-57 to read `record.__dict__["signal"]` too |
 | R-12 | Collision (shared context files) | `.claude/reference/area-map.md` row `3+` (also edited by 51, 52, 55, 57–60, 62), `.claude/state/icm-progress.md` (append-style rows; AEA-02b hit a conflict there) and `docs/design/code-design.md` §9 | Append-only edits to one cell, one new row and one line; resolve a merge conflict by keeping both sides |
 | R-13 | Workflow | If the orchestrator merges part A before AEA-51, the issue stays open and the ledger row must not read `merged` for the whole ticket | Orchestrator: record "part A merged; B/C blocked-on AEA-51" |
-| R-14 | Transitive blocker (parts B, C) | AEA-51 pass 2 waits on AEA-21b (`compose.py` slot, account and appointment blocks), which has no ticket file, ledger row or branch on `dc8d8d0`, and on AEA-40-F1 (planned, worktree exists). WP-4F and WP-4 need the slot card for `first_shown_slot` (B1) and the live customer sees it | Orchestrator: cut AEA-21b (AEA-51 plan §8 R-13) so AEA-51 pass 2 can run; nothing in this plan works around it |
+| R-14 | Resolved (refresh 6) | AEA-21b merged at `9b3824e` and AEA-40-F1 at `47da752`, so AEA-51 pass 2 was able to complete | — |
+| R-15 | Behaviour note (parts B, C) | AEA-51 finding F-1: `open_tasks` is not advanced on card and code turns, so a resumed task re-runs its specialist on later turns. A live model may call tools again on WP-2 T4 or WP-4F T5 | The checks already allow it: PD-7 needs at least one INV-204411 read after verification; WP-4F needs exactly one `moved` action, and a second `find_windows` writes none. A second `move_visit` attempt in a live run is a finding for AEA-39/AEA-51, never a weakened check |
+| R-16 | Scripted WP-4F differs from AEA-51's driver | AEA-51's `wp4f` computes its own customer and moves by picking a slot-card option; the dev script seeds MHC-10001 and moves by text, to slot 56 | B1 follows the dev script; B0 step 3 proves the slot facts first |
 
 ---
 
 ## 9. Readiness
 
-**READY.** No product decision is open, and every engineering choice is made above (PD-1…PD-14).
+**READY.** No product decision is open, and every engineering choice is made above (PD-1…PD-15).
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `dc8d8d0` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
-| B | **Blocked-on AEA-51 pass 2** (`tests/graph/worked_pair_scenarios.py`, `Key("run_graph")`; it waits on AEA-21b and AEA-40-F1, R-14) |
-| C | **Blocked-on AEA-51 pass 2** (AEA-60 merged at `0e37fad`), plus `gate::paid` (D-15 spend statement) |
+| A | Buildable on `main` `dffedf7` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| B | **Blocked-on AEA-51** (merge; pass 2 is complete on its branch at `fdcc332` after the J-9 send-back) |
+| C | **Blocked-on AEA-51** (merge), plus `gate::paid` (D-15 spend statement) |
 
 ## Gates
 

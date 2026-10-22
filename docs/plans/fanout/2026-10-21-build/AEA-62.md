@@ -1,19 +1,51 @@
 # Plan — [AEA-62] browser journeys for integrated capabilities (J-2, J-3, J-6, J-8)
 
 **Status:** planned — READY, **blocked-on AEA-58-F1** (one AEA-58 follow-up carrying additions A-1, A-2 and A-3 of §8
-R-1: AEA-58 merged at `eb51ba4` **without** them, and no such ticket exists yet) and **AEA-51** (only
-`tests/integration/customer_support.py`, §4.4; it exists on AEA-51's pass-1 branch `e9d07f3`, unmerged). The UX
-session's `docs/plans/ux-join/selectors.md` (still unpublished) and AEA-51's `run_graph` / `reply_composer` bindings
-(AEA-51 pass 2, itself waiting on AEA-21b, AEA-19-F1 and AEA-40-F1) are **run-time** dependencies: missing ones show as
-*blocked* steps with their owner, never imported and never passed. No `NEEDS-DECISION`: Decision 6 (D-8, start fresh)
-and WEB-1 (D-4, option A) are applied as decided; no contract change.
+R-1: AEA-58 merged at `eb51ba4` **without** them, and that follow-up has still not been opened) and **AEA-51** (its
+branch `aea-51-aea-51-customer-path` at `fdcc332` now holds pass 2: `Key("run_graph")` and `Key("retrieval_index")`
+bound, `tests/integration/customer_support.py` with the §4.4 names unchanged; its merge was sent back at `dffedf7` on a
+red J-9 sibling test and is being retried). The UX session's `docs/plans/ux-join/selectors.md` (still unpublished) is a
+**run-time** dependency: missing rows show as *blocked* steps with their owner, never passed. No `NEEDS-DECISION`:
+Decision 6 (D-8, start fresh) and WEB-1 (D-4) are applied as option A, as decided; no contract change.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/62 (identical to
-`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `2f70221` (earlier versions: `b68df7e`, `6b845a3`, `c9b17ea`,
+`docs/plans/tickets/AEA-62.md`) · **Base revision:** `main` `dffedf7` (earlier versions: `2f70221`, `b68df7e`, `6b845a3`, `c9b17ea`,
 `bb9a471`, `e22aebb`) · **Wave:** 4 · **Lane:** build-loop · **Risk:** none (no `risk::security`: plan → implement with
 tests → review; no frozen tests) · **Gate:** inherits `gate::ux4` through AEA-58.
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refresh 6) · **Implementer:** fanout-implementer (Sonnet).
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-22 (refresh 7) · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-62-browser-journeys` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-62`), cut from `main` **after** AEA-58-F1 and AEA-51 merged.
+
+**Refresh 7 (2026-10-22, against `main` `dffedf7`; read this box first, then refresh 6).** Merged since `2f70221`:
+**AEA-21b** (compose cards: slot, account, appointment, where; `9b3824e`), **AEA-19-F1** (trace override, `dc8d8d0`),
+**AEA-40-F1** (`TurnService` parses the intake before the spend check so safety turns pass at the cap, `47da752`) and
+FU-saveFollowUp-text (`0a01219`). Unchanged since `2f70221`: `tests/journeys/support/`, `tests/journeys/browser/` (still
+without A-1…A-3), `services/{session,cases,handoff,_case_views}.py`, `web/routes/`, the ticket, the slice plan, the
+stage-7 sign-off and `docs/plans/ux-join/` (`selectors.md` still unpublished). **AEA-51 pass 2 is built** on its branch
+(`ddb7cbd` binds `run_graph`; `fdcc332` is the J-9 retry after the merge gate sent it back), and the three pass-2
+blockers of the old R-14 (AEA-21b, AEA-19-F1, AEA-40-F1) are all merged, so once AEA-51 merges the chat steps run. What
+changed in this version, from reading AEA-51's pass-2 `tests/graph/worked_pair_scenarios.py` (each worked pair driven
+against the real graph over HTTP) and `compose_cards.py` on `main`:
+1. **AC-12 (WP-8) verifies first, then asks to cancel** (§5 step 5 item 4). AEA-51 found that the identity-first
+   variant loses the plan's handoff (its finding F-1, a strict xfail on its branch, owned by a follow-up in the
+   identity/plan area), so an unverified "I want to cancel…" opening would open no case. The ticket's "(after the code,
+   renewal 2026-11-03 read)" fits the verified-first order: "What does my membership include?" → locate → code
+   (membership read, account card with the renewal date) → "I want to cancel my Comfort Club membership." with the
+   account and knowledge specialists in parallel.
+2. **`by_marker` keys are the report schemas' field names** (§4.4b): `'"answered"'` (knowledge), `'"summary"'`
+   (account), `'"wanted_time"'` (scheduling), the markers AEA-51 proved; each appears only in its own report schema, so
+   table order no longer matters. Replaces the tool-name markers and their dict-order rule (§8 R-11 rewritten).
+3. **PA-2's pre-search uses the app's own index**, `run.container.get(Key[Any]("retrieval_index"))` (bound by AEA-51),
+   the object the `kb_search` tool calls, instead of a second `FastembedIndex`. `first_passage`, `top_passage`,
+   `passages_hold` and `knowledge_table` take `run`; tests that only need the index unpack `as (brun, _)`.
+4. **Message-id prediction** is `COALESCE(MAX(id), 0) + 1` over `messages` (AEA-51's `next_message_id`).
+5. **Locate-turn, code-turn and card-turn tables also carry `Role.PLANNER` and `Role.CLASSIFIER`** entries, as AEA-51's
+   `after_code` tables do: an entry nobody calls is harmless, and a planner that does run on such a turn no longer ends
+   `exhausted`. `must` sets are unchanged.
+6. §8 R-14 replaced (AEA-51 is now one plain merge blocker). AC-4's account card and AC-6's slot and confirmation cards
+   come from `compose_cards.py` / `compose.py` on `main`; their shapes match §4.7 (`SlotWindow.slot_id` is a string,
+   `Money.display` like `$245.00`, membership card `renewal_date`).
+7. Context rows: `icm-progress.md` *Integrated-journey protection* rows at **line 46** (edit) and **line 62** (older);
+   area-map row `3+` line 47; DO-3 §9 `journeys/` tree line 719, *Built on `main`* line 726.
 
 **Refresh 6 (2026-10-21, against `main` `2f70221`; read this box first, then refresh 5).** Merged since `b68df7e`:
 **AEA-39** (act node, `12e46ee`), AEA-60 (prompt ↔ consumer checks, `0e37fad`) and FU-j1-demo-state (`dbcd8b7`; changes
@@ -165,9 +197,9 @@ case. Every `/api/*` response Chrome received is checked against the OpenAPI whe
 
 AEA-51 and AEA-52 prove J-2, J-3, J-6 and J-8 through the HTTP API; AEA-58 proves J-1 in a browser. This ticket moves
 the integrated legs of J-2, J-3, J-6 and J-8 into Chrome (slice plan §0a, Amendment 1), using AEA-58's browser harness,
-AEA-57's support package and AEA-51's step-script helpers, all unchanged. On `main` today (`2f70221`) AEA-58's `browser/`
-package is merged but without the three additions this slice needs (§8 R-1, AEA-58-F1), AEA-51 is not merged (its
-step-script helpers exist on its pass-1 branch; the graph bindings wait on its pass 2), and
+AEA-57's support package and AEA-51's step-script helpers, all unchanged. On `main` today (`dffedf7`) AEA-58's `browser/`
+package is merged but without the three additions this slice needs (§8 R-1, AEA-58-F1), AEA-51 is built (pass 2) but
+not merged (sent back on a sibling J-9 test, being retried), and
 `docs/plans/ux-join/selectors.md` has not been published, so until those land every on-screen step reports *blocked*
 with its owner.
 
@@ -194,7 +226,8 @@ with its owner.
 | A knowledge report must cite a passage the search returned | graph-tools §2, DO-4 §5 | implicit | added PA-2 (pre-search) | step 3 |
 | A brief `Quote` must be an exact substring of a customer message with that `message_id` | graph-nodes §2 | implicit | added: predict the message id, assert it after the turn | steps 5 |
 | `completion` and `fact` `check_events` are written every turn the responder ran (result `pass` when nothing removed) | graph-nodes §1 | AC-7 says "no completion-check row" | in-ticket, read as: the turn's `completion` row has `result='pass'` and `removed=0`, and no row of that turn has `result='trimmed'` | step 4 (AC-7) |
-| Parallel specialists on one turn (WP-8 code turn: account + knowledge) | DO-4 §4 `join_plan` | implicit | added: step-scripted model with `by_marker` (`StepScript`) | §4.4, step 2, §8 R-1 A-1 |
+| Parallel specialists on one turn (WP-8 cancel turn: account + knowledge) | DO-4 §4 `join_plan` | implicit | added: step-scripted model with `by_marker` keyed by report-field markers (`StepScript`) | §4.4, §4.4b, step 5, §8 R-1 A-1 |
+| An unverified customer's cancel plan is lost at identity resume | AEA-51 finding F-1 (strict xfail on its branch) | "after the code" | decided: verify first with a membership question, then the cancel turn; F-1 stays the identity/plan follow-up's | step 5 item 4 |
 | A verified customer's waiting account task runs on the code turn | `routers.route_after_identity` on `main` | AC-4 "then … an account card" | decided: invoice read on the code turn; no fallback branch | step 3, §8 R-10 |
 | WF-3 `request` record carries the code request's `thread_id` | DO-6 WF-3 | AC-17 | asserted in AC-17 only; expected seam finding (path-only `thread_id` on `main`) | step 6, §8 R-9 |
 | A fresh login is role `customer`; landing on `/staff/cases/<ref>` after re-sign-in shows the role panel, not the case | staff.md §2 | implicit | AC-15 asserts the URL only | step 6 |
@@ -273,7 +306,7 @@ static ones is **`integrated with a scripted model`**. Step names in quotes are 
 | AC-9 | **journey** (WP-7; WF-1) | Handoff card: `MHC-C-NNNN` (≥ 0009), refund promise + "I can't promise an outcome.", due "Tue Oct 20 · 7:00 pm", follow-up legend; settled request; one `refund` P3 case, promise = table text `open`, `case_opened` case event + `case_created` thread-stream event, turn and conversation `handed_off` | `refund_case()` driver | `tests/journeys/j6/test_aea_62.py::test_j6_refund_handoff_in_chat` | integrated |
 | AC-10 | **journey** | One click "Acting as" Representative → `/staff/queue`, "Riley · demo representative"; new row "P3 · Standard", ref, refund reason, "Unowned", due; four seeds; MHC-C-0008 "P0 · Safety" first; role column `representative` same `session_id`; reading writes no `case_events` | Driver + switch | `j6/test_aea_62.py::test_j6_case_in_staff_queue` | integrated |
 | AC-11 | **journey** (WF-4; R-28, R-29) | SCR-6 `/staff/cases/<ref>`: "Unassigned, nobody owns it yet"; promise text + Open; eight headings = `BRIEF_TITLES`; section 4 "Customer says · not checked" with both claims; refund guidance sourced (CAS-33); every chip → `#src-<source_id>`; stored brief = shown; no `case_events`, `cases.version` unchanged | Driver (built index) + switch + open row | `j6/test_aea_62.py::test_j6_case_view_brief_and_promise` | integrated |
-| AC-12 | **journey** (WP-8) | New chat: verify, renewal read; "I can't switch off auto-renewal from this chat."; handoff "…within 1 business day"; "Done, auto-renew is off" absent; SCR-5 lists it "P3 · Standard"; `membership_cancel` P3 case + promise; completion `trimmed` row; customer row unchanged | Own driver; parallel specialists through `by_marker` | `j6/test_aea_62.py::test_j6_membership_cancel_honest_limit` | integrated |
+| AC-12 | **journey** (WP-8) | New chat: verify, renewal read; "I can't switch off auto-renewal from this chat."; handoff "…within 1 business day"; "Done, auto-renew is off" absent; SCR-5 lists it "P3 · Standard"; `membership_cancel` P3 case + promise; completion `trimmed` row; customer row unchanged | Verified first (membership question), then the cancel turn; parallel specialists through `by_marker` | `j6/test_aea_62.py::test_j6_membership_cancel_honest_limit` | integrated |
 | AC-13 | **journey** (N-29, N-31, STF-19) | Switch to Representative → SCR-5; back to Customer → SCR-1 same conversation (`getChatThread`, no `startChatSession`); reload SCR-6 keeps the case and role (`getSession`); tab A chat works while tab B is representative; one `staff_sessions` row whose role follows; one conversation; no `case_events` from reads | Two tabs, one context | `tests/journeys/j8/test_aea_62.py::test_j8_role_switch_and_resume` | integrated |
 | AC-14 | failure/refusal (rule §3.5) | Customer on `/staff/queue`: SCR-4 line, no staff data, `getQueue` 403 `ROLE_NOT_ALLOWED` `wrong_role`; Representative on that page → 200 | One tab | `j8/test_aea_62.py::test_j8_customer_refused_then_switch_allowed` | integrated |
 | AC-15 | failure/refusal | Sign out on SCR-6 → SCR-12, row deleted, reload → 303 `reason=none`, sign in → that case URL; re-enter SCR-1 → one new `startChatSession`, earlier thread 404 `SESSION_NOT_FOUND`; clock past `login_session_lifetime_s` → 303 `reason=expired`, `Max-Age=0`, expired line, row deleted | Seed case MHC-C-0006; run clock | `j8/test_aea_62.py::test_j8_signed_out_and_expired` | integrated |
@@ -419,7 +452,7 @@ Keys this ticket needs AEA-58 to add (addition A-2; each maps to a FOR-UX-SESSIO
 A key AEA-58 does not know raises `KeyError` inside `missing_selectors` (a harness bug, not a blocked step): if that
 happens, **stop** and report `BLOCKED-ON AEA-58 addition A-2`; never catch it.
 
-### 4.4 AEA-51 test helpers (import only; read on AEA-51's pass-1 branch `e9d07f3`, `tests/integration/customer_support.py`)
+### 4.4 AEA-51 test helpers (import only; `tests/integration/customer_support.py`, read on AEA-51's branch at `fdcc332`, pass 2; names unchanged since pass 1)
 
 ```python
 from tests.integration.customer_support import StepScript, built_index_dir, fastembed_offline, step_overrides
@@ -443,7 +476,8 @@ from tests.integration.customer_support import StepScript, built_index_dir, fast
 
 If AEA-51's merged module names or signatures differ from these, use the merged ones and say so in the report; if
 `StepScript`, `step_overrides` or `set_step(..., by_marker=...)` is missing, stop and report `BLOCKED-ON AEA-51`. **Do not
-import `tests.graph.worked_pair_scenarios`** (it arrives only with AEA-51's pass 2); the builders below are this ticket's.
+import `tests.graph.worked_pair_scenarios`** (it merges with AEA-51, but the ticket says this ticket writes its own scripts
+per leg); the builders and markers below are this ticket's, written to match it.
 
 ### 4.4b Script builders (this ticket's own; top of `tests/journeys/j2/test_aea_62.py`, built from `main`'s models)
 
@@ -489,7 +523,17 @@ def report(model: type[LLMFacing], **fields: Any) -> RawToolCall:
 
 def step(*calls: RawToolCall, text: str = "") -> RawToolStep:
     return RawToolStep(text=text, calls=calls, stop_reason="tool_use" if calls else "end_turn")
+
+
+# by_marker keys (refresh 7 item 2): each report schema's own field name, quoted as it appears in the request JSON.
+KNOWLEDGE_MARKER = '"answered"'  # KnowledgeReport.answered
+ACCOUNT_MARKER = '"summary"'  # AccountReport.summary
+SCHEDULING_MARKER = '"wanted_time"'  # SchedulingReport.wanted_time
+assert "answered" in KnowledgeReport.model_fields and "summary" in AccountReport.model_fields
+assert "wanted_time" in SchedulingReport.model_fields
 ```
+
+(`KnowledgeReport`, `AccountReport`, `SchedulingReport` come from the §4.5 imports.)
 
 Valid planner values on `main` (`PlannerChoices`): `knowledge` `no|yes`; `account`
 `none|invoice|membership|appointments|warranty`; `scheduling` `none|book_new|reschedule|cancel|confirm`; `handoff`
@@ -511,6 +555,7 @@ from meridian.adapters.retrieval_fastembed import FastembedIndex
     # RetrievalResult(passages: tuple[Passage, ...], below_floor: bool);
     # Passage(passage_id, file, section, version_label, version_date, text, score); passage_id = f"{file}#{n}"
 from meridian.retrieval.settings import MIN_SCORE, SEARCH_K
+from meridian.web.container import Key   # run.container.get(Key[Any]("retrieval_index")) -> FastembedIndex (AEA-51)
 from meridian.domain.common import Role      # PLANNER, CLASSIFIER, PLANNER_FALLBACK, SPECIALIST, RESPONDER, BRIEF
 from meridian.domain.specialists import AccountReport, KnowledgeReport, ReportedPoint, SchedulingReport
     # KnowledgeReport(points: list[ReportedPoint] (max 5), answered: bool); ReportedPoint(text, passage_id)
@@ -531,7 +576,7 @@ Script arguments (exact; built from the models so a rename fails at import):
 | AC-6 windows | `tool(FIND_WINDOWS_NAME, FindWindowsArgs(service_type="hvac_repair", wanted_text="This Saturday if possible, 4 to 7, after work.").model_dump(mode="json"))` |
 | AC-6 book | `tool(BOOK_VISIT_NAME, BookVisitArgs(slot_id=56, issue="AC not cooling").model_dump())` |
 | AC-12 membership | `tool(READ_MEMBERSHIP_NAME, ReadMembershipArgs().model_dump())` |
-| AC-12 knowledge | `tool(KB_SEARCH_NAME, KbSearchArgs(query="How do I cancel a Comfort Club membership?").model_dump())` |
+| AC-12 knowledge | `tool(KB_SEARCH_NAME, KbSearchArgs(query=CANCEL_QUERY).model_dump())`, `CANCEL_QUERY = "cancel Comfort Club membership auto-renewal"` (AEA-51's query) |
 
 - `render(TextId.GREETING)`, `render(TextId.VERIFIED)` = "Thanks, you're verified for this chat.",
   `render(TextId.BOOKED)` = "You're booked. Here are the details.", `render(TextId.PROMISE_REFUND_NO_OUTCOME)` = "I can't
@@ -584,9 +629,9 @@ Script arguments (exact; built from the models so a rename fails at import):
   a chat turn raises `RuntimeError("not bound: <key>")`, so `TURN_NEEDS` steps report blocked with owner AEA-51.
 - `agent/nodes/plan.py::join_plan` (AEA-37, merged `8d025b7`): when the handoff request is
   `HandoffReason.MEMBERSHIP_CANCEL` it sets `account = "membership"` and `knowledge = "yes"`; drafts are ordered account,
-  scheduling, knowledge, with `needs_identity=True` for account and scheduling and `False` for knowledge. WP-8's opening
-  turn therefore goes to identity (`_route_planned`, above), and the code turn runs the account and the knowledge
-  specialist (the `CANCEL_MARKERS` case of §5 step 5).
+  scheduling, knowledge, with `needs_identity=True` for account and scheduling and `False` for knowledge. With the
+  customer verified first (refresh 7 item 1), WP-8's cancel turn runs the account and the knowledge specialist in
+  parallel (the `by_marker` case of §5 step 5 item 4). The identity-first order loses the handoff (AEA-51 F-1).
 - `web/routes/staff_cases.py` (AEA-45, merged `1a6712a`): `getQueue` and `getCase` are mounted; `QueueResponse`
   (`web/schemas/staff_cases.py`) is `{as_of, staffing, live[], needs_my_action[]}` of `QueueRowOut {…, priority
   {level, word}, owner: str | None, due_label: str | None, …}`.
@@ -659,13 +704,11 @@ Nothing imports the j-files except other j-files of this ticket.
    `grep -n "def browser_journey_factory\|def locate_by\|def screenshot_element\|overrides_for" tests/journeys/browser/*.py`
    finds all four, and `uv run python -c "from tests.journeys.browser.selectors import SELECTOR_KEYS;
    print(sorted(SELECTOR_KEYS))"` lists every key of §4.3. Missing → stop, report `BLOCKED-ON AEA-58-F1 (addition A-<n>)`.
-3. Confirm AEA-51 merged: `ls tests/integration/customer_support.py`. Missing → stop, report `BLOCKED-ON AEA-51`.
-   (`tests/graph/worked_pair_scenarios.py` is **not** needed; §4.4.)
+3. Confirm AEA-51 merged: `ls tests/integration/customer_support.py` and `grep -n 'Key("run_graph")\|Key("retrieval_index")'
+   src/meridian/web/container.py` finds both. Missing → stop, report `BLOCKED-ON AEA-51`.
 4. Confirm AEA-51's names: `uv run python -c "from tests.integration.customer_support import StepScript, step_overrides,
    built_index_dir, fastembed_offline"`. Fails → stop, report `BLOCKED-ON AEA-51` (or use the merged names, §4.4).
-   Then check whether the graph is bound: `grep -n 'Key("run_graph")' src/meridian/web/container.py
-   src/meridian/agent/*.py`; when it is absent, every chat step will report blocked with owner AEA-51 (expected; build
-   anyway, run C-1 and report the skips).
+   `tests/graph/worked_pair_scenarios.py` is reference only (read it for the proven turn tables; never import it).
 5. Build in the primary checkout (backend worktrees have no `node_modules`):
    `npm --prefix /home/linuxuser/workspaces/inno-aea-callcenter/apps/web run build && npm --prefix /home/linuxuser/workspaces/inno-aea-callcenter/apps/web run check:dist`;
    then `git -C /home/linuxuser/workspaces/inno-aea-callcenter status --porcelain apps/web` prints nothing (else stop
@@ -776,12 +819,12 @@ first in the helper section, copied exactly.
     different code than listDemoInbox returned"` (no value in the message); `tab.page.close()`; return `(shown, ex)`. No
     screenshot while the tab is open. **No WF-3 assertion here** (AC-17 owns it; §8 R-9).
 13. `verify_in_chat(run, bp, customer_id, ending, *, opening, opening_table, code_table, code_must, code_by_marker=None)
-    -> Verified`: (a) `t1 = say(run, bp, opening, table=opening_table, must={Role.PLANNER, Role.CLASSIFIER})`; assert
+    -> Verified`: `talk = {Role.PLANNER: opening_table[Role.PLANNER], Role.CLASSIFIER: NORMAL}` (refresh 7 item 5); (a) `t1 = say(run, bp, opening, table=opening_table, must={Role.PLANNER, Role.CLASSIFIER})`; assert
     `blocks_of(t1.body, "locate_prompt")`; (b) `t2 = submit_locate(run, bp, customer_id, previous=t1,
-    table={Role.RESPONDER: responder("Please type the code when it arrives.")}, must=set())`; assert
+    table={**talk, Role.RESPONDER: responder("Thanks, I sent a code.")}, must=set())`; assert
     `blocks_of(t2.body, "code_prompt")`; `card = locate(bp.page, "chat.block.code_prompt").last`; `assert f"Code sent to
     the phone on record, ending in {ending}" in card.inner_text()`; (c) `code, inbox = read_code_from_inbox(run, bp)`;
-    (d) `t3 = expect_turn(run, bp, table=code_table, by_marker=code_by_marker, must=code_must, send=<fill
+    (d) `t3 = expect_turn(run, bp, table={**talk, **code_table}, by_marker=code_by_marker, must=code_must, send=<fill
     locate_in(card, "card.code.input") with code; click locate_in(card, "card.code.submit")>)`; assert
     `render(TextId.VERIFIED)` is in `locate(bp.page, "chat.entry.assistant").last.inner_text()`; return
     `Verified(customer_id, t1, t3, inbox, phone, code)` (phone from `customer_contact`).
@@ -789,16 +832,18 @@ first in the helper section, copied exactly.
     lookup_log WHERE thread_id = ?", (thread_id,)) for pid in json.loads(r["passage_ids"])]`; `files = [p.split("#",
     1)[0] for p in ids]`; `bad = [f for f in files if f.startswith("archive/") or f in EXCLUDED_FILES]`;
     `assert bad == []`; print `passage ids: …`; return `ids`.
-15. `first_passage(index_dir, query, file) -> Passage` (PA-2): `result = FastembedIndex(index_dir,
-    model_cache_dir=Path(os.environ["FASTEMBED_CACHE_PATH"])).search(query, k=SEARCH_K, min_score=MIN_SCORE)` (only
-    inside `browser_run(..., index=True)`, which holds `fastembed_offline()`); `hits = [p for p in result.passages if
-    p.file == file]`; `assert not result.below_floor and hits, f"{query!r}: the index returned no passage from
+15. `first_passage(run, query, file) -> Passage` (PA-2; refresh 7 item 3): `index =
+    run.container.get(Key[Any]("retrieval_index"))`; `result = index.search(query, k=SEARCH_K, min_score=MIN_SCORE)`
+    (only inside `browser_run(..., index=True)`, which holds `fastembed_offline()`); `hits = [p for p in result.passages
+    if p.file == file]`; `assert not result.below_floor and hits, f"{query!r}: the index returned no passage from
     {file}"`; return `hits[0]`.
-    `passages_hold(index_dir, query, needles) -> None`: the union of `p.text` over the same search's `passages`
-    contains every needle; else `AssertionError(f"{query!r}: the passages lack {missing}; change the query wording,
-    never the expected facts")`.
-16. `knowledge_table(index_dir, query, file, point_text, reply, *, topic) -> Table`: `p = first_passage(...)`; return
-    `{Role.PLANNER: planner(knowledge="yes", topic=topic), Role.CLASSIFIER: NORMAL, Role.SPECIALIST:
+    `top_passage(run, query) -> Passage`: the same search; `assert not result.below_floor and result.passages`; return
+    `result.passages[0]` (AEA-51's `top_passage`; used only where no file is expected, AC-12).
+    `passages_hold(run, query, needles) -> None`: the union of `p.text` over the same search's `passages` contains every
+    needle; else `AssertionError(f"{query!r}: the passages lack {missing}; change the query wording, never the expected
+    facts")`.
+16. `knowledge_table(run, query, file, point_text, reply, *, topic) -> Table`: `p = first_passage(run, query, file)`;
+    return `{Role.PLANNER: planner(knowledge="yes", topic=topic), Role.CLASSIFIER: NORMAL, Role.SPECIALIST:
     (step(tool(KB_SEARCH_NAME, KbSearchArgs(query=query).model_dump())), step(report(KnowledgeReport,
     points=[ReportedPoint(text=point_text, passage_id=p.passage_id)], answered=True))), Role.RESPONDER:
     responder(reply)}`.
@@ -807,8 +852,8 @@ first in the helper section, copied exactly.
     "turn_id = ? AND check_kind = 'gate'", (t,)) == 1` (graph-nodes §1: one gate event every turn); and
     `run.db.count("spend_ledger", "turn_id = ?", (t,)) >= 1` for every turn whose `turns.model_calls > 0`. Print one
     line per turn: sequence, gate_result, outcome, server_ms, trace_export, lookup rows, check rows, spend rows.
-18. `next_message_id(run) -> int`: `int(run.db.scalar("SELECT COALESCE((SELECT seq FROM sqlite_sequence WHERE name =
-    'messages'), 0) + 1 AS n"))`.
+18. `next_message_id(run) -> int`: `int(run.db.scalar("SELECT COALESCE(MAX(id), 0) + 1 FROM messages"))` (AEA-51's
+    form; refresh 7 item 4).
 19. `switch_role(run, bp, role) -> ApiExchange`: `mark = bp.net.mark()`; `locate(bp.page, f"shell.role.{role}").click()`;
     `ex = bp.net.wait_for(bp.page, "switchRole", since=mark)`; `assert ex.status == 200`; return `ex`.
 20. `card_shot(brun, bp, key, label) -> Path`: `brun.screenshot_element(bp, locate(bp.page, key).last, label)`
@@ -840,9 +885,9 @@ adversarial draft (R-46 must remove it). `STALE = ("$149", "$12.99", "$219", "10
 prorated refund", "transfers to a new address")`; compare lower-cased page text with lower-cased strings.
 
 `membership_leg(brun, index_dir) -> tuple[BrowserPage, str, list[Turn]]`: `bp = brun.open(PHONE)`; step "2a sign in
-and chat" (`open_chat`); for M1…M3: `passages_hold(index_dir, query, needles)` then step f"2b turn {n}"
+and chat" (`open_chat`); for M1…M3: `passages_hold(run, query, needles)` then step f"2b turn {n}"
 (`needs=TURN_NEEDS, operations=("submitTurn",), selectors=(*CHAT_SELECTORS, "chat.source")`): `say(run, bp, text,
-table=knowledge_table(index_dir, query, MEMBERSHIP_FILE, point, reply, topic="membership"), must={Role.PLANNER,
+table=knowledge_table(run, query, MEMBERSHIP_FILE, point, reply, topic="membership"), must={Role.PLANNER,
 Role.CLASSIFIER, Role.SPECIALIST, Role.RESPONDER})`. Returns the page, thread id and turns.
 
 1. **`test_j2_membership_with_source(browser_journey_factory)`** (AC-2) — `with browser_run(browser_journey_factory,
@@ -937,7 +982,7 @@ Any]`), steps:
   windows (slot id, label, technician).
 - "6c pick 8–12" (`needs=TURN_NEEDS, operations=("submitTurn",), selectors=("chat.block.slot_card",
   "card.slot.window_by_id", "card.slot.continue", "chat.block.confirmation", "settled.visit")`): `card_el =
-  locate(page, "chat.block.slot_card").last`; `booking = expect_turn(run, bp, table={Role.SPECIALIST:
+  locate(page, "chat.block.slot_card").last`; `booking = expect_turn(run, bp, table={Role.PLANNER: planner(scheduling="book_new", topic="booking"), Role.CLASSIFIER: NORMAL, Role.SPECIALIST:
   (step(tool(BOOK_VISIT_NAME, BookVisitArgs(slot_id=56, issue="AC not cooling").model_dump())),
   step(report(SchedulingReport, appointment_id=0, wanted_time="", note="booked"))), Role.RESPONDER:
   responder(BOOKED_REPLY)}, must={Role.RESPONDER}, send=<click locate_by(card_el, "card.slot.window_by_id", "56");
@@ -1070,38 +1115,48 @@ Any]`), steps:
      heading titles == `BRIEF_TITLES`; per heading `[i["kind"] for i in items]` equal `d`'s (same count, same order);
      for headings 2 and 4 the item texts equal `d`'s exactly (wire texts elsewhere are masked, §4.6); `cases.version == version_before`;
      `case_events` count unchanged. `brun.screenshot(bp, "case-brief")`.
-4. **`test_j6_membership_cancel_honest_limit(browser_journey_factory)`** (AC-12; WP-8) — **`browser_run(J6,
-   index=True)`** (its knowledge specialist calls `kb_search`), PHONE. "12a sign in and chat"; "12b ask, locate, code"
-   (`needs=(*VERIFY_NEEDS, "handoff_service", "case_service")`, selectors `(*CHAT_SELECTORS, *IDENTITY_SELECTORS,
-   "chat.block.handoff")`): `msg1 = next_message_id(run)` before the opening turn; `v = verify_in_chat(run, bp,
-   "MHC-10001", "01", opening=CANCEL_TEXT, opening_table={Role.PLANNER: planner(account="membership",
-   handoff="membership_cancel", topic="membership"), Role.CLASSIFIER: NORMAL, Role.RESPONDER: responder("I can help
-   once I've confirmed your account.")}, code_table=CANCEL_CODE, code_by_marker=CANCEL_MARKERS,
-   code_must={Role.SPECIALIST, Role.RESPONDER, Role.BRIEF})`; check `msg1` after the opening turn as in 9b.
-   Constants: `CANCEL_TEXT = "I want to cancel my Comfort Club membership."`;
-   `CANCEL_CLAIM = "Done, auto-renew is off."`;
-   `CANCEL_CODE = {Role.RESPONDER: responder("I can't switch off auto-renewal from this chat. " + CANCEL_CLAIM),
-   Role.BRIEF: brief(needs=[Quote(message_id=msg1, text=CANCEL_TEXT)], claims=[], open_decision="Switch off
-   auto-renewal before the renewal date.")}` (built after `msg1` is known);
-   `CANCEL_MARKERS = {KB_SEARCH_NAME: {Role.SPECIALIST: (step(tool(KB_SEARCH_NAME, KbSearchArgs(query="How do I cancel
-   a Comfort Club membership?").model_dump())), step(report(KnowledgeReport, points=[], answered=False)))},
-   READ_MEMBERSHIP_NAME: {Role.SPECIALIST: (step(tool(READ_MEMBERSHIP_NAME, ReadMembershipArgs().model_dump())),
-   step(report(AccountReport, summary="Standard plan, renews 2026-11-03.")))}}` — **this dict order is required**: the
-   knowledge request's JSON contains both words (`kb_search`'s description names `read_membership`), the account
-   request's JSON contains only `read_membership`, and `by_marker` takes the first match in dict order. *Invariant:
-   each specialist gets its own two rounds whatever order the threads run in.*
+4. **`test_j6_membership_cancel_honest_limit(browser_journey_factory)`** (AC-12; WP-8; verified first, refresh 7 item
+   1) — **`browser_run(J6, index=True)`** (its knowledge specialist calls `kb_search`), PHONE. Constants:
+   `MEMBERSHIP_ASK = "What does my membership include?"`; `ASK_PLAN = planner(account="membership", topic="membership")`;
+   `MEMBERSHIP_READ = (step(tool(READ_MEMBERSHIP_NAME, ReadMembershipArgs().model_dump())), step(report(AccountReport,
+   summary="Read the membership record.")))`; `CANCEL_TEXT = "I want to cancel my Comfort Club membership."`;
+   `CANCEL_PLAN = planner(account="membership", handoff="membership_cancel", topic="membership")`; `CANCEL_QUERY =
+   "cancel Comfort Club membership auto-renewal"`; `CANCEL_CLAIM = "Done, auto-renew is off."`.
+   - "12a sign in and chat" (`open_chat`).
+   - "12b verify with a membership question" (`needs=VERIFY_NEEDS, operations=("submitTurn", "listDemoInbox")`,
+     selectors `(*CHAT_SELECTORS, *IDENTITY_SELECTORS, "chat.block.account_card")`): `v = verify_in_chat(run, bp,
+     "MHC-10001", "01", opening=MEMBERSHIP_ASK, opening_table={Role.PLANNER: ASK_PLAN, Role.CLASSIFIER: NORMAL,
+     Role.RESPONDER: responder("I need to find your record first.")}, code_table={Role.SPECIALIST: MEMBERSHIP_READ,
+     Role.RESPONDER: responder("Here is your membership.")}, code_must={Role.SPECIALIST, Role.RESPONDER})`. Renewal
+     read: `mem = [b for b in blocks_of(v.code_turn.body, "account_card") if b["kind"] == "membership"]`; `mem and
+     mem[-1]["membership"]["renewal_date"] == "2026-11-03"`; `locate(page, "chat.block.account_card").last.is_visible()`;
+     `run.db.count("lookup_log", "turn_id = ? AND tool = ?", (v.code_turn.turn_id, READ_MEMBERSHIP_NAME)) >= 1`.
+   - "12c cancel" (`needs=HANDOFF_NEEDS, operations=("submitTurn",), selectors=(*CHAT_SELECTORS,
+     "chat.block.handoff")`): `msg = next_message_id(run)`; `kp = top_passage(run, CANCEL_QUERY)`; `t = say(run, bp,
+     CANCEL_TEXT, table={Role.PLANNER: CANCEL_PLAN, Role.CLASSIFIER: NORMAL, Role.RESPONDER: responder("I can't switch
+     off auto-renewal from this chat. " + CANCEL_CLAIM), Role.BRIEF: brief(needs=[Quote(message_id=msg,
+     text=CANCEL_TEXT)], claims=[], open_decision="Switch off auto-renewal before the renewal date.")},
+     by_marker={KNOWLEDGE_MARKER: {Role.SPECIALIST: (step(tool(KB_SEARCH_NAME,
+     KbSearchArgs(query=CANCEL_QUERY).model_dump())), step(report(KnowledgeReport,
+     points=[ReportedPoint(text="Auto-renewal can be cancelled before the renewal date.", passage_id=kp.passage_id)],
+     answered=True)))}, ACCOUNT_MARKER: {Role.SPECIALIST: MEMBERSHIP_READ}}, must={Role.PLANNER, Role.CLASSIFIER,
+     Role.SPECIALIST, Role.RESPONDER, Role.BRIEF})`; then `run.db.scalar("SELECT id FROM messages WHERE turn_id = ? AND
+     role = 'customer'", (t.turn_id,)) == msg` (else stop: a plan error; report it, never change the quote).
+     *Invariant: each specialist gets its own two rounds whatever order the threads run in.*
    - Visible: page text contains "I can't switch off auto-renewal from this chat." and not "Done, auto-renew is off";
-     handoff card text contains "A representative will get back to you within 1 business day".
+     `locate(page, "chat.block.handoff").last` text contains "A representative will get back to you within 1 business
+     day".
    - Stored: `c = run.db.one("SELECT * FROM cases WHERE thread_id = ?", (tid,))`: reason `membership_cancel`, priority
      `P3`; `run.db.count("promises", "case_ref = ?", (c["case_ref"],)) == 1`; `run.db.count("check_events", "turn_id = ?
-     AND check_kind = 'completion' AND result = 'trimmed'", (v.code_turn.turn_id,)) >= 1`; `run.db.count("lookup_log",
-     "turn_id = ? AND tool = ?", (v.code_turn.turn_id, READ_MEMBERSHIP_NAME)) >= 1`; the working-copy `customers` row of
-     MHC-10001 equals the issued row (`[r for r in issued_rows("customers") if r[0] == "MHC-10001"] == [r for r in
-     run.db.table_rows("customers") if r[0] == "MHC-10001"]`; compare, never print).
+     AND check_kind = 'completion' AND result = 'trimmed'", (t.turn_id,)) >= 1`; `run.db.count("lookup_log", "turn_id = ?
+     AND tool = ?", (t.turn_id, READ_MEMBERSHIP_NAME)) >= 1`; `assert_no_excluded(run, tid)`; the working-copy
+     `customers` row of MHC-10001 equals the issued row (`[r for r in issued_rows("customers") if r[0] == "MHC-10001"] ==
+     [r for r in run.db.table_rows("customers") if r[0] == "MHC-10001"]`; compare, never print). A missing case is a
+     seam finding on the escalation policy / AEA-39 (§4.6 act node), never a reason to change the planner value.
    - `card_shot(brun, bp, "chat.block.handoff", "cancel-handoff")` before switching.
-   - "12c in the queue" (`needs=STAFF_NEEDS, operations=("switchRole", "getQueue"),
+   - "12d in the queue" (`needs=STAFF_NEEDS, operations=("switchRole", "getQueue"),
      selectors=("shell.role.representative", "queue.row_by_ref")`): desktop viewport; `switch_role`; `locate_by(page,
-     "queue.row_by_ref", c["case_ref"])` text contains "P3 · Standard". Step "12d records": `assert_turn_records`.
+     "queue.row_by_ref", c["case_ref"])` text contains "P3 · Standard". Step "12e records": `assert_turn_records`.
 
 ### Step 6 — J-8 tests (`tests/journeys/j8/test_aea_62.py`, DESKTOP; every run through `browser_run`)
 
@@ -1265,7 +1320,7 @@ commit body.
      clause as AEA-58 left it): `; browser legs of J-2, J-3, J-6, J-8 `tests/journeys/j{2,3,6,8}/test_aea_62.py`
      actual (AEA-62, `<sha>`)`.
    - `.claude/state/icm-progress.md`: the *Integrated-journey protection* row whose evidence cell names AEA-57 and
-     AEA-58 (today line 46; **not** the older row at line 61): append `; browser J-2/J-3/J-6/J-8 (AEA-62, `<sha>`)` after
+     AEA-58 (today line 46; **not** the older row at line 62): append `; browser J-2/J-3/J-6/J-8 (AEA-62, `<sha>`)` after
      the AEA-58 clause and replace its record link with `[`AEA-62`](../../docs/testing/journeys/<date>-AEA-62.md)`; keep
      the row ≤ 400 characters (shorten wording, never drop a SHA); next cell: `Every J-2/3/6/8 browser step integrated
      under --journeys-strict (needs the UX selector contract)`. Do not delete or merge the duplicate row; mention it in
@@ -1282,7 +1337,8 @@ commit body.
   `tests/conftest.py`, `src/meridian/`, `apps/web/`, `docs/ux/`, the OpenAPI, `UI_CONTRACTS.md`, or another ticket's
   `j<N>` file. A missing helper, fixture or selector key is a follow-up on AEA-58 / AEA-57 / AEA-51: stop and report.
 - Use `JourneyScript.add` / the plain FIFO queue, or `browser_journey` (every run goes through `browser_run` with
-  `StepScript`); reorder `CANCEL_MARKERS`.
+  `StepScript`); key a `by_marker` table by a tool name (only the three report-field markers of §4.4b); open WP-8
+  unverified (AEA-51 F-1).
 - Call `locator(` or `get_by_` (selectors only through `locate`, `locate_in`, `locate_by`); use copy text as a
   selector; read `apps/web/src` to fill a selector gap.
 - Use `?signedin`, `?role`, `?scenario`, `?staffing`, `?ex`, `?delay`; pytest-playwright's `page` / `context` /
@@ -1378,7 +1434,7 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
   opens). `expect_turn` fails loudly on an `exhausted` or invalid call and on a *must* role that never ran; roles that
   are given an entry but not called are harmless. `join_plan` (AEA-37) and the specialist runner (AEA-35) are on `main`;
   the act node (AEA-39, `12e46ee`) is merged too; a mismatch at run time is reported as a seam finding on them, never guessed around.
-- **R-4 brief quote message ids.** `next_message_id` predicts the customer message id from `sqlite_sequence`; the test
+- **R-4 brief quote message ids.** `next_message_id` predicts the customer message id as `MAX(messages.id) + 1`; the test
   asserts the prediction after the turn. A wrong prediction is a plan error (stop and report), never a reason to loosen
   the quote check.
 - **R-5 the 300 s cap.** About 18 browser tests, each with its own server, plus a one-off index build (AEA-51's
@@ -1387,7 +1443,7 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 - **R-6 shared context rows.** AEA-61 and AEA-55 also edit area-map row `3+`, the icm-progress journey row and DO-3 §9,
   and AEA-58-F1 may too. Each edit is one clause; the merge agent keeps both sides. AC-21's `browser/README.md` journey
   list is a follow-up on AEA-58 (its README has an *Adding a browser journey later* recipe but no journey list).
-  `icm-progress.md` carries two *Integrated-journey protection* rows (lines 46 and 61 today); this slice edits only the
+  `icm-progress.md` carries two *Integrated-journey protection* rows (lines 46 and 62 today); this slice edits only the
   AEA-57/AEA-58 one (line 46) and reports the duplicate for context upkeep.
 - **R-7 test-to-test imports.** j3, j6 and j8 import helpers from `tests.journeys.j2.test_aea_62` (only non-`test_`
   names), as AEA-58 imports from `j1/test_aea_57.py`. The convention check forbids a separate helper module in `j<N>/`,
@@ -1409,10 +1465,10 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 - **R-10 AC-4 decided on the code turn.** If the merged graph reads the invoice only on a later text turn, the code
   turn fails with `roles never called: ['specialist']`; that is a seam finding on AEA-37/AEA-39 against
   `route_after_identity`, not a reason to add a turn.
-- **R-11 `by_marker` depends on tool descriptions.** `CANCEL_MARKERS` relies on `kb_search`'s description naming
-  `read_membership` and no account tool description naming `kb_search` (true on `main`). If a later change puts
-  `kb_search` into the account specialist's request text, both specialists get the knowledge table and the step fails
-  loudly (`invalid_output`); report it.
+- **R-11 `by_marker` keys.** The markers are the report schemas' own field names (refresh 7 item 2), proven by AEA-51;
+  the module-level asserts fail at import if a field is renamed. If a later change puts one specialist's report field
+  into another specialist's request text, both get one table and the step fails loudly (`invalid_output` or a wrong
+  tool round); report it as a seam finding, never reorder or rename markers to hide it.
 - **R-12 source-card DOM id.** The wire `source_id` is already `src-<lookup_log id>` (§4.6), while the ticket and audit
   A2 speak of `#src-<source_id>`. Which DOM id the Sources tab renders is the UX session's `case.source_by_id` row; the
   test passes the wire `source_id` as the row's `{value}` and never builds an id itself. A row that cannot resolve a wire
@@ -1420,13 +1476,12 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 - **R-13 AC-11 needs the fastembed cache.** Like AC-2, AC-3, AC-5 and AC-12, AC-11 now needs `bge-small-en-v1.5` in
   `var/fastembed`; without it the test blocks with owner "environment (fastembed model cache)". Index build is once per
   process (`built_index_dir` is cached), so the extra cost is one more server start, not a second build.
-- **R-14 AEA-51's pass-2 blockers are this slice's run-time blockers.** AEA-51's plan (*Deviations* item 2, branch
-  `e9d07f3`) built only pass 1: `run_graph` is not bound because `compose.py` builds no slot, account or appointment
-  blocks (AEA-21b), `register_tracing` does not read `Key("trace_override")` (AEA-19-F1), and `TurnService` checks
-  `allow_turn()` before `parse_intake` (AEA-40-F1). Until AEA-51's pass 2 lands, every chat step here reports blocked
-  with owner AEA-51 (the needs check), and AC-4 (account card) and AC-6 (slot and confirmation cards) additionally depend
-  on AEA-21b's blocks. If AEA-51 merges pass 1 only, this slice can merge with those steps blocked (never passed); the
-  wave-4 gate under `--journeys-strict` then fails until pass 2 lands, which is the intended signal.
+- **R-14 AEA-51 is one plain merge blocker.** Pass 2 is built on its branch (`ddb7cbd`; AEA-21b, AEA-19-F1 and
+  AEA-40-F1 all merged on `main`), and its merge was sent back at `dffedf7` only because a sibling J-9 test
+  (`tests/journeys/j9/test_aea_40.py`) went red under real graph timing; the retry is `fdcc332`. AEA-51 also records
+  seam defects as strict xfails (F-1 identity resume loses an unverified customer's plan; F-2, F-4, F-5) that this slice
+  steers around only where the ticket allows (WP-8 verified first, AC-12) and never hides. If AEA-51's merged names
+  differ from §4.4, use the merged ones and say so.
 - **No contract change needed.** WEB-1 option A (D-4) and start-fresh (D-8) are applied as decided.
 
 ---
@@ -1434,16 +1489,14 @@ green:** `tests/journeys/support/test_support.py` (including `test_journey_file_
 ## 9. Readiness and gates
 
 **READY**, **BLOCKED-ON AEA-58-F1** (the AEA-58 follow-up with additions A-1, A-2, A-3 of §8 R-1; AEA-58 itself merged
-at `eb51ba4` without them, and the follow-up has not been opened) and **AEA-51** (the one import in §4.4:
-`tests/integration/customer_support.py` — `StepScript`, `step_overrides`, `built_index_dir`, `fastembed_offline` —
-present on AEA-51's pass-1 branch `e9d07f3`, not on `main`). Run-time dependencies, reported as *blocked* steps with
-their owners and never passed: AEA-51's `run_graph` and `reply_composer` bindings (AEA-51 pass 2, waiting on AEA-21b,
-AEA-19-F1, AEA-40-F1; §8 R-14), and the UX session's `selectors.md` rows plus its B1/B2, A-5 and B-3 fixes in `dist`.
-Already merged and no longer blocking: AEA-27 (identity), AEA-28 (booking), AEA-29 (cases and handoff), AEA-30 (demo
-clock), AEA-31 (reset), AEA-35 (specialist runner), AEA-36 (front nodes), AEA-37 (plan join), AEA-39 (act node), AEA-40
-(chat routes; AEA-40-1 greeting after reload), AEA-43 (demo inbox), AEA-44 (staff sessions), AEA-45 (`getQueue`,
-`getCase`), AEA-52 (staff and demo integration), AEA-57 (harness, wall clock), AEA-58 (browser harness). No
-`NEEDS-DECISION`.
+at `eb51ba4` without them, and the follow-up has not been opened) and **AEA-51** (`tests/integration/customer_support.py`
+for §4.4 and `Key("retrieval_index")` / `Key("run_graph")` in `web/container.py`; pass 2 built on its branch at
+`fdcc332`, merge sent back at `dffedf7` on a sibling J-9 test and being retried). Run-time dependencies, reported as
+*blocked* steps with their owners and never passed: the UX session's `selectors.md` rows plus its B1/B2, A-5 and B-3
+fixes in `dist`. Already merged and no longer blocking: AEA-19-F1, AEA-21b (cards), AEA-27 (identity), AEA-28 (booking),
+AEA-29 (cases and handoff), AEA-30 (demo clock), AEA-31 (reset), AEA-35, AEA-36, AEA-37, AEA-39 (graph nodes),
+AEA-40 and AEA-40-F1 (chat routes; greeting after reload), AEA-43 (demo inbox), AEA-44, AEA-45 (`getQueue`, `getCase`),
+AEA-52, AEA-57, AEA-58. No `NEEDS-DECISION`.
 
 **Gates:** no human, external, paid or live gate of its own; inherits `gate::ux4` through AEA-58. No model call is paid
 (scripted adapter only).

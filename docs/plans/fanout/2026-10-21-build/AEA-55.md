@@ -4,14 +4,42 @@
 AEA-49, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
 orchestrator) and by the checklist *Skips* row "UX-5 first run". The ★ boxes stay Innocent's.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/55 (identical to
-`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `2f70221` (2026-10-21; first written against `ef561fc`, refreshed at `c9b17ea`, `6b845a3` and `b68df7e`) · **Wave:** 5 · **Lane:**
+`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `dffedf7` (2026-10-22; first written against `ef561fc`, refreshed at `c9b17ea`, `6b845a3`, `b68df7e` and `2f70221`) · **Wave:** 5 · **Lane:**
 `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests, no
 security agent) · **Gates:** `gate::ux5` (cleared, above), `gate::paid` (AC-10 walkthrough only, Innocent's).
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 · **Implementer:** fanout-implementer (Sonnet).
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (sixth version 2026-10-22) · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-55-ui-verify-again` at
 `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-55`), cut from `main` after the five blockers merged.
 
-**Refresh, 2026-10-21 (fifth version; read this box first).** Re-checked against `main` at `2f70221`, 16 commits
+**Refresh, 2026-10-22 (sixth version; read this box first).** Re-checked against `main` at `dffedf7`, 18 commits
+after `2f70221`. Merged in that range: **AEA-19-F1** (`dc8d8d0`, trace override), **AEA-40-F1** (`47da752`, safety turns
+at the spend cap), **FU-saveFollowUp-text** (`0a01219`) and **AEA-21b** (`9b3824e`, compose cards). Between them they
+changed only `src/meridian/web/container.py` (`register_tracing` now honours `Key[TraceSink]("trace_override")`) and
+area-map rows A0, A7a and A8. Nothing changed under `apps/web/`, `docs/ux/` (the OpenAPI included; `05-verify/` still
+absent), `tests/journeys/`, `tests/integration/`, `tests/graph/`, the ticket, the slice plan, `stage7-signoff.md`,
+`docs/plans/ux-join/`, `metrics_reader.py`, `_case_rules.py`, `policy/limits.py`, `pyproject.toml` or
+`tests/conftest.py`. Checklist lines 90, 91, 120, 127 and 151 and the area-map *Screens* line 55 are unchanged. So §4.1,
+§4.3–§4.6 and every spec step hold. What changed in this version:
+1. **AEA-51 is built whole on its branch but not merged.** Pass 2 is on `aea-51-aea-51-customer-path` (head `fdcc332`).
+   Its first merge attempt was **sent back** at the merge gate (ledger, `dffedf7`): `tests/journeys/j9/test_aea_40.py::
+   test_j9_rate_limited_through_the_real_server` went red once AEA-51's composition unskipped it. The branch's fix commit
+   `fdcc332` is waiting for the next merge batch. AEA-51's own blockers (AEA-21b, AEA-19-F1, AEA-40-F1) are all merged now.
+2. **§4.2 is now copied from the branch's real files** at `fdcc332`: `customer_support.py` (474 lines) and
+   `tests/graph/worked_pair_scenarios.py` (1,279 lines). Every name this plan imports exists with the signature shown.
+   One detail differs from the earlier copy: `finished_spans(sink: Any, exporter)` (the sink is typed `Any`).
+3. **Step 6.4 is definite.** It no longer says "copy what the driver sets"; it gives the exact entries, copied from the
+   real `wp2` and `wp7` drivers. Two corrections came out of the real code: the `wp7` planner is
+   `planner(handoff="refund", topic="billing")`, and `wp2` turn 1 calls **no** specialist (the invoice read happens on
+   the code turn, round-indexed `(read, report_step)`). Step 6.1's imports change to match (`account_steps` and
+   `ReadInvoicesArgs` are added; `report` and `step` are no longer needed).
+4. **AEA-19-F1 is merged**, so `RunOptions(trace=sink)` reaches the turn spans that AC-6 scans. The R-11 caveat about it is
+   gone.
+5. **The relayed instruction "go with A"** (Innocent, through the workflow harness) matches what this plan already builds
+   on: WEB-1 option A (D-4 in `docs/plans/stage7-signoff.md`; `/login`, `/assets/` and `/fonts/` load unsigned, every
+   other page redirects with 303). AC-5's served-build smoke expects exactly that. Nothing else in this plan was open.
+6. R-11 and §9 restate the blocker states at `dffedf7`.
+
+**Refresh, 2026-10-21 (fifth version).** Re-checked against `main` at `2f70221`, 16 commits
 after `b68df7e` (merges: AEA-39 act node, AEA-60 prompt consumer checks, FU-j1-demo-state). None of them touched
 `apps/web/`, `docs/ux/` (the OpenAPI included; `05-verify/` still absent), `tests/journeys/support/`,
 `tests/integration/`, the ticket, the slice plan, `PROJECT-CHECKLIST.md` (lines 90, 91, 120, 127, 151 unchanged) or
@@ -326,7 +354,7 @@ Tables and columns the checks read (schema on `main`): `messages(thread_id, role
 `cases(case_ref, thread_id, reason, seed, …)`, `spend_ledger(cost_usd, recorded_at, …)`, `identity_codes(code_hmac,
 …)` (the code is stored only as an HMAC), `demo_inbox(…)` (no code column), `customers(customer_id, name, phone, …)`.
 
-### 4.2 From AEA-51 (merged before this ticket; `customer_support.py` copied from its branch at `e9d07f3`, `worked_pair_scenarios.py` from its plan D1/D2 — **verify at Step 0.3**)
+### 4.2 From AEA-51 (merged before this ticket; both files copied from its branch `aea-51-aea-51-customer-path` at `fdcc332` — **verify at Step 0.3**)
 
 ```python
 # tests/integration/customer_support.py
@@ -349,24 +377,47 @@ INDEX_SKIP: str                          # "bge-small-en-v1.5 is not cached loca
 @functools.cache
 def built_index_dir() -> Path | None    # None when the fastembed model is not cached; else the KB index, built once per process
 def require_index() -> Path              # pytest.skip(INDEX_SKIP) when built_index_dir() is None
-def build_capture_sink(registry: list[Any]) -> tuple[TraceSink, InMemorySpanExporter]
-def finished_spans(sink: TraceSink, exporter: InMemorySpanExporter) -> list[ReadableSpan]
+def build_capture_sink(registry: list[Any]) -> tuple[TraceSink, InMemorySpanExporter]   # the sink is already started
+def finished_spans(sink: Any, exporter: InMemorySpanExporter) -> list[ReadableSpan]      # flushes, then sorts by start time
 
-# tests/graph/worked_pair_scenarios.py
-def planner(**choices: str) -> str        # PlannerChoices JSON; defaults knowledge="no", account="none", scheduling="none", handoff="none", topic="other"
+# tests/graph/worked_pair_scenarios.py (branch fdcc332)
+TOOLS: Mapping[str, str]                  # MappingProxyType; "invoice" -> READ_INVOICES_NAME ("read_invoices"), …
+def planner(**choices: str) -> str        # PlannerChoices JSON; base {"knowledge": "no", "account": "none", "scheduling": "none", "handoff": "none", "topic": "other"}
 def classifier(label: str) -> str
-def responder(text: str) -> str
-def brief(**fields: Any) -> str
+def responder(text: str) -> str           # ResponderDraft(text=text).model_dump_json()
+def brief(**fields: Any) -> str           # BriefExtraction(**fields).model_dump_json()
 def tool(name: str, args: Mapping[str, Any], call_id: str = "call-1") -> RawToolCall
-def report(model: type, **fields: Any) -> RawToolCall
+def report(model: type[LLMFacing], **fields: Any) -> RawToolCall
 def step(*calls: RawToolCall, text: str = "") -> RawToolStep
-NORMAL: str                                # classifier "normal"
-TOOLS: Mapping[str, str]                  # "invoice" -> READ_INVOICES_NAME, …
-def wp2(run, client=None) -> ScenarioResult;  def wp5(...);  def wp7(...)   # drivers: their run.steps.set_step(...) calls per turn are the source of the entries copied in Step 6.4
-# Driver table (AEA-51 plan D1): wp2 = T1 "What is this invoice for? INV-204411" (specialist round 0 calls TOOLS["invoice"]
-#   before the code), T2 form, T3 code, T4 "What is it for?" planner(account="invoice", topic="billing"), T5 dispute
-#   planner(handoff="billing_dispute"); wp5 = no model entry; wp7 = planner(handoff="refund") + a GRN-3 test brief
-#   (per-run message_id, "$212.00", sentinel quote).
+def account_steps(*calls: RawToolCall, summary: str = "Read the record.") -> tuple[RawToolStep, RawToolStep]
+#   = step(*calls), step(report(AccountReport, summary=summary))
+NORMAL = classifier("normal")
+CO_TEXT = "My carbon monoxide detector is going off."
+REFUND_TEXT = "I want a refund for last week's visit."
+def wp2(run: CustomerRun, client: JourneyClient | None = None) -> ScenarioResult
+def wp5(run: CustomerRun, client: JourneyClient | None = None) -> ScenarioResult
+def wp7(run: CustomerRun, client: JourneyClient | None = None) -> ScenarioResult
+
+# meridian.agent.tools.account (main, line 65): class ReadInvoicesArgs(LLMFacing)   # used as the driver uses it
+
+# What the drivers set, per turn (copied from the branch; Step 6.4 turns these into the browser tables):
+#   wp2: talk = {Role.CLASSIFIER: NORMAL}; invoice_plan = planner(account="invoice", topic="billing");
+#        read, report_step = account_steps(tool(TOOLS["invoice"], ReadInvoicesArgs.model_validate(
+#            {"invoice_number": "INV-204411"}).model_dump(mode="json")), summary="Read the invoice as billed.")
+#     T1 "What is this invoice for? INV-204411":
+#        {**talk, PLANNER: invoice_plan, RESPONDER: responder("I need to find your record first.")}
+#     T2 the locate form:  {RESPONDER: responder("Thanks, I sent a code.")}
+#     T3 the code:         {**talk, PLANNER: invoice_plan, SPECIALIST: (read, report_step),
+#                           RESPONDER: responder("This invoice bills a diagnostic visit, a contactor replacement and a dispatch fee.")}
+#     T4 "What is it for?": {**talk, PLANNER: invoice_plan, SPECIALIST: (read, report_step),
+#                           RESPONDER: responder("The invoice lists three lines: the diagnostic visit, the part and the dispatch.")}
+#     T5 the dispute (planner(handoff="billing_dispute", topic="billing") + a per-run brief): NOT mirrored here.
+#   wp5: T1 CO_TEXT runs with set_step({}) — the safety gate answers before any model call.
+#   wp7: T1 REFUND_TEXT: {PLANNER: planner(handoff="refund", topic="billing"), CLASSIFIER: NORMAL,
+#        RESPONDER: responder("I can't promise an outcome, but I have asked a representative to look at it."),
+#        BRIEF: <per-run brief: next message id, "$212.00", a sentinel quote> — NOT mirrored (GRN-3 test data)}
+#   The account card WP-2's T3/T4 render shows the invoice total "$478.00" (tests/graph/test_worked_pairs_api.py asserts
+#   card["invoice"]["total"]["amount_cents"] == 47800; apps/web AccountCard renders inv.total.display).
 
 # src/meridian/domain/handoff.py (main)
 class Quote(LLMFacing): message_id: int; text: str            # text max_length=300
@@ -505,7 +556,8 @@ default config: they bind 5184 or 4019.
 3. AEA-51's API is as §4.2 says:
    `grep -nE "^def (open_customer_run|step_overrides|build_capture_sink|finished_spans|built_index_dir)|^class (StepScript|RunOptions|CustomerRun)|^DEFAULT_OPTIONS" tests/integration/customer_support.py`
    and
-   `grep -nE "^def (planner|classifier|responder|brief|tool|report|step|wp2|wp5|wp7)\b|^(NORMAL|TOOLS)\b" tests/graph/worked_pair_scenarios.py`.
+   `grep -nE "^def (planner|classifier|responder|brief|tool|account_steps|wp2|wp5|wp7)\b|^(NORMAL|TOOLS)\b" tests/graph/worked_pair_scenarios.py`
+   and `grep -n "^class ReadInvoicesArgs" src/meridian/agent/tools/account.py`.
    If a name is missing or its signature differs from §4.2, **stop and report** (the plan goes back to the planner).
 4. AEA-53: `grep -n "reason_label" src/meridian/services/metrics_reader.py` → note the import line; use the same
    module in Step 6.
@@ -927,8 +979,9 @@ Imports:
 - `meridian.config.Settings`, `meridian.domain.common.{HandoffReason, Role}`, `meridian.gates.gate.CODE_ENTERED`,
   `meridian.adapters.sqlite.db.format_wall`; `datetime.{date, datetime, time, timedelta}` and `zoneinfo.ZoneInfo`;
 - `reason_label` from the module found in Step 0.4;
-- `tests.integration.customer_support.{INDEX_SKIP, RunOptions, StepScript, build_capture_sink, built_index_dir, finished_spans, open_customer_run, step_overrides}`; `meridian.domain.handoff.Quote`;
-- `tests.graph.worked_pair_scenarios.{NORMAL, TOOLS, brief, planner, report, responder, step, tool}` (only those used);
+- `tests.integration.customer_support.{INDEX_SKIP, RunOptions, StepScript, build_capture_sink, built_index_dir, finished_spans, open_customer_run, step_overrides}`;
+- `tests.graph.worked_pair_scenarios.{NORMAL, TOOLS, account_steps, brief, planner, responder, tool}`;
+- `meridian.agent.tools.account.ReadInvoicesArgs`;
 - `tests.journeys.support.env.journey_environ`, `tests.journeys.support.server.{FORBIDDEN_PORTS, launch_server}`.
 
 **6.2 Constants.**
@@ -982,27 +1035,75 @@ NOT_RUN_SPECS = {
   chunk. Catch `httpx.ReadTimeout` and return `None`. Return `None` if the elapsed time is over `STREAM_PROBE_S`.
 - `code_hits(chain, digest) -> list[str]` (Step 6.7).
 
-**6.4 Script tables** (`script_tables() -> tuple[dict[Role, Any], dict[str, dict[Role, Any]]]`).
-- `DEFAULT_BRIEF = brief(needs=[Quote(message_id=0, text="I need a person to help me.")], claims=[], open_decision="Decide how to help the customer.")`.
-- `default = {Role.PLANNER: planner(), Role.CLASSIFIER: NORMAL, Role.RESPONDER: responder(DEFAULT_REPLY), Role.BRIEF: DEFAULT_BRIEF}`.
-  *Invariant:* every brief call is answered (a later turn on a thread with an open case, the WP-7 handoff), so
-  `script.problems()` stays empty. Message ids start at 1, so this quote is always removed by GRN-3 as a `brief_quote`
-  check event. That is never a turn failure, and the report says so (Step 13 §15).
-- `markers` is a dict built **in this insertion order**:
-  1. `WP2_T4_MARKER`: the per-role entries of AEA-51's `wp2` driver turn 4 (its `set_step(default=…)` mapping).
-     The driver has one (AEA-51 plan D1: T4 "What is it for?", planner `account="invoice", topic="billing"`); copy
-     every role its T4 `set_step` sets.
-  2. `WP2_T1_MARKER`: the entries of `wp2` turns 1–3, per role. A role called in more than one of those turns
-     becomes a **tuple in call order**. `Role.SPECIALIST` keeps the driver's round-indexed tuple for turn 1.
-  3. `WP7_MARKER`: the `wp7` driver's single-turn mapping **without `Role.BRIEF`** (it holds at least
-     `Role.PLANNER: planner(handoff="refund")`). The driver's brief has a per-run `message_id`, an amount and a sentinel
-     quote that test GRN-3; `DEFAULT_BRIEF` from the default table answers instead.
-- *Invariant 1:* turn 4's request also carries the turn-1 text in its chat window, so its marker must come first.
-- *Invariant 2:* marker phrases are taken from the customer's own words, never from a word a prompt contains.
-  `run.script.problems()` being empty after phase A proves no call fell through (Step 6.6).
-- WP-5 needs no entry: the safety gate answers before any model call (AEA-51 `wp5`: "no model entry set").
-- Copy each entry by **calling the same helpers with the same arguments as the driver** (for example
-  `planner(account="invoice", topic="billing")`). Never paste JSON.
+**6.4 Script tables** (`script_tables() -> tuple[dict[Role, Any], dict[str, dict[Role, Any]]]`). Exactly these
+entries; each is built by calling the AEA-51 helpers with the same arguments the drivers use (§4.2), never by pasting
+JSON.
+
+```python
+def script_tables() -> tuple[dict[Role, Any], dict[str, dict[Role, Any]]]:
+    talk = {Role.CLASSIFIER: NORMAL}
+    invoice_plan = planner(account="invoice", topic="billing")
+    read, report_step = account_steps(
+        tool(TOOLS["invoice"], ReadInvoicesArgs.model_validate({"invoice_number": "INV-204411"}).model_dump(mode="json")),
+        summary="Read the invoice as billed.",
+    )
+    default_brief = brief(
+        needs=[{"message_id": 0, "text": "I need a person to help me."}],
+        claims=[],
+        open_decision="Decide how to help the customer.",
+    )
+    default = {
+        Role.PLANNER: planner(),
+        Role.CLASSIFIER: NORMAL,
+        Role.RESPONDER: responder(DEFAULT_REPLY),
+        Role.BRIEF: default_brief,
+    }
+    markers = {  # insertion order matters: the first marker found in the request JSON whose table has the role wins
+        WP2_T4_MARKER: {
+            **talk,
+            Role.PLANNER: invoice_plan,
+            Role.SPECIALIST: (read, report_step),
+            Role.RESPONDER: responder("The invoice lists three lines: the diagnostic visit, the part and the dispatch."),
+        },
+        WP2_T1_MARKER: {
+            **talk,
+            Role.PLANNER: invoice_plan,
+            Role.SPECIALIST: (read, report_step),
+            Role.RESPONDER: (
+                responder("I need to find your record first."),
+                responder("Thanks, I sent a code."),
+                responder("This invoice bills a diagnostic visit, a contactor replacement and a dispatch fee."),
+            ),
+        },
+        WP7_MARKER: {
+            Role.PLANNER: planner(handoff="refund", topic="billing"),
+            Role.CLASSIFIER: NORMAL,
+            Role.RESPONDER: responder("I can't promise an outcome, but I have asked a representative to look at it."),
+        },
+    }
+    return default, markers
+```
+
+What each entry protects:
+- *Default table, `Role.BRIEF`:* every brief call is answered (a later turn on a thread with an open case, the WP-7
+  handoff, the "Talk to a person" button), so `script.problems()` stays empty. Message ids start at 1, so this quote is
+  always removed by GRN-3 as a `brief_quote` check event. That is never a turn failure, and the report says so
+  (Step 13 §15).
+- *`WP2_T4_MARKER` first:* turn 4's request also carries the turn-1 text in its chat window, so its marker must win
+  over `WP2_T1_MARKER`.
+- *`WP2_T1_MARKER`, the responder tuple:* turns 1, 2 (the locate form) and 3 (the code) each call the responder once, in
+  that order; the tuple is consumed by a per-table counter. `PLANNER` and `CLASSIFIER` are single entries because the
+  driver gives them the same value on every turn that calls them (turn 2 calls neither). `SPECIALIST` is indexed by tool
+  round, not by the counter, so the same `(read, report_step)` serves the code turn.
+- *`WP7_MARKER` without `Role.BRIEF`:* the driver's brief carries a per-run message id, a "$212.00" amount and a
+  sentinel quote that exist to test GRN-3 and cannot be computed before a browser run; the default brief answers instead.
+- *No WP-5 entry:* the safety gate answers before any model call (the `wp5` driver runs turn 1 with `set_step({})`).
+- *Marker phrases* are taken from the customer's own words, never from a word a prompt contains.
+  `run.script.problems() == ()` after phase A proves no call fell through (Step 6.7 test 2). The UX specs under
+  `apps/web/tests/e2e/` contain none of the three marker phrases (checked at `dffedf7`).
+- *Counters reset:* `set_step` resets every tuple counter. The fixture calls it before **every** Playwright invocation
+  (Step 6.6 item 12) and before phase B (Step 6.7 test 5), so phase B's `90-clock-and-inbox` WP2_T1 message gets the
+  turn-1 responder again.
 
 **6.5 The `Chain` dataclass.**
 
@@ -1441,19 +1542,20 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 - **R-10, AEA-58's selector contract** (`docs/plans/ux-join/selectors.md`, UX session) is still missing on `main`. If
   it is still missing at build time, AEA-58's on-screen journey steps are *blocked* and `--journeys-strict` fails
   (AC-13 not met, reported with owner "UX session").
-- **R-11, upstream holds (at `2f70221`).** AEA-49, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; ledger and merge
+- **R-11, upstream holds (at `dffedf7`).** AEA-49, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; ledger and merge
   subjects agree.
-  - **AEA-51** is `blocked` in the ledger. Pass 1 is built on `aea-51-aea-51-customer-path` (`e9d07f3`, not merged);
-    pass 2a (`worked_pair_scenarios.py`, the drivers this plan copies) is buildable; pass 2b is BLOCKED-ON AEA-21b
-    (compose cards), AEA-19-F1 (the trace override that AC-6's span scan needs) and AEA-40-F1. Until AEA-51 binds
-    `reply_composer` and `run_graph`, `startChatSession` answers 500 and
-    `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` is red on `main` (AEA-52 plan,
-    *Deviations*).
+  - **AEA-51** is `sent-back` in the ledger. It is built whole on `aea-51-aea-51-customer-path` (head `fdcc332`); its
+    first merge attempt failed the gate on `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`
+    (21 turns on one thread never answered `RATE_LIMITED`), and `fdcc332` is the branch's fix, waiting for the next
+    batch. Its own blockers (AEA-21b, AEA-19-F1, AEA-40-F1) are merged. Until it merges, `startChatSession` cannot run a
+    graph turn on `main`, and `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` stays red there
+    (AEA-52 plan, *Deviations*).
   - **AEA-52** merged pass 1 only (G0 + G1). Its AEA-51 halves (pass 2: G2, G2-WP, G3) are not built. Whether they are
     re-dispatched after AEA-51 is the orchestrator's call. This ticket does not import them; it needs only the staff
     routes on real services, which are merged (AEA-45, AEA-46, AEA-47). Any AEA-52 journey step still blocked when
     Step 10 runs makes `--journeys-strict` fail, and AC-13 is then reported not met with owner AEA-52.
-  - **AEA-62** is `planned` and BLOCKED-ON AEA-58-F1 (selector additions A-1…A-3) and AEA-51.
+  - **AEA-62** is `planned` and BLOCKED-ON AEA-58-F1 (selector additions A-1…A-3; not yet ticketed in the ledger) and
+    AEA-51.
   None of these is a decision this ticket needs.
 - **R-12, scripted-table fidelity.** WP-2's entries come from AEA-51's driver. If WP-2 still fails through the UI
   (`script.problems()` not empty, or a marker word turns out to occur in a prompt), the implementer stops and sends
@@ -1476,23 +1578,23 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 
 ## 9. Readiness
 
-**READY**, BLOCKED-ON **AEA-51, AEA-62** being merged into `main` (transitively AEA-21b, AEA-19-F1, AEA-40-F1 and
-AEA-58-F1, which those two wait on). Step 0.2 checks all five of the original blockers, so it still passes for the three
-already merged.
+**READY**, BLOCKED-ON **AEA-51, AEA-62** being merged into `main` (transitively AEA-58-F1, which AEA-62 waits on). Step 0.2
+checks all five of the original blockers, so it still passes for the three already merged.
 
-State at `2f70221`:
+State at `dffedf7`:
 - merged: AEA-52 (`55d9adf`, pass 1), AEA-53 (`b9be4dc`), AEA-58 (`eb51ba4`); also AEA-49 and AEA-57 from the
-  slice-plan row;
-- AEA-51 `blocked`: pass 1 on its branch (`e9d07f3`), pass 2a buildable, pass 2b waiting on AEA-21b, AEA-19-F1, AEA-40-F1;
+  slice-plan row; AEA-51's own blockers AEA-21b (`9b3824e`), AEA-19-F1 (`dc8d8d0`) and AEA-40-F1 (`47da752`);
+- AEA-51 `sent-back`: built whole on its branch (`fdcc332`), the J-9 fix committed, waiting for the next merge batch;
 - AEA-62 `planned`, waiting on AEA-58-F1 and AEA-51.
 
 | Blocker | Why it is truly needed |
 |---|---|
-| AEA-51 | **Imports:** `tests/integration/customer_support.py` (`open_customer_run`, `StepScript`, `step_overrides`, `build_capture_sink`, `finished_spans`, `RunOptions`); `tests/graph/worked_pair_scenarios.py` (script helpers and the `wp2`/`wp7` entries); and the real customer graph behind CON-2 |
+| AEA-51 | **Imports:** `tests/integration/customer_support.py` (`open_customer_run`, `StepScript`, `step_overrides`, `build_capture_sink`, `finished_spans`, `RunOptions`, `built_index_dir`, `INDEX_SKIP`); `tests/graph/worked_pair_scenarios.py` (`planner`, `classifier`-built `NORMAL`, `responder`, `brief`, `tool`, `account_steps`, `TOOLS`); and the real customer graph behind CON-2 (`run_graph`, `reply_composer` bound) |
 | AEA-52 (merged) | **Runtime:** staff and demo seams on the real app, behind SCR-5…SCR-8 and AC-7, AC-11, AC-19; journeys J-6 and J-8 (`j6/`, `j8/test_aea_52.py`) for AC-13 |
 | AEA-53 (merged) | **Runtime:** the real `MetricsReader` behind CON-18…CON-20 (AC-8, AC-9, AC-21); `reason_label` import path |
 | AEA-58 (merged) | **Runtime:** `pytest-playwright` (`--browser-channel`) and the browser J-1/J-9 journeys that AC-13 runs |
 | AEA-62 | **Runtime:** the browser legs of J-2, J-3, J-6 and J-8 that AC-13 runs (with AEA-58-F1's selector additions) |
 
-No `NEEDS-DECISION`. The UX-5 gate question was answered by Innocent (relayed); R-1 is an orchestrator confirmation,
-not a product decision.
+No `NEEDS-DECISION`. The UX-5 gate question was answered by Innocent (relayed by the orchestrator; the *Skips* row
+"UX-5 first run" records his skip), WEB-1 is option A (D-4, and the relayed "go with A"), and R-1 (linking
+`apps/web/node_modules`) is an orchestrator confirmation, not a product decision.
