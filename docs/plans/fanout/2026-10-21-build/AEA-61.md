@@ -1,19 +1,56 @@
 # Plan — [AEA-61] live smoke: live-model smoke set through the real app
 
-**Status:** planned — **READY in three parts.** **Part A** (smoke driver, custody/spend/record guards, the paid test file
-that skips by default) imports nothing that is not on `main` and **can be built now**. **Part B** (four scripted journey
-files, AC-16's scripted dry run, the scripted record) is **blocked-on AEA-51**: pass 2 is complete on its branch but not
-merged (sent back at the merge gate on J-9; fix commit `fdcc332` on the branch). **Part C** (the paid run and its record)
-is **blocked-on AEA-51** too, and waits on **`gate::paid`**: Innocent's go with the day's spend statement (sign-off D-15,
-"a statement, not a choice").
+**Status:** planned — **READY.** **Parts A and B build now in one dispatch** on `main` `8785135` (AEA-51 merged at
+`5539bca`): part A is the smoke driver, custody/spend/record guards and the paid test file that skips by default; part B
+is the four scripted journey files, AC-16's scripted dry run and the scripted record. **Part C** (the paid run and its
+record) waits only on **`gate::paid`**: Innocent's go with the day's spend statement (sign-off D-15, "a statement, not a
+choice") and the provider keys in the environment.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/61 (identical to
-`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `dffedf7` (refresh 6, 2026-10-22; refresh 5 at `dc8d8d0`; refresh 4 at `b68df7e`; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
+`docs/plans/tickets/AEA-61.md`) · **Base revision:** `main` `8785135` (refresh 7, 2026-10-22; refresh 6 at `dffedf7`; refresh 5 at `dc8d8d0`; refresh 4 at `b68df7e`; refresh 3 at `76f14f4`; refresh 2 at `cf8fd78`; refresh 1 at `ef561fc`; first written at `e22aebb`)
 · **Wave:** 4 · **Lane:** build-loop · **Risk:** none in the slice plan (see §8 R-6) · **Gate:** `gate::paid` (part C)
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refresh 6: 2026-10-22) · **Implementer:** fanout-implementer (Sonnet)
-**Branch / worktree:** the one the orchestrator creates (suggested `aea-61-live-smoke` at
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`), cut from `main`.
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (refreshes 6 and 7: 2026-10-22) · **Implementer:** fanout-implementer (Sonnet)
+**Branch / worktree:** `aea-61-aea-61-live-smoke` at `/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-61`,
+created by the orchestrator at `main` `8785135`; it holds no AEA-61 commit yet.
 
-**Refresh 6 (2026-10-22, `main` at `dffedf7`).** Read this box first; refreshes 5 to 1 below are kept as history. Where
+**Refresh 7 (2026-10-22, `main` at `8785135`).** Read this box first; refreshes 6 to 1 below are kept as history. Where
+this box and anything later differ, this box wins. Changed in place: the status lines, §2.2, §3.1's last paragraph,
+§4.3's heading, A0 step 1, the part A stop note, the A8 / B4 / C2 context wording, B0 step 1, §7 check 6, §8 R-1 and
+R-13, and §9. Everything else was re-checked and holds.
+
+1. **AEA-51 merged** at `5539bca` ("Merge AEA-51 customer path"; build ledger `merged`, commit `8785135`). The only other
+   commits after refresh 6's base `dffedf7` are `6a5c5bd` (plan files) and `8785135` (ledger).
+2. **Nothing this plan copies has changed.** `git diff --stat fdcc332 main` is empty over
+   `tests/integration/customer_support.py`, `tests/graph/worked_pair_scenarios.py`, `src/`, `tests/journeys/support/`,
+   `tests/live/`, `eval/`, `scripts/`, `tests/api/openapi_check.py`, `tests/fixtures/`,
+   `tests/unit/adapters/test_retrieval_fastembed.py` and `pyproject.toml`. So every §4.1 and §4.3 name holds as written.
+   Spot-read on `main`: `open_customer_run(request, options=DEFAULT_OPTIONS, *, monkeypatch=None)`, `RunOptions`,
+   `CustomerRun.steps`, `StepScript.set_step`, `TOOLS`, `Step`, `find_args`, `kb_steps`, `account_steps`,
+   `scheduling_steps`, `next_message_id`, `scheduled_appointment`, `open_slot`, `MOVED_SENTENCE`, `wp4f_followup`,
+   `warranty`.
+3. **A0 step 1 now passes.** The merge is on `main`; `tests/graph/worked_pair_scenarios.py` exists; and `register_graph`
+   provides `Key[Any]("run_graph")` (`src/meridian/web/container.py`, near line 1253; docstring near line 1099). So
+   **one dispatch builds part A, then part B**, in the existing worktree. Part C still waits for `gate::paid`.
+4. **B0 step 3's facts were re-checked read-only on `8785135`.** The implementer still re-runs them.
+   - `match_rules(<DANGER text>).danger_words` is `False`.
+   - Issued DB open slots for `north` / `2026-10-19` / `08:00-12:00`: `[56]` for `hvac_repair`, `[41]` for
+     `hvac_tune_up`.
+   - Earliest scheduled visit: MHC-10001 → appointment 159 (`north`, `hvac_repair`); MHC-57204 → appointment 1
+     (`north`, `hvac_tune_up`).
+   - The first dev warranty key is still `T-CALL-20260723-0276`.
+   - All six scripts are `split=dev`, `staffing=nobody`, `clock=2026-10-16T10:00:00-05:00`. Turn kinds: WP-1 `text` ×3;
+     WP-2, WP-4F and WP-4 `text, form, code_from_inbox, text, text`; warranty `text, form, code_from_inbox`; DANGER
+     `text`. B1's tables match row for row (3, 5, 3, 5, 1, 5 steps).
+5. **New sibling journey:** `tests/journeys/j5/test_aea_40.py` (AEA-40-F1) is added to §7 check 6.
+6. **Context wording simplified.** Parts A and B now land together, so A8's area-map and ICM sentences say "await
+   part B", not "await AEA-51", and "paid run awaits gate::paid". B4 and C2 replace those exact phrases. When both
+   parts are done in one dispatch, the implementer may fold A8's docs commit into B4's docs commit and write the B4
+   wording directly.
+7. **Pre-existing red, not ours:** AEA-51's ledger row notes a failing `test_wf15_reset_script` that also fails on `main`
+   `6a5c5bd`. It is outside this slice's affected set; do not chase or fix it.
+8. **Blockers recorded for the orchestrator:** parts A and B none; part C `gate::paid` (the D-15 spend statement and the
+   provider keys).
+
+**Refresh 6 (2026-10-22, `main` at `dffedf7`).** History; superseded by refresh 7 above. Where
 this box and anything later differ, this box wins. Rewritten in place: §4.3, A0 step 1, two A4 clarifications, B0, B1,
 §7 check 6, §8 (R-1, R-14, new R-15 and R-16) and §9. Everything else was re-checked and holds.
 
@@ -379,7 +416,7 @@ the same assertion the live run uses.
   `tests/journeys/{README.md,affected.py,__init__.py}`, `tests/journeys/j*/__init__.py`, and every other
   `tests/journeys/j*/test_aea_*.py`.
 - **AEA-51's helpers (part B only):** `tests/integration/customer_support.py`, `tests/graph/worked_pair_scenarios.py`
-  (import only, once merged).
+  (import only; on `main` since `5539bca`).
 - **Other test code:** `tests/api/openapi_check.py` (AEA-23); `tests/fixtures/**`, `tests/fakes/**`;
   `tests/unit/adapters/test_retrieval_fastembed.py` (import `KB_DIR`, `TRANSCRIPTIONS_DIR`, `cached_model_dir`);
   `tests/conftest.py`.
@@ -429,8 +466,8 @@ Module shorthand: **C** `smoke_cases.py`, **$** `smoke_spend.py`, **P** `smoke_p
 
 The ticket's **WP-N worked pairs** are WP-1, WP-2, WP-4 and WP-4F (plus DANGER and one transcript-derived warranty case).
 Their tests are `test_live_case[...]` (live, part C) and the four scripted journey files (free, part B). The **single
-`[journey]` criterion is AC-5, at level `integrated with a scripted model`.** Until part B lands, the ticket's journey
-level is `mock-tested` and the part A record line says `blocked by AEA-51`.
+`[journey]` criterion is AC-5, at level `integrated with a scripted model`.** Parts A and B land together (refresh 7), so the
+ticket's scripted record is at `integrated with a scripted model`; the live level comes only with part C.
 
 ### 3.2 Plan decisions (engineering; the reviewer checks them)
 
@@ -646,7 +683,7 @@ Tables read (columns copied from `schema/*.sql`):
   due_label, extra_lines, …, produced_by_code: true}`
 - `handoff{…}`, `account_card`, `appointment`, `confirmation`
 
-### 4.3 Names from AEA-51 (part B only; not on `main`; copied from branch `aea-51-aea-51-customer-path` at `fdcc332`; re-verify at step B0 after AEA-51 merges)
+### 4.3 Names from AEA-51 (part B only; on `main` since the merge `5539bca`; copied from branch `fdcc332`, and `git diff fdcc332 main` over both files is empty; B0 re-verifies)
 
 | Name | Where | Used for |
 |---|---|---|
@@ -665,7 +702,7 @@ Tables read (columns copied from `schema/*.sql`):
   A5 checks → A6 record and audit → A7 facade, live index, launcher and paid tests → A8 free tests, context, commit.
 - **Part B** (after AEA-51 merges): B0 verify → B1 scripted tables → B2 journey files → B3 AC-16 dry run → B4
   scripted record, context, commit.
-- **Part C** (after AEA-51 pass 2 merges; AEA-60 is merged; and only on Innocent's `gate::paid` go): C1 pre-paid checks → C2 paid run,
+- **Part C** (AEA-51 merged at `5539bca`, AEA-60 at `0e37fad`; only on Innocent's `gate::paid` go): C1 pre-paid checks → C2 paid run,
   record, context, commit.
 
 Each step ends with its tests green. The slice **consumes** AEA-57's harness API, AEA-51's test helpers (part B) and the
@@ -683,8 +720,8 @@ It stops and reports at the first part it cannot do, naming the blocker.
 1. Check three facts on `main` and record the results in the report: `git log --oneline main | grep -E "Merge
    (AEA-51|aea-51)"`; `test -f tests/graph/worked_pair_scenarios.py`; `grep -n '"run_graph"'
    src/meridian/web/container.py` showing a `provide(` of `Key("run_graph")` inside `register_graph`. Part A needs none
-   of them. **Part B and part C need all three.** On `dffedf7` all three are absent (AEA-51 pass 2 sits on its branch at
-   `fdcc332`). AEA-60 is on `main` (`0e37fad`).
+   of them. **Part B and part C need all three.** On `8785135` all three pass (refresh 7): `5539bca Merge AEA-51 customer
+   path`; the file exists; `register_graph` provides `Key[Any]("run_graph")`. AEA-60 is on `main` (`0e37fad`).
 2. Re-open `tests/journeys/support/{run,env,server,client,db,logtap,record}.py` and confirm the §4.1 names. A renamed
    name: use the merged name and list it in the report.
 3. `uv run python -m scripts.agent_version` prints one non-empty line. The value is not secret, but print it only in
@@ -1309,10 +1346,10 @@ Tests, with exact names. Each prints its evidence line.
 
 **Context (AC-18), in the part A commit:**
 - Area map row `3+`, last cell: append `; AEA-61 part A: tests/live/ (smoke driver, custody/spend/record guards, paid
-  tests skipped by default) actual (<sha>); scripted journeys j2–j5 await AEA-51; paid run awaits AEA-51 and gate::paid`.
+  tests skipped by default) actual (<sha>); scripted journeys j2–j5 await part B; paid run awaits gate::paid`.
 - ICM: add one row after the last *Routes verified against code and tests* row: `| Routes verified against code and
   tests | provisional | <date>: live smoke AEA-61 part A (<sha>): tests/live free run (7 passed, 10 skipped); journeys
-  await AEA-51; paid run awaits gate::paid | Re-run on any prompt, schema, model, tool or orchestration change
+  await part B; paid run awaits gate::paid | Re-run on any prompt, schema, model, tool or orchestration change
   (integrated-journeys rule 4) |`. Keep it ≤ 400 chars.
 - DO-3 §9's `└── live/` line (line 723 at `dc8d8d0`; find it by its text) becomes: `└── live/             marked `live`: paid calls, never in the default run (recordings
   feed contract/); AEA-61: conftest, smoke*.py, scripted_cases, test_smoke_guards, test_live_smoke; records
@@ -1324,13 +1361,14 @@ Tests, with exact names. Each prints its evidence line.
 1. `test(AEA-61): live smoke driver, custody and spend guards` — the `tests/live/*.py` files of part A.
 2. `docs(AEA-61): context rows for the live smoke driver` — area map, ICM, DO-3.
 
-**If AEA-51 pass 2 is not on `main` (A0 step 1): stop and report** "part A built (<sha>); part B blocked-on AEA-51
+**Then continue to part B in the same dispatch** (A0 step 1 passes on `8785135`). Only if A0 step 1 failed would you
+**stop and report** "part A built (<sha>); part B blocked-on AEA-51
 pass 2; part C blocked-on AEA-51 pass 2 and gate::paid". The journey record level for this ticket stays `mock-tested`.
 
 ### B0. Verify part B's prerequisites (after AEA-51 merges)
 
-1. A0 step 1's three checks pass on `main`. Then `git merge main` into the AEA-61 branch (or rebase, per the
-   orchestrator).
+1. A0 step 1's three checks pass on `main` (they do on `8785135`). The AEA-61 branch was cut at `8785135`, so no
+   merge is needed. If `main` has moved, `git merge main` into the branch; never rebase it, never force-push.
 2. Open `tests/integration/customer_support.py` and `tests/graph/worked_pair_scenarios.py` on `main` and confirm every
    §4.3 name and signature. A renamed helper: use the merged name and list it in the report. A missing capability (no
    per-step script, no built-index run, no `kb_steps`, `scheduled_appointment` or `open_slot`): stop and report
@@ -1473,7 +1511,7 @@ test function, so part A's file never imports an unmerged module.
 - Record: `uv run pytest -m journey tests/journeys/j2/test_aea_61.py tests/journeys/j3/test_aea_61.py
   tests/journeys/j4/test_aea_61.py tests/journeys/j5/test_aea_61.py --journey-record=AEA-61` writes
   `docs/testing/journeys/<date>-AEA-61.md`.
-- Area map: replace the part A sentence's `scripted journeys j2–j5 await AEA-51` with `scripted journeys
+- Area map: replace the part A sentence's `scripted journeys j2–j5 await part B` with `scripted journeys
   tests/journeys/j{2,3,4,5}/test_aea_61.py actual (<sha>)`.
 - ICM: the AEA-61 row's evidence becomes `<date>: live smoke AEA-61 (<sha>): tests/live free run (8 passed, 10
   skipped), journeys j2–j5 test_aea_61 (<m> passed); record docs/testing/journeys/<date>-AEA-61.md; paid run awaits
@@ -1495,7 +1533,7 @@ test function, so part A's file never imports an unmerged module.
 - Commit `docs(AEA-61): live smoke record <N>` with:
   - the record;
   - the ICM row's evidence replaced by the record link and result (`<k>/6 pass, run total $<x>`);
-  - the area-map sentence `paid run awaits AEA-51 and gate::paid` replaced by `live record
+  - the area-map sentence `paid run awaits gate::paid` replaced by `live record
     docs/testing/journeys/<date>-live-smoke-<N>.md`.
 - **A failing case:** keep the record and do not fix anything here. Report the failing assertion and its owner ticket
   (rule 5); the re-run is a new record.
@@ -1530,7 +1568,7 @@ live set serially. Run cheapest first and stop at the first red.
 | 3 | A, B | Iterating + before commit (free) | `uv run pytest tests/live -q -rs` | part A: 7 passed, 10 skipped "live smoke not requested…"; part B: 8 passed, 10 skipped; no "non-loopback" error |
 | 4 | B | Iterating + before commit (journeys, serial) | `uv run pytest tests/journeys/j2/test_aea_61.py tests/journeys/j3/test_aea_61.py tests/journeys/j4/test_aea_61.py tests/journeys/j5/test_aea_61.py -m journey -q -rs` | 6 good + 4 bad tests pass (10); no `blocked-on` skip |
 | 5 | A, B | Before commit | `uv run python -m tests.journeys.affected --base main` | part A: "0 journeys affected" (no journey path changed); part B: the selected journeys green |
-| 6 | B | Before commit | `uv run pytest tests/journeys/support -q` and `uv run pytest -m journey tests/journeys/j2 tests/journeys/j3 tests/journeys/j4 tests/journeys/j5 -q` | harness self-tests green; the siblings' journeys still green beside ours (after AEA-51 merges: `j2/test_aea_35.py`, `test_aea_38.py`, `test_aea_51.py`; `j3/test_aea_27.py`, `test_aea_28.py`, `test_aea_34.py`, `test_aea_39.py`, `test_aea_43.py`, `test_aea_51.py`; `j4/test_aea_28.py`, `test_aea_39.py`, `test_aea_51.py`; `j5/test_aea_36.py`, `test_aea_37.py`, `test_aea_51.py`, `test_aea_60.py`) |
+| 6 | B | Before commit | `uv run pytest tests/journeys/support -q` and `uv run pytest -m journey tests/journeys/j2 tests/journeys/j3 tests/journeys/j4 tests/journeys/j5 -q` | harness self-tests green; the siblings' journeys still green beside ours (on `8785135`: `j2/test_aea_35.py`, `test_aea_38.py`, `test_aea_51.py`; `j3/test_aea_27.py`, `test_aea_28.py`, `test_aea_34.py`, `test_aea_39.py`, `test_aea_43.py`, `test_aea_51.py`; `j4/test_aea_28.py`, `test_aea_39.py`, `test_aea_51.py`; `j5/test_aea_36.py`, `test_aea_37.py`, `test_aea_40.py`, `test_aea_51.py`, `test_aea_60.py`) |
 | 7 | A, B | Before commit | `git diff --name-only main...HEAD` and `git diff --name-only main...HEAD -- tests/journeys/support src eval scripts` | only §2.1 paths; the second is empty |
 | 8 | A, B | Before commit | `python3 ~/.claude/skills/icm-project/scripts/check_context.py .` | no FAIL in an owned row |
 | P1 | C | Same revision, before the paid run | `uv run pytest tests/contract/test_prompts_vs_consumers.py -q` | green |
@@ -1580,7 +1618,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | # | Kind | Item | Handling |
 |---|---|---|---|
-| R-1 | Blocker (parts B, C) | AEA-51 is not merged. Ledger `sent-back`: its merge gate went red on `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`; the fix `fdcc332` is on its branch. Pass 2 is complete there (`Key("run_graph")` bound over the production adapters; the helpers in §4.3). Everything else this slice needs is merged (AEA-21b `9b3824e`, AEA-40-F1 `47da752`, AEA-60 `0e37fad`, AEA-39 `12e46ee`) | Part A now; parts B and C start only on A0 step 1's three checks; B0 verifies the names and the facts |
+| R-1 | Resolved (refresh 7) | AEA-51 merged at `5539bca` (ledger `merged` at `8785135`); its helpers on `main` equal branch `fdcc332`, where §4.3 was copied | Parts A and B build now in one dispatch; part C waits only on `gate::paid` |
 | R-2 | Resolved (refresh 5) | AEA-60's prompt check (`tests/contract/test_prompts_vs_consumers.py`) merged at `0e37fad` | P1 runs on the paid run's revision as §7 says |
 | R-3 | Gate | `gate::paid` + the day's spend statement (D-15) | Part C only; the plan carries no figure and invents none |
 | R-4 | Live variance | Real models may route a dev script differently (e.g. WP-4F moving in turn 5, WP-2 reading the invoice twice) | Checks assert outcomes, not turn positions, where the ACs allow (PD-7; WP-4F "settled on the follow-up"). A genuine miss is a finding for the owner ticket, never a weakened check |
@@ -1592,7 +1630,7 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 | R-10 | Encodings | Raw model outputs (report model names, tool argument names, the danger label) belong to AEA-35/27/28/37; this plan fixes their content, AEA-51's merged drivers fix their encoding | B0 step 2; a mismatch is reported, not guessed |
 | R-11 | Request to AEA-57 (follow-up, not blocking) | `LogTap.structured(kind)` cannot see `signal` records, because `emit_signal` logs them with `extra={"signal": …}` while LogTap reads `meridian_record`. Any journey asserting on signals through LogTap passes vacuously | AEA-61 works around it in owned code (`SignalTap`). Orchestrator: open a follow-up on AEA-57 to read `record.__dict__["signal"]` too |
 | R-12 | Collision (shared context files) | `.claude/reference/area-map.md` row `3+` (also edited by 51, 52, 55, 57–60, 62), `.claude/state/icm-progress.md` (append-style rows; AEA-02b hit a conflict there) and `docs/design/code-design.md` §9 | Append-only edits to one cell, one new row and one line; resolve a merge conflict by keeping both sides |
-| R-13 | Workflow | If the orchestrator merges part A before AEA-51, the issue stays open and the ledger row must not read `merged` for the whole ticket | Orchestrator: record "part A merged; B/C blocked-on AEA-51" |
+| R-13 | Workflow | Parts A and B land as one build; part C (the paid run and its record) comes later under `gate::paid` | Orchestrator: after the merge, the ledger row reads "merged (free parts); paid run awaits gate::paid", and issue #61 stays open until the live record is committed (AC-17) |
 | R-14 | Resolved (refresh 6) | AEA-21b merged at `9b3824e` and AEA-40-F1 at `47da752`, so AEA-51 pass 2 was able to complete | — |
 | R-15 | Behaviour note (parts B, C) | AEA-51 finding F-1: `open_tasks` is not advanced on card and code turns, so a resumed task re-runs its specialist on later turns. A live model may call tools again on WP-2 T4 or WP-4F T5 | The checks already allow it: PD-7 needs at least one INV-204411 read after verification; WP-4F needs exactly one `moved` action, and a second `find_windows` writes none. A second `move_visit` attempt in a live run is a finding for AEA-39/AEA-51, never a weakened check |
 | R-16 | Scripted WP-4F differs from AEA-51's driver | AEA-51's `wp4f` computes its own customer and moves by picking a slot-card option; the dev script seeds MHC-10001 and moves by text, to slot 56 | B1 follows the dev script; B0 step 3 proves the slot facts first |
@@ -1605,9 +1643,9 @@ package-scoped to `tests/live/`), no setting, no dependency and no module import
 
 | Part | State |
 |---|---|
-| A | Buildable on `main` `dffedf7` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
-| B | **Blocked-on AEA-51** (merge; pass 2 is complete on its branch at `fdcc332` after the J-9 send-back) |
-| C | **Blocked-on AEA-51** (merge), plus `gate::paid` (D-15 spend statement) |
+| A | Buildable on `main` `8785135` now; imports only merged code (AEA-06, 10, 17, 18, 23, 26, 33, 43, 50, 57) |
+| B | Buildable on `main` `8785135` now, in the same dispatch after part A (AEA-51 merged at `5539bca`) |
+| C | Waits on `gate::paid` only (D-15 spend statement and the provider keys); never part of a merge gate |
 
 ## Gates
 

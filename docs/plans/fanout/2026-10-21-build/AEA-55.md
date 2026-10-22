@@ -1,17 +1,39 @@
 # Plan: [AEA-55] UI integration: `apps/web` against the real backend ("UI verify again")
 
-**Status:** planned. **READY to build once its two remaining blockers are merged** (BLOCKED-ON AEA-51, AEA-62;
-AEA-49, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
+**Status:** planned. **READY to build once its one remaining blocker is merged** (BLOCKED-ON AEA-62, which itself
+waits on AEA-58-F1; AEA-49, AEA-51, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; see §9). The UX-5 gate is cleared for this ticket by Innocent's statement of 2026-10-21 (relayed by the
 orchestrator) and by the checklist *Skips* row "UX-5 first run". The ★ boxes stay Innocent's.
 **Issue:** https://labs.gauntletai.com/innocentnortey/inno-aea-callcenter/-/issues/55 (identical to
-`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `dffedf7` (2026-10-22; first written against `ef561fc`, refreshed at `c9b17ea`, `6b845a3`, `b68df7e` and `2f70221`) · **Wave:** 5 · **Lane:**
+`docs/plans/tickets/AEA-55.md`) · **Base revision:** `main` `8785135` (2026-10-22; first written against `ef561fc`, refreshed at `c9b17ea`, `6b845a3`, `b68df7e`, `2f70221` and `dffedf7`) · **Wave:** 5 · **Lane:**
 `lane::build-loop` · **Risk:** none (no `risk::security`: plan → implement with tests → review; no frozen tests, no
 security agent) · **Gates:** `gate::ux5` (cleared, above), `gate::paid` (AC-10 walkthrough only, Innocent's).
-**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (sixth version 2026-10-22) · **Implementer:** fanout-implementer (Sonnet).
+**Planner:** fanout-planner on `claude-opus-5-5`, 2026-10-21 (seventh version 2026-10-22) · **Implementer:** fanout-implementer (Sonnet).
 **Branch / worktree:** the one the orchestrator creates (suggested `aea-55-ui-verify-again` at
-`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-55`), cut from `main` after the five blockers merged.
+`/home/linuxuser/workspaces/inno-aea-callcenter-wt/AEA-55`), cut from `main` after AEA-62 (the last blocker) merged.
 
-**Refresh, 2026-10-22 (sixth version; read this box first).** Re-checked against `main` at `dffedf7`, 18 commits
+**Refresh, 2026-10-22 (seventh version; read this box first).** Re-checked against `main` at `8785135`. The only merge
+since `dffedf7` is **AEA-51** (`5539bca`, the customer path; its branch head `fdcc332` came in through `321c4b6`).
+1. **§4.2 holds byte for byte.** It was copied from the branch at `fdcc332`, and
+   `git diff fdcc332 main -- tests/integration/customer_support.py tests/graph/worked_pair_scenarios.py src/meridian
+   tests/journeys apps docs/ux tests/conftest.py pyproject.toml` is empty. Every name Step 0.3 greps for is now on
+   `main`, and `run_graph` / `reply_composer` are bound in `src/meridian/web/container.py`, so CON-2 runs a real graph
+   turn.
+2. **AEA-51's other new files** (`tests/integration/{customer_api,test_customer_composition,test_customer_failures,
+   test_relayed_turn}.py`, `tests/capture/test_cap{1,2,3}_*.py`, `tests/contract/test_model_ports_contract.py`,
+   `tests/graph/test_worked_pairs_api.py`, `tests/journeys/j{2,3,4,5,9}/test_aea_51.py`) are already in §2's
+   do-not-touch list by pattern. None overlaps a file this ticket owns.
+3. **Unchanged since `dffedf7`:** everything under `apps/web/` and `docs/ux/` (the OpenAPI included; `05-verify/` still
+   absent), `docs/plans/ux-join/` (`selectors.md` still absent, R-10), the ticket, the slice plan, `PROJECT-CHECKLIST.md`
+   (lines 90, 91, 120, 127, 151 as quoted) and the area-map *Screens* paragraph (still line 55). So §2–§7 hold unchanged.
+4. **One blocker remains: AEA-62** (`planned` in the ledger; its plan is READY but BLOCKED-ON AEA-58-F1, which has not
+   been opened as a ticket yet). Step 0.2 still checks all five original blockers; four of them now pass.
+5. **Known red on `main` that is not this ticket's:** `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script`
+   (`2 == 1` reset rows; resume note, fix ticket proposed). It is not a journey and is not in any command this plan runs.
+   `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` was red only until AEA-51 bound
+   `run_graph`; Step 10 reports whatever it finds and fixes nothing outside §2.
+6. R-11 and §9 restate the blocker states at `8785135`.
+
+**Refresh, 2026-10-22 (sixth version).** Re-checked against `main` at `dffedf7`, 18 commits
 after `2f70221`. Merged in that range: **AEA-19-F1** (`dc8d8d0`, trace override), **AEA-40-F1** (`47da752`, safety turns
 at the spend cap), **FU-saveFollowUp-text** (`0a01219`) and **AEA-21b** (`9b3824e`, compose cards). Between them they
 changed only `src/meridian/web/container.py` (`register_tracing` now honours `Key[TraceSink]("trace_override")`) and
@@ -1542,20 +1564,18 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 - **R-10, AEA-58's selector contract** (`docs/plans/ux-join/selectors.md`, UX session) is still missing on `main`. If
   it is still missing at build time, AEA-58's on-screen journey steps are *blocked* and `--journeys-strict` fails
   (AC-13 not met, reported with owner "UX session").
-- **R-11, upstream holds (at `dffedf7`).** AEA-49, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; ledger and merge
-  subjects agree.
-  - **AEA-51** is `sent-back` in the ledger. It is built whole on `aea-51-aea-51-customer-path` (head `fdcc332`); its
-    first merge attempt failed the gate on `tests/journeys/j9/test_aea_40.py::test_j9_rate_limited_through_the_real_server`
-    (21 turns on one thread never answered `RATE_LIMITED`), and `fdcc332` is the branch's fix, waiting for the next
-    batch. Its own blockers (AEA-21b, AEA-19-F1, AEA-40-F1) are merged. Until it merges, `startChatSession` cannot run a
-    graph turn on `main`, and `tests/journeys/j7/test_aea_30.py::test_j7_shift_end_converts_queued_case` stays red there
-    (AEA-52 plan, *Deviations*).
+- **R-11, upstream holds (at `8785135`).** AEA-49, AEA-51, AEA-52, AEA-53, AEA-57 and AEA-58 are merged; ledger and
+  merge subjects agree.
+  - **AEA-51** merged at `5539bca` (ledger `merged`). Its merge gate ran 546 tests and journeys J-2/3/4/5/9/10 with one
+    failure, `tests/capture/test_cap9_runtime_ops.py::test_wf15_reset_script`, which fails identically on the pre-merge
+    commit (not a journey; outside this plan's commands).
   - **AEA-52** merged pass 1 only (G0 + G1). Its AEA-51 halves (pass 2: G2, G2-WP, G3) are not built. Whether they are
-    re-dispatched after AEA-51 is the orchestrator's call. This ticket does not import them; it needs only the staff
-    routes on real services, which are merged (AEA-45, AEA-46, AEA-47). Any AEA-52 journey step still blocked when
-    Step 10 runs makes `--journeys-strict` fail, and AC-13 is then reported not met with owner AEA-52.
-  - **AEA-62** is `planned` and BLOCKED-ON AEA-58-F1 (selector additions A-1…A-3; not yet ticketed in the ledger) and
-    AEA-51.
+    re-dispatched now that AEA-51 is merged is the orchestrator's call. This ticket does not import them; it needs only
+    the staff routes on real services, which are merged (AEA-45, AEA-46, AEA-47). Any AEA-52 journey step still blocked
+    when Step 10 runs makes `--journeys-strict` fail, and AC-13 is then reported not met with owner AEA-52.
+  - **AEA-62** is `planned`; its plan is READY but BLOCKED-ON **AEA-58-F1** (selector additions A-1…A-3 to
+    `tests/journeys/browser/`), which is not yet a ticket in the ledger. AEA-62's other blocker, AEA-51, is now merged.
+    The orchestrator should open AEA-58-F1 so the chain AEA-58-F1 → AEA-62 → AEA-55 can move.
   None of these is a decision this ticket needs.
 - **R-12, scripted-table fidelity.** WP-2's entries come from AEA-51's driver. If WP-2 still fails through the UI
   (`script.problems()` not empty, or a marker word turns out to occur in a prompt), the implementer stops and sends
@@ -1578,22 +1598,27 @@ across the codebase. `apps/web` config changes select every journey, which Step 
 
 ## 9. Readiness
 
-**READY**, BLOCKED-ON **AEA-51, AEA-62** being merged into `main` (transitively AEA-58-F1, which AEA-62 waits on). Step 0.2
-checks all five of the original blockers, so it still passes for the three already merged.
+**READY**, BLOCKED-ON **AEA-62** being merged into `main` (transitively AEA-58-F1, which AEA-62 waits on and which
+has not been opened yet). Step 0.2 checks all five of the original blockers, so it still passes for the four already
+merged.
 
-State at `dffedf7`:
-- merged: AEA-52 (`55d9adf`, pass 1), AEA-53 (`b9be4dc`), AEA-58 (`eb51ba4`); also AEA-49 and AEA-57 from the
-  slice-plan row; AEA-51's own blockers AEA-21b (`9b3824e`), AEA-19-F1 (`dc8d8d0`) and AEA-40-F1 (`47da752`);
-- AEA-51 `sent-back`: built whole on its branch (`fdcc332`), the J-9 fix committed, waiting for the next merge batch;
-- AEA-62 `planned`, waiting on AEA-58-F1 and AEA-51.
+State at `8785135`:
+- merged: AEA-51 (`5539bca`), AEA-52 (`55d9adf`, pass 1), AEA-53 (`b9be4dc`), AEA-58 (`eb51ba4`); also AEA-49 and
+  AEA-57 from the slice-plan row;
+- AEA-62 `planned`, waiting on AEA-58-F1 (not yet ticketed).
 
 | Blocker | Why it is truly needed |
 |---|---|
-| AEA-51 | **Imports:** `tests/integration/customer_support.py` (`open_customer_run`, `StepScript`, `step_overrides`, `build_capture_sink`, `finished_spans`, `RunOptions`, `built_index_dir`, `INDEX_SKIP`); `tests/graph/worked_pair_scenarios.py` (`planner`, `classifier`-built `NORMAL`, `responder`, `brief`, `tool`, `account_steps`, `TOOLS`); and the real customer graph behind CON-2 (`run_graph`, `reply_composer` bound) |
+| AEA-51 (merged) | **Imports:** `tests/integration/customer_support.py` (`open_customer_run`, `StepScript`, `step_overrides`, `build_capture_sink`, `finished_spans`, `RunOptions`, `built_index_dir`, `INDEX_SKIP`); `tests/graph/worked_pair_scenarios.py` (`planner`, `classifier`-built `NORMAL`, `responder`, `brief`, `tool`, `account_steps`, `TOOLS`); and the real customer graph behind CON-2 (`run_graph`, `reply_composer` bound) |
 | AEA-52 (merged) | **Runtime:** staff and demo seams on the real app, behind SCR-5…SCR-8 and AC-7, AC-11, AC-19; journeys J-6 and J-8 (`j6/`, `j8/test_aea_52.py`) for AC-13 |
 | AEA-53 (merged) | **Runtime:** the real `MetricsReader` behind CON-18…CON-20 (AC-8, AC-9, AC-21); `reason_label` import path |
 | AEA-58 (merged) | **Runtime:** `pytest-playwright` (`--browser-channel`) and the browser J-1/J-9 journeys that AC-13 runs |
-| AEA-62 | **Runtime:** the browser legs of J-2, J-3, J-6 and J-8 that AC-13 runs (with AEA-58-F1's selector additions) |
+| AEA-62 | **Runtime:** the browser legs of J-2, J-3, J-6 and J-8 that AC-13 runs (with AEA-58-F1's selector additions). Nothing is imported from it; only AC-13 needs it |
+
+If the orchestrator wants the rest of the ticket to move before AEA-62, everything except AC-13 (Steps 0–9 and
+11–15) can be built now: Step 0.2 would then be told to skip AEA-62, and Step 10 would record AC-13 as **not met,
+blocked by AEA-62** in the journey record. That is the orchestrator's scheduling call, not a product decision; the
+ticket's *Blocked by* list names AEA-62, so this plan keeps it as a blocker by default.
 
 No `NEEDS-DECISION`. The UX-5 gate question was answered by Innocent (relayed by the orchestrator; the *Skips* row
 "UX-5 first run" records his skip), WEB-1 is option A (D-4, and the relayed "go with A"), and R-1 (linking
