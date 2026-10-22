@@ -21,6 +21,9 @@ from meridian.config import Settings, default_model_settings
 ROOT: Final = Path(__file__).resolve().parents[1]  # repo root locally; /app in the image
 BUILD_SHA_FILE: Final = ROOT / "BUILD_SHA"
 PROMPT_GLOBS: Final = ("src/meridian/agent/prompts/*.py", "src/meridian/policy/texts.py")
+# The commit each host sets on a Git-built deploy. Railway's comes first (the frozen AEA-50 precedence); Render
+# (RENDER_GIT_COMMIT, set at build and run time) hosts the app since 2026-10-21. Only one is ever set.
+HOST_SHA_VARIABLES: Final = ("RAILWAY_GIT_COMMIT_SHA", "RENDER_GIT_COMMIT")
 
 
 def prompt_files(root: Path = ROOT) -> tuple[Path, ...]:
@@ -32,10 +35,12 @@ def prompt_files(root: Path = ROOT) -> tuple[Path, ...]:
 
 
 def resolve_git_sha(environ: Mapping[str, str], build_sha_file: Path = BUILD_SHA_FILE) -> str:
-    """Railway's commit SHA, else the BUILD_SHA file (a `-dirty` suffix is kept), else `unknown`."""
-    railway = environ.get("RAILWAY_GIT_COMMIT_SHA", "").strip()
-    if railway:
-        return railway
+    """The host's commit SHA (Railway's, else Render's), else the BUILD_SHA file (a `-dirty` suffix is kept),
+    else `unknown`."""
+    for name in HOST_SHA_VARIABLES:
+        value = environ.get(name, "").strip()
+        if value:
+            return value
     if build_sha_file.is_file():
         text = build_sha_file.read_text(encoding="utf-8").strip()
         if text:
