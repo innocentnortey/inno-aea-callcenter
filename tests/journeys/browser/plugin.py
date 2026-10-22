@@ -1,4 +1,5 @@
-"""The three browser fixtures and the two session hooks (AEA-58). Loaded with
+"""The browser fixtures (production_build, journey_chrome, browser_journey, browser_journey_factory) and the two
+session hooks (AEA-58, AEA-58-F1). Loaded with
 `pytest_plugins = ("tests.journeys.browser.plugin",)` by each browser test module.
 
 Module level imports only the standard library, pytest and TYPE_CHECKING names, as AEA-57's plugin does.
@@ -7,7 +8,8 @@ Module level imports only the standard library, pytest and TYPE_CHECKING names, 
 from __future__ import annotations
 
 import shlex
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -21,6 +23,8 @@ if TYPE_CHECKING:
     from tests.journeys.browser.build import ProductionBuild
     from tests.journeys.browser.pages import BrowserRun
     from tests.journeys.browser.record import BrowserSession
+    from tests.journeys.browser.server import OverridesFor
+    from tests.journeys.support.scripted_model import JourneyScript
 
 
 def _session(config: pytest.Config) -> BrowserSession:
@@ -75,10 +79,19 @@ def journey_chrome(
         pw.stop()
 
 
-@pytest.fixture
-def browser_journey(
-    request: pytest.FixtureRequest, journey_chrome: Browser, production_build: ProductionBuild, tmp_path: Path
+@contextmanager
+def _browser_run(
+    request: pytest.FixtureRequest,
+    browser: Browser,
+    build: ProductionBuild,
+    tmp_path: Path,
+    *,
+    environ_overrides: dict[str, str] | None = None,
+    script: JourneyScript | None = None,
+    with_clock: bool = False,
+    overrides_for: OverridesFor | None = None,
 ) -> Iterator[BrowserRun]:
+    """One composition for both browser fixtures: collector, strict flag, screenshots folder, BrowserRun, close()."""
     from tests.journeys.browser.pages import BrowserRun
     from tests.journeys.browser.server import open_browser_journey
     from tests.journeys.support.env import REPO_ROOT
@@ -91,13 +104,20 @@ def browser_journey(
     scope = request.config.getoption("--journey-record")
     shots = record_path(REPO_ROOT, scope, _today()).with_suffix("") if scope else tmp_path / "shots"
     with open_browser_journey(
-        collector=collector, strict=strict, nodeid=request.node.nodeid, build=production_build
+        collector=collector,
+        strict=strict,
+        nodeid=request.node.nodeid,
+        build=build,
+        environ_overrides=environ_overrides,
+        script=script,
+        with_clock=with_clock,
+        overrides_for=overrides_for,
     ) as run:
         brun = BrowserRun(
             run=run,
-            browser=journey_chrome,
+            browser=browser,
             channel=str(session.channel),
-            build=production_build,
+            build=build,
             shots_dir=shots,
             session=session,
             test_name=request.node.originalname,
@@ -106,6 +126,45 @@ def browser_journey(
             yield brun
         finally:
             brun.close()
+
+
+@pytest.fixture
+def browser_journey(
+    request: pytest.FixtureRequest, journey_chrome: Browser, production_build: ProductionBuild, tmp_path: Path
+) -> Iterator[BrowserRun]:
+    with _browser_run(request, journey_chrome, production_build, tmp_path) as brun:
+        yield brun
+
+
+@pytest.fixture
+def browser_journey_factory(
+    request: pytest.FixtureRequest, journey_chrome: Browser, production_build: ProductionBuild, tmp_path: Path
+) -> Callable[..., AbstractContextManager[BrowserRun]]:
+    """Runs with options (AEA-58-F1 A-1): `with browser_journey_factory(index_dir=..., with_clock=True,
+    script=..., overrides_for=...) as brun:`. Each call opens one run; close it with the `with` block."""
+
+    def open_run(
+        *,
+        index_dir: Path | None = None,
+        with_clock: bool = False,
+        script: JourneyScript | None = None,
+        overrides_for: OverridesFor | None = None,
+    ) -> AbstractContextManager[BrowserRun]:
+        from tests.journeys.browser.server import INDEX_DIR_ENV
+
+        environ = {INDEX_DIR_ENV: str(index_dir)} if index_dir is not None else None
+        return _browser_run(
+            request,
+            journey_chrome,
+            production_build,
+            tmp_path,
+            environ_overrides=environ,
+            script=script,
+            with_clock=with_clock,
+            overrides_for=overrides_for,
+        )
+
+    return open_run
 
 
 @pytest.hookimpl(trylast=True)
