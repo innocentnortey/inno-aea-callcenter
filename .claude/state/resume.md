@@ -1,6 +1,6 @@
 # Resume note — inno-aea-callcenter
 
-**Updated:** 2026-10-21 (Stage 5 closed after SP-1), Mac working copy. **Product stage:** see [`PROJECT-CHECKLIST.md`](../../PROJECT-CHECKLIST.md)
+**Updated:** 2026-10-22 (Stage 5 closed after SP-1), Mac working copy. **Product stage:** see [`PROJECT-CHECKLIST.md`](../../PROJECT-CHECKLIST.md)
 (re-initialized 2026-10-20; the checklist shows the current gate). **Context maturity:** [ICM checklist](icm-progress.md).
 
 ## UX track update (2026-10-21, VPS)
@@ -512,6 +512,27 @@ uncommitted planner edit, not swept in). Cut tickets for findings 1, 3, 4 and 5 
 5. **Low, context drift (`lane::direct`).** `.claude/reference/area-map.md` has duplicate A6, A8 and A11 rows (stale and current); collapse them. The missing ux fixture dump skips one fixtures test.
 
 **Next action:** cut the fix ticket for finding 1 and the `lane::direct` area-map cleanup (finding 5); decide finding 4 with the CAS-16 owner; then land the remaining open tickets in `build-ledger.md`. The full suite stays red until `test_wf15_reset_script` (and wave-3 finding 5b, `test_affected_journeys.py:61`, if still open) is fixed; fix before the pre-deploy full run. Stale worktree `audit-W3` (at `5539bca`) is not ours; ask its owner before removing it.
+
+## Stage 8: wave 4 follow-ups context upkeep (2026-10-22, VPS)
+
+**Merged in wave 4 (follow-ups):** FU-main-green (restores a green full suite; closes the `test_wf15_reset_script` finding above), FU-pending-change (`8c9b780`, PR #212) and FU-handoff-placeholders (`cde7581`, PR #213; ledger `c29cad6`, `5c96934`). Main is at `5c96934`. Audits below are second-hand auditor reports, not re-run here.
+
+**Security audit: n/a.** No `risk::security` ticket in this batch.
+
+**Seams audit: PASS on the seams that could be exercised; two low findings; no cross-ticket seam is broken.** Scripted model, no paid calls.
+- At `8c9b780`: `tests/journeys` + `tests/contract` 901 passed, 16 skipped, 1 xfailed, 33 errors (every one a browser journey: no `apps/web/dist`). The rest of `tests`: 2317 passed, 36 skipped, 2 xfailed. Skips: deploy tests, live smoke (needs `gate::paid`), one test blocked on a UX amendment. The xfail `test_cap9_runtime_ops.py::test_wf13_deploy_record_reads_export_state` is right-1/wrong-0, blocked on AEA-19.
+- At `5c96934` (includes FU-handoff-placeholders): `tests/journeys/j4`, `j6`, `tests/unit/agent/nodes`, `tests/capture/test_cap3_handoff.py`, `tests/graph`, `tests/contract`: 1114 passed, 3 skipped, 1 xfailed, 4 errors (the j6 browser journeys, same missing dist).
+- FU-pending-change: `act._has_pending_change` and the planner's `StateFlags.pending_change` (`plan.py:build_planner_input`) both read the current visit's `change_request` from `settled`. `DURABLE_KEYS` in `agent/graph.py` still lists a `pending_change` key that no longer exists in state: harmless drift.
+- FU-handoff-placeholders: `compose_promise.promise_wire` splits the stored promise into the three wire fields; it checks the `PROMISE_UNSTAFFED` text shape at import, so a wording edit in `policy/texts.py` fails at import (fail-closed) and so touches the composer.
+- Container: real `create_app()` with dummy provider keys: `/healthz` 200; chat session without login 401; bad login 401 `LOGIN_FAILED`; good login 200 as customer; session after login 201 with a greeting. The "demo clock 500 on login" note is stale (AEA-30 merged).
+
+**Open findings (new):**
+1. **Low, prerequisite gap.** The 33 browser-journey errors (4 in j6 at `5c96934`) need `npm --prefix apps/web run build`; no browser leg of any journey ran. Run them where node and a built `apps/web/dist` exist before the wave-5 gate; acceptance: the errors become passes or named skips. Same as finding 3 above.
+2. **Low, drift.** `DURABLE_KEYS` in `agent/graph.py` lists a `pending_change` key that is absent from state. Remove or document it (build-loop, since code reads the constant).
+
+Closed: wave-4 finding 1 (`test_wf15_reset_script`) is fixed by FU-main-green. Still open from above: findings 2 (`GraphDeps.cases` typing), 4 (CAS-16 scope) and 5 (area-map duplicates).
+
+**Next action:** land the remaining open tickets in `build-ledger.md`; run the browser journeys with a built `apps/web/dist` before the wave-5 gate; cut tickets for the open low findings; the full suite was green at `8c9b780`, re-run it before deploy. Stale worktree `audit-W3` is not ours; ask its owner before removing it.
 
 ## Hosting: Render (decided 2026-10-21, deployed 2026-10-22; supersedes Railway)
 
