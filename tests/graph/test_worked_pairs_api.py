@@ -200,7 +200,7 @@ def _fee_bearing_checks(run: CustomerRun, result: sc.ScenarioResult, *, change: 
     block = blocks(result.responses[-1], "change_request")[0]
     assert block["change"] == change
     assert "$49" in block["fee_line"] and "stays" in block["original_stays_line"]
-    assert block["extra_lines"] == extra
+    assert block["extra_lines"] == [render(TextId.REFERENCE_LINE, case_ref=case["case_ref"]), *extra]
     code_turn = result.turn_ids[-1]
     removed = [e for e in checks_of(run, code_turn, "completion") if e["result"] == "trimmed"]
     assert len(removed) == 1 and removed[0]["removed"] >= 1

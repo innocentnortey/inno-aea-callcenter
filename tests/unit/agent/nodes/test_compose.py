@@ -9,6 +9,7 @@ import typing
 import pytest
 
 from meridian.agent.nodes.compose import ReplyComposer, turn_trace
+from meridian.agent.nodes.compose_promise import UNSTAFFED_LEAD
 from meridian.domain import blocks as b
 from meridian.domain.actions import ActionKey, ActionKind, CompletedAction, Settled
 from meridian.domain.common import Halt, HaltReason, Priority, ProviderFailure, ProviderFailureKind
@@ -48,8 +49,7 @@ def talk_plan(mode: typing.Literal["talk", "act"] = "talk", tasks: tuple[Planned
 
 
 def unstaffed(case_ref: str = "MHC-C-0007") -> typing.Any:
-    text = render(TextId.PROMISE_UNSTAFFED, due_label="Monday, October 19, 7:00 pm", case_ref=case_ref)
-    return fx.handoff_result("R26.unstaffed", text, case_ref=case_ref)
+    return fx.handoff_result("R26.unstaffed", TEXTS[TextId.PROMISE_UNSTAFFED], case_ref=case_ref)
 
 
 def test_wp4f_settled_view_matches_words() -> None:
@@ -90,10 +90,10 @@ def test_handoff_card_only_from_handoff_result() -> None:
     promise = result.case.promise
     assert (card.reference, card.promise_text, card.due_label) == (
         "MHC-C-0007",
-        promise.text,
-        promise.due_label,
+        UNSTAFFED_LEAD,
+        "by Monday, October 19, 7:00 pm",
     )
-    assert card.extra_lines == promise.extra_lines
+    assert card.extra_lines == (render(TextId.REFERENCE_LINE, case_ref="MHC-C-0007"), *promise.extra_lines)
     assert card.card_id == "handoff-MHC-C-0007"
     assert sum(isinstance(x, b.HandoffBlock) for x in reply.blocks) == 1
     queued = fx.handoff_result("R26.staffed", TEXTS[TextId.PROMISE_STAFFED], live_queued=True)

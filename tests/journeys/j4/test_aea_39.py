@@ -13,11 +13,13 @@ import hashlib
 
 import pytest
 
+from meridian.agent.nodes.compose_promise import UNSTAFFED_LEAD
 from meridian.domain.blocks import HandoffBlock
 from meridian.domain.handoff import HandoffReason, Priority
 from meridian.domain.specialists import SchedulingSlice
 from meridian.domain.turn import TaskIntent
 from meridian.policy.handoff import PROMISE_TABLE, promise_for
+from meridian.policy.texts import TextId, render
 from tests.fakes import WORKED_PAIRS_NOW
 from tests.fixtures.sqlite import ISSUED_DB, temp_sqlite
 from tests.services._case_fixtures import new_thread, services, summary_of
@@ -94,6 +96,10 @@ def test_j4_wp4_fee_bearing_change_p2_case_policy_promise(monkeypatch: pytest.Mo
     assert hashlib.sha256(ISSUED_DB.read_bytes()).hexdigest() == issued_before
     blocks = [x for x in out.reply.blocks if isinstance(x, HandoffBlock)]
     assert len(blocks) == 1
-    assert blocks[0].promise_text == PROMISE_TABLE["R26.unstaffed"]
+    assert (blocks[0].promise_text, blocks[0].due_label) == (UNSTAFFED_LEAD, "by Monday, October 19, 7:00 pm")
+    assert blocks[0].extra_lines == (
+        render(TextId.REFERENCE_LINE, case_ref=str(result.case.case_ref)),
+        *stored.promise.extra_lines,
+    )
     assert blocks[0].reference == str(result.case.case_ref)
     assert out.turn_trace.outcome == "handed_off"

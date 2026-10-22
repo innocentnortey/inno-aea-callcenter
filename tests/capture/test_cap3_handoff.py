@@ -11,7 +11,9 @@ from typing import Any
 
 import pytest
 
+from meridian.agent.nodes.compose_promise import UNSTAFFED_LEAD
 from meridian.policy.handoff import PROMISE_TABLE
+from meridian.policy.texts import TextId, render
 from tests.graph import worked_pair_scenarios as sc
 from tests.integration.customer_api import Chat, open_chat, read_events
 from tests.integration.customer_support import (
@@ -67,7 +69,8 @@ def test_cap3_records(request: pytest.FixtureRequest) -> None:
         promise = run.db.one("SELECT * FROM promises WHERE case_ref = ?", (case["case_ref"],))
         assert promise["text"] == PROMISE_TABLE["R26.unstaffed"]
         block = first.json()["block"]
-        assert block["reference"] == case["case_ref"] and block["promise_text"] == promise["text"]
+        assert block["reference"] == case["case_ref"] and block["promise_text"] == UNSTAFFED_LEAD
+        assert block["extra_lines"][0] == render(TextId.REFERENCE_LINE, case_ref=case["case_ref"])
         assert run.db.count("case_events", "case_ref = ?", (case["case_ref"],)) >= 1
         turn = run.db.one(
             "SELECT * FROM turns WHERE turn_id = ?",

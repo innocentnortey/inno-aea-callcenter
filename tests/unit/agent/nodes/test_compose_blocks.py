@@ -8,6 +8,7 @@ import typing
 import pytest
 
 from meridian.agent.nodes.compose import ReplyComposer
+from meridian.agent.nodes.compose_promise import UNSTAFFED_LEAD
 from meridian.domain import blocks as b
 from meridian.domain import identity as idn
 from meridian.domain.actions import ActionKey, ActionKind, CompletedAction, OpenCase, Settled
@@ -186,7 +187,7 @@ def _identity(status: str, hint: str | None = _HINT) -> idn.IdentityState:
 
 
 def test_settled_view_identity_and_request() -> None:
-    result = fx.handoff_result("R26.unstaffed", "We will call.", case_ref="MHC-C-0007")
+    result = fx.handoff_result("R26.unstaffed", TEXTS[TextId.PROMISE_UNSTAFFED], case_ref="MHC-C-0007")
     case = result.case
     open_case = OpenCase(
         case_ref=case.case_ref,
@@ -215,16 +216,17 @@ def test_settled_view_identity_and_request() -> None:
     promise = case.promise
     assert (request.reference, request.promise_text, request.due_label) == (
         "MHC-C-0007",
-        promise.text,
-        promise.due_label,
+        UNSTAFFED_LEAD,
+        "by Monday, October 19, 7:00 pm",
     )
-    assert (request.extra_lines, request.live_queued) == (promise.extra_lines, False)
+    assert request.extra_lines == (render(TextId.REFERENCE_LINE, case_ref="MHC-C-0007"), *promise.extra_lines)
+    assert request.live_queued is False
     assert (view.replying.kind, view.replying.display_name) == ("human", "Riley")
     assert COMPOSER.settled_view(settled, _identity("not_checked", None), ai).replying.display_name is None
 
 
 def test_change_request_block() -> None:
-    result = fx.handoff_result("R26.unstaffed", "A person will review the change.", case_ref="MHC-C-0011")
+    result = fx.handoff_result("R26.unstaffed", TEXTS[TextId.PROMISE_UNSTAFFED], case_ref="MHC-C-0011")
     request = action(
         ActionKind.CHANGE_REQUEST_SENT,
         record_id="159",
@@ -270,10 +272,11 @@ def test_change_request_block() -> None:
     assert not any(isinstance(x, b.HandoffBlock | b.LiveQueuedBlock) for x in reply.blocks)
     card = cards[0]
     assert [w.window_label for w in card.windows_shown] == ["8:00 am – 12:00 pm", "12:00 pm – 4:00 pm"]
-    assert (card.reference, card.promise_text, card.change) == (
-        "MHC-C-0011",
-        "A person will review the change.",
-        "move",
+    assert (card.reference, card.promise_text, card.change) == ("MHC-C-0011", UNSTAFFED_LEAD, "move")
+    assert card.due_label == "by Monday, October 19, 7:00 pm"
+    assert card.extra_lines == (
+        render(TextId.REFERENCE_LINE, case_ref="MHC-C-0011"),
+        "A person will pick this up.",
     )
     assert card.fee_line == "A $89 fee applies under current policy."
     assert card.original_stays_line == TEXTS[TextId.FEE_ORIGINAL_STAYS]
