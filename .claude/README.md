@@ -60,7 +60,8 @@ No backend code exists yet. The backend is mapped in [`reference/area-map.md`](r
 | KB, chunking, retrieval eval (later) | `rules/retrieval-and-context.md`, `docs/principles/context-and-rag.md` | Retrieval evaluated on its own |
 | Scheduling tools, escalation, agent loop (later) | `rules/agent-architecture.md`, `agent-tools.md`, `safe-validation-errors.md` | — |
 | Containment metrics, monitoring, feedback loop (later) | `rules/verification-evals-observability.md`, `docs/principles/evals-and-observability.md` | — |
-| Build loop: which tests each role runs (Stage 8) | `rules/build-loop-test-scope.md` (its *AEA addition*: journeys in the merge gate) | — |
+| Build loop: which tests each role runs; merging in batches in tree order (Stage 8) | `rules/build-loop-test-scope.md` (*Merge in batches*; its *AEA addition*: journeys in the merge gate) | — |
+| Planning: giving a planner a context pack instead of a search (Stage 8) | `rules/planning-context-packs.md` | — |
 | Journeys, contract boundary checks, prompt ↔ consumer checks, live smoke, any "verified" claim (Stage 8 on) | `rules/integrated-journeys.md` (§1 inventory, §5 who runs what) → `rules/build-loop-test-scope.md` | Record in `docs/testing/journeys/` names revision, environment, command, result, evidence, limits, level |
 | UX track (§4b): stories, flows, CON drafts, concepts, directions, prototypes | `docs/ux/`, `docs/design/DESIGN-DIRECTIONS.md`, `design.md`; pages `docs/artifacts/2026-10-2*-ux-*.html`, `…-direction-A5-*.html`; generators `docs/artifacts/_build/`; skill `ux-pipeline` | `trace_check.py` passes; pages rebuilt by generator; CONs owned here |
 | Who Meridian serves, how service works, UX research inputs, brand/colour direction | `docs/analysis/2026-10-20-meridian-company-service-profile.md`, then `skills/ux-pipeline` when §4b starts | Meridian fact / industry context / design inference kept apart; no official palette declared |
