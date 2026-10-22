@@ -720,7 +720,7 @@ tests/                                       planned
 │                     on a disposable DB copy, scripted model at the provider boundary, client, DB reader, record writer);
 │                     j<N>/test_aea_<NN>.py, one file per ticket per journey;
 │                     browser/ = AEA-58's browser fixtures (system Chrome via pytest-playwright, the production build served by the real app, the one selector module, the response check, the walkthrough recipe)
-└── live/             marked `live`: paid calls, never in the default run (recordings feed contract/)
+└── live/             marked `live`: paid calls, never in the default run (recordings feed contract/); AEA-61: conftest, smoke*.py, scripted_cases, test_smoke_guards, test_live_smoke; records docs/testing/journeys/*-live-smoke-<N>.md
 ```
 
 **Built on `main`:** `tests/fakes/` (AEA-11, `c33f12c`); `tests/journeys/support/` and `tests/journeys/j1/test_aea_57.py` (AEA-57, `2788964`); `tests/contract/` OpenAPI boundary checks (AEA-59, branch `aea-59-aea-59-contract-boundary`); `tests/journeys/browser/`, `j1/test_aea_58.py`, `j9/test_aea_58.py` (AEA-58, `821e134`); `tests/contract/test_prompts_vs_consumers.py` and `j5/`, `j9/test_aea_60.py` (AEA-60, branch `aea-60-prompt-consumer-checks`); the rest of this tree is planned.
