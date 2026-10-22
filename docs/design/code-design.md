@@ -145,8 +145,8 @@ and the design must turn that into an honest "busy" or "taking longer" reply, no
 1. **No database transaction is open across a model call.** Services open a unit of work, write and commit in
    milliseconds; nodes call models outside any transaction. `code-review-agent` checks that no `gateway.*` call sits
    inside a `uow(...)` block.
-2. **Each model call keeps its own role cap** (Jev 3 s, specialist step 8 s, responder 12 s, brief 12 s; proposal,
-   DO-1 §8.1). The 60 s bounds the turn; the caps bound each call.
+2. **Each model call keeps its own role cap** (Jev 3 s, specialist step 15 s, raised from 8 s on 2026-10-22 after a Render timeout, demo-fix brief item 1;
+   responder 12 s, brief 12 s; proposal, DO-1 §8.1). The 60 s bounds the turn; the caps bound each call.
 3. **`/healthz` is `async def` and reads an in-memory heartbeat**, never the pool or SQLite, so a pool busy with long
    turns never looks hung to the watchdog (DO-1 §8.2).
 4. **Event-stream polling reads run on their own `anyio` `CapacityLimiter(4)`** [A], so many open streams cannot take

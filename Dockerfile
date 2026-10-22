@@ -54,6 +54,7 @@ FROM base AS runtime
 ENV HF_HUB_OFFLINE=1 \
     MERIDIAN_DATA_DIR=/data \
     MERIDIAN_INDEX_DIR=/app/index \
+    MERIDIAN_WARM_RETRIEVAL=1 \
     MERIDIAN_WEB_DIST_DIR=/app/apps/web/dist \
     PORT=8080
 COPY docs/data/issued/meridian_dataset/ /app/docs/data/issued/meridian_dataset/

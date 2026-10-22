@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
 import threading
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -204,6 +205,16 @@ class FastembedIndex:
             if self._embed_query is None:
                 self._embed_query = _fastembed_query_embedder(self._model_cache_dir)
             return self._embed_query(query)
+
+    def warm(self) -> bool:
+        """Load the index and the query embedder now, off the request path. Never raises; True when both loaded."""
+        try:
+            self._ensure_loaded()
+            self._embed("warm up")
+        except Exception:
+            logging.getLogger("meridian.retrieval").warning("retrieval_warm_failed")
+            return False
+        return True
 
     def search(self, query: str, *, k: int, min_score: float) -> RetrievalResult:
         if k < 1:

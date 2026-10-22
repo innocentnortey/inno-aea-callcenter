@@ -96,8 +96,9 @@ BRIEF_RULES: Final[tuple[str, ...]] = (
     "You prepare notes for a Meridian Home Comfort staff member who will take over this conversation.",
     "needs: one or two quotes of what the customer is asking for. Copy each quote exactly, character for character, "
     "from one customer message, and give that message's id.",
-    "claims: up to five quotes of things the customer says happened that nobody has checked. Copy each exactly and "
-    "give its message id.",
+    "claims: up to five quotes of what the customer says that nobody has checked: what they say happened, and "
+    "anything they say is wrong, unfair or disputed (for example a charge they dispute). Copy each exactly and give "
+    "its message id. One message can give both a need and a claim when they are different sentences.",
     "open_decision: one sentence naming what the staff member must decide. Use no number, date, price or ID unless it "
     "appears in the customer messages.",
     "Never invent, shorten or reword a quote.",
@@ -294,18 +295,44 @@ def account_for_model(results: Sequence[SpecialistResult]) -> AccountForModel | 
     return None
 
 
+def _latest_message_text(state: ConversationState, facts: TurnFacts, settled: SettledForModel) -> str:
+    """The customer's message as the responder sees it.
+
+    A window-card pick is stored as the raw slot id (the scheduling specialist needs it), so the responder gets a
+    description of the picked window instead. `facts` has already replaced `state.shown_slots` by now (a write
+    empties it), so the picked slot is looked up in the previous list, this turn's windows, then this turn's booking.
+    """
+    choice = state.turn_input.choice
+    if state.turn_input.kind == "choice" and choice is not None:
+        for s in (*state.shown_slots, *facts.windows_shown):
+            if str(s.slot_id) == choice.option:
+                parts = [date_label(s.date), window_label(s.window) or s.window, s.technician]
+                return redact(
+                    "(picked from the window card) " + ", ".join(parts), RedactionProfile.SONNET
+                ).text
+        if choice.option.isdigit():
+            done = next((d for d in settled.done if d.when == "this_turn" and d.date_label is not None), None)
+            if done is not None:
+                parts = [p for p in (done.date_label, done.window_label, done.technician) if p is not None]
+                return redact(
+                    "(picked from the window card) " + ", ".join(parts), RedactionProfile.SONNET
+                ).text
+    return redact(state.turn_input.text_store, RedactionProfile.SONNET).text
+
+
 def responder_input(state: ConversationState, ctx: TurnContext) -> ResponderInput:
     if state.facts is None or state.settled is None:
         raise RuntimeError("responder input needs facts and settled")
+    settled = settled_for_model(state.settled, ctx.ids.turn_id)
     return ResponderInput(
         chat_window=tuple(
             line.model_copy(update={"text": redact(line.text, RedactionProfile.SONNET).text})
             for line in state.chat_window
         ),
-        latest_message=redact(state.turn_input.text_store, RedactionProfile.SONNET).text,
+        latest_message=_latest_message_text(state, state.facts, settled),
         this_turn=facts_for_model(state.facts),
         account=account_for_model(state.specialist_results),
-        settled=settled_for_model(state.settled, ctx.ids.turn_id),
+        settled=settled,
         identity_status=state.identity.status,
         today_label=today_label(ctx.now),
         rules=ResponderRules(lines=RESPONDER_RULES),

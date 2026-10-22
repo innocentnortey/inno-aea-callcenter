@@ -85,6 +85,7 @@ start-up and names the variable, never its value.
 | `MERIDIAN_COOKIE_SECURE` | Marks the session cookie `Secure` | Not secret | Optional | `true` on Railway (code default `false`) |
 | `MERIDIAN_TRUST_PROXY_HEADERS` | Reads the client address from the proxy's forwarded header | Not secret | Optional | `true` on Railway (code default `false`) |
 | `MERIDIAN_REQUIRE_FRONTEND` | Start-up fails when `dist/` is missing | Not secret | Optional | `true` on Railway (code default `false`) |
+| `MERIDIAN_WARM_RETRIEVAL` | Loads the search index and embedding model in a background thread at start and every 10 minutes, so the first question is not slow | Not secret | Optional | `1` (set in the image; code default off) |
 | `MERIDIAN_WEB_DIST_DIR` | Where the built frontend is | Not secret | Optional | `/app/apps/web/dist` (the image also sets it; code default `apps/web/dist`) |
 | `MERIDIAN_DATA_DIR` | The data directory | Not secret | Optional | `/data` (set in the image; code default `var`) |
 | `MERIDIAN_INDEX_DIR` | The retrieval index directory | Not secret | Optional | `/app/index` (set in the image; code default `var/index`) |

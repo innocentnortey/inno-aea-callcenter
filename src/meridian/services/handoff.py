@@ -30,7 +30,7 @@ from meridian.domain.handoff import (
     Quote,
     SourceRef,
 )
-from meridian.domain.specialists import AccountResult, KnowledgeResult
+from meridian.domain.specialists import AccountResult, InvoiceView, KnowledgeResult
 from meridian.domain.state import ConversationState
 from meridian.domain.tools import LookupEntry, LookupRow
 from meridian.domain.turn import CheckResult, TurnContext
@@ -166,12 +166,22 @@ class BriefAssembler:
     def __init__(self, staff_guidance: Mapping[PassageId, StaffGuidance] | None = None) -> None:
         self._guidance = dict(staff_guidance or {})
 
-    def assemble(self, case: CaseSummary, state: ConversationState, lookups: Sequence[LookupRow]) -> Brief:
-        """Headings 1, 3, 5, 6, 8 and the guidance items of 7 from stored facts; 2 and 4 start empty."""
+    def assemble(
+        self,
+        case: CaseSummary,
+        state: ConversationState,
+        lookups: Sequence[LookupRow],
+        *,
+        invoices: Sequence[InvoiceView] = (),
+    ) -> Brief:
+        """Headings 1, 3, 5, 6, 8 and the guidance items of 7 from stored facts; 2 and 4 start empty.
+
+        `invoices` are the thread's invoices read on earlier turns; this turn's own views win on the same id.
+        """
         rows = [r for r in lookups if r.result_seen != "failed" and not r.result_seen.startswith("refused:")]
         items: dict[int, list[BriefItem]] = {n: [] for n in range(1, 9)}
         items[1] = self._why(case, state)
-        items[3] = self._know(state, rows)
+        items[3] = self._know(state, rows, invoices)
         items[5] = self._ai_did(state, rows)
         items[6] = self._told(case)
         items[7] = self._guidance_items(rows)
@@ -284,19 +294,33 @@ class BriefAssembler:
         return [_item(text, "fact", SourceRef(kind="rule", ref=rule))]
 
     @staticmethod
-    def _know(state: ConversationState, rows: Sequence[LookupRow]) -> list[BriefItem]:
+    def _know(
+        state: ConversationState, rows: Sequence[LookupRow], earlier_invoices: Sequence[InvoiceView] = ()
+    ) -> list[BriefItem]:
         out: list[BriefItem] = []
+        seen: set[str] = set()
+        views: list[InvoiceView] = []
         for result in state.specialist_results:
             if isinstance(result, AccountResult) and result.status == "read":
-                for inv in result.invoices:
-                    row = _first_row(rows, record=str(inv.invoice_id))
-                    if row is None:
-                        continue
-                    text = (
-                        f"Invoice {inv.invoice_id}: total {format_usd(inv.total_cents)}, balance "
-                        f"{format_usd(inv.balance_cents)}, due {inv.due_on.isoformat()}."
-                    )
-                    out.append(_item(text, "fact", _on(row)))
+                views.extend(result.invoices)
+        views.extend(earlier_invoices)
+        for inv in views:
+            if str(inv.invoice_id) in seen:
+                continue
+            seen.add(str(inv.invoice_id))
+            row = _first_row(rows, record=str(inv.invoice_id))
+            if row is None:
+                continue
+            text = (
+                f"Invoice {inv.invoice_id}: total {format_usd(inv.total_cents)}, balance "
+                f"{format_usd(inv.balance_cents)}, due {inv.due_on.isoformat()}."
+            )
+            if inv.lines:
+                listed = "; ".join(f"{ln.description} {format_usd(ln.amount_cents)}" for ln in inv.lines)
+                text += f" Lines: {listed}."
+            out.append(_item(text, "fact", _on(row)))
+        for result in state.specialist_results:
+            if isinstance(result, AccountResult) and result.status == "read":
                 for note in result.staff_notes:
                     row = _first_row(rows, record=str(note.record_id))
                     if row is not None:

@@ -120,7 +120,7 @@ def default_model_settings() -> ModelSettings:
                 RoleSpec(
                     model=SONNET_MODEL,
                     effort="medium",
-                    cap_s=8.0,  # proposal (DO-1 section 8.1)
+                    cap_s=15.0,  # raised from 8.0 on 2026-10-22 after a Render timeout (demo-fix brief item 1); per call, clamped to the 60 s turn deadline (TurnBudget.timeout_for), which still bounds a turn with several specialist steps
                     max_tokens=3000,
                     redaction=RedactionProfile.SONNET,
                 ),
@@ -145,11 +145,12 @@ ENV_NAMES: Mapping[str, str] = MappingProxyType(
         "trust_proxy_headers": "MERIDIAN_TRUST_PROXY_HEADERS",
         "web_dist_dir": "MERIDIAN_WEB_DIST_DIR",
         "require_frontend": "MERIDIAN_REQUIRE_FRONTEND",
+        "warm_retrieval": "MERIDIAN_WARM_RETRIEVAL",
         "data_dir": "MERIDIAN_DATA_DIR",
         "index_dir": "MERIDIAN_INDEX_DIR",
         "agent_version": "MERIDIAN_AGENT_VERSION",
     }
-)  # 17 names; `models` and `issued_db_path` have none
+)  # 18 names; `models` and `issued_db_path` have none
 
 
 class SettingsError(ValueError):
@@ -184,6 +185,7 @@ class Settings(MeridianModel):
     trust_proxy_headers: bool = False
     web_dist_dir: Path = Path("apps/web/dist")
     require_frontend: bool = False
+    warm_retrieval: bool = False
     data_dir: Path = Path("var")
     index_dir: Path = Path("var/index")
     issued_db_path: Path = Path("docs/data/issued/meridian_dataset/scheduling_db/meridian_scheduling.sqlite")
@@ -193,7 +195,7 @@ class Settings(MeridianModel):
     def from_env(cls, environ: Mapping[str, str]) -> Settings:
         """Build from a mapping the caller passes once (never reads os.environ itself).
 
-        Only the 17 names are read; a blank value counts as unset. A failure raises `SettingsError`, which names
+        Only the 18 names are read; a blank value counts as unset. A failure raises `SettingsError`, which names
         the variable and the rule and drops the pydantic exception (whose errors hold inputs) from the chain.
         """
         data = {

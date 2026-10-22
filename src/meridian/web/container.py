@@ -25,6 +25,8 @@ from meridian.policy.limits import Limits
 if TYPE_CHECKING:
     from fastapi import FastAPI
 
+    from meridian.adapters.retrieval_fastembed import FastembedIndex
+
 
 class ContainerError(RuntimeError):
     """A wiring mistake: an unknown, duplicate or cyclic provider, or use after build or close."""
@@ -1087,6 +1089,37 @@ def register_reads(container: Container, app: FastAPI, *, settings: Any, limits:
     app.state.reads_routes_included = True
 
 
+def _start_retrieval_warmer(
+    container: Container, index: FastembedIndex, *, interval_s: float = 600.0
+) -> None:
+    """Warm the index and query embedder off the request path, then keep them warm until the container closes.
+
+    One daemon thread; its closer sets the stop event and joins briefly. Never blocks start and never raises.
+    """
+    import logging
+    import threading
+
+    if not index.readiness().ok:
+        logging.getLogger("meridian.retrieval").warning("retrieval_warm_skipped")
+        return
+    stop = threading.Event()
+
+    def loop() -> None:
+        while True:
+            index.warm()
+            if stop.wait(interval_s):
+                return
+
+    thread = threading.Thread(target=loop, name="retrieval-warmer", daemon=True)
+    thread.start()
+
+    def close() -> None:
+        stop.set()
+        thread.join(timeout=2.0)
+
+    container.on_close(close)
+
+
 def register_graph(
     container: Container, app: FastAPI, *, settings: Any, limits: Limits, overrides: Any
 ) -> None:
@@ -1235,6 +1268,8 @@ def register_graph(
     container.provide(ports_key, model_ports)
     container.provide(gateway_key, gateway)
     container.provide(index_key, lambda _c: FastembedIndex(Path(typed.index_dir)))
+    if typed.warm_retrieval:
+        container.on_start(lambda: _start_retrieval_warmer(container, container.get(index_key)))
     container.provide(readiness_key, readiness)
     container.provide(registry_key, registry)
     container.provide(dispatcher_key, lambda c: ToolDispatcher(c.get(registry_key), c.get(deps.UOW_FACTORY)))

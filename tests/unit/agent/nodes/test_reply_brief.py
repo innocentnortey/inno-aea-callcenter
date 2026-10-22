@@ -7,8 +7,11 @@ from typing import Any
 import pytest
 
 from meridian.agent.nodes import reply
+from meridian.agent.tools.account import READ_INVOICES_NAME
+from meridian.domain.common import CustomerId
 from meridian.domain.handoff import BriefExtraction, Quote
 from meridian.domain.state import ConversationState
+from meridian.domain.tools import LookupEntry
 from meridian.policy.limits import Brakes, Limits
 from tests.fakes import FakeStructuredModel
 from tests.fixtures.sqlite import temp_sqlite
@@ -153,3 +156,74 @@ def test_brief_sonnet_brake(caplog: pytest.LogCaptureFixture) -> None:
     (ev,) = update["check_events"]
     assert ev.check == "brake"
     assert [s["name"] for s in signals(caplog)] == ["brief_failed", "brake_fired"]
+
+
+def _invoice_owner(store: Any) -> CustomerId:
+    with store.uow() as tx:
+        row = tx.core.reads.invoice("INV-204411")
+    assert row is not None
+    return CustomerId(str(row.customer_id))
+
+
+def _verified(owner: CustomerId) -> Any:
+    return state(
+        handoff=handoff_result(case_summary()),
+        facts=facts(),
+        identity={
+            "status": "verified",
+            "customer_id": str(owner),
+            "masked_hint": None,
+            "code_expires_at": None,
+            "tries_left": 3,
+            "codes_sent": 1,
+            "verified_at": None,
+        },
+    )
+
+
+def _seed_read_invoices(store: Any, seen: str = "amount_cents=47800") -> list[int]:
+    ids = seed(store, customer=[(TURN_4, WP7_MESSAGE)])
+    with store.uow(write=True) as tx:
+        tx.core.lookup_log.append(
+            LookupEntry(
+                tool=READ_INVOICES_NAME,
+                record_ids=("INV-204411", "INV-204411", "not-an-invoice"),
+                passage_ids=(),
+                result_seen=seen,
+                message_id=ids[0],
+                turn_id=TURN_4,
+            )
+        )
+        tx.commit()
+    return ids
+
+
+def test_brief_and_checks_pass_earlier_turn_invoices_scoped_to_customer() -> None:
+    with temp_sqlite() as store:
+        ids = _seed_read_invoices(store)
+        owner = _invoice_owner(store)
+        cases = FakeCaseService(case_summary())
+        assembler = FakeBriefAssembler()
+        gw, _ = gateway(brief=FakeStructuredModel([_ext(ids)] * 3))
+        d = deps(uow=store.uow, gw=gw, cases=cases, brief=assembler)
+        reply.brief(_verified(owner), run(turn_ctx()), deps=d)
+        reply.checks(_verified(owner), run(turn_ctx()), deps=d)
+        other = reply.brief(_verified(CustomerId("MHC-99999")), run(turn_ctx()), deps=d)
+    assert [[str(v.invoice_id) for v in got] for got in assembler.invoices[:2]] == [
+        ["INV-204411"],
+        ["INV-204411"],
+    ]
+    assert assembler.invoices[2] == () and other is not None  # another account reads nothing (scoped)
+
+
+def test_failed_or_refused_read_and_unverified_customer_pass_no_invoices() -> None:
+    with temp_sqlite() as store:
+        ids = _seed_read_invoices(store, seen="refused:not_verified")
+        owner = _invoice_owner(store)
+        cases = FakeCaseService(case_summary())
+        assembler = FakeBriefAssembler()
+        gw, _ = gateway(brief=FakeStructuredModel([_ext(ids)] * 3))
+        d = deps(uow=store.uow, gw=gw, cases=cases, brief=assembler)
+        reply.brief(_verified(owner), run(turn_ctx()), deps=d)
+        reply.brief(_st(), run(turn_ctx()), deps=d)
+    assert assembler.invoices == [(), ()]

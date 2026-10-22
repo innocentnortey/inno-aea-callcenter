@@ -386,3 +386,23 @@ def test_readiness_ok_on_ingest_output(tmp_path: Path) -> None:
         assert p.file in current
         assert p.file not in banned
         assert not p.file.startswith("archive/")
+
+
+def test_warm_loads_index_and_embeds_once(tmp_path: Path) -> None:
+    embed = StandInEmbed()
+    ix = FastembedIndex(write_index_dir(tmp_path / "i"), embed_query=embed)
+    assert ix.warm() is True
+    assert len(embed.queries) == 1
+
+
+def test_warm_returns_false_for_missing_index(tmp_path: Path) -> None:
+    embed = StandInEmbed()
+    assert FastembedIndex(tmp_path / "absent", embed_query=embed).warm() is False
+    assert embed.queries == []
+
+
+def test_warm_returns_false_when_embedder_raises(tmp_path: Path) -> None:
+    def boom(_query: str) -> npt.NDArray[np.float32]:
+        raise RuntimeError("no model")
+
+    assert FastembedIndex(write_index_dir(tmp_path / "i"), embed_query=boom).warm() is False

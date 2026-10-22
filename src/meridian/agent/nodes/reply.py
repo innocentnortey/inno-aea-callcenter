@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Literal
 
 from langgraph.runtime import Runtime
@@ -9,13 +10,15 @@ from langgraph.runtime import Runtime
 from meridian.agent.context import GraphDeps
 from meridian.agent.prompts.reply import brief_request, brief_shown, responder_input, responder_request
 from meridian.agent.signals import emit_signal
+from meridian.agent.tools.account import READ_INVOICES_NAME
 from meridian.checks import build_evidence, check_completion, check_facts, check_quotes
 from meridian.domain.actions import ActionKind, CompletedAction
-from meridian.domain.common import HaltReason, ProviderFailureKind, TurnId
+from meridian.domain.common import HaltReason, InvoiceId, ProviderFailureKind, TurnId
 from meridian.domain.identity import CodeWrong, NotVerified
 from meridian.domain.records import Passage, ShownSlot
 from meridian.domain.specialists import (
     AccountResult,
+    InvoiceView,
     KnowledgeResult,
     SchedulingResult,
     SpecialistResult,
@@ -30,6 +33,7 @@ from meridian.domain.state import (
     ResponderUpdate,
     TaskDetails,
 )
+from meridian.domain.tools import LookupRow
 from meridian.domain.turn import (
     CheckedReply,
     CheckEvent,
@@ -43,6 +47,7 @@ from meridian.domain.turn import (
     TurnFacts,
 )
 from meridian.ports.models import Role
+from meridian.ports.runtime import UnitOfWork
 
 __all__ = ["brief", "checks", "facts", "responder"]
 
@@ -275,6 +280,34 @@ def _store_brief(deps: GraphDeps, ctx: TurnContext, case_ref: object, brief_obj:
         _signal(ctx, SignalName.BRIEF_FAILED, node, cause="write_error", role="brief")
 
 
+def _thread_invoices(
+    tx: UnitOfWork, state: ConversationState, lookups: Sequence[LookupRow]
+) -> tuple[InvoiceView, ...]:
+    """Invoices this thread read on earlier turns, re-read scoped to the verified customer (never unscoped)."""
+    customer_id = state.identity.customer_id
+    if state.identity.status != "verified" or customer_id is None:
+        return ()
+    found: dict[str, InvoiceView] = {}
+    for row in lookups:
+        if (
+            row.tool != READ_INVOICES_NAME
+            or row.result_seen == "failed"
+            or row.result_seen.startswith("refused:")
+        ):
+            continue
+        for rid in row.record_ids:
+            if rid in found:
+                continue
+            try:
+                invoice_id = InvoiceId(rid)
+            except ValueError:
+                continue
+            view = tx.identity.invoice(customer_id, invoice_id)
+            if view is not None:
+                found[rid] = view
+    return tuple(found.values())
+
+
 def brief(state: ConversationState, runtime: Runtime[TurnContext], *, deps: GraphDeps) -> BriefUpdate:
     ctx = runtime.context
     thread_id = ctx.ids.thread_id
@@ -285,7 +318,10 @@ def brief(state: ConversationState, runtime: Runtime[TurnContext], *, deps: Grap
     with deps.uow() as tx:
         lookups = tx.core.lookup_log.for_thread(thread_id)
         rows = tx.core.messages.recent(thread_id, turns=deps.limits.context.window_turns)
-    _store_brief(deps, ctx, case.case_ref, deps.brief.assemble(case, state, lookups), "brief")
+        invoices = _thread_invoices(tx, state, lookups)
+    _store_brief(
+        deps, ctx, case.case_ref, deps.brief.assemble(case, state, lookups, invoices=invoices), "brief"
+    )
     shown = brief_shown(
         [(r.id, r.text) for r in rows if r.role == "customer"], deps.limits.context.window_line_chars
     )
@@ -339,6 +375,7 @@ def checks(state: ConversationState, runtime: Runtime[TurnContext], *, deps: Gra
             if case is not None
             else ()
         )
+        invoices = _thread_invoices(tx, state, lookups) if case is not None else ()
     events: list[CheckEvent] = []
     if state.draft is None:
         text = ""
@@ -363,7 +400,7 @@ def checks(state: ConversationState, runtime: Runtime[TurnContext], *, deps: Gra
         if fallback:
             _signal(ctx, SignalName.RESPONDER_FALLBACK, "checks", cause="all_removed", role="responder")
     if case is not None:
-        draft_brief = deps.brief.assemble(case, state, lookups)
+        draft_brief = deps.brief.assemble(case, state, lookups, invoices=invoices)
         ext = state.brief_extraction
         if ext is None:
             final = deps.brief.attach_extraction(draft_brief, None, None)

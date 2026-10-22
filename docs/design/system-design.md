@@ -373,7 +373,7 @@ gets a code-built reply with the named error **`TURN_TIMEOUT`** (N-26). The reco
 
 **How the deadline works.**
 - Each model call gets `timeout = min(role cap, time left)`. Role caps (**Proposal**): Jev 3 s (its p95 is 0.4 s [M]),
-  specialist step 8 s, responder 12 s, brief 12 s.
+  specialist step 15 s (raised 2026-10-22, Render timeout, demo-fix brief item 1), responder 12 s, brief 12 s.
 - The SDK's own retries are off (`max_retries=0`), because it honours any `retry-after` with no ceiling (research §4).
   Our loop retries once, only for retryable errors (408, 409, 429 with `retry-after`, 5xx, 529), and only when the wait
   plus a minimum call time fits in the time left. It never waits past the deadline.
@@ -989,7 +989,7 @@ alert (B), or keep only the last one (C)?
 | Typed card choices (slot pick, locate card, code card) route by code to the open task, skipping the planner | §A.1, §A.6 | The planner runs on every turn (+0.2 s, 2 Jev calls) |
 | Code-entry and greeting texts are fixed, no model | §A.2 | One more Sonnet call on those turns |
 | Brakes: 3 tasks per turn, 2 tool rounds per specialist, 6 Sonnet calls per turn | §A.1 | Different numbers in config |
-| Role timeouts: Jev 3 s, specialist step 8 s, responder 12 s, brief 12 s | §8.1 | Different numbers in config |
+| Role timeouts: Jev 3 s, specialist step 15 s (raised 2026-10-22, Render timeout, demo-fix brief item 1), responder 12 s, brief 12 s | §8.1 | Different numbers in config |
 | In-process watchdog that exits the process after 3 failed `/healthz` probes, so Railway restarts it (Q-045 = A) | §8.2 | Rely on Railway's own checks only (check its docs at deploy) |
 | The demo clock moves only when advanced, never with real time | §A.4 | A ticking clock changes due-time behaviour in demos |
 | Scheduler job every 60 s on the demo clock | §A.4 | Different interval |

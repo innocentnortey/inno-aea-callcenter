@@ -30,7 +30,7 @@ from meridian.privacy.redact import RedactionProfile
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
-# graph-core §12: the seventeen environment names, typed here independently of ENV_NAMES.
+# graph-core §12: the eighteen environment names, typed here independently of ENV_NAMES.
 EXPECTED_ENV_NAMES = {
     "ANTHROPIC_API_KEY",
     "OPENROUTER_API_KEY",
@@ -46,6 +46,7 @@ EXPECTED_ENV_NAMES = {
     "MERIDIAN_TRUST_PROXY_HEADERS",
     "MERIDIAN_WEB_DIST_DIR",
     "MERIDIAN_REQUIRE_FRONTEND",
+    "MERIDIAN_WARM_RETRIEVAL",
     "MERIDIAN_DATA_DIR",
     "MERIDIAN_INDEX_DIR",
     "MERIDIAN_AGENT_VERSION",
@@ -121,7 +122,7 @@ def test_valid_environment_builds() -> None:
     for spec in (fallback, responder, brief, specialist):
         assert spec.redaction == RedactionProfile.SONNET
     caps = [planner.cap_s, classifier.cap_s, fallback.cap_s, responder.cap_s, brief.cap_s, specialist.cap_s]
-    assert caps == [3.0, 3.0, 8.0, 12.0, 12.0, 8.0]
+    assert caps == [3.0, 3.0, 8.0, 12.0, 12.0, 15.0]
 
 
 def test_each_value_is_read_from_its_graph_core_name() -> None:
@@ -134,6 +135,12 @@ def test_each_value_is_read_from_its_graph_core_name() -> None:
     assert settings.demo_password.get_secret_value() == env["MERIDIAN_DEMO_PASSWORD"]
     assert settings.session_secret.get_secret_value() == env["MERIDIAN_SESSION_SECRET"]
     assert set(ENV_NAMES.values()) == EXPECTED_ENV_NAMES
+
+
+def test_warm_retrieval_defaults_off_and_reads_its_env_name() -> None:
+    """[invariant] MERIDIAN_WARM_RETRIEVAL is off unless set (tests never load the embedder)."""
+    assert Settings.from_env(_env()).warm_retrieval is False
+    assert Settings.from_env({**_env(), "MERIDIAN_WARM_RETRIEVAL": "1"}).warm_retrieval is True
 
 
 def test_env_example_matches_settings() -> None:
@@ -151,7 +158,7 @@ def test_env_example_matches_settings() -> None:
     assert len(names) == len(set(names)), "duplicate name"
     assert set(names) == set(ENV_NAMES.values())
     assert set(names) == EXPECTED_ENV_NAMES
-    assert len(names) == 17
+    assert len(names) == 18
 
 
 @pytest.mark.parametrize(

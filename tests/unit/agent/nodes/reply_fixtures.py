@@ -432,10 +432,19 @@ def make_brief(case_ref: CaseRef, *, status: str, not_generated: bool) -> Brief:
 class FakeBriefAssembler:
     def __init__(self) -> None:
         self.assembled: list[int] = []
+        self.invoices: list[tuple[Any, ...]] = []
         self.extractions: list[tuple[BriefExtraction | None, Any]] = []
 
-    def assemble(self, case: CaseSummary, state: ConversationState, lookups: Sequence[Any]) -> Brief:
+    def assemble(
+        self,
+        case: CaseSummary,
+        state: ConversationState,
+        lookups: Sequence[Any],
+        *,
+        invoices: Sequence[Any] = (),
+    ) -> Brief:
         self.assembled.append(len(lookups))
+        self.invoices.append(tuple(invoices))
         return make_brief(case.case_ref, status="being_written", not_generated=False)
 
     def attach_extraction(self, brief: Brief, extraction: BriefExtraction | None, check: Any) -> Brief:

@@ -22,7 +22,7 @@ from meridian.domain.handoff import (
     Quote,
 )
 from meridian.domain.identity import IdentityState
-from meridian.domain.specialists import AccountResult, InvoiceView, StaffNote
+from meridian.domain.specialists import AccountResult, InvoiceLineView, InvoiceView, StaffNote
 from meridian.domain.state import ConversationState
 from meridian.domain.tools import LookupRow
 from meridian.domain.turn import CheckResult, TurnInput
@@ -229,6 +229,52 @@ def test_staff_notes_only_in_headings_3_or_7() -> None:
     holders = [h.number for h in brief.headings if any(note in i.text for i in h.items)]
     assert holders == [3]
     assert all(s.kind == "lookup_log" for i in brief.headings[2].items for s in i.sources)
+
+
+def _dispute_invoice() -> InvoiceView:
+    return InvoiceView(
+        invoice_id=InvoiceId("INV-204411"),
+        lines=(
+            InvoiceLineView(description="Diagnostic visit", amount_cents=8900),
+            InvoiceLineView(description="Contactor replacement", amount_cents=24500),
+            InvoiceLineView(description="After-hours dispatch", amount_cents=14400),
+        ),
+        total_cents=47800,
+        balance_cents=47800,
+        issued_on=dt.date(2026, 10, 2),
+        due_on=dt.date(2026, 11, 1),
+        paid=False,
+    )
+
+
+def test_heading_three_lists_earlier_turn_invoice_with_lines() -> None:
+    """Demo fix: an invoice read on an earlier turn is a verified fact on the handoff turn, line items included."""
+    row = _row(7, "read_invoices", records=("INV-204411",), seen="amount_cents=47800")
+    case = _case(HandoffReason.BILLING_DISPUTE)
+    brief = BriefAssembler().assemble(case, _state(), [row], invoices=(_dispute_invoice(),))
+    (text,) = _texts(brief, 3)
+    assert text == (
+        "Invoice INV-204411: total $478, balance $478, due 2026-11-01. "
+        "Lines: Diagnostic visit $89; Contactor replacement $245; After-hours dispatch $144."
+    )
+    assert brief.headings[2].items[0].sources[0].ref == "7"
+    # no matching lookup row (or a failed one) -> not listed
+    assert _texts(BriefAssembler().assemble(case, _state(), [], invoices=(_dispute_invoice(),)), 3) == []
+    failed = _row(8, "read_invoices", records=("INV-204411",), seen="failed")
+    assert (
+        _texts(BriefAssembler().assemble(case, _state(), [failed], invoices=(_dispute_invoice(),)), 3) == []
+    )
+
+
+def test_heading_three_current_turn_view_wins_and_dedupes() -> None:
+    row = _row(7, "read_invoices", records=("INV-204411",), seen="amount_cents=47800")
+    current = _dispute_invoice().model_copy(update={"balance_cents": 0})
+    result = AccountResult(status="read", invoices=(current,), staff_notes=(), tools=(), calls=())
+    brief = BriefAssembler().assemble(
+        _case(HandoffReason.BILLING_DISPUTE), _state([result]), [row], invoices=(_dispute_invoice(),)
+    )
+    (text,) = _texts(brief, 3)
+    assert "balance $0," in text
 
 
 def test_guidance_text_needs_matching_hash() -> None:

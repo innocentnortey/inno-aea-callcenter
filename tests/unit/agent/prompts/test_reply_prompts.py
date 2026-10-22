@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import json
 import uuid
 
@@ -9,20 +10,23 @@ import pytest
 
 from meridian.agent.nodes import reply
 from meridian.agent.prompts.reply import (
+    BRIEF_RULES,
     RESPONDER_RULES,
     RESPONDER_SYSTEM_PREFIX,
     brief_request,
     brief_shown,
     facts_for_model,
     render_responder_dynamic,
+    render_responder_user,
     responder_input,
     responder_request,
     trimmed_schema,
 )
 from meridian.domain.actions import ActionKind, OpenCase
+from meridian.domain.records import ShownSlot
 from meridian.domain.specialists import KnowledgePoint, KnowledgeResult
 from meridian.domain.state import ChatLine
-from meridian.domain.turn import ResponderDraft
+from meridian.domain.turn import CardChoice, ResponderDraft
 from tests.fakes import FakeStructuredModel
 from tests.fixtures.sqlite import temp_sqlite
 from tests.unit.agent._gateway_doubles import card_like, six_digit_code
@@ -145,3 +149,57 @@ def test_labels_and_schema_in_requests() -> None:
     b = brief_request(case_summary(), shown)
     assert "[message 11]" in b.user and "[message 12]" in b.user
     assert str(CASE_REF) not in b.system_dynamic
+
+
+def _slot(slot_id: int = 169) -> ShownSlot:
+    return ShownSlot(
+        slot_id=slot_id,
+        date=dt.date(2026, 10, 22),
+        window="16:00-19:00",
+        technician="Sam Igwe",
+        service_type="hvac_repair",
+        zone="north",
+        member_reserved=False,
+        shown_turn=TURN_4,
+    )
+
+
+def _pick(option: str, *, kind: str = "choice", **extra: object) -> str:
+    ti = turn_input(text=option).model_copy(
+        update={
+            "kind": kind,
+            "choice": CardChoice(card_id="windows", option=option) if kind == "choice" else None,
+        }
+    )
+    st = state(turn_input=ti, facts=facts(), **extra)
+    return render_responder_user(responder_input(st, turn_ctx()))
+
+
+def test_window_card_pick_shows_label_not_slot_id() -> None:
+    out = _pick("169", shown_slots=[_slot()])
+    assert "169" not in out
+    assert "(picked from the window card)" in out and "Sam Igwe" in out
+    assert "Thursday, October 22" in out and "4:00 pm" in out
+
+
+def test_window_card_pick_after_write_uses_this_turns_booking() -> None:
+    booked = action(
+        ActionKind.BOOKED,
+        "A-1",
+        turn=TURN_4,
+        after={"date": "2026-10-22", "window": "16:00-19:00", "technician": "Sam Igwe"},
+    )
+    out = _pick("169", settled=settled(booked))
+    assert "169" not in out
+    assert "(picked from the window card)" in out and "Sam Igwe" in out
+
+
+def test_other_turns_unchanged_by_label_rewrite() -> None:
+    assert "(picked from the window card)" not in _pick("yes", shown_slots=[_slot()])
+    text_turn = _pick("169", kind="text", shown_slots=[_slot()])
+    assert "169" in text_turn and "(picked from the window card)" not in text_turn
+
+
+def test_brief_claims_rule_covers_disputes() -> None:
+    claims = next(r for r in BRIEF_RULES if r.startswith("claims:"))
+    assert "disputed" in claims and "wrong" in claims and "Copy each exactly" in claims
