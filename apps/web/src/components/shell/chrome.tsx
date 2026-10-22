@@ -83,6 +83,7 @@ export function DemoPageHeader({ title, subtitle, showDemoBar = true }: { title:
           <p className="t-name">Meridian Home Comfort</p>
           <p className="text-small text-text-muted">{title}{subtitle ? ` · ${subtitle}` : ""}</p>
         </div>
+        <NavLink to="/" end className="link-text inline-flex min-h-11 items-center text-small">Back to chat</NavLink>
         <SignOutButton />
       </div>
       <div className="px-4 pb-3"><RoleSwitch /></div>
