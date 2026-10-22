@@ -11,10 +11,13 @@ from __future__ import annotations
 
 import threading
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
+from meridian.web.deps import RATE_LIMITER
+from meridian.web.middleware import LimitScope
 from tests.api.chat_support import REFUSED, chat_env, post_turn
 from tests.api.web_shell_support import assert_matches, make_client
 from tests.journeys.support.run import JourneyRun
@@ -151,6 +154,14 @@ def test_j9_rate_limited_through_the_real_server(journey: JourneyRun) -> None:
             "thread_id"
         ]
         limit = journey.container.limits.web.chat_turns_per_thread_per_min
+        # With the real graph bound each turn takes ~0.3 s, so the per-minute thread bucket refills while 21 turns run
+        # and the 21st is never refused (AEA-51 merge gate). Spend limit - 3 tokens of this thread's bucket on the same
+        # real limiter and clock first, so the HTTP loop below still crosses the cap through the real server.
+        # Chosen by Innocent, 2026-10-22 ("go with A"); a frozen-clock harness (option B) is a follow-up.
+        limiter = journey.container.get(RATE_LIMITER)
+        now = (journey.clock() if journey.clock is not None else datetime.now(UTC)).timestamp()
+        for _ in range(limit - 3):
+            assert limiter.check(LimitScope.THREAD, thread_id, now, family="turn").allowed
         codes: list[str | None] = []
         last_turn = ""
         for n in range(limit + 1):

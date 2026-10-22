@@ -1092,8 +1092,167 @@ def register_graph(
 ) -> None:
     """AEA-51 integration: completes the graph and binds run_graph; the only reader of overrides (web.md §15, R-W-8).
 
-    No-op until AEA-51 fills it.
+    Provides Key("model_ports") (the role -> (port, RoleSpec) maps the gateway receives), Key("model_gateway"),
+    Key("retrieval_index") (FastembedIndex(settings.index_dir)), Key("retrieval_readiness") (its readiness(), read while the
+    container builds; not ready logs retrieval_not_ready and the app still starts), Key("tool_registry"),
+    Key("tool_dispatcher"), Key("specialist_runner"), deps.REPLY_COMPOSER (one ReplyComposer), Key("graph_deps"),
+    Key("compiled_graph") (SqliteSaver from Key("checkpointer"), recursion limit 25) and Key("run_graph"). A role present in
+    overrides.choice / .structured / .tools uses that port with its configured RoleSpec; overrides.trace is provided as
+    Key("trace_override"), which Key("trace") (AEA-19) then returns. Makes no request and writes nothing. An app
+    create_app did not build has no web shell, so this does nothing.
     """
+    import logging
+    from pathlib import Path
+    from types import MappingProxyType
+
+    from meridian.adapters.models.anthropic import AnthropicAdapter
+    from meridian.adapters.retrieval_fastembed import FastembedIndex, Readiness
+    from meridian.agent.context import GraphDeps
+    from meridian.agent.gateway import ModelGateway
+    from meridian.agent.graph import bind_run_graph, build_graph
+    from meridian.agent.nodes.compose import ReplyComposer
+    from meridian.agent.specialists.runner import SpecialistRunner
+    from meridian.agent.specialists.specs import SPECS
+    from meridian.agent.tools.account import account_tools
+    from meridian.agent.tools.dispatch import ToolDispatcher, ToolRegistry
+    from meridian.agent.tools.knowledge import knowledge_tools
+    from meridian.agent.tools.scheduling import scheduling_tools
+    from meridian.config import RoleSpec, Settings
+    from meridian.ports.models import Role
+    from meridian.ports.runtime import TraceSink
+    from meridian.privacy.redact import redact
+    from meridian.web import deps
+    from meridian.web.middleware import WebShellState
+
+    if not isinstance(getattr(app.state, "web_shell", None), WebShellState):
+        return
+    typed = cast(Settings, settings)
+    trace_key: Key[TraceSink] = Key("trace")
+    ledger_key: Key[Any] = Key("ledger")
+    scheduling_key: Key[Any] = Key("scheduling")
+    ports_key: Key[Any] = Key("model_ports")
+    gateway_key: Key[ModelGateway] = Key("model_gateway")
+    index_key: Key[FastembedIndex] = Key("retrieval_index")
+    readiness_key: Key[Readiness] = Key("retrieval_readiness")
+    registry_key: Key[ToolRegistry] = Key("tool_registry")
+    dispatcher_key: Key[ToolDispatcher] = Key("tool_dispatcher")
+    runner_key: Key[SpecialistRunner] = Key("specialist_runner")
+    deps_key: Key[GraphDeps] = Key("graph_deps")
+    graph_key: Key[Any] = Key("compiled_graph")
+
+    if overrides is not None and overrides.trace is not None:
+        override_sink: TraceSink = overrides.trace
+        container.provide(Key[TraceSink]("trace_override"), lambda _c: override_sink)
+
+    def model_ports(c: Container) -> Any:
+        adapters: dict[tuple[str, str], object] = {}
+
+        def adapter_for(provider: str, spec: RoleSpec) -> object:
+            key = (provider, spec.model)
+            if key not in adapters:
+                if provider == "anthropic":
+                    adapters[key] = AnthropicAdapter(c.get(Key[Any]("anthropic_client")), model=spec.model)
+                else:
+                    adapters[key] = c.get(Key[Callable[[str], Any]]("jev_adapter_factory"))(spec.model)
+            return adapters[key]
+
+        maps: dict[str, Any] = {}
+        for name in ("choice", "structured", "tools"):
+            given = getattr(overrides, name, None) if overrides is not None else None
+            paired: dict[Any, tuple[Any, RoleSpec]] = {}
+            for role, (provider, spec) in getattr(typed.models, name).items():
+                if given is not None and role in given:
+                    port = given[role]
+                    if port.provider != provider:
+                        raise ValueError(
+                            f"override for role {role.value} has provider {port.provider}; settings name {provider}"
+                        )
+                else:
+                    port = adapter_for(provider, spec)
+                paired[role] = (port, spec)
+            maps[name] = MappingProxyType(paired)
+        return MappingProxyType(maps)
+
+    def gateway(c: Container) -> ModelGateway:
+        ports = c.get(ports_key)
+        return ModelGateway(
+            choice=ports["choice"],
+            structured=ports["structured"],
+            tools=ports["tools"],
+            ledger=c.get(ledger_key),
+            trace=c.get(trace_key),
+            redact=redact,
+            limits=limits,
+        )
+
+    def readiness(c: Container) -> Readiness:
+        ready = c.get(index_key).readiness()
+        if not ready.ok:
+            logging.getLogger("meridian.graph").warning(
+                "retrieval_not_ready reasons=%s", ",".join(ready.reasons)
+            )
+        return ready
+
+    def registry(c: Container) -> ToolRegistry:
+        built = ToolRegistry(
+            (
+                *knowledge_tools(c.get(index_key)),
+                *account_tools(c.get(deps.UOW_FACTORY)),
+                *scheduling_tools(c.get(scheduling_key)),
+            )
+        )
+        for spec in SPECS.values():
+            built.check_covers(spec.tool_kinds)
+        return built
+
+    def runner(c: Container) -> SpecialistRunner:
+        return SpecialistRunner(
+            gateway=c.get(gateway_key),
+            transcript=c.get(ports_key)["tools"][Role.SPECIALIST][0],
+            dispatcher=c.get(dispatcher_key),
+            specs=SPECS,
+            brakes=limits.brakes,
+            trace=c.get(trace_key),
+        )
+
+    def graph_deps(c: Container) -> GraphDeps:
+        return GraphDeps(
+            gateway=c.get(gateway_key),
+            retrieval=c.get(index_key),
+            uow=c.get(deps.UOW_FACTORY),
+            identity=c.get(deps.IDENTITY_SERVICE),
+            scheduling=c.get(scheduling_key),
+            handoff=c.get(deps.HANDOFF_SERVICE),
+            brief=c.get(Key[Any]("brief_assembler")),
+            demo=c.get(deps.DEMO_SERVICE),
+            limits=limits,
+            trace=c.get(trace_key),
+            specialists=c.get(runner_key),
+            cases=c.get(deps.CASE_SERVICE),
+            ledger=c.get(ledger_key),
+        )
+
+    container.provide(ports_key, model_ports)
+    container.provide(gateway_key, gateway)
+    container.provide(index_key, lambda _c: FastembedIndex(Path(typed.index_dir)))
+    container.provide(readiness_key, readiness)
+    container.provide(registry_key, registry)
+    container.provide(dispatcher_key, lambda c: ToolDispatcher(c.get(registry_key), c.get(deps.UOW_FACTORY)))
+    container.provide(runner_key, runner)
+    container.provide(deps.REPLY_COMPOSER, lambda _c: ReplyComposer())
+    container.provide(deps_key, graph_deps)
+    container.provide(
+        graph_key,
+        lambda c: build_graph(
+            c.get(deps_key),
+            checkpointer=c.get(Key[Any]("checkpointer")).saver,
+            composer=c.get(deps.REPLY_COMPOSER),
+        ),
+    )
+    container.provide(
+        Key[Any]("run_graph"),
+        lambda c: bind_run_graph(c.get(graph_key), deps=c.get(deps_key), composer=c.get(deps.REPLY_COMPOSER)),
+    )
 
 
 def register_frontend(container: Container, app: FastAPI, *, settings: Any, limits: Limits) -> None:
