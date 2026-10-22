@@ -139,11 +139,6 @@ def test_wf2_turn_records(request: pytest.FixtureRequest) -> None:
         close_all(registry)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="blocked-on an AEA-42 follow-up (finding F-5): PersonRequestService opens the turn span but emits no child "
-    "span, so the CON-4 trace has no timed step",
-)
 def test_wf2_turn_has_timed_children(request: pytest.FixtureRequest) -> None:
     registry: list[Any] = []
     sink, exporter = build_capture_sink(registry)
@@ -215,11 +210,6 @@ def test_con4_event_in_handoff_commit(request: pytest.FixtureRequest) -> None:
         assert not [f for f in frames if json.loads(f.data).get("type") == "case_created"]
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="blocked-on an AEA-42 follow-up (finding F-4): PersonRequestService.request() opens its first write "
-    "transaction outside the try block, so a held write lock gives HTTP 500, not 503 HANDOFF_FAILED",
-)
 def test_con4_held_write_lock_gives_503(request: pytest.FixtureRequest) -> None:
     """AC-48 (second half): a write lock held beyond the retry answers 503 HANDOFF_FAILED and writes neither row."""
     with open_customer_run(request, RunOptions()) as run:
