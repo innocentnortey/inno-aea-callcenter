@@ -251,7 +251,7 @@ def test_concurrent_reset_refused() -> None:
 
 def test_writer_waits_for_reset_lock() -> None:
     with demo_store() as (store, cp):
-        make_dirty_demo(store, cp)
+        make_dirty_demo(store, cp, prior_reset_event=True)
         started, release, done = threading.Event(), threading.Event(), threading.Event()
         svc, _ = make_service(store, cp, seed=_blocking_seed(started, release))
         stamps: dict[str, float] = {}
@@ -396,7 +396,7 @@ def test_reset_restores_clock_and_staffing() -> None:
 
 def test_reset_clears_codes_keeps_ops_records() -> None:
     with demo_store() as (store, cp):
-        make_dirty_demo(store, cp)
+        make_dirty_demo(store, cp, prior_reset_event=True)
         kept = (
             "spend_ledger",
             "health_events",

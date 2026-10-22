@@ -156,6 +156,7 @@ def make_dirty_demo(
     *,
     open_chats: int = 1,
     customer_message: str = "Hi, my AC is making a noise.",
+    prior_reset_event: bool = False,
 ) -> Dirty:
     seed_first_boot(store.uow, seed_fn(), WALL)
     sessions = {
@@ -262,7 +263,9 @@ def make_dirty_demo(
             "VALUES (?, ?, 'clock_advanced', 'a', 'b', ?, 'supervisor')",
             (str(uuid4()), stamp, str(uuid4())),
         )
-        conn.execute("INSERT INTO reset_events (reset_id, at_wall) VALUES (?, ?)", (str(uuid4()), stamp))
+        if prior_reset_event:
+            # an earlier reset, for tests proving the reset keeps reset_events (cases.md §1.3); off by default so a WF-15 run sees only its own row
+            conn.execute("INSERT INTO reset_events (reset_id, at_wall) VALUES (?, ?)", (str(uuid4()), stamp))
         conn.execute(
             "INSERT INTO ended_threads (thread_id, demo_session, ended_wall_at, reason, reset_id) "
             "VALUES (?, 'old-session', ?, 'demo_reset', NULL)",
